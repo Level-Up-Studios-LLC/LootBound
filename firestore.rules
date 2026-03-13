@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /families/{familyId} {
+      allow read, write: if request.auth != null && request.auth.uid == familyId;
+
+      match /children/{childId} {
+        allow read, write: if request.auth != null && request.auth.uid == familyId;
+      }
+      match /tasks/{taskId} {
+        allow read, write: if request.auth != null && request.auth.uid == familyId;
+      }
+      match /rewards/{rewardId} {
+        allow read, write: if request.auth != null && request.auth.uid == familyId;
+      }
+      match /childData/{childId} {
+        allow read, write: if request.auth != null && request.auth.uid == familyId;
+        match /{subcol}/{docId} {
+          allow read, write: if request.auth != null && request.auth.uid == familyId;
+        }
+      }
+    }
+
+    // Feedback — any authenticated user can submit, read/update/delete restricted
+    match /feedback/{feedbackId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
+
+    // Family codes — public lookup for kid enrollment
+    match /familyCodes/{code} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Parent member mapping
+    match /parentMembers/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
