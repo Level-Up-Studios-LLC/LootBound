@@ -69,6 +69,7 @@ import {
 
 import {
   faHouse as fasHouse,
+  faHouseChimney as fasHouseChimney,
   faClipboardList as fasClipboardList,
   faTrophy as fasTrophy,
   faCartShopping as fasCartShopping,
@@ -80,10 +81,16 @@ import {
   faGift as fasGift,
   faChildren as fasChildren,
   faChartBar as fasChartBar,
+  faCrosshairs as fasCrosshairs,
+  faCrown as fasCrown,
+  faTreasureChest as fasTreasureChest,
+  faEllipsisVertical as fasEllipsisVertical,
+  faLeftFromBracket as fasLeftFromBracket,
 } from '@awesome.me/kit-e916efbc87/icons/classic/solid';
 
 library.add(
   fasHouse,
+  fasHouseChimney,
   fasClipboardList,
   fasTrophy,
   fasCartShopping,
@@ -95,6 +102,11 @@ library.add(
   fasGift,
   fasChildren,
   fasChartBar,
+  fasCrosshairs,
+  fasCrown,
+  fasTreasureChest,
+  fasEllipsisVertical,
+  fasLeftFromBracket,
   faHouse,
   faClipboardList,
   faTrophy,
