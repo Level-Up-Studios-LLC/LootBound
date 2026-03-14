@@ -22,9 +22,7 @@ interface RewardFormProps {
   onCancel: () => void;
 }
 
-export default function RewardForm(
-  props: RewardFormProps
-): React.ReactElement {
+export default function RewardForm(props: RewardFormProps): React.ReactElement {
   var _s = useState<Reward>(props.reward),
     f = _s[0],
     setF = _s[1];
@@ -33,16 +31,21 @@ export default function RewardForm(
   }
   return (
     <div className='flex flex-col gap-4'>
-      <input
-        placeholder='Loot name'
-        value={f.name}
-        onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-          u('name', e.target.value);
-        }}
-        className='quest-input'
-      />
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Icon</label>
+        <label className='text-qslate font-semibold mb-1 block'>
+          Loot Name
+        </label>
+        <input
+          placeholder='Loot name'
+          value={f.name}
+          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            u('name', e.target.value);
+          }}
+          className='quest-input'
+        />
+      </div>
+      <div>
+        <label className='text-qslate font-semibold mb-1 block'>Icon</label>
         <div className='flex gap-1 flex-wrap'>
           {REWARD_EMOJIS.map(function (e) {
             return (
@@ -63,7 +66,9 @@ export default function RewardForm(
         </div>
       </div>
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Cost (coins)</label>
+        <label className='text-qslate font-semibold mb-1 block'>
+          Cost (coins)
+        </label>
         <input
           type='number'
           value={f.cost}
@@ -74,7 +79,7 @@ export default function RewardForm(
         />
       </div>
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Limit</label>
+        <label className='text-qslate font-semibold mb-1 block'>Limit</label>
         <select
           value={f.limitType || 'none'}
           onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
@@ -89,7 +94,7 @@ export default function RewardForm(
       </div>
       {f.limitType && f.limitType !== 'none' && (
         <div>
-          <label className='text-xs text-qmuted mb-1 block'>
+          <label className='text-qslate font-semibold mb-1 block'>
             Max ({f.limitType === 'daily' ? 'per day' : 'per week'})
           </label>
           <input
@@ -103,7 +108,7 @@ export default function RewardForm(
           />
         </div>
       )}
-      <label className='text-[13px] text-qmuted flex items-center gap-2'>
+      <label className='text-qslate flex items-center gap-2'>
         <input
           type='checkbox'
           checked={!!f.requireApproval}

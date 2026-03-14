@@ -30,8 +30,8 @@ import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
 
 function LoadingScreen() {
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="font-display text-2xl text-qteal animate-pulse rounded-card px-6 py-3">
+    <div className='flex items-center justify-center h-screen'>
+      <div className='font-display text-2xl text-qteal animate-pulse rounded-card px-6 py-3'>
         Loading LootBound...
       </div>
     </div>
@@ -51,13 +51,13 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
   var showFab = ctx.screen === 'admin';
 
   return (
-    <div className="page-wrapper relative">
+    <div className='page-wrapper relative'>
       <input
         ref={ctx.fileRef}
         type='file'
         accept='image/*'
         capture='environment'
-        className="hidden"
+        className='hidden'
         onChange={ctx.handlePhoto}
       />
       <NotificationToast notif={ctx.notif} />
@@ -69,27 +69,30 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
         }}
       />
 
-      {ctx.screen !== 'login' && ctx.screen !== 'admin' && ctx.curUser && ctx.curUser !== 'parent' && (
-        <div className="fixed top-3 right-3 z-[100]">
-          <HamburgerMenu
-            items={[
-              {
-                id: 'logout',
-                icon: 'left-from-bracket',
-                label: 'Logout',
-                onClick: function () {
-                  if (ctx.onLogout) {
-                    ctx.onLogout();
-                  } else {
-                    ctx.setCurUser(null);
-                    ctx.setScreen('login');
-                  }
+      {ctx.screen !== 'login' &&
+        ctx.screen !== 'admin' &&
+        ctx.curUser &&
+        ctx.curUser !== 'parent' && (
+          <div className='fixed top-3 right-3 z-[100]'>
+            <HamburgerMenu
+              items={[
+                {
+                  id: 'logout',
+                  icon: 'left-from-bracket',
+                  label: 'Logout',
+                  onClick: function () {
+                    if (ctx.onLogout) {
+                      ctx.onLogout();
+                    } else {
+                      ctx.setCurUser(null);
+                      ctx.setScreen('login');
+                    }
+                  },
                 },
-              },
-            ]}
-          />
-        </div>
-      )}
+              ]}
+            />
+          </div>
+        )}
 
       {ctx.screen === 'login' && (
         <LoginScreen onSwitchFamily={props.onSwitchFamily} />
@@ -105,10 +108,11 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
           onClick={function () {
             setShowFeedback(true);
           }}
-          className="fixed bottom-[72px] right-4 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform"
-          aria-label="Send Feedback"
+          className='fixed bottom-[90px] right-3 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform'
+          aria-label='Send Feedback'
         >
-          <FontAwesomeIcon icon={faCommentDots} className="text-lg" />
+          <FontAwesomeIcon icon={faCommentDots} className='text-lg' />
+          <span className='sr-only'>Send Feedback</span>
         </button>
       )}
 
@@ -116,7 +120,13 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
         <FeedbackForm
           familyId={ctx.familyId}
           userRole={ctx.curUser || 'unknown'}
-          userName={ctx.curUser === 'parent' ? 'Parent' : (ctx.curUser && ctx.getChild(ctx.curUser) ? ctx.getChild(ctx.curUser)!.name : 'Kid')}
+          userName={
+            ctx.curUser === 'parent'
+              ? 'Parent'
+              : ctx.curUser && ctx.getChild(ctx.curUser)
+                ? ctx.getChild(ctx.curUser)!.name
+                : 'Kid'
+          }
           onClose={function () {
             setShowFeedback(false);
           }}
@@ -186,14 +196,17 @@ function AppRouter() {
   }, []);
 
   // Auto-detect persisted parent session
-  useEffect(function () {
-    if (!auth.authLoading && auth.authUser && !role && initDone) {
-      var storedCode = getStoredFamilyCode();
-      if (!storedCode) {
-        setRole('parent');
+  useEffect(
+    function () {
+      if (!auth.authLoading && auth.authUser && !role && initDone) {
+        var storedCode = getStoredFamilyCode();
+        if (!storedCode) {
+          setRole('parent');
+        }
       }
-    }
-  }, [auth.authLoading, auth.authUser, role, initDone]);
+    },
+    [auth.authLoading, auth.authUser, role, initDone]
+  );
 
   // When parent authenticates, load their parent PIN from Firestore
   // A PIN of '1234' (default) means no custom PIN has been set
@@ -336,9 +349,7 @@ function AppRouter() {
 
     // Family code resolved → show app (starts at profile selection)
     return (
-      <AppProvider
-        familyId={kidFamilyId}
-      >
+      <AppProvider familyId={kidFamilyId}>
         <AppInner
           onSwitchFamily={function () {
             clearStoredFamilyCode();
@@ -355,12 +366,12 @@ function AppRouter() {
 
 function ErrorFallback(props: { resetError: () => void }) {
   return (
-    <div className="page-wrapper page-centered">
-      <div className="bg-qyellow w-full max-w-[360px] p-8 rounded-card text-center">
-        <div className="font-display text-2xl font-bold text-qslate mb-3">
+    <div className='page-wrapper page-centered'>
+      <div className='bg-qyellow w-full max-w-[360px] p-8 rounded-card text-center'>
+        <div className='font-display text-2xl font-bold text-qslate mb-3'>
           Something went wrong
         </div>
-        <div className="text-sm text-qmuted mb-6">
+        <div className='text-sm text-qmuted mb-6'>
           An unexpected error occurred. Try reloading the app.
         </div>
         <button
@@ -368,7 +379,7 @@ function ErrorFallback(props: { resetError: () => void }) {
             props.resetError();
             window.location.reload();
           }}
-          className="btn-primary w-full"
+          className='btn-primary w-full'
         >
           Reload App
         </button>

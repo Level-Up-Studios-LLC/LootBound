@@ -64,10 +64,10 @@ export default function FeedbackForm(
   }
 
   return (
-    <Modal title="Send Feedback" bgColor="bg-white">
-      <div className="mb-4">
-        <div className="text-[13px] text-qmuted mb-2">Category</div>
-        <div className="flex gap-2">
+    <Modal title='Send Feedback' bgColor='bg-qyellow'>
+      <div className='mb-4'>
+        <div className='text-qslate font-semibold mb-1'>Category</div>
+        <div className='flex gap-2'>
           {CATEGORIES.map(function (cat) {
             var isActive = category === cat.id;
             return (
@@ -79,7 +79,7 @@ export default function FeedbackForm(
                 className={
                   (isActive
                     ? 'bg-qteal text-white'
-                    : 'bg-qslate-dim text-qslate') +
+                    : 'bg-qmint-dim text-qslate') +
                   ' rounded-badge px-4 py-2 font-semibold text-sm border-none cursor-pointer font-body flex items-center gap-1.5 transition-colors'
                 }
               >
@@ -93,8 +93,8 @@ export default function FeedbackForm(
           })}
         </div>
       </div>
-      <div className="mb-4">
-        <div className="text-[13px] text-qmuted mb-2">Message</div>
+      <div className='mb-4'>
+        <div className='text-qslate font-semibold mb-1'>Message</div>
         <textarea
           value={message}
           onChange={function (e: React.ChangeEvent<HTMLTextAreaElement>) {

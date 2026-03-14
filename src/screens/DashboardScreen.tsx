@@ -26,44 +26,44 @@ export default function DashboardScreen(): React.ReactElement | null {
   var pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
-    <div className='p-4 pb-20'>
-      {bedLock && (
-        <div className='bg-qcoral-dim rounded-badge px-4 py-3 mb-4 text-[13px] text-qcoral text-center'>
-          <FontAwesomeIcon
-            icon={faBed}
-            style={FA_ICON_STYLE}
-            className='mr-1.5'
-          />
-          Past 9 PM bedtime. Missions are locked for today.
-        </div>
-      )}
-      <div className='flex justify-between items-start mb-5'>
-        <div>
-          <div className='font-display text-[26px] font-bold animate-fade-in'>
-            Hey {ch.name} {ch.avatar}
+    <div className='pb-20'>
+      <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+        <div className='flex justify-between items-center'>
+          <div>
+            <div className='font-display text-[22px] font-bold animate-fade-in'>
+              Hey {ch.name} {ch.avatar}
+            </div>
+            <div className='text-[12px] text-qmuted'>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </div>
           </div>
-          <div className='text-[13px] text-qmuted'>
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </div>
-        </div>
-        <div className='flex flex-col items-center bg-qmint rounded-btn px-4 py-3'>
-          <div className='font-display text-2xl font-bold text-qslate'>
-            {(ud.points || 0).toLocaleString()}
-          </div>
-          <div className='text-[11px] text-qslate font-bold tracking-wider'>
+          <div className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5'>
             <FontAwesomeIcon
               icon={faCoins}
               style={FA_ICON_STYLE}
-              className='mr-1'
+              className='text-sm'
             />
-            COINS
+            <span className='font-display text-lg font-bold text-qslate'>
+              {(ud.points || 0).toLocaleString()}
+            </span>
           </div>
         </div>
+        {bedLock && (
+          <div className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'>
+            <FontAwesomeIcon
+              icon={faBed}
+              style={FA_ICON_STYLE}
+              className='mr-1.5'
+            />
+            Past 9 PM bedtime. Missions are locked for today.
+          </div>
+        )}
       </div>
+      <div className='px-4 pt-4'>
       <div className='grid grid-cols-3 gap-3.5 mb-6'>
         <div className='bg-qmint rounded-btn p-4'>
           <div className='font-display text-[22px] font-bold text-qslate'>
@@ -181,6 +181,7 @@ export default function DashboardScreen(): React.ReactElement | null {
             All done for today!
           </div>
         )}
+      </div>
       </div>
       <BNav tabs={KID_NAV} />
     </div>
