@@ -39,7 +39,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     var cfgCooldown =
       deps.cfg && deps.cfg.cooldown != null ? deps.cfg.cooldown : COOLDOWN;
     if (isPastBedtime(cfgBedtime)) {
-      deps.notify('Past bedtime. Tasks locked.', 'error');
+      deps.notify('Past bedtime. Missions locked.', 'error');
       return;
     }
     var ud = deps.allU[deps.curUser!];
@@ -156,7 +156,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     }
     await deps.saveUsr(uid, ud);
     var sl = SL[status] || {};
-    deps.notify((sl.text || '') + ': ' + (pts > 0 ? '+' : '') + pts + ' pts');
+    deps.notify((sl.text || '') + ': ' + (pts > 0 ? '+' : '') + pts + ' coins');
   }
 
   async function rejectTask(uid: string, taskId: string) {

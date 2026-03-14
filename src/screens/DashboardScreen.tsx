@@ -40,7 +40,7 @@ export default function DashboardScreen(): React.ReactElement | null {
             }
             className='mr-1.5'
           />
-          Past 9 PM bedtime. Tasks are locked for today.
+          Past 9 PM bedtime. Missions are locked for today.
         </div>
       )}
       <div className='flex justify-between items-start mb-5'>
@@ -72,7 +72,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               }
               className='mr-1'
             />
-            PTS
+            COINS
           </div>
         </div>
       </div>

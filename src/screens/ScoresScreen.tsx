@@ -29,7 +29,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   return (
     <div className='p-4 pb-20'>
       <div className='font-display text-2xl font-bold mb-4 text-qslate'>
-        Scoreboard
+        Leaderboard
       </div>
       <div className='flex flex-col gap-4'>
         {sorted.map(function (c, idx) {
@@ -80,7 +80,7 @@ export default function ScoresScreen(): React.ReactElement | null {
                   <div className='font-display text-[26px] font-bold text-qslate'>
                     {(udata.points || 0).toLocaleString()}
                   </div>
-                  <div className='text-[11px] text-qmuted font-bold'>PTS</div>
+                  <div className='text-[11px] text-qmuted font-bold'>COINS</div>
                 </div>
               </div>
               <div className='grid grid-cols-3 gap-3'>

@@ -330,8 +330,8 @@ export function altBg(index: number): string {
 }
 
 export var KID_NAV = [
-  { id: 'dashboard', icon: 'house', label: 'Home' },
-  { id: 'tasks', icon: 'clipboard-list', label: 'Tasks' },
-  { id: 'scores', icon: 'trophy', label: 'Scores' },
-  { id: 'store', icon: 'cart-shopping', label: 'Store' },
+  { id: 'dashboard', icon: 'house', label: 'HQ' },
+  { id: 'tasks', icon: 'crosshairs', label: 'Missions' },
+  { id: 'scores', icon: 'trophy', label: 'Ranks' },
+  { id: 'store', icon: 'treasure-chest', label: 'Loot' },
 ];

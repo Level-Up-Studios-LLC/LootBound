@@ -16,7 +16,7 @@ export function useRewardActions(deps: RewardActionsDeps) {
   ): { ok: boolean; reason: string | null } {
     var ud = deps.allU[uid] || freshUser();
     if ((ud.points || 0) < reward.cost)
-      return { ok: false, reason: 'Not enough points' };
+      return { ok: false, reason: 'Not enough coins' };
     if (
       reward.limitType &&
       reward.limitType !== 'none' &&

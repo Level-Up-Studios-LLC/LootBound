@@ -34,7 +34,7 @@ export default function RewardForm(
   return (
     <div className='flex flex-col gap-4'>
       <input
-        placeholder='Reward name'
+        placeholder='Loot name'
         value={f.name}
         onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
           u('name', e.target.value);
@@ -63,7 +63,7 @@ export default function RewardForm(
         </div>
       </div>
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Cost (points)</label>
+        <label className='text-xs text-qmuted mb-1 block'>Cost (coins)</label>
         <input
           type='number'
           value={f.cost}

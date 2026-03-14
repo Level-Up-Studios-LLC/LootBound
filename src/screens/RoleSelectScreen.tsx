@@ -33,7 +33,7 @@ export default function RoleSelectScreen(
             <FontAwesomeIcon icon={faShieldHalved} style={duotoneStyle} />
           </div>
           <div className='font-display text-xl font-semibold'>I'm a Parent</div>
-          <div className='text-xs text-qmuted'>Manage tasks &amp; rewards</div>
+          <div className='text-xs text-qmuted'>Manage missions &amp; loot</div>
         </button>
 
         <button
@@ -47,7 +47,7 @@ export default function RoleSelectScreen(
           </div>
           <div className='font-display text-xl font-semibold'>I'm a Kid</div>
           <div className='text-xs text-qmuted'>
-            Complete quests &amp; earn points
+            Complete missions &amp; earn coins
           </div>
         </button>
       </div>

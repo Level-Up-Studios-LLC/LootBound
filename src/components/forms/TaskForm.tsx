@@ -20,7 +20,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
   return (
     <div className='flex flex-col gap-4'>
       <input
-        placeholder='Task name'
+        placeholder='Mission name'
         value={f.name}
         onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
           u('name', e.target.value);
@@ -28,7 +28,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         className='quest-input'
       />
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Tier</label>
+        <label className='text-xs text-qmuted mb-1 block'>Rank</label>
         <select
           value={f.tier}
           onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
@@ -36,10 +36,10 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           }}
           className='quest-input'
         >
-          <option value={1}>Tier 1 ({tp[1] || 5} pts)</option>
-          <option value={2}>Tier 2 ({tp[2] || 10} pts)</option>
-          <option value={3}>Tier 3 ({tp[3] || 20} pts)</option>
-          <option value={4}>Tier 4 ({tp[4] || 30} pts)</option>
+          <option value={1}>Rank 1 ({tp[1] || 5} coins)</option>
+          <option value={2}>Rank 2 ({tp[2] || 10} coins)</option>
+          <option value={3}>Rank 3 ({tp[3] || 20} coins)</option>
+          <option value={4}>Rank 4 ({tp[4] || 30} coins)</option>
         </select>
       </div>
       <div className='flex gap-3'>

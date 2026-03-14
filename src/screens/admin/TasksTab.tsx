@@ -29,8 +29,8 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
     return (
       <EmptyState
         icon={faClipboardList}
-        title='Task Management'
-        description='Create daily and weekly tasks for each child. Assign tiers, set time windows, and watch them earn points for completing their quests.'
+        title='Mission Management'
+        description='Create daily and weekly missions for each child. Assign ranks, set time windows, and watch them earn coins for completing their missions.'
         ctaText='Go to Children'
         onCta={function () {
           props.onSwitchTab('children');
@@ -47,7 +47,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           <div key={c.id} className='pb-4'>
             <div className='flex justify-between items-center mb-3 mt-4'>
               <span className='font-bold text-qslate'>
-                {c.avatar} {c.name}'s Tasks
+                {c.avatar} {c.name}'s Missions
               </span>
               <button
                 onClick={function () {
@@ -80,7 +80,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                   <div>
                     <div className='font-semibold text-qslate'>{t.name}</div>
                     <div className='text-xs text-qmuted'>
-                      Tier {t.tier} ({ctx.tp(t.tier)} pts) |{' '}
+                      Rank {t.tier} ({ctx.tp(t.tier)} coins) |{' '}
                       {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
                       {t.daily
                         ? 'Daily'
@@ -121,7 +121,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
         );
       })}
       {(editTask || addTask) && (
-        <Modal title={editTask ? 'Edit Task' : 'Add Task'}>
+        <Modal title={editTask ? 'Edit Mission' : 'Add Mission'}>
           <TaskForm
             task={(editTask || addTask)!}
             tierPts={cfg!.tierPoints || DEF_TIER_PTS}

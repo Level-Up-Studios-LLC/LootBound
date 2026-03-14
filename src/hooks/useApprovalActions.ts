@@ -15,7 +15,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     if (!ud.pendingRedemptions || !ud.pendingRedemptions[idx]) return;
     var p = ud.pendingRedemptions[idx];
     if ((ud.points || 0) < p.cost) {
-      deps.notify('Not enough points', 'error');
+      deps.notify('Not enough coins', 'error');
       return;
     }
     ud.points -= p.cost;

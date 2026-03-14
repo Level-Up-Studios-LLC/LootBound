@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCircleQuestion } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
+import HamburgerMenu from '../../components/HamburgerMenu.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';
 import ReviewTab from './ReviewTab.tsx';
@@ -22,7 +23,7 @@ export default function AdminScreen(): React.ReactElement {
   var cfg = ctx.cfg;
   var pendingCount = ctx.pendingCount;
 
-  var adminTabs: [string, string, string][] = [
+  var bottomTabs: [string, string, string][] = [
     ['overview', 'chart-bar', 'Overview'],
     [
       'approvals',
@@ -30,10 +31,8 @@ export default function AdminScreen(): React.ReactElement {
       'Approvals' + (pendingCount > 0 ? ' (' + pendingCount + ')' : ''),
     ],
     ['review', 'magnifying-glass', 'Review'],
-    ['tasks', 'list-check', 'Tasks'],
-    ['rewards', 'gift', 'Rewards'],
-    ['children', 'children', 'Children'],
-    ['settings', 'gear', 'Settings'],
+    ['tasks', 'list-check', 'Missions'],
+    ['rewards', 'treasure-chest', 'Loot'],
   ];
 
   function handleCopyCode(): void {
@@ -54,6 +53,39 @@ export default function AdminScreen(): React.ReactElement {
         <div className='font-display text-2xl font-bold text-qslate'>
           Parent Dashboard
         </div>
+        <HamburgerMenu
+          items={[
+            {
+              id: 'children',
+              icon: 'children',
+              label: 'Children',
+              onClick: function () {
+                setAtab('children');
+              },
+            },
+            {
+              id: 'settings',
+              icon: 'gear',
+              label: 'Settings',
+              onClick: function () {
+                setAtab('settings');
+              },
+            },
+            {
+              id: 'logout',
+              icon: 'door-open',
+              label: 'Logout',
+              onClick: function () {
+                if (ctx.onLogout) {
+                  ctx.onLogout();
+                } else {
+                  ctx.setCurUser(null);
+                  ctx.setScreen('login');
+                }
+              },
+            },
+          ]}
+        />
       </div>
       {cfg && cfg.familyCode && (
         <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3 mb-4'>
@@ -64,8 +96,8 @@ export default function AdminScreen(): React.ReactElement {
                 <FontAwesomeIcon icon={faCircleQuestion} />
               </span>
               <div className='absolute top-3/4 left-full -translate-y-1/2 mb-1 px-3 py-2 bg-white rounded-badge text-xs w-52 hidden group-hover:block z-10 text-center leading-relaxed shadow-lg'>
-                Share this code with family members so they can join your Quest
-                Board on their devices.
+                Share this code with family members so they can join your
+                LootBound family on their devices.
               </div>
             </div>
           </div>
@@ -92,7 +124,7 @@ export default function AdminScreen(): React.ReactElement {
 
       {/* Bottom Navigation */}
       <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>
-        {adminTabs.map(function (t) {
+        {bottomTabs.map(function (t) {
           return (
             <button
               key={t[0]}
@@ -111,25 +143,6 @@ export default function AdminScreen(): React.ReactElement {
             </button>
           );
         })}
-        <button
-          onClick={function () {
-            if (ctx.onLogout) {
-              ctx.onLogout();
-            } else {
-              ctx.setCurUser(null);
-              ctx.setScreen('login');
-            }
-          }}
-          className='flex flex-col items-center gap-0.5 bg-transparent text-qslate px-1.5 py-2 rounded-badge border-none cursor-pointer font-body'
-        >
-          <span className='text-base'>
-            <FontAwesomeIcon
-              icon={['fas', 'door-open'] as any}
-              style={FA_ICON_STYLE}
-            />
-          </span>
-          <span className='text-[10px] font-semibold'>Logout</span>
-        </button>
       </div>
     </div>
   );

@@ -27,8 +27,8 @@ export default function ChildrenTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        Add children to your family. Each child gets their own profile, tasks,
-        and point balance. Set a PIN per child to prevent siblings from
+        Add children to your family. Each child gets their own profile, missions,
+        and coin balance. Set a PIN per child to prevent siblings from
         accessing each other's profiles.
       </div>
       <div className='flex justify-between items-center mb-4'>
@@ -60,7 +60,7 @@ export default function ChildrenTab(): React.ReactElement {
                   </div>
                   <div className='text-xs text-qmuted'>
                     Age {c.age} |{' '}
-                    {(allU[c.id] || ({} as UserData)).points || 0} pts |{' '}
+                    {(allU[c.id] || ({} as UserData)).points || 0} coins |{' '}
                     {c.pin ? 'PIN set' : 'No PIN'}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ export default function ChildrenTab(): React.ReactElement {
           message={
             'This permanently removes ' +
             removeChild.name +
-            ' from LootBound, including all their points, tasks, streaks, and history.'
+            ' from LootBound, including all their coins, missions, streaks, and history.'
           }
           warning='This action cannot be undone.'
           confirmLabel='Remove'

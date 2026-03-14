@@ -22,9 +22,9 @@ export default function ApprovalsTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        When children redeem high-value rewards (above the approval threshold)
-        or rewards flagged for approval, their requests appear here. Approve to
-        deduct points and grant the reward, or deny to cancel.
+        When children redeem high-value loot (above the approval threshold)
+        or loot flagged for approval, their requests appear here. Approve to
+        deduct coins and grant the loot, or deny to cancel.
       </div>
       {items.length === 0 && (
         <div className='text-center p-5 text-qmuted'>
@@ -41,7 +41,7 @@ export default function ApprovalsTab(): React.ReactElement {
                 </div>
                 <div className='text-sm text-qmuted'>
                   {item.pending.icon} {item.pending.name}{' '}
-                  <span className='text-qteal'>{item.pending.cost} pts</span>
+                  <span className='text-qteal'>{item.pending.cost} coins</span>
                 </div>
               </div>
               <div className='flex gap-1.5'>

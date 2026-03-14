@@ -32,7 +32,7 @@ export default function TasksScreen(): React.ReactElement | null {
   return (
     <div className='p-4 pb-20'>
       <div className='font-display text-2xl font-bold mb-4 text-qslate'>
-        Today's Quests
+        Today's Missions
       </div>
       {bedLock && (
         <div className='bg-qcoral-dim rounded-badge px-4 py-3 mb-4 text-[13px] text-qcoral text-center'>
@@ -47,7 +47,7 @@ export default function TasksScreen(): React.ReactElement | null {
             }
             className='mr-1.5'
           />
-          Bedtime cutoff passed. Incomplete tasks marked as missed.
+          Bedtime cutoff passed. Incomplete missions marked as missed.
         </div>
       )}
       <div className='flex flex-col gap-3'>
@@ -68,7 +68,7 @@ export default function TasksScreen(): React.ReactElement | null {
             color: '#64748b',
             bg: 'transparent',
           };
-          var pts = isDone
+          var coins = isDone
             ? entry.points
             : isMissed
               ? entry.points
@@ -120,11 +120,11 @@ export default function TasksScreen(): React.ReactElement | null {
                   <Badge status={status} />
                   <div className='text-sm font-bold font-display text-qslate'>
                     {isDone || isMissed
-                      ? pts > 0
-                        ? '+' + pts
-                        : pts
+                      ? coins > 0
+                        ? '+' + coins
+                        : coins
                       : tp(t.tier)}{' '}
-                    pts
+                    coins
                   </div>
                 </div>
               </div>
@@ -167,15 +167,15 @@ export default function TasksScreen(): React.ReactElement | null {
               {isDone && (
                 <div className='text-xs mt-1.5' style={{ color: sl.color }}>
                   {status === 'early'
-                    ? 'Early! Bonus points.'
+                    ? 'Early! Bonus coins.'
                     : status === 'ontime'
-                      ? 'On time. Full points.'
-                      : 'Late. Half points.'}
+                      ? 'On time. Full coins.'
+                      : 'Late. Half coins.'}
                 </div>
               )}
               {isMissed && (
                 <div className='text-xs mt-1.5 text-qred'>
-                  Missed. Points deducted.
+                  Missed. Coins deducted.
                 </div>
               )}
             </div>

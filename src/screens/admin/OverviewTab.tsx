@@ -28,8 +28,8 @@ export default function OverviewTab(
           Children Overview
         </div>
         <div className='text-[13px] leading-relaxed max-w-[300px] mx-auto'>
-          This tab shows a summary of each child's points, daily progress, and
-          streak at a glance. You can also quickly adjust points here.
+          This tab shows a summary of each child's coins, daily progress, and
+          streak at a glance. You can also quickly adjust coins here.
         </div>
         <div className='text-[13px] mt-4 text-qmuted'>
           Add a child in the{' '}
@@ -64,7 +64,7 @@ export default function OverviewTab(
                 {c.avatar} {c.name} (age {c.age})
               </span>
               <span className='text-qslate font-display'>
-                {(udata.points || 0).toLocaleString()} pts
+                {(udata.points || 0).toLocaleString()} coins
               </span>
             </div>
             <div className='flex gap-4 text-[13px] text-qmuted mb-2'>

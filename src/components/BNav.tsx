@@ -33,20 +33,6 @@ export default function BNav(p: BNavProps) {
           </button>
         );
       })}
-      <button
-        onClick={function () {
-          if (ctx.onLogout) {
-            ctx.onLogout();
-          } else {
-            ctx.setCurUser(null);
-            ctx.setScreen('login');
-          }
-        }}
-        className="flex flex-col items-center gap-1 bg-transparent text-qslate hover:text-qteal px-3 py-2 rounded-badge border-none cursor-pointer font-body transition-colors"
-      >
-        <FontAwesomeIcon icon={['fas', 'door-open'] as any} className="text-lg" />
-        <span className="text-[11px] font-semibold">Logout</span>
-      </button>
     </div>
   );
 }

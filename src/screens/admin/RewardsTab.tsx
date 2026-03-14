@@ -75,14 +75,14 @@ export default function RewardsTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        Rewards are what children can spend their earned points on. Set a point
-        cost, limit how often each reward can be redeemed, and flag high-value
-        rewards for parent approval.
+        Loot is what children can spend their earned coins on. Set a coin cost,
+        limit how often each item can be redeemed, and flag high-value loot for
+        parent approval.
       </div>
       {rewards.length === 0 && (
         <div className='text-center py-5 mb-4'>
           <div className='text-[13px] text-qmuted mb-3'>
-            No rewards yet. Add some below, or start with these samples:
+            No loot yet. Add some below, or start with these samples:
           </div>
           <button
             onClick={function () {
@@ -100,12 +100,12 @@ export default function RewardsTab(): React.ReactElement {
             }}
             className='bg-qteal text-white rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
           >
-            Add 5 Sample Rewards
+            Add 5 Sample Loot Items
           </button>
         </div>
       )}
       <div className='flex justify-between items-center mb-3'>
-        <span className='font-bold text-qslate'>Reward Catalog</span>
+        <span className='font-bold text-qslate'>Loot Catalog</span>
         <button
           onClick={function () {
             setAddReward({
@@ -144,7 +144,7 @@ export default function RewardsTab(): React.ReactElement {
               <span className='text-lg'>{r.icon}</span>
               <span className='font-semibold ml-2 text-qslate'>{r.name}</span>
               <div className='text-[11px] text-qmuted'>
-                {r.cost} pts | {ll}
+                {r.cost} coins | {ll}
                 {r.requireApproval ? ' | Approval req.' : ''}
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function RewardsTab(): React.ReactElement {
         );
       })}
       {(addReward || editReward) && (
-        <Modal title={editReward ? 'Edit Reward' : 'Add Reward'}>
+        <Modal title={editReward ? 'Edit Loot' : 'Add Loot'}>
           <RewardForm
             reward={(editReward || addReward)!}
             onSave={function (r) {

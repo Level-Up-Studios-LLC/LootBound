@@ -71,7 +71,7 @@ export function useChildActions(deps: ChildActionsDeps) {
     deps.notify(
       (pts > 0 ? '+' : '') +
         pts +
-        ' pts for ' +
+        ' coins for' +
         (deps.getChild(uid) || ({} as any)).name
     );
   }

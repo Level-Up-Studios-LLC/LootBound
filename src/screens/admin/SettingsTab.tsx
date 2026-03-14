@@ -36,14 +36,14 @@ export default function SettingsTab(): React.ReactElement {
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCoins} style={FA_ICON_STYLE} />
-          Tier Point Values
+          Rank Coin Values
         </div>
         <div className='grid grid-cols-2 gap-3'>
           {[1, 2, 3, 4].map(function (tier) {
             return (
               <div key={tier} className='flex items-center gap-2'>
                 <span className='text-[13px] text-qmuted min-w-[50px]'>
-                  Tier {tier}
+                  Rank {tier}
                 </span>
                 <input
                   type='number'
@@ -60,7 +60,7 @@ export default function SettingsTab(): React.ReactElement {
                   }}
                   className='quest-input !w-[70px] text-center'
                 />
-                <span className='text-xs text-qmuted'>pts</span>
+                <span className='text-xs text-qmuted'>coins</span>
               </div>
             );
           })}
@@ -72,7 +72,7 @@ export default function SettingsTab(): React.ReactElement {
           Approval Threshold
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Rewards costing this or more need approval.
+          Loot costing this or more needs approval.
         </div>
         <div className='flex gap-3 items-center'>
           <input
@@ -87,7 +87,7 @@ export default function SettingsTab(): React.ReactElement {
             }}
             className='quest-input !w-[100px] text-center'
           />
-          <span className='text-[13px] text-qmuted'>pts</span>
+          <span className='text-[13px] text-qmuted'>coins</span>
         </div>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
@@ -139,7 +139,7 @@ export default function SettingsTab(): React.ReactElement {
           Bedtime Cutoff
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Tasks lock after this time. Incomplete tasks are marked as missed.
+          Missions lock after this time. Incomplete missions are marked as missed.
         </div>
         <div className='flex gap-3 items-center'>
           <input
@@ -169,7 +169,7 @@ export default function SettingsTab(): React.ReactElement {
           Weekly Reset
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          All task logs clear on this day. Points and streaks carry over.
+          All mission logs clear on this day. Coins and streaks carry over.
         </div>
         <div className='flex gap-3 items-center'>
           <select
@@ -196,10 +196,10 @@ export default function SettingsTab(): React.ReactElement {
       <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faStopwatch} style={FA_ICON_STYLE} />
-          Task Cooldown
+          Mission Cooldown
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Minimum seconds between completing tasks. Prevents rapid-fire spam.
+          Minimum seconds between completing missions. Prevents rapid-fire spam.
         </div>
         <div className='flex gap-3 items-center'>
           <input
@@ -219,7 +219,7 @@ export default function SettingsTab(): React.ReactElement {
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='text-xs text-qslate'>
-          Tasks are recurring. Daily repeats every day, weekly on assigned day.
+          Missions are recurring. Daily repeats every day, weekly on assigned day.
         </div>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
@@ -259,7 +259,7 @@ export default function SettingsTab(): React.ReactElement {
           Reset All Data
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Clears all points, streaks, and history for all children.
+          Clears all coins, streaks, and history for all children.
         </div>
         <button
           onClick={function () {
@@ -273,7 +273,7 @@ export default function SettingsTab(): React.ReactElement {
       {showResetConfirm && (
         <ConfirmDialog
           title="Reset All Data?"
-          message="This will permanently erase all points, streaks, task history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain."
+          message="This will permanently erase all coins, streaks, mission history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain."
           warning="This action cannot be undone."
           confirmLabel="Yes, Reset Everything"
           confirmColor="bg-qcoral"

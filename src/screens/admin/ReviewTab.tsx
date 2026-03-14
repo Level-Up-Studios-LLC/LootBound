@@ -33,13 +33,13 @@ export default function ReviewTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        Review completed tasks and photo proof from today. If a task wasn't done
-        properly, reject it to deduct the points and send it back for the child
-        to redo.
+        Review completed missions and photo proof from today. If a mission wasn't
+        done properly, reject it to deduct the coins and send it back for the
+        child to redo.
       </div>
       {items.length === 0 && (
         <div className='text-center p-5 text-qmuted'>
-          No tasks to review today.
+          No missions to review today.
         </div>
       )}
       {items.map(function (item, ri) {
@@ -56,7 +56,7 @@ export default function ReviewTab(): React.ReactElement {
                 <div className='text-xs text-qmuted'>
                   {(SL[item.entry.status] || ({} as StatusLabel)).text} |{' '}
                   {item.entry.points > 0 ? '+' : ''}
-                  {item.entry.points} pts
+                  {item.entry.points} coins
                 </div>
               </div>
               <Badge status={item.entry.status} />
@@ -87,13 +87,13 @@ export default function ReviewTab(): React.ReactElement {
       })}
 
       {reviewTask && (
-        <Modal title='Reject Task?'>
+        <Modal title='Reject Mission?'>
           <div className='mb-4'>
             <div className='font-semibold text-qslate'>
               {reviewTask.child.name}: {reviewTask.task.name}
             </div>
             <div className='text-[13px] text-qmuted mt-1'>
-              Points removed. Sent back for redo.
+              Coins removed. Sent back for redo.
             </div>
           </div>
           {reviewTask.entry.photo && (

@@ -12,6 +12,7 @@ import {
 } from './services/familyCode.ts';
 import { signInAnonymousKid } from './services/auth.ts';
 import NotificationToast from './components/NotificationToast.tsx';
+import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
 import FeedbackForm from './components/forms/FeedbackForm.tsx';
 import RoleSelectScreen from './screens/RoleSelectScreen.tsx';
@@ -67,6 +68,28 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
           ctx.setViewPhoto(null);
         }}
       />
+
+      {ctx.screen !== 'login' && ctx.screen !== 'admin' && ctx.curUser && ctx.curUser !== 'parent' && (
+        <div className="fixed top-3 right-3 z-[100]">
+          <HamburgerMenu
+            items={[
+              {
+                id: 'logout',
+                icon: 'door-open',
+                label: 'Logout',
+                onClick: function () {
+                  if (ctx.onLogout) {
+                    ctx.onLogout();
+                  } else {
+                    ctx.setCurUser(null);
+                    ctx.setScreen('login');
+                  }
+                },
+              },
+            ]}
+          />
+        </div>
+      )}
 
       {ctx.screen === 'login' && (
         <LoginScreen onSwitchFamily={props.onSwitchFamily} />

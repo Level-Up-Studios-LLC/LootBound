@@ -29,12 +29,12 @@ export default function StoreScreen(): React.ReactElement | null {
   return (
     <div className='p-4 pb-20'>
       <div className='font-display text-2xl font-bold mb-4 text-qslate'>
-        Reward Store
+        Loot Shop
       </div>
       <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-4 mb-4'>
         <span className='font-semibold text-qslate'>Balance:</span>
         <span className='font-display text-[22px] font-bold text-qslate'>
-          {(ud.points || 0).toLocaleString()} pts
+          {(ud.points || 0).toLocaleString()} coins
         </span>
       </div>
       {pendingR.length > 0 && (
@@ -51,7 +51,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 <span>
                   {p.icon} {p.name}
                 </span>
-                <span className='text-qslate'>{p.cost} pts</span>
+                <span className='text-qslate'>{p.cost} coins</span>
                 <span className='text-[11px] text-qmuted'>Waiting...</span>
               </div>
             );
@@ -87,7 +87,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 {r.name}
               </div>
               <div className='font-display font-bold text-qslate'>
-                {r.cost} pts
+                {r.cost} coins
               </div>
               {li && <div className='text-[10px] text-qmuted'>{li}</div>}
               {na && (
@@ -109,7 +109,7 @@ export default function StoreScreen(): React.ReactElement | null {
                   ? na
                     ? 'Request'
                     : 'Redeem'
-                  : check.reason || 'Need more pts'}
+                  : check.reason || 'Need more coins'}
               </button>
             </div>
           );
@@ -151,7 +151,7 @@ export default function StoreScreen(): React.ReactElement | null {
               <div className='text-[32px]'>{confirmR.icon}</div>
               <div className='text-base font-semibold'>{confirmR.name}</div>
               <div className='text-qteal text-lg font-bold'>
-                {confirmR.cost} pts
+                {confirmR.cost} coins
               </div>
               {needsApproval(confirmR) && (
                 <div className='text-xs text-qorange'>
