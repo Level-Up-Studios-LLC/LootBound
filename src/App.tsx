@@ -105,7 +105,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
           onClick={function () {
             setShowFeedback(true);
           }}
-          className="fixed bottom-5 right-5 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-50 hover:scale-110 transition-transform"
+          className="fixed bottom-[72px] right-4 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform"
           aria-label="Send Feedback"
         >
           <FontAwesomeIcon icon={faCommentDots} className="text-lg" />
