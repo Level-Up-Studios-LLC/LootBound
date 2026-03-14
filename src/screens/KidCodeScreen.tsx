@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { lookupFamilyCode, setStoredFamilyCode } from '../services/familyCode.ts';
+import {
+  lookupFamilyCode,
+  setStoredFamilyCode,
+} from '../services/familyCode.ts';
 import { signInAnonymousKid } from '../services/auth.ts';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faAngleLeft } from '../fa.ts';
 
 interface KidCodeScreenProps {
   onSuccess: (familyId: string) => void;
@@ -59,10 +64,10 @@ export default function KidCodeScreen(
 
   return (
     <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
+      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
       </div>
-      <div className='text-base text-qmuted mb-10'>Enter your family code</div>
+      <div className='text-base text-qmuted mb-5'>Enter your family code</div>
 
       <div className='bg-qyellow w-full max-w-[360px] p-6 rounded-card flex flex-col items-center gap-5'>
         <input
@@ -94,6 +99,7 @@ export default function KidCodeScreen(
         </button>
 
         <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+          <FontAwesomeIcon icon={faAngleLeft} />
           Back
         </button>
       </div>

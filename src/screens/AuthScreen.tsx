@@ -135,7 +135,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
         <div>
-          <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Email
           </label>
           <input
@@ -152,7 +152,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </div>
 
         <div>
-          <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Password
           </label>
           <input
@@ -172,7 +172,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
         {mode === 'signup' && (
           <div>
-            <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
               Confirm Password
             </label>
             <input
@@ -191,11 +191,8 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
         {mode === 'signup' && (
           <div>
-            <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
               Family Code{' '}
-              <span className='text-qdim normal-case'>
-                (optional — enter to join an existing family)
-              </span>
             </label>
             <input
               type='text'
@@ -208,6 +205,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               autoComplete='off'
               className='quest-input tracking-[4px] font-semibold'
             />
+            <span className='text-qmuted text-xs font-normal'>
+              (optional — enter to join an existing family)
+            </span>
           </div>
         )}
 
