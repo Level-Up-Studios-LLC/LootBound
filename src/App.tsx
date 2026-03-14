@@ -295,8 +295,8 @@ function AppRouter() {
         );
       }
 
-      // No PIN, session persisted → sign out, force re-auth
-      auth.doSignOut();
+      // No PIN — skip straight to app (PIN can be set in Settings)
+      setParentVerified(true);
     }
 
     // Verified → full app in parent mode
