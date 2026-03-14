@@ -209,6 +209,19 @@ function AppRouter() {
     [auth.authUser, role]
   );
 
+  // Auto-verify parent when no PIN is set (persisted session, not fresh sign-in)
+  useEffect(function () {
+    if (
+      auth.authUser &&
+      role === 'parent' &&
+      parentPin === '' &&
+      !parentVerified &&
+      !auth.justSignedIn
+    ) {
+      setParentVerified(true);
+    }
+  }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
+
   if (auth.authLoading || !initDone) {
     return <LoadingScreen />;
   }
@@ -295,8 +308,8 @@ function AppRouter() {
         );
       }
 
-      // No PIN — skip straight to app (PIN can be set in Settings)
-      setParentVerified(true);
+      // No PIN — will be auto-verified via useEffect below
+      return <LoadingScreen />;
     }
 
     // Verified → full app in parent mode

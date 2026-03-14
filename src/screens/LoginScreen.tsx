@@ -80,7 +80,13 @@ export default function LoginScreen(
     // and don't have parent-level write access to the full config)
     var ch = ctx.getChild(pinTarget!);
     if (!ch || !ctx.familyId) return;
-    await fsSaveChild(ctx.familyId, pinTarget!, { pin: newPin });
+    try {
+      await fsSaveChild(ctx.familyId, pinTarget!, { pin: newPin });
+    } catch (err) {
+      console.error('Failed to save PIN:', err);
+      setPinErr('Could not save PIN. Please try again.');
+      return;
+    }
     ctx.setCurUser(pinTarget);
     ctx.setScreen('dashboard');
     setPinTarget(null);

@@ -66,12 +66,17 @@ export default function AdminScreen(): React.ReactElement {
     ta.focus();
     ta.select();
     try {
-      document.execCommand('copy');
-      cb();
+      var ok = document.execCommand('copy');
+      if (ok) {
+        cb();
+      } else {
+        ctx.notify('Long-press the code to copy', 'error');
+      }
     } catch (_e) {
       ctx.notify('Long-press the code to copy', 'error');
+    } finally {
+      document.body.removeChild(ta);
     }
-    document.body.removeChild(ta);
   }
 
   return (
