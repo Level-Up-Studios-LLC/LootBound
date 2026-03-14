@@ -1,39 +1,68 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper: check if the requesting user is a parent of this family.
+    // Either their uid IS the familyId (creator) or parentMembers maps them.
+    function isParent(familyId) {
+      return request.auth != null && (
+        request.auth.uid == familyId ||
+        exists(/databases/$(database)/documents/parentMembers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/parentMembers/$(request.auth.uid)).data.familyId == familyId
+      );
+    }
+
+    // Helper: any authenticated user (parents + anonymous kids).
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
     match /families/{familyId} {
-      allow read, write: if request.auth != null && request.auth.uid == familyId;
+      // Parents can read and write family config.
+      // Kids (anonymous) can read so they see children, tasks, rewards, settings.
+      allow read: if isAuthenticated();
+      allow write: if isParent(familyId);
 
       match /children/{childId} {
-        allow read, write: if request.auth != null && request.auth.uid == familyId;
+        allow read: if isAuthenticated();
+        allow write: if isParent(familyId);
       }
+
       match /tasks/{taskId} {
-        allow read, write: if request.auth != null && request.auth.uid == familyId;
+        allow read: if isAuthenticated();
+        allow write: if isParent(familyId);
       }
+
       match /rewards/{rewardId} {
-        allow read, write: if request.auth != null && request.auth.uid == familyId;
+        allow read: if isAuthenticated();
+        allow write: if isParent(familyId);
       }
+
       match /childData/{childId} {
-        allow read, write: if request.auth != null && request.auth.uid == familyId;
+        // Both parents and kids need read + write on child data
+        // (kids write task completions, redemption requests, etc.)
+        allow read, write: if isAuthenticated();
+
         match /{subcol}/{docId} {
-          allow read, write: if request.auth != null && request.auth.uid == familyId;
+          allow read, write: if isAuthenticated();
         }
       }
     }
 
-    // Feedback — any authenticated user can submit, read/update/delete restricted
+    // Feedback — any authenticated user can submit
     match /feedback/{feedbackId} {
-      allow create: if request.auth != null;
+      allow create: if isAuthenticated();
       allow read, update, delete: if false;
     }
 
-    // Family codes — public lookup for kid enrollment
+    // Family codes — public read for kid enrollment, parents can create
     match /familyCodes/{code} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
     }
 
-    // Parent member mapping
+    // Parent member mapping — only the owning user can read/write their own doc
     match /parentMembers/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
