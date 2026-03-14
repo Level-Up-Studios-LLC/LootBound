@@ -1,5 +1,6 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
+  faAngleLeft,
   faHouse,
   faClipboardList,
   faTrophy,
@@ -86,9 +87,11 @@ import {
   faTreasureChest as fasTreasureChest,
   faEllipsisVertical as fasEllipsisVertical,
   faLeftFromBracket as fasLeftFromBracket,
+  faAngleLeft as fasAngleLeft,
 } from '@awesome.me/kit-e916efbc87/icons/classic/solid';
 
 library.add(
+  faAngleLeft,
   fasHouse,
   fasHouseChimney,
   fasClipboardList,
@@ -175,6 +178,7 @@ library.add(
 );
 
 export {
+  faAngleLeft,
   faHouse,
   faClipboardList,
   faTrophy,
