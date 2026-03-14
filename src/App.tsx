@@ -48,7 +48,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
     return <LoadingScreen />;
   }
 
-  var showFab = ctx.screen !== 'login';
+  var showFab = ctx.screen === 'admin';
 
   return (
     <div className="page-wrapper relative">
