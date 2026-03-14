@@ -27,7 +27,7 @@ export default function DashboardScreen(): React.ReactElement | null {
 
   return (
     <div className='pb-20'>
-      <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center'>
           <div>
             <div className='font-display text-[22px] font-bold animate-fade-in'>

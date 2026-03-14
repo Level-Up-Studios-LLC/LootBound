@@ -27,16 +27,19 @@ export default function StoreScreen(): React.ReactElement | null {
   var pendingR = ud.pendingRedemptions || [];
 
   return (
-    <div className='p-4 pb-20'>
-      <div className='font-display text-2xl font-bold mb-4 text-qslate'>
-        Loot Shop
+    <div className='pb-20'>
+      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+        <div className='font-display text-2xl font-bold text-qslate mb-3'>
+          Loot Shop
+        </div>
+        <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3'>
+          <span className='font-semibold text-qslate'>Balance:</span>
+          <span className='font-display text-[22px] font-bold text-qslate'>
+            {(ud.points || 0).toLocaleString()} coins
+          </span>
+        </div>
       </div>
-      <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-4 mb-4'>
-        <span className='font-semibold text-qslate'>Balance:</span>
-        <span className='font-display text-[22px] font-bold text-qslate'>
-          {(ud.points || 0).toLocaleString()} coins
-        </span>
-      </div>
+      <div className='px-4 pt-3'>
       {pendingR.length > 0 && (
         <div className='mb-4'>
           <div className='text-sm font-bold text-qslate mb-2'>
@@ -181,6 +184,7 @@ export default function StoreScreen(): React.ReactElement | null {
           </div>
         </div>
       )}
+      </div>
       <BNav tabs={KID_NAV} />
     </div>
   );
