@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPenToSquare, faTrashCan } from '../../fa.ts';
+import { faPlus, faPenToSquare, faTrashCan, faGift } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
+import EmptyState from '../../components/ui/EmptyState.tsx';
 import RewardForm from '../../components/forms/RewardForm.tsx';
 import type { Reward } from '../../types.ts';
 
@@ -80,29 +81,25 @@ export default function RewardsTab(): React.ReactElement {
         parent approval.
       </div>
       {rewards.length === 0 && (
-        <div className='text-center py-5 mb-4'>
-          <div className='text-[13px] text-qmuted mb-3'>
-            No loot yet. Add some below, or start with these samples:
-          </div>
-          <button
-            onClick={function () {
-              var newRewards = SAMPLE_REWARDS.map(function (r) {
-                return Object.assign({}, r, {
-                  id:
-                    'r' +
-                    Date.now() +
-                    Math.random().toString(36).substring(2, 5),
-                });
+        <EmptyState
+          icon={faGift}
+          title='No loot yet'
+          description='Add loot items that children can spend their earned coins on, or start with some samples.'
+          ctaText='Add 5 Sample Loot Items'
+          onCta={function () {
+            var newRewards = SAMPLE_REWARDS.map(function (r) {
+              return Object.assign({}, r, {
+                id:
+                  'r' +
+                  Date.now() +
+                  Math.random().toString(36).substring(2, 5),
               });
-              ctx.saveCfg(
-                Object.assign({}, cfg!, { rewards: newRewards })
-              );
-            }}
-            className='bg-qteal text-white rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
-          >
-            Add 5 Sample Loot Items
-          </button>
-        </div>
+            });
+            ctx.saveCfg(
+              Object.assign({}, cfg!, { rewards: newRewards })
+            );
+          }}
+        />
       )}
       <div className='flex justify-between items-center mb-3'>
         <span className='font-bold text-qslate'>Loot Catalog</span>

@@ -1,10 +1,11 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBed, faCamera } from '../fa.ts';
+import { faBed, faCamera, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV, SL, DAYS_SHORT, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
+import EmptyState from '../components/ui/EmptyState.tsx';
 import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
@@ -47,6 +48,13 @@ export default function TasksScreen(): React.ReactElement | null {
         )}
       </div>
       <div className='px-4 pt-3 flex flex-col gap-3'>
+        {todayTasks.length === 0 && (
+          <EmptyState
+            icon={faGamepadModern}
+            title='No missions today!'
+            description='Enjoy your free time. Check back tomorrow for new missions!'
+          />
+        )}
         {sorted.map(function (t, idx) {
           var entry = tLog[t.id];
           var isRej = entry && entry.rejected;

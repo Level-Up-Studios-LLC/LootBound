@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faKey, faUserPlus, faTrashCan } from '../../fa.ts';
+import { faXmark, faKey, faUserPlus, faTrashCan, faChildren } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { AVATARS, COLORS, altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
+import EmptyState from '../../components/ui/EmptyState.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
 export default function ChildrenTab(): React.ReactElement {
@@ -157,9 +158,11 @@ export default function ChildrenTab(): React.ReactElement {
         );
       })}
       {children.length === 0 && (
-        <div className='text-center p-5 text-qmuted'>
-          No children. Add one to get started.
-        </div>
+        <EmptyState
+          icon={faChildren}
+          title='No children yet'
+          description='Add your first child to get started with missions and loot!'
+        />
       )}
 
       {addChildForm && (
