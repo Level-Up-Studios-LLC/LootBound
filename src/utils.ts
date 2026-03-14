@@ -1,11 +1,14 @@
-import type { Task, UserData, Redemption } from './types.ts';
-import { BEDTIME } from './constants.ts';
+import type { Task, UserData, Redemption, TierConfig } from './types.ts';
+import { BEDTIME, LEVEL_XP, LEVEL_TITLES } from './constants.ts';
 
 export function freshUser(): UserData {
   return {
     points: 0,
+    xp: 0,
+    level: 1,
     streak: 0,
     bestStreak: 0,
+    missedDaysThisWeek: 0,
     lastPerfectDate: null,
     taskLog: {},
     redemptions: [],
@@ -101,6 +104,56 @@ export function calcPts(bp: number, st: string): number {
   if (st === 'late') return Math.round(bp * 0.5);
   if (st === 'missed') return -bp;
   return 0;
+}
+
+export function calcRewards(
+  tc: TierConfig,
+  status: string
+): { coins: number; xp: number } {
+  var mult = status === 'early' ? 1.25 : status === 'ontime' ? 1.0 : status === 'late' ? 0.5 : 0;
+  if (status === 'missed') return { coins: -tc.coins, xp: 0 };
+  return {
+    coins: Math.round(tc.coins * mult),
+    xp: Math.round(tc.xp * mult),
+  };
+}
+
+export function getStreakMultiplier(streak: number): number {
+  if (streak >= 30) return 2.0;
+  if (streak >= 21) return 1.6;
+  if (streak >= 14) return 1.4;
+  if (streak >= 7) return 1.25;
+  if (streak >= 3) return 1.1;
+  return 1.0;
+}
+
+export function getLevelFromXp(totalXp: number): number {
+  for (var i = LEVEL_XP.length - 1; i >= 0; i--) {
+    if (totalXp >= LEVEL_XP[i]) return i + 2;
+  }
+  return 1;
+}
+
+export function getXpProgress(
+  totalXp: number,
+  level: number
+): { current: number; needed: number; pct: number } {
+  if (level >= 20) return { current: 0, needed: 0, pct: 100 };
+  var floor = level >= 2 ? LEVEL_XP[level - 2] : 0;
+  var ceil = LEVEL_XP[level - 1];
+  var current = totalXp - floor;
+  var needed = ceil - floor;
+  var pct = needed > 0 ? Math.round((current / needed) * 100) : 100;
+  return { current: current, needed: needed, pct: pct };
+}
+
+export function getLevelTitle(level: number): { title: string; color: string } {
+  var idx = Math.max(0, Math.min(level - 1, LEVEL_TITLES.length - 1));
+  return LEVEL_TITLES[idx];
+}
+
+export function getLevelCoinBonus(level: number): number {
+  return Math.min(Math.floor(level * 1.32), 25);
 }
 
 export function resizeImg(file: File, maxW: number): Promise<string> {

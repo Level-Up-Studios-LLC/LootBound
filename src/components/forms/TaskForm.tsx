@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { DAYS } from '../../constants.ts';
-import type { Task } from '../../types.ts';
+import { DAYS, TIER_ORDER } from '../../constants.ts';
+import type { Task, TierConfig } from '../../types.ts';
 
 interface TaskFormProps {
   task: Task & { uid: string };
-  tierPts: Record<number, number>;
+  tierConfig: Record<string, TierConfig>;
   onSave: (task: Task & { uid: string }) => void;
   onCancel: () => void;
 }
@@ -13,7 +13,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
   var _s = useState<Task & { uid: string }>(props.task),
     f = _s[0],
     setF = _s[1];
-  var tp = props.tierPts;
+  var tc = props.tierConfig;
   function u(k: string, v: any): void {
     setF(Object.assign({}, f, { [k]: v }));
   }
@@ -28,18 +28,22 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         className='quest-input'
       />
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Rank</label>
+        <label className='text-xs text-qmuted mb-1 block'>Tier</label>
         <select
           value={f.tier}
           onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
-            u('tier', Number(e.target.value));
+            u('tier', e.target.value);
           }}
           className='quest-input'
         >
-          <option value={1}>Rank 1 ({tp[1] || 5} coins)</option>
-          <option value={2}>Rank 2 ({tp[2] || 10} coins)</option>
-          <option value={3}>Rank 3 ({tp[3] || 20} coins)</option>
-          <option value={4}>Rank 4 ({tp[4] || 30} coins)</option>
+          {TIER_ORDER.map(function (t) {
+            var cfg = tc[t] || { coins: 0, xp: 0 };
+            return (
+              <option key={t} value={t}>
+                {t}-Tier ({cfg.coins} coins, {cfg.xp} XP)
+              </option>
+            );
+          })}
         </select>
       </div>
       <div className='flex gap-3'>

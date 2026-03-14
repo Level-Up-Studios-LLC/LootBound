@@ -1,4 +1,4 @@
-import type { StatusLabel } from './types.ts';
+import type { StatusLabel, TierConfig } from './types.ts';
 
 export var CFG_KEY = 'qb-cfg-v5';
 export function childKey(id: string): string {
@@ -15,7 +15,56 @@ export var DAYS = [
   'Saturday',
 ];
 export var DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-export var DEF_TIER_PTS: Record<number, number> = { 1: 5, 2: 10, 3: 20, 4: 30 };
+
+export var TIER_ORDER: string[] = ['S', 'A', 'B', 'C', 'D', 'F'];
+
+export var DEF_TIER_CONFIG: Record<string, TierConfig> = {
+  S: { coins: 50, xp: 40 },
+  A: { coins: 30, xp: 25 },
+  B: { coins: 20, xp: 18 },
+  C: { coins: 12, xp: 12 },
+  D: { coins: 7, xp: 7 },
+  F: { coins: 3, xp: 3 },
+};
+
+export var TIER_COLORS: Record<string, string> = {
+  S: '#eab308',
+  A: '#ef4444',
+  B: '#3b82f6',
+  C: '#22c55e',
+  D: '#a855f7',
+  F: '#6b7280',
+};
+
+export var LEVEL_XP: number[] = [
+  120, 200, 290, 395, 510,
+  640, 785, 940, 1115, 1305,
+  1510, 1730, 1965, 2220, 2495,
+  2785, 3095, 3425, 3775, 4150,
+];
+
+export var LEVEL_TITLES: { title: string; color: string }[] = [
+  { title: 'Rookie', color: '#6b7280' },
+  { title: 'Rookie', color: '#6b7280' },
+  { title: 'Rookie', color: '#6b7280' },
+  { title: 'Adventurer', color: '#22c55e' },
+  { title: 'Adventurer', color: '#22c55e' },
+  { title: 'Adventurer', color: '#22c55e' },
+  { title: 'Guardian', color: '#3b82f6' },
+  { title: 'Guardian', color: '#3b82f6' },
+  { title: 'Guardian', color: '#3b82f6' },
+  { title: 'Champion', color: '#a855f7' },
+  { title: 'Champion', color: '#a855f7' },
+  { title: 'Champion', color: '#a855f7' },
+  { title: 'Hero', color: '#f97316' },
+  { title: 'Hero', color: '#f97316' },
+  { title: 'Hero', color: '#f97316' },
+  { title: 'Legend', color: '#eab308' },
+  { title: 'Legend', color: '#eab308' },
+  { title: 'Legend', color: '#eab308' },
+  { title: 'Mythic', color: '#ef4444' },
+  { title: 'Mythic', color: '#ef4444' },
+];
 export var BEDTIME = 21 * 60;
 export var COOLDOWN = 60;
 export var AVATARS = [

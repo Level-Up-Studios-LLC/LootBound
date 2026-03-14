@@ -10,7 +10,7 @@ export interface Child {
 export interface Task {
   id: string;
   name: string;
-  tier: number;
+  tier: string;
   windowStart: string;
   windowEnd: string;
   daily: boolean;
@@ -48,6 +48,7 @@ export interface TaskLogEntry {
   completedAt: number | null;
   status: string;
   points: number;
+  xp: number;
   photo: string | null;
   rejected: boolean;
   autoCutoff?: boolean;
@@ -61,8 +62,11 @@ export interface StatusLabel {
 
 export interface UserData {
   points: number;
+  xp: number;
+  level: number;
   streak: number;
   bestStreak: number;
+  missedDaysThisWeek: number;
   lastPerfectDate: string | null;
   taskLog: Record<string, Record<string, any>>;
   redemptions: Redemption[];
@@ -70,12 +74,17 @@ export interface UserData {
   lastTaskTime: number;
 }
 
+export interface TierConfig {
+  coins: number;
+  xp: number;
+}
+
 export interface Config {
   children: Child[];
   tasks: Record<string, Task[]>;
   rewards: Reward[];
   parentPin: string;
-  tierPoints: Record<number, number>;
+  tierConfig: Record<string, TierConfig>;
   approvalThreshold: number;
   lastWeeklyReset: string;
   familyCode?: string;

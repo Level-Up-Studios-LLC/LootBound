@@ -53,7 +53,7 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
         if (!prev) return prev;
         return Object.assign({}, prev, {
           parentPin: fc ? fc.parentPin : prev.parentPin,
-          tierPoints: fc && fc.tierPoints ? fc.tierPoints : prev.tierPoints,
+          tierConfig: fc && fc.tierConfig ? fc.tierConfig : prev.tierConfig,
           approvalThreshold:
             fc && fc.approvalThreshold != null
               ? fc.approvalThreshold

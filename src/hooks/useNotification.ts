@@ -10,9 +10,10 @@ export function useNotification() {
   function notify(msg: string, type?: string) {
     if (nRef.current) clearTimeout(nRef.current);
     setNotif({ msg: msg, type: type || 'success' });
+    var dur = type === 'levelup' ? 4000 : 2500;
     nRef.current = setTimeout(function () {
       setNotif(null);
-    }, 2500);
+    }, dur);
   }
 
   return { notif: notif, notify: notify };
