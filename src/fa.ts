@@ -92,6 +92,7 @@ import {
 
 library.add(
   faAngleLeft,
+  fasAngleLeft,
   fasHouse,
   fasHouseChimney,
   fasClipboardList,
