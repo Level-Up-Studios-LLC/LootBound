@@ -273,8 +273,8 @@ function AppRouter() {
       );
     }
 
-    // Returning from persisted session
-    if (!parentVerified) {
+    // Returning from persisted session (not a fresh sign-in/sign-up)
+    if (!parentVerified && !auth.justSignedIn) {
       if (parentPin) {
         // Has PIN, session persisted → enter PIN
         return (
