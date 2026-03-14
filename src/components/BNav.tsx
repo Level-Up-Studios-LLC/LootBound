@@ -28,8 +28,8 @@ export default function BNav(p: BNavProps) {
               (isActive ? 'text-qteal' : 'text-qslate hover:text-qteal')
             }
           >
-            <FontAwesomeIcon icon={['fas', t.icon] as any} className="text-lg" />
-            <span className="text-[11px] font-semibold">{t.label}</span>
+            <FontAwesomeIcon icon={['fas', t.icon] as any} className="text-xl" />
+            <span className="text-xs font-semibold">{t.label}</span>
           </button>
         );
       })}

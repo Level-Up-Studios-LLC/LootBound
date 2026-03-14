@@ -23,10 +23,10 @@ export default function HamburgerMenu(p: HamburgerMenuProps): React.ReactElement
         onClick={function () {
           setOpen(!open);
         }}
-        className="flex flex-col items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer rounded-badge hover:bg-qmint transition-colors"
+        className="flex flex-col items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer p-0"
         aria-label="Menu"
       >
-        <FontAwesomeIcon icon={['fas', 'bars'] as any} className="text-qslate text-lg" />
+        <FontAwesomeIcon icon={['fas', 'ellipsis-vertical'] as any} className="text-qslate text-xl" />
       </button>
       {open && (
         <>

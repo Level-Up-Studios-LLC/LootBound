@@ -31,7 +31,7 @@ export default function AdminScreen(): React.ReactElement {
       'Approvals' + (pendingCount > 0 ? ' (' + pendingCount + ')' : ''),
     ],
     ['review', 'magnifying-glass', 'Review'],
-    ['tasks', 'list-check', 'Missions'],
+    ['tasks', 'crosshairs', 'Missions'],
     ['rewards', 'treasure-chest', 'Loot'],
   ];
 
@@ -73,7 +73,7 @@ export default function AdminScreen(): React.ReactElement {
             },
             {
               id: 'logout',
-              icon: 'door-open',
+              icon: 'left-from-bracket',
               label: 'Logout',
               onClick: function () {
                 if (ctx.onLogout) {
@@ -136,10 +136,10 @@ export default function AdminScreen(): React.ReactElement {
                 (atab === t[0] ? 'text-qteal' : 'text-qslate')
               }
             >
-              <span className='text-base'>
+              <span className='text-xl'>
                 <FontAwesomeIcon icon={['fas', t[1]] as any} />
               </span>
-              <span className='text-[10px] font-semibold'>{t[2]}</span>
+              <span className='text-xs font-semibold'>{t[2]}</span>
             </button>
           );
         })}

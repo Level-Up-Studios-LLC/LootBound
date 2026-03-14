@@ -75,7 +75,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
             items={[
               {
                 id: 'logout',
-                icon: 'door-open',
+                icon: 'left-from-bracket',
                 label: 'Logout',
                 onClick: function () {
                   if (ctx.onLogout) {
