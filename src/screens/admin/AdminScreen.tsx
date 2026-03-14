@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCircleQuestion } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { FA_ICON_STYLE } from '../../constants.ts';
 import HamburgerMenu from '../../components/HamburgerMenu.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';

@@ -1,16 +1,11 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShieldHalved, faGamepadModern } from '../fa.ts';
+import { FA_ICON_STYLE } from '../constants.ts';
 
 interface RoleSelectScreenProps {
   onSelectRole: (role: 'parent' | 'kid') => void;
 }
-
-var duotoneStyle = {
-  "--fa-primary-color": "#4B4E6D",
-  "--fa-secondary-color": "#FF8C94",
-  "--fa-secondary-opacity": "1"
-} as any;
 
 export default function RoleSelectScreen(
   props: RoleSelectScreenProps
@@ -30,7 +25,7 @@ export default function RoleSelectScreen(
           className='flex flex-col items-center gap-3 py-8 px-9 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
         >
           <div className='text-5xl'>
-            <FontAwesomeIcon icon={faShieldHalved} style={duotoneStyle} />
+            <FontAwesomeIcon icon={faShieldHalved} style={FA_ICON_STYLE} />
           </div>
           <div className='font-display text-xl font-semibold'>I'm a Parent</div>
           <div className='text-xs text-qmuted'>Manage missions &amp; loot</div>
@@ -43,7 +38,7 @@ export default function RoleSelectScreen(
           className='flex flex-col items-center gap-3 py-8 px-9 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
         >
           <div className='text-5xl'>
-            <FontAwesomeIcon icon={faGamepadModern} style={duotoneStyle} />
+            <FontAwesomeIcon icon={faGamepadModern} style={FA_ICON_STYLE} />
           </div>
           <div className='font-display text-xl font-semibold'>I'm a Kid</div>
           <div className='text-xs text-qmuted'>

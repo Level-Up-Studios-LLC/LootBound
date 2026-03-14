@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCrown } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import { KID_NAV } from '../constants.ts';
+import { KID_NAV, FA_ICON_STYLE } from '../constants.ts';
 import BNav from '../components/BNav.tsx';
 import { freshUser, getToday, isTaskActiveToday } from '../utils.ts';
 import type { UserData } from '../types.ts';
@@ -56,13 +56,7 @@ export default function ScoresScreen(): React.ReactElement | null {
                     {idx === 0 && (
                       <FontAwesomeIcon
                         icon={faCrown}
-                        style={
-                          {
-                            '--fa-primary-color': '#4B4E6D',
-                            '--fa-secondary-color': '#FF8C94',
-                            '--fa-secondary-opacity': '1',
-                          } as any
-                        }
+                        style={FA_ICON_STYLE}
                         className='mr-1'
                       />
                     )}

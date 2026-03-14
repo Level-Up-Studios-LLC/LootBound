@@ -2,16 +2,11 @@ import React, { useState } from 'react';
 import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPartyHorn } from '../fa.ts';
+import { FA_ICON_STYLE } from '../constants.ts';
 
 interface AuthScreenProps {
   onBack: () => void;
 }
-
-var duotoneStyle = {
-  '--fa-primary-color': '#4B4E6D',
-  '--fa-secondary-color': '#FF8C94',
-  '--fa-secondary-opacity': '1',
-} as any;
 
 export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   var _mode = useState<'signin' | 'signup'>('signin'),
@@ -93,7 +88,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     return (
       <div className='page-wrapper page-centered'>
         <div className='text-5xl mb-5'>
-          <FontAwesomeIcon icon={faPartyHorn} style={duotoneStyle} />
+          <FontAwesomeIcon icon={faPartyHorn} style={FA_ICON_STYLE} />
         </div>
         <div className='font-display text-2xl font-bold mb-3'>
           Family Created!

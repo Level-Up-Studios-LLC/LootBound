@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
+import { FA_ICON_STYLE } from '../constants.ts';
 import type { Child } from '../types.ts';
 
 interface LoginScreenProps {
@@ -125,11 +126,7 @@ export default function LoginScreen(
                   <FontAwesomeIcon
                     icon={faLock}
                     className="mr-1"
-                    style={{
-                      "--fa-primary-color": "#4B4E6D",
-                      "--fa-secondary-color": "#FF8C94",
-                      "--fa-secondary-opacity": "1"
-                    } as any}
+                    style={FA_ICON_STYLE}
                   />
                   PIN protected
                 </div>

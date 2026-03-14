@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
+import { FA_ICON_STYLE } from '../constants.ts';
 
 interface CreatePinPromptProps {
   onCreated: (pin: string) => void;
   onSkip: () => void;
 }
 
-var duotoneStyle = {
-  "--fa-primary-color": "#4B4E6D",
-  "--fa-secondary-color": "#FF8C94",
-  "--fa-secondary-opacity": "1"
-} as any;
 
 export default function CreatePinPrompt(
   props: CreatePinPromptProps
@@ -44,7 +40,7 @@ export default function CreatePinPrompt(
         LOOTBOUND
       </div>
       <div className="font-display text-lg font-semibold mb-3">
-        <FontAwesomeIcon icon={faLock} className="mr-2" style={duotoneStyle} />
+        <FontAwesomeIcon icon={faLock} className="mr-2" style={FA_ICON_STYLE} />
         Create a Parent PIN
       </div>
       <div className="text-[13px] text-qmuted text-center mb-9 max-w-[280px]">

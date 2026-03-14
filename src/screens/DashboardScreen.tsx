@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faFire, faPartyHorn, faCheck, faCoins } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import { KID_NAV } from '../constants.ts';
+import { KID_NAV, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
@@ -31,13 +31,7 @@ export default function DashboardScreen(): React.ReactElement | null {
         <div className='bg-qcoral-dim rounded-badge px-4 py-3 mb-4 text-[13px] text-qcoral text-center'>
           <FontAwesomeIcon
             icon={faBed}
-            style={
-              {
-                '--fa-primary-color': '#4B4E6D',
-                '--fa-secondary-color': '#FF8C94',
-                '--fa-secondary-opacity': '1',
-              } as any
-            }
+            style={FA_ICON_STYLE}
             className='mr-1.5'
           />
           Past 9 PM bedtime. Missions are locked for today.
@@ -63,13 +57,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           <div className='text-[11px] text-qslate font-bold tracking-wider'>
             <FontAwesomeIcon
               icon={faCoins}
-              style={
-                {
-                  '--fa-primary-color': '#4B4E6D',
-                  '--fa-secondary-color': '#FF8C94',
-                  '--fa-secondary-opacity': '1',
-                } as any
-              }
+              style={FA_ICON_STYLE}
               className='mr-1'
             />
             COINS
@@ -98,13 +86,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           <div className='font-display text-[22px] font-bold text-qslate animate-float'>
             <FontAwesomeIcon
               icon={faFire}
-              style={
-                {
-                  '--fa-primary-color': '#4B4E6D',
-                  '--fa-secondary-color': '#FF8C94',
-                  '--fa-secondary-opacity': '1',
-                } as any
-              }
+              style={FA_ICON_STYLE}
               className='mr-1 text-base'
             />
             {ud.streak || 0}
@@ -193,13 +175,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           <div className='text-center p-5 text-qteal font-semibold text-lg animate-confetti'>
             <FontAwesomeIcon
               icon={faPartyHorn}
-              style={
-                {
-                  '--fa-primary-color': '#4B4E6D',
-                  '--fa-secondary-color': '#FF8C94',
-                  '--fa-secondary-opacity': '1',
-                } as any
-              }
+              style={FA_ICON_STYLE}
               className='mr-2'
             />
             All done for today!

@@ -3,6 +3,7 @@ import { signInFamily } from '../services/auth.ts';
 import { saveConfig as fsSaveConfig } from '../services/firestoreStorage.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
+import { FA_ICON_STYLE } from '../constants.ts';
 
 interface ParentPinScreenProps {
   email: string;
@@ -12,11 +13,6 @@ interface ParentPinScreenProps {
   onSignOut: () => void;
 }
 
-var duotoneStyle = {
-  "--fa-primary-color": "#4B4E6D",
-  "--fa-secondary-color": "#FF8C94",
-  "--fa-secondary-opacity": "1"
-} as any;
 
 export default function ParentPinScreen(
   props: ParentPinScreenProps
@@ -93,7 +89,7 @@ export default function ParentPinScreen(
         LOOTBOUND
       </div>
       <div className="text-sm text-qmuted mb-3">
-        <FontAwesomeIcon icon={faLock} className="mr-1.5" style={duotoneStyle} />
+        <FontAwesomeIcon icon={faLock} className="mr-1.5" style={FA_ICON_STYLE} />
         Welcome back
       </div>
       <div className="text-[13px] text-qdim mb-10">{props.email}</div>

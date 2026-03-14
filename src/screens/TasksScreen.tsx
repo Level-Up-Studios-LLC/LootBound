@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faCamera } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import { KID_NAV, SL, DAYS_SHORT } from '../constants.ts';
+import { KID_NAV, SL, DAYS_SHORT, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
@@ -38,13 +38,7 @@ export default function TasksScreen(): React.ReactElement | null {
         <div className='bg-qcoral-dim rounded-badge px-4 py-3 mb-4 text-[13px] text-qcoral text-center'>
           <FontAwesomeIcon
             icon={faBed}
-            style={
-              {
-                '--fa-primary-color': '#4B4E6D',
-                '--fa-secondary-color': '#FF8C94',
-                '--fa-secondary-opacity': '1',
-              } as any
-            }
+            style={FA_ICON_STYLE}
             className='mr-1.5'
           />
           Bedtime cutoff passed. Incomplete missions marked as missed.
