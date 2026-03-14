@@ -12,17 +12,17 @@ export default function RoleSelectScreen(
 ): React.ReactElement {
   return (
     <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
+      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
       </div>
-      <div className='text-base text-qmuted mb-10'>Who are you?</div>
+      <div className='text-base text-qmuted mb-5'>Who are you?</div>
 
       <div className='flex gap-6 justify-center'>
         <button
           onClick={function () {
             props.onSelectRole('parent');
           }}
-          className='flex flex-col items-center gap-3 py-8 px-9 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
+          className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
         >
           <div className='text-5xl'>
             <FontAwesomeIcon icon={faShieldHalved} style={FA_ICON_STYLE} />
@@ -35,7 +35,7 @@ export default function RoleSelectScreen(
           onClick={function () {
             props.onSelectRole('kid');
           }}
-          className='flex flex-col items-center gap-3 py-8 px-9 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
+          className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
         >
           <div className='text-5xl'>
             <FontAwesomeIcon icon={faGamepadModern} style={FA_ICON_STYLE} />

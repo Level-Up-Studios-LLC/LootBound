@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPartyHorn } from '../fa.ts';
+import { faPartyHorn, faAngleLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 
 interface AuthScreenProps {
@@ -124,10 +124,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   return (
     <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
+      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
       </div>
-      <div className='text-sm text-qmuted mb-10'>
+      <div className='text-sm text-qmuted mb-5'>
         {mode === 'signin'
           ? 'Sign in with your family account'
           : 'Create a new family account'}
@@ -238,6 +238,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </button>
 
         <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+          <FontAwesomeIcon icon={faAngleLeft} />
           Back
         </button>
       </div>

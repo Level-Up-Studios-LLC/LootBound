@@ -209,6 +209,19 @@ function AppRouter() {
     [auth.authUser, role]
   );
 
+  // Auto-verify parent when no PIN is set (persisted session, not fresh sign-in)
+  useEffect(function () {
+    if (
+      auth.authUser &&
+      role === 'parent' &&
+      parentPin === '' &&
+      !parentVerified &&
+      !auth.justSignedIn
+    ) {
+      setParentVerified(true);
+    }
+  }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
+
   if (auth.authLoading || !initDone) {
     return <LoadingScreen />;
   }
@@ -273,8 +286,8 @@ function AppRouter() {
       );
     }
 
-    // Returning from persisted session
-    if (!parentVerified) {
+    // Returning from persisted session (not a fresh sign-in/sign-up)
+    if (!parentVerified && !auth.justSignedIn) {
       if (parentPin) {
         // Has PIN, session persisted → enter PIN
         return (
@@ -295,8 +308,8 @@ function AppRouter() {
         );
       }
 
-      // No PIN, session persisted → sign out, force re-auth
-      auth.doSignOut();
+      // No PIN — will be auto-verified via useEffect below
+      return <LoadingScreen />;
     }
 
     // Verified → full app in parent mode
