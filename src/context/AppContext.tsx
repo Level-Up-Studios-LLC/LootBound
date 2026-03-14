@@ -279,13 +279,30 @@ export function AppProvider(props: {
       var needsSeed = !fc && fsChildren.length === 0;
       if (needsSeed) {
         var defConfig = {
-          parentPin: '1234',
           tierPoints: Object.assign({}, DEF_TIER_PTS),
           approvalThreshold: 300,
           lastWeeklyReset: getWeekStart(),
         };
         await fsSaveConfig(familyId, defConfig);
         fc = defConfig;
+      } else if (fc) {
+        // Config doc exists (e.g. parentPin was saved during signup)
+        // but may be missing seed defaults — fill them in without
+        // overwriting fields that already have values.
+        var patches: Record<string, any> = {};
+        if (!fc.tierPoints) {
+          patches.tierPoints = Object.assign({}, DEF_TIER_PTS);
+        }
+        if (fc.approvalThreshold == null) {
+          patches.approvalThreshold = 300;
+        }
+        if (!fc.lastWeeklyReset) {
+          patches.lastWeeklyReset = getWeekStart();
+        }
+        if (Object.keys(patches).length > 0) {
+          await fsSaveConfig(familyId, patches);
+          fc = Object.assign({}, fc, patches);
+        }
       }
 
       if (fc && !(fc as any).familyCode) {
@@ -314,7 +331,7 @@ export function AppProvider(props: {
         children: fsChildren as Child[],
         tasks: tasksMap,
         rewards: fsRewards as Reward[],
-        parentPin: fc ? fc.parentPin : '1234',
+        parentPin: fc && fc.parentPin ? fc.parentPin : '',
         tierPoints:
           fc && fc.tierPoints
             ? fc.tierPoints
