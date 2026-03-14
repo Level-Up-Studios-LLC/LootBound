@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
+import { saveChild as fsSaveChild } from '../services/firestoreStorage.ts';
 import type { Child } from '../types.ts';
 
 interface LoginScreenProps {
@@ -75,19 +76,11 @@ export default function LoginScreen(
       setPinErr('PINs do not match');
       return;
     }
-    // Save PIN to child profile
+    // Save PIN directly to the child's Firestore doc (kids are anonymous
+    // and don't have parent-level write access to the full config)
     var ch = ctx.getChild(pinTarget!);
-    if (!ch || !ctx.cfg) return;
-    var newCfg = JSON.parse(JSON.stringify(ctx.cfg));
-    var childList = newCfg.children || [];
-    for (var i = 0; i < childList.length; i++) {
-      if (childList[i].id === pinTarget) {
-        childList[i].pin = newPin;
-        break;
-      }
-    }
-    newCfg.children = childList;
-    await ctx.saveCfg(newCfg);
+    if (!ch || !ctx.familyId) return;
+    await fsSaveChild(ctx.familyId, pinTarget!, { pin: newPin });
     ctx.setCurUser(pinTarget);
     ctx.setScreen('dashboard');
     setPinTarget(null);
