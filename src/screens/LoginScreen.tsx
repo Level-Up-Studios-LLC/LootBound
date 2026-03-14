@@ -100,7 +100,7 @@ export default function LoginScreen(
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <div className="font-display text-[42px] font-bold text-qslate tracking-wider mb-1 animate-fade-in">
-        QUEST BOARD
+        LOOTBOUND
       </div>
       <div className="text-base text-qmuted mb-10">
         Choose your profile

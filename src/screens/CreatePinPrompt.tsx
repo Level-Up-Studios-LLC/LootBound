@@ -41,7 +41,7 @@ export default function CreatePinPrompt(
   return (
     <div className="page-wrapper page-centered">
       <div className="font-display text-5xl font-bold text-qslate tracking-wider mb-1">
-        QUEST BOARD
+        LOOTBOUND
       </div>
       <div className="font-display text-lg font-semibold mb-3">
         <FontAwesomeIcon icon={faLock} className="mr-2" style={duotoneStyle} />

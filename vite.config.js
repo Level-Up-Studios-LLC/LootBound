@@ -12,7 +12,7 @@ export default defineConfig({
     tailwindcss(),
     sentryVitePlugin({
       org: process.env.SENTRY_ORG || 'level-up-studios',
-      project: process.env.SENTRY_PROJECT || 'quest-board',
+      project: process.env.SENTRY_PROJECT || 'lootbound',
       authToken: process.env.SENTRY_AUTH_TOKEN,
       disable: !process.env.SENTRY_AUTH_TOKEN,
     }),

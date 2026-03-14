@@ -1,8 +1,8 @@
-# CLAUDE.md — Quest Board
+# CLAUDE.md — LootBound
 
 ## Project Overview
 
-Quest Board is a gamified chore/task reward system for children, built as a React web app. It was designed for the Johnson family (Marc and Pheline) to help their kids develop responsibility and good habits through a video-game-inspired point system.
+LootBound is a gamified chore/task reward system for children, built as a React web app. It was designed for the Johnson family (Marc and Pheline) to help their kids develop responsibility and good habits through a video-game-inspired point system.
 
 The app runs on iPads and uses localStorage for persistence. The long-term plan is to deploy it as a PWA and eventually migrate storage to a real backend (Supabase, Firebase, etc.) for multi-device sync.
 
@@ -18,7 +18,7 @@ The app runs on iPads and uses localStorage for persistence. The long-term plan 
 ## File Structure
 
 ```
-quest-board/
+lootbound/
 ├── index.html              # Entry HTML with mobile meta tags
 ├── package.json            # Dependencies and scripts
 ├── vite.config.js          # Vite config (port 3000, auto-open)
@@ -260,7 +260,7 @@ At the end of each conversation (or when significant work is completed), review 
 
 ## Family Context
 
-- **Marc** (Dad) — owner of Level Up Studios LLC, Senior Web Developer at Guardian Recovery Network. Built Quest Board as a family project.
+- **Marc** (Dad) — owner of Level Up Studios LLC, Senior Web Developer at Guardian Recovery Network. Built LootBound as a family project.
 - **Pheline** (Mom) — co-parent, both parents share the admin PIN.
 - **Donovan** (age 12) — pre-loaded with age-appropriate tasks including homework, reading, shower, chores.
 - **Imani** (age 6) — pre-loaded with simpler tasks like picking up toys, putting shoes away, practicing reading.

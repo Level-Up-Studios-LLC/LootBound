@@ -18,7 +18,7 @@ export default function RoleSelectScreen(
   return (
     <div className='page-wrapper page-centered'>
       <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
-        QUEST BOARD
+        LOOTBOUND
       </div>
       <div className='text-base text-qmuted mb-10'>Who are you?</div>
 

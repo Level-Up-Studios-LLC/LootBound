@@ -31,7 +31,7 @@ function LoadingScreen() {
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="font-display text-2xl text-qteal animate-pulse rounded-card px-6 py-3">
-        Loading Quest Board...
+        Loading LootBound...
       </div>
     </div>
   );

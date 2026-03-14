@@ -1,4 +1,4 @@
-# Quest Board
+# LootBound
 
 A gamified chore and reward system for kids. Built with React + Vite.
 

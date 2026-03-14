@@ -1,5 +1,5 @@
 /**
- * Firestore storage adapter for Quest Board.
+ * Firestore storage adapter for LootBound.
  *
  * Replaces the localStorage adapter (storage.ts) with Firestore-backed
  * operations organized by domain. All functions accept a familyId to

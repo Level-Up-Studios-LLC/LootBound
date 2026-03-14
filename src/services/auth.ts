@@ -1,5 +1,5 @@
 /**
- * Authentication module for Quest Board.
+ * Authentication module for LootBound.
  *
  * Uses Firebase Email/Password auth for parents.
  * Kids do not use Firebase Auth — they connect via family code.

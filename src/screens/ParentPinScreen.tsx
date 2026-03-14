@@ -90,7 +90,7 @@ export default function ParentPinScreen(
   return (
     <div className="page-wrapper page-centered">
       <div className="font-display text-5xl font-bold text-qslate tracking-wider mb-1">
-        QUEST BOARD
+        LOOTBOUND
       </div>
       <div className="text-sm text-qmuted mb-3">
         <FontAwesomeIcon icon={faLock} className="mr-1.5" style={duotoneStyle} />

@@ -30,7 +30,7 @@ export default function PhotoViewer(p: PhotoViewerProps) {
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'quest-board-photo.jpg';
+      a.download = 'lootbound-photo.jpg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

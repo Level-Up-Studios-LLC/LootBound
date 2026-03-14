@@ -342,7 +342,7 @@ export default function App(){
     notify("All data reset");
   }
 
-  if(loading)return(<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"#0f172a"}}><link href={FONT} rel="stylesheet"/><div style={{fontFamily:"'Fredoka', sans-serif",fontSize:22,color:"#fbbf24"}}>Loading Quest Board...</div></div>);
+  if(loading)return(<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"#0f172a"}}><link href={FONT} rel="stylesheet"/><div style={{fontFamily:"'Fredoka', sans-serif",fontSize:22,color:"#fbbf24"}}>Loading LootBound...</div></div>);
 
   var children=cfg?cfg.children:[];
   var ch=curUser&&curUser!=="parent"?getChild(curUser):null;
@@ -370,7 +370,7 @@ export default function App(){
 
       {/* LOGIN */}
       {screen==="login"&&(<div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:24}}>
-        <div style={ns.bigTitle}>QUEST BOARD</div>
+        <div style={ns.bigTitle}>LOOTBOUND</div>
         <div style={{fontSize:16,color:"#94a3b8",marginBottom:32}}>Choose your profile</div>
         <div style={{display:"flex",gap:16,flexWrap:"wrap",justifyContent:"center",marginBottom:32}}>
           {children.map(function(c){return(
@@ -639,7 +639,7 @@ export default function App(){
             {removeChild&&<div style={ns.overlay}><div style={ns.modal}>
               <div style={ns.modalHd}>Remove {removeChild.name}?</div>
               <div style={{marginBottom:16}}>
-                <div style={{fontSize:14,color:"#94a3b8"}}>This permanently removes {removeChild.name} from Quest Board, including all their points, tasks, streaks, and history.</div>
+                <div style={{fontSize:14,color:"#94a3b8"}}>This permanently removes {removeChild.name} from LootBound, including all their points, tasks, streaks, and history.</div>
                 <div style={{fontSize:13,color:"#ef4444",marginTop:8}}>This action cannot be undone.</div>
               </div>
               <div style={ns.modalActs}>

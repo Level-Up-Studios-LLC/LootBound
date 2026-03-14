@@ -1,5 +1,5 @@
 /**
- * Family code utilities for Quest Board.
+ * Family code utilities for LootBound.
  *
  * Generates, looks up, and persists short alphanumeric codes
  * that kids use to connect to their family on shared devices.

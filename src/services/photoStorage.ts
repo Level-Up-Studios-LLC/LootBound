@@ -1,5 +1,5 @@
 /**
- * Photo storage module for Quest Board.
+ * Photo storage module for LootBound.
  *
  * Handles uploading task completion photos to Firebase Storage
  * and returning download URLs to store in Firestore task logs.

@@ -1,5 +1,5 @@
 /**
- * Storage adapter for Quest Board.
+ * Storage adapter for LootBound.
  *
  * In the Claude artifact environment this used window.storage (a key-value
  * persistence API). This module swaps it for localStorage so the app runs

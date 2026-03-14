@@ -1,5 +1,5 @@
 /**
- * Firebase configuration and initialization for Quest Board.
+ * Firebase configuration and initialization for LootBound.
  *
  * Initializes Firebase App, Firestore (with offline persistence),
  * Authentication, and Storage.

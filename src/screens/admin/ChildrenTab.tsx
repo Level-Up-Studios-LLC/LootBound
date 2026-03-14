@@ -186,7 +186,7 @@ export default function ChildrenTab(): React.ReactElement {
           message={
             'This permanently removes ' +
             removeChild.name +
-            ' from Quest Board, including all their points, tasks, streaks, and history.'
+            ' from LootBound, including all their points, tasks, streaks, and history.'
           }
           warning='This action cannot be undone.'
           confirmLabel='Remove'
