@@ -20,10 +20,11 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
   return (
     <div className='flex flex-col gap-4'>
       <div>
-        <label className='text-qslate font-semibold mb-2 block'>
+        <label htmlFor='tf-name' className='text-qslate font-semibold mb-2 block'>
           Mission Name
         </label>
         <input
+          id='tf-name'
           placeholder='Mission name'
           value={f.name}
           onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
@@ -33,8 +34,9 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         />
       </div>
       <div>
-        <label className='text-qslate font-semibold mb-2 block'>Rank</label>
+        <label htmlFor='tf-tier' className='text-qslate font-semibold mb-2 block'>Rank</label>
         <select
+          id='tf-tier'
           value={f.tier}
           onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
             u('tier', Number(e.target.value));
@@ -48,9 +50,10 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         </select>
       </div>
       <div className='flex gap-3'>
-        <div className='w-[50%]'>
-          <label className='text-qslate font-semibold mb-2 block'>Start</label>
+        <div className='w-1/2'>
+          <label htmlFor='tf-start' className='text-qslate font-semibold mb-2 block'>Start</label>
           <input
+            id='tf-start'
             type='time'
             value={f.windowStart}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
@@ -59,9 +62,10 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             className='quest-input'
           />
         </div>
-        <div className='w-[50%]'>
-          <label className='text-qslate font-semibold mb-2 block'>End</label>
+        <div className='w-1/2'>
+          <label htmlFor='tf-end' className='text-qslate font-semibold mb-2 block'>End</label>
           <input
+            id='tf-end'
             type='time'
             value={f.windowEnd}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
@@ -75,8 +79,9 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         <label className='text-qslate font-semibold mb-2 block'>
           Frequency
         </label>
-        <div className='flex gap-3'>
+        <div className='flex gap-3' role='radiogroup' aria-label='Frequency'>
           <button
+            aria-pressed={f.daily}
             onClick={function () {
               u('daily', true);
             }}
@@ -88,6 +93,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             Daily
           </button>
           <button
+            aria-pressed={!f.daily}
             onClick={function () {
               u('daily', false);
             }}
@@ -102,10 +108,11 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
       </div>
       {!f.daily && (
         <div>
-          <label className='text-qslate font-semibold mb-2 block'>
+          <label htmlFor='tf-dueday' className='text-qslate font-semibold mb-2 block'>
             Due Day
           </label>
           <select
+            id='tf-dueday'
             value={f.dueDay != null ? f.dueDay : ''}
             onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
               u(

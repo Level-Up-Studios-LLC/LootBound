@@ -45,10 +45,10 @@ export default function StoreScreen(): React.ReactElement | null {
             <div className='text-sm font-bold text-qslate mb-2'>
               Pending Approval
             </div>
-            {pendingR.map(function (p, i) {
+            {pendingR.map(function (p) {
               return (
                 <div
-                  key={i}
+                  key={p.rewardId + '-' + p.requestedAt}
                   className='flex justify-between bg-qyellow-dim rounded-badge px-3 py-2 mb-1 text-[13px] animate-fade-in'
                 >
                   <span>
@@ -147,12 +147,18 @@ export default function StoreScreen(): React.ReactElement | null {
           </div>
         )}
         {confirmR && (
-          <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'>
+          <div
+            className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='confirmR-title'
+            aria-describedby='confirmR-desc'
+          >
             <div className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto animate-slide-up'>
-              <div className='font-display text-xl font-bold mb-4'>
+              <div id='confirmR-title' className='font-display text-xl font-bold mb-4'>
                 {needsApproval(confirmR) ? 'Request Approval?' : 'Redeem?'}
               </div>
-              <div className='flex flex-col items-center gap-2 mb-5'>
+              <div id='confirmR-desc' className='flex flex-col items-center gap-2 mb-5'>
                 <div className='text-[32px]'>{confirmR.icon}</div>
                 <div className='text-base font-semibold'>{confirmR.name}</div>
                 <div className='text-qteal text-lg font-bold'>
@@ -174,9 +180,13 @@ export default function StoreScreen(): React.ReactElement | null {
                   Cancel
                 </button>
                 <button
-                  onClick={function () {
-                    requestRedemption(confirmR!);
-                    setConfirmR(null);
+                  onClick={async function () {
+                    try {
+                      await requestRedemption(confirmR!);
+                      setConfirmR(null);
+                    } catch (err) {
+                      console.error('Redemption failed:', err);
+                    }
                   }}
                   className='btn-primary rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body hover:brightness-110 transition-all'
                 >

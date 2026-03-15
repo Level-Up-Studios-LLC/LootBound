@@ -99,7 +99,7 @@ export default function KidCodeScreen(
         </button>
 
         <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
-          <FontAwesomeIcon icon={faAngleLeft} />
+          <FontAwesomeIcon icon={faAngleLeft} className='mr-1.5' />
           Back
         </button>
       </div>

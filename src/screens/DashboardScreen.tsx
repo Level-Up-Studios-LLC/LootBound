@@ -53,7 +53,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           </div>
         </div>
         {bedLock && (
-          <div className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'>
+          <div className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center' role='status' aria-live='polite'>
             <FontAwesomeIcon
               icon={faBed}
               style={FA_ICON_STYLE}

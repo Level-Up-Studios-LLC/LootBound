@@ -64,7 +64,7 @@ export default function FeedbackForm(
   }
 
   return (
-    <Modal title='Send Feedback' bgColor='bg-qyellow'>
+    <Modal title='Send Feedback'>
       <div className='mb-4'>
         <div className='text-qslate font-semibold mb-1'>Category</div>
         <div className='flex gap-2'>
@@ -73,6 +73,7 @@ export default function FeedbackForm(
             return (
               <button
                 key={cat.id}
+                aria-pressed={isActive}
                 onClick={function () {
                   setCategory(cat.id);
                 }}
@@ -94,8 +95,9 @@ export default function FeedbackForm(
         </div>
       </div>
       <div className='mb-4'>
-        <div className='text-qslate font-semibold mb-1'>Message</div>
+        <label htmlFor='fb-message' className='text-qslate font-semibold mb-1 block'>Message</label>
         <textarea
+          id='fb-message'
           value={message}
           onChange={function (e: React.ChangeEvent<HTMLTextAreaElement>) {
             setMessage(e.target.value);
@@ -104,27 +106,25 @@ export default function FeedbackForm(
           placeholder="Tell us what's on your mind..."
           rows={4}
           maxLength={1000}
-          className="quest-input w-full resize-none"
+          className='quest-input w-full resize-none'
         />
-        <div className="text-[11px] text-qmuted text-right mt-1">
+        <div className='text-[11px] text-qmuted text-right mt-1'>
           {message.length}/1000
         </div>
       </div>
-      {error && (
-        <div className="text-qcoral text-[13px] mb-3">{error}</div>
-      )}
-      <div className="flex gap-3 justify-end">
+      {error && <div className='text-qcoral text-[13px] mb-3'>{error}</div>}
+      <div className='flex gap-3 justify-end'>
         <button
           onClick={props.onClose}
           disabled={submitting}
-          className="bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body"
+          className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
           disabled={submitting || message.trim().length < 10}
-          className="bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-60"
+          className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-60'
         >
           <FontAwesomeIcon
             icon={submitting ? faSpinner : faPaperPlane}
