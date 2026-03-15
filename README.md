@@ -192,7 +192,7 @@ Firebase configuration is managed through `.firebaserc` and `firebase.json`.
 ## Project Structure
 
 ```text
-quest-board/
+LootBound/
   index.html
   package.json
   tsconfig.json
