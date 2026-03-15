@@ -275,11 +275,23 @@ export async function deleteChildData(
 // ---------------------------------------------------------------------------
 
 export async function deleteFamily(familyId: string, currentUid: string): Promise<void> {
-  // Read family code before deleting anything
+  // Read family code — check config doc first, then query familyCodes collection
   var configSnap = await getDoc(doc(db, 'families', familyId));
   var familyCode = configSnap.exists() && configSnap.data().familyCode
     ? configSnap.data().familyCode
     : null;
+
+  if (!familyCode) {
+    // Family code may not be on the config doc — query the familyCodes collection
+    var codeQuery = query(
+      collection(db, 'familyCodes'),
+      where('familyId', '==', familyId)
+    );
+    var codeSnap = await getDocs(codeQuery);
+    if (!codeSnap.empty) {
+      familyCode = codeSnap.docs[0].id;
+    }
+  }
 
   var batch = writeBatch(db);
 
