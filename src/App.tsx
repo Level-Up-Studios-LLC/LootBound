@@ -201,8 +201,8 @@ function AppRouter() {
     function () {
       if (auth.authUser && role === 'parent') {
         fsGetConfig(auth.authUser.familyId).then(function (cfg) {
-          var pin = cfg ? cfg.parentPin : '';
-          setParentPin(pin && pin !== '1234' ? pin : '');
+          var pin = cfg ? cfg.parentPin || '' : '';
+          setParentPin(pin);
         });
       }
     },
@@ -271,11 +271,14 @@ function AppRouter() {
       return (
         <CreatePinPrompt
           onCreated={function (newPin) {
-            fsSaveConfig(auth.authUser!.familyId, { parentPin: newPin });
-            setParentPin(newPin);
-            setShowCreatePin(false);
-            setParentVerified(true);
-            auth.clearJustSignedIn();
+            fsSaveConfig(auth.authUser!.familyId, { parentPin: newPin }).then(function () {
+              setParentPin(newPin);
+              setShowCreatePin(false);
+              setParentVerified(true);
+              auth.clearJustSignedIn();
+            }).catch(function (err) {
+              console.error('Failed to save PIN:', err);
+            });
           }}
           onSkip={function () {
             setShowCreatePin(false);

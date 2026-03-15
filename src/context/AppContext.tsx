@@ -282,13 +282,14 @@ export function AppProvider(props: {
         // between our initial read and now
         var freshCfg = await fsGetConfig(familyId);
         var defConfig = {
+          parentPin: '',
           tierPoints: Object.assign({}, DEF_TIER_PTS),
           approvalThreshold: 300,
           lastWeeklyReset: getWeekStart(),
         };
         // merge: true in fsSaveConfig preserves any existing parentPin
         await fsSaveConfig(familyId, defConfig);
-        fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : Object.assign({ parentPin: '1234' }, defConfig);
+        fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : defConfig;
       }
 
       if (fc && !(fc as any).familyCode) {
@@ -317,7 +318,7 @@ export function AppProvider(props: {
         children: fsChildren as Child[],
         tasks: tasksMap,
         rewards: fsRewards as Reward[],
-        parentPin: fc ? fc.parentPin : '1234',
+        parentPin: fc && fc.parentPin ? fc.parentPin : '',
         tierPoints:
           fc && fc.tierPoints
             ? fc.tierPoints

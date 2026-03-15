@@ -95,7 +95,7 @@ export default function SettingsTab(): React.ReactElement {
           <FontAwesomeIcon icon={faKey} style={FA_ICON_STYLE} />
           Parent PIN
         </div>
-        {(!cfg!.parentPin || cfg!.parentPin === '1234') && (
+        {!cfg!.parentPin && (
           <div className='text-[13px] text-qslate mb-2 px-4 py-3 bg-qcoral-dim rounded-badge leading-relaxed'>
             <FontAwesomeIcon
               icon={faTriangleExclamation}
