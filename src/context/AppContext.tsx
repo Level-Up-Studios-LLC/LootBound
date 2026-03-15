@@ -297,10 +297,28 @@ export function AppProvider(props: {
         // merge: true in fsSaveConfig preserves any existing parentPin
         await fsSaveConfig(familyId, defConfig);
         fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : Object.assign({ parentPin: '1234' }, defConfig);
+      } else if (fc) {
+        // Config doc exists (e.g. parentPin was saved during signup)
+        // but may be missing seed defaults — fill them in without
+        // overwriting fields that already have values.
+        var patches: Record<string, any> = {};
+        if (!(fc as any).tierConfig) {
+          patches.tierConfig = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
+        }
+        if (fc.approvalThreshold == null) {
+          patches.approvalThreshold = 300;
+        }
+        if (!fc.lastWeeklyReset) {
+          patches.lastWeeklyReset = getWeekStart();
+        }
+        if (Object.keys(patches).length > 0) {
+          await fsSaveConfig(familyId, patches);
+          fc = Object.assign({}, fc, patches);
+        }
       }
 
       // Migration: tierPoints (numeric) -> tierConfig (letter-based)
-      if (fc && !fc.tierConfig && (fc as any).tierPoints) {
+      if (fc && !(fc as any).tierConfig && (fc as any).tierPoints) {
         var oldTp = (fc as any).tierPoints;
         var numToLetter: Record<string, string> = { '1': 'D', '2': 'C', '3': 'B', '4': 'A' };
         var migrated: Record<string, { coins: number; xp: number }> = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
@@ -361,7 +379,7 @@ export function AppProvider(props: {
         children: fsChildren as Child[],
         tasks: tasksMap,
         rewards: fsRewards as Reward[],
-        parentPin: fc ? fc.parentPin : '1234',
+        parentPin: fc && fc.parentPin ? fc.parentPin : '',
         tierConfig:
           fc && (fc as any).tierConfig
             ? (fc as any).tierConfig

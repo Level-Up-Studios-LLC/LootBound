@@ -284,11 +284,12 @@ function AppRouter() {
       return (
         <CreatePinPrompt
           onCreated={function (newPin) {
-            fsSaveConfig(auth.authUser!.familyId, { parentPin: newPin });
-            setParentPin(newPin);
-            setShowCreatePin(false);
-            setParentVerified(true);
-            auth.clearJustSignedIn();
+            fsSaveConfig(auth.authUser!.familyId, { parentPin: newPin }).then(function () {
+              setParentPin(newPin);
+              setShowCreatePin(false);
+              setParentVerified(true);
+              auth.clearJustSignedIn();
+            });
           }}
           onSkip={function () {
             setShowCreatePin(false);
