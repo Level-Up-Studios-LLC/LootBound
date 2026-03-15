@@ -124,7 +124,7 @@ Coins and XP scale based on when a mission is completed relative to its time win
 | 15 days | +150 coins |
 | 30 days | +300 coins |
 
-> **Grace day:** Kids get 1 missed day per week without breaking their streak.
+> **Grace day:** Kids get 1 missed day per calendar week (resets on the configured weekly reset day, default Sunday) without breaking their streak. A second missed day in the same week resets the streak to 0.
 
 ---
 
@@ -161,13 +161,13 @@ Higher levels earn a percentage bonus on coins per mission, scaling linearly:
 
 | Level | Bonus |
 | --- | --- |
-| 1 | +0% |
+| 1 | +1% |
 | 5 | +6% |
 | 10 | +13% |
 | 15 | +19% |
 | 20 | +25% (cap) |
 
-Formula: `Math.min(Math.floor(level * 1.32), 25)` percent.
+Formula: `Math.min(Math.floor(level * 1.32), 25)` percent bonus on coins earned per mission.
 
 ---
 
