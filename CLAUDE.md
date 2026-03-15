@@ -1,269 +1,294 @@
 # CLAUDE.md — LootBound
 
+## Memory Maintenance
+
+At the end of each conversation (or when significant work is completed), review and update your memory files to capture important decisions, new patterns, version changes, or user feedback. Check existing memories for accuracy and update any that have become outdated.
+
 ## Project Overview
 
-LootBound is a gamified chore/task reward system for children, built as a React web app. It was designed for the Johnson family (Marc and Pheline) to help their kids develop responsibility and good habits through a video-game-inspired point system.
+LootBound is a gamified chore/task reward system for children, built as a React web app. It was designed for the Johnson family (Marc and Pheline) to help their kids develop responsibility and good habits through a video-game-inspired coin + XP system.
 
-The app runs on iPads and uses localStorage for persistence. The long-term plan is to deploy it as a PWA and eventually migrate storage to a real backend (Supabase, Firebase, etc.) for multi-device sync.
+The app runs on iPads and mobile devices, uses Firebase (Firestore + Storage + Auth) for persistence and multi-device sync, and is deployed via Firebase Hosting.
 
 ## Tech Stack
 
 - **Framework:** React 18 (functional components, hooks only)
-- **Build Tool:** Vite 6
-- **Storage:** localStorage (adapted from Claude artifact `window.storage` API)
-- **Styling:** Inline styles via JS objects (no CSS files, no Tailwind)
-- **Fonts:** Google Fonts — Fredoka (headings/display), Nunito (body)
-- **Deployment Target:** iPad Safari (designed as a mobile-first 480px max-width app)
-
-## File Structure
-
-```
-lootbound/
-├── index.html              # Entry HTML with mobile meta tags
-├── package.json            # Dependencies and scripts
-├── vite.config.js          # Vite config (port 3000, auto-open)
-├── .gitignore
-├── CLAUDE.md               # This file — project context for Claude Code
-├── public/                 # Static assets (empty for now)
-└── src/
-    ├── main.jsx            # React DOM entry point
-    ├── App.jsx             # Main application component (all-in-one)
-    └── storage.js          # localStorage adapter (async API)
-```
+- **Build Tool:** Vite 7
+- **Language:** TypeScript (strict mode)
+- **Auth:** Firebase Authentication (email/password for parents, anonymous for kids)
+- **Database:** Cloud Firestore (real-time sync via onSnapshot listeners)
+- **File Storage:** Firebase Storage (photo proof uploads)
+- **Hosting:** Firebase Hosting
+- **Styling:** Tailwind CSS v4
+- **Icons:** FontAwesome Pro 6 (duotone + classic solid, registered in `src/fa.ts`)
+- **Error Tracking:** Sentry
+- **Fonts:** Google Fonts — Fredoka (display), Nunito (body)
+- **Deployment Target:** iPad Safari (mobile-first 480px max-width app)
 
 ## Running the Project
 
 ```bash
 npm install
-npm run dev       # Starts dev server on http://localhost:3000
-npm run build     # Production build to dist/
-npm run preview   # Preview production build
+npm run dev          # Starts dev server on http://localhost:3000
+npm run build        # Production build to dist/
+npm run preview      # Preview production build
+npm run type-check   # TypeScript strict checking
+npm run format       # Prettier formatting
 ```
 
-## Default Parent PIN: 1234
+Always run `npm run type-check` after TypeScript changes before committing.
+
+Copy `.env.example` to `.env` and fill in Firebase config values.
 
 ---
 
 ## Core Concepts
 
-### Point System
+### Tier System (S-F Letter Grades)
 
-Tasks earn points based on their assigned tier. Points scale based on when the task is completed relative to its time window:
+Missions are assigned a tier from S (hardest) to F (easiest). Each tier has configurable coin and XP values stored in `Config.tierConfig`:
+
+| Tier | Coins | XP  | Description                     |
+| ---- | ----- | --- | ------------------------------- |
+| S    | 50    | 40  | Epic — rare, high-effort        |
+| A    | 30    | 25  | Hard — real effort required     |
+| B    | 20    | 18  | Medium — core daily chores      |
+| C    | 12    | 12  | Light — quick responsibilities  |
+| D    | 7     | 7   | Easy — simple habits            |
+| F    | 3     | 3   | Trivial — participation-level   |
+
+Parents can change tier coin/XP values in Settings.
+
+### Timing Multipliers
+
+Coins and XP scale based on when a mission is completed relative to its time window:
 
 | Timing  | Multiplier | Description                       |
 | ------- | ---------- | --------------------------------- |
-| Early   | x 1.25     | Completed before the window opens |
-| On Time | x 1.0      | Completed within the window       |
-| Late    | x 0.5      | Completed after the window closes |
-| Missed  | -Base      | Not completed by bedtime (9 PM)   |
+| Early   | x1.25      | Completed before the window opens |
+| On Time | x1.0       | Completed within the window       |
+| Late    | x0.5       | Completed after the window closes |
+| Missed  | -Coins, 0 XP | Not completed by bedtime       |
 
-### Tier System
+**Key rule: XP never goes negative.** Missed tasks deduct coins but award 0 XP. Rejected tasks deduct both coins and XP (clamped to 0).
 
-Tasks are assigned a tier (1–4). Each tier has a configurable base point value. Defaults:
+### XP & Leveling System (20 Levels)
 
-| Tier | Default Points |
-| ---- | -------------- |
-| 1    | 5 pts          |
-| 2    | 10 pts         |
-| 3    | 20 pts         |
-| 4    | 30 pts         |
+Kids earn XP alongside coins. XP feeds into a 20-level progression system.
 
-Parents can change tier point values in Settings. When a parent assigns a task a tier, the points are derived automatically — there is no separate points field.
+**Level titles:** Rookie (1-3) → Adventurer (4-6) → Guardian (7-9) → Champion (10-12) → Hero (13-15) → Legend (16-18) → Mythic (19-20)
 
-### Time Windows
+**Level coin bonus:** Higher levels earn a percentage bonus on coins per mission: `Math.min(Math.floor(level * 1.32), 25)` percent (0% at Lv.1, 25% at Lv.20).
 
-Each task has a start and end time defining its "on-time" window. For example, "Make bed" might be 7:00 AM – 9:00 AM. Completing before 7 AM = early bonus. Completing after 9 AM = late penalty. Not done by 9 PM bedtime = missed.
+**Streak XP multiplier (capped at 2.0x):**
 
-### Recurring Tasks
-
-- **Daily tasks**: Repeat every day automatically
-- **Weekly tasks**: Repeat on their assigned day of the week (e.g., "Clean room" every Saturday)
-
-Task definitions persist in config. Only the completion log resets.
-
-### Bedtime Cutoff
-
-All task windows hard-cap at 9:00 PM. After bedtime:
-- The app shows a red "Tasks locked" banner
-- Incomplete tasks auto-mark as missed with full point deductions
-- The "Done" button is disabled
-- Streaks break if any tasks were missed
-
-### Weekly Reset
-
-On Sunday at midnight (checked on first load each week):
-- All task completion logs clear
-- Points, streaks, and redemption history carry over
-- The `lastWeeklyReset` field in config prevents double-resets
+| Streak     | Multiplier |
+| ---------- | ---------- |
+| 0-2 days   | 1.0x       |
+| 3-6 days   | 1.1x       |
+| 7-13 days  | 1.25x      |
+| 14-20 days | 1.4x       |
+| 21-29 days | 1.6x       |
+| 30+ days   | 2.0x (cap) |
 
 ### Streak System
 
 Completing ALL daily tasks on time (or early) earns a perfect day. Consecutive perfect days build a streak.
 
-| Streak  | Bonus    |
-| ------- | -------- |
-| 3 days  | +20 pts  |
-| 7 days  | +75 pts  |
-| 30 days | +300 pts |
+| Streak  | Bonus      |
+| ------- | ---------- |
+| 3 days  | +20 coins  |
+| 7 days  | +75 coins  |
+| 15 days | +150 coins |
+| 30 days | +300 coins |
 
-A missed task (not late — missed) breaks the streak. The app tracks both current streak and all-time best.
+**Grace day:** Kids get 1 missed day per week without breaking their streak. Tracked via `missedDaysThisWeek` (resets on weekly reset).
+
+### Time Windows
+
+Each task has a start and end time defining its "on-time" window. Completing before start = early bonus. Completing after end = late penalty. Not done by bedtime = missed.
+
+### Recurring Tasks
+
+- **Daily tasks**: Repeat every day automatically
+- **Weekly tasks**: Repeat on their assigned day of the week
+
+Task definitions persist in config. Only the completion log resets.
+
+### Bedtime Cutoff
+
+Configurable per family (default 9:00 PM). After bedtime:
+- The app shows a "missions locked" banner with the configured time
+- Incomplete tasks auto-mark as missed (coins deducted, 0 XP)
+- Grace day logic applies (1 missed day/week doesn't break streak)
+
+### Weekly Reset
+
+Configurable reset day (default Sunday). On reset:
+- All task completion logs clear
+- Coins, XP, levels, streaks, and redemption history carry over
+- `missedDaysThisWeek` resets to 0
+- `lastWeeklyReset` field prevents double-resets
 
 ---
 
-## Features Implemented (v5)
+## Features
 
 ### Kid Features
 
-- **Login screen** with profile cards, optional 4-digit PIN per child
-- **Dashboard** — today's progress %, streak, points badge, "Up Next" task list
-- **Tasks screen** — full daily quest list with status badges, photo capture on completion, point breakdown per task
-- **Scoreboard** — dedicated tab ranking all children by points with stats (today's completion, streak, best streak), crown icon for leader
-- **Reward Store** — browse rewards, see limits and availability, redeem or request approval, pending approval status, redemption history
+- **Dashboard (HQ)** — progress %, streak, coins badge, XP progress bar with level + title, streak multiplier indicator, "Up Next" task list
+- **Missions** — daily mission list with colored tier badges (S-F), status indicators, time windows, coin + XP breakdowns, photo capture on completion
+- **Leaderboard** — multi-kid: ranked by perfect days with "Top Adventurer" highlight, level titles; solo kid: personal stats view with milestones
+- **Loot Shop** — browse rewards, see limits and availability, redeem or request approval, pending status, redemption history with double-submit guard
+- **PIN Protection** — optional per-child 4-digit PIN
 
 ### Parent Features
 
-- **Overview** — all children at a glance with points, today's progress, streak, quick +/- point adjustment buttons
-- **Approvals** — queue for high-value or flagged redemptions, approve/deny each
-- **Review** — see all completed tasks for today with photo proof, reject tasks that don't meet standards (sends back for redo, deducts points)
-- **Tasks** — add/edit/delete tasks per child with tier, time window, daily/weekly toggle, day-of-week selector for weekly tasks
-- **Rewards** — full CRUD for rewards with cost, icon, active/inactive toggle, redemption limits (per day, per week, or none), require-approval flag
-- **Children** — add new children (name, age, avatar, color), remove children (with confirmation), manage PINs per child
-- **Settings** — edit tier point values, set approval threshold, change parent PIN, system info display, reset all data
+- **Overview** — all children with coins, levels, progress, quick +/- adjustments
+- **Approvals** — queue for high-value redemptions
+- **Review** — completed missions with photo proof; reject sub-standard work (deducts coins + XP, clamped to 0)
+- **Mission Management** — CRUD per child with tier (S-F), time windows, daily/weekly scheduling
+- **Loot Management** — CRUD for rewards with cost, icon, limits, approval flags
+- **Children Management** — add/remove children, manage profiles and PINs
+- **Settings** — tier coin/XP values, approval threshold, parent PIN, bedtime, weekly reset day, cooldown
+- **Feedback** — in-app feedback submission
 
 ### Abuse Prevention
 
 | Guard                     | What it prevents                                |
 | ------------------------- | ----------------------------------------------- |
-| 60-second task cooldown   | Rapid-fire spam completing tasks                |
+| Configurable cooldown     | Rapid-fire spam completing tasks                |
 | Camera-only photo capture | Uploading old/fake photos from gallery          |
-| Per-reward limits         | Burning points on the same reward repeatedly    |
+| Per-reward limits         | Burning coins on the same reward repeatedly     |
 | Parent approval queue     | High-value redemptions without oversight        |
-| Approval threshold        | Auto-flags rewards above X points (default 300) |
+| Configurable threshold    | Auto-flags rewards above X coins                |
 | Kid PINs                  | Sibling tampering / cross-account access        |
 | Bedtime lockout           | Late-night task manipulation                    |
 | Full audit log            | All redemptions logged with timestamps          |
+| XP multiplier cap (2.0x)  | Prevents streak abuse of XP system              |
 
 ---
 
 ## Data Architecture
 
-### Config (stored at key `qb-cfg-v5`)
+### Firestore Collections
+
+```text
+families/{familyId}              — Family config
+  /children/{childId}            — Child profiles
+  /tasks/{taskId}                — Mission definitions (includes childId field)
+  /rewards/{rewardId}            — Reward definitions
+  /childData/{childId}           — Runtime data (coins, XP, level, streaks, logs)
+
+parentMembers/{uid}              — Maps parent auth UIDs to family IDs
+familyCodes/{code}               — Maps family codes to family IDs
+feedback/{docId}                 — User-submitted feedback
+```
+
+### Family Config (Firestore document)
 
 ```js
 {
-  children: [
-    { id: "donovan", name: "Donovan", age: 12, avatar: "🎮", color: "#3b82f6", pin: null },
-    { id: "imani", name: "Imani", age: 6, avatar: "🌟", color: "#ec4899", pin: null },
-  ],
-  tasks: {
-    donovan: [ { id, name, tier, windowStart, windowEnd, daily, dueDay }, ... ],
-    imani: [ ... ],
+  parentPin: "",                    // Empty string = no PIN set
+  tierConfig: {
+    S: { coins: 50, xp: 40 },
+    A: { coins: 30, xp: 25 },
+    B: { coins: 20, xp: 18 },
+    C: { coins: 12, xp: 12 },
+    D: { coins: 7, xp: 7 },
+    F: { coins: 3, xp: 3 },
   },
-  rewards: [
-    { id, name, cost, icon, active, limitType, limitMax, requireApproval },
-  ],
-  parentPin: "1234",
-  tierPoints: { 1: 5, 2: 10, 3: 20, 4: 30 },
   approvalThreshold: 300,
-  lastWeeklyReset: "2026-03-08",  // ISO date string of last Sunday
+  lastWeeklyReset: "2026-03-08",
+  familyCode: "ABC123",
+  bedtime: 1260,                   // Minutes from midnight (21:00 = 1260)
+  weeklyResetDay: 0,               // 0=Sunday
+  cooldown: 60,                    // Seconds between task completions
 }
 ```
 
-### Per-Child Data (stored at key `qb-child-{id}-v5`)
+### Per-Child Data (Firestore document)
 
 ```js
 {
-  points: 0,
+  points: 0,                       // Coin balance
+  xp: 0,                           // Total XP earned
+  level: 1,                        // Current level (1-20)
   streak: 0,
   bestStreak: 0,
-  lastPerfectDate: null,       // ISO date string
-  lastTaskTime: 0,             // Unix seconds (for cooldown)
+  missedDaysThisWeek: 0,           // For grace day tracking
+  lastPerfectDate: null,
+  lastTaskTime: 0,                 // Unix seconds (cooldown)
   taskLog: {
     "2026-03-11": {
-      "d1": { completedAt: 540, status: "ontime", points: 10, photo: "data:image/jpeg;base64,...", rejected: false },
-      "_bedtimeApplied": true,  // Flag to prevent double-penalizing
+      "taskId": { completedAt: 540, status: "ontime", points: 10, xp: 12, photo: "https://...", rejected: false },
+      "_bedtimeApplied": true,
     },
   },
-  redemptions: [
-    { rewardId: "r1", name: "15 min extra screen time", cost: 50, date: "2026-03-11" },
-  ],
-  pendingRedemptions: [
-    { rewardId: "r7", name: "Big reward", cost: 500, icon: "🏆", date: "2026-03-11", requestedAt: 1741700000000 },
-  ],
+  redemptions: [...],
+  pendingRedemptions: [...],
 }
 ```
 
-### Storage Key Scheme
+### Data Migration
 
-- `qb-cfg-v5` — app config (children, tasks, rewards, settings)
-- `qb-child-{id}-v5` — per-child data (points, logs, redemptions)
-
-The `v5` suffix is a schema version. If you make breaking changes to the data shape, bump this to avoid corrupting old data.
+When AppContext loads config, it checks for the old numeric `tierPoints` format and auto-migrates to `tierConfig` with letter-grade tiers. Task tiers are migrated from numbers (1→D, 2→C, 3→B, 4→A) with S and F added as defaults. Migration is idempotent — config is only saved after all task migrations succeed.
 
 ---
 
-## Design Decisions
+## Auth Flow
 
-- **Single-file component (App.jsx):** The entire app lives in one file. This was intentional for the prototype phase. The next step is to break it into components: LoginScreen, Dashboard, TasksScreen, ScoreBoard, Store, AdminPanel, etc.
-
-- **Inline styles:** No CSS framework. All styles are defined in the `ns` object at the bottom of App.jsx. This kept the prototype self-contained but should migrate to CSS modules or Tailwind when the codebase grows.
-
-- **Async storage API:** Even though localStorage is synchronous, the storage adapter uses async functions. This makes the eventual migration to a real database seamless — swap out `storage.js` and nothing else changes.
-
-- **Camera capture:** The file input uses `capture="environment"` to force the device camera on iPads/phones. This prevents kids from picking old photos from their camera roll. On desktop browsers, it falls back to a normal file picker.
-
-- **No routing library:** Screen navigation uses a simple `screen` state variable. React Router would be the right move once the app grows.
-
----
-
-## Memory Maintenance
-
-At the end of each conversation (or when significant work is completed), review and update your memory files to capture important decisions, new patterns, version changes, or user feedback. Check existing memories for accuracy and update any that have become outdated.
-
----
-
-## What's Next (Roadmap)
-
-### Immediate priorities
-- [ ] Break App.jsx into separate component files
-- [ ] Add CSS modules or Tailwind for styling
-- [ ] Add React Router for navigation
-- [ ] PWA manifest + service worker for offline support and "Add to Home Screen"
-- [ ] Add Melody (age 2) as a child when ready
-
-### Medium-term
-- [ ] Backend storage (Supabase or Firebase) for multi-device sync
-- [ ] Push notifications for task reminders
-- [ ] Weekly summary report for parents (email or in-app)
-- [ ] Task history / points-over-time chart
-- [ ] Custom reward images instead of just emoji icons
-- [ ] Configurable bedtime per child (not just global 9 PM)
-- [ ] Configurable weekly reset day
-
-### Nice-to-have
-- [ ] Achievement badges (e.g., "First 100 pts", "7-day streak")
-- [ ] Sound effects / animations on task completion
-- [ ] Dark/light theme toggle
-- [ ] Multiple parent accounts with separate PINs
-- [ ] Export data as CSV/JSON from admin
+1. **Role Selection** — "I'm a Parent" or "I'm a Kid"
+2. **Parent Flow** — Sign up/in with email/password → Optional PIN creation → App
+3. **Kid Flow** — Enter family code → Select profile → Enter/create PIN → App
+4. **PIN semantics** — Empty string = no PIN set. Any non-empty value is a valid PIN.
+5. **Family code** — 6-character alphanumeric, persisted in localStorage for kid devices
 
 ---
 
 ## Conventions
 
-- **No arrow functions in component body:** Regular `function` declarations are used throughout to avoid minification issues with React's hook ordering detection.
-- **Object.assign over spread:** The component uses `Object.assign({}, obj, {key: val})` instead of `{...obj, key: val}` for broader compatibility.
-- **Deep clone before mutation:** User data is always `JSON.parse(JSON.stringify(data))` before modification to prevent reference-sharing bugs.
-- **Storage keys are prefixed and versioned:** Always use the `qb-` prefix and `-v5` suffix pattern.
+- **`var` declarations only** — no `let` or `const` in component bodies
+- **`Object.assign` over spread** — `Object.assign({}, obj, { key: val })` not `{ ...obj, key: val }`
+- **`function` declarations** — no arrow functions in component bodies
+- **Deep clone before mutation** — `JSON.parse(JSON.stringify(data))`
+- **useState pattern** — `var _s = useState(x), val = _s[0], setVal = _s[1]`
+- **FontAwesome icons** — must be imported in `src/fa.ts` and added to `library.add()`
+- **Firestore writes** — always use `{ merge: true }` via `fsSaveConfig`/`fsSaveChild` etc.
+- **No Co-Authored-By** — do not add "Co-Authored-By: Claude" to commit messages
+
+### Branch Workflow
+
+Always checkout the correct branch before making changes:
+
+| Branch           | Purpose                           |
+| ---------------- | --------------------------------- |
+| `feature`        | New features                      |
+| `bugfix`         | Non-critical bug fixes            |
+| `hotfix`         | Critical fixes from main          |
+| `release`        | Preparing production releases     |
+| `docs`           | Documentation                     |
+| `refactor`       | Code restructuring                |
+| `ui-adjustments` | UI polish and tweaks              |
+
+GitHub repo: https://github.com/Level-Up-Studios-LLC/LootBound.git
+
+### Versioning
+
+Uses semantic versioning (SemVer). Update `package.json` version and CHANGELOG.md for each release.
+
+- **Patch** (X.X.+1) — Bug fixes
+- **Minor** (X.+1.0) — New features, backward compatible
+- **Major** (+1.0.0) — Breaking changes
 
 ---
 
 ## Family Context
 
-- **Marc** (Dad) — owner of Level Up Studios LLC, Senior Web Developer at Guardian Recovery Network. Built LootBound as a family project.
+- **Marc** (Dad) — owner of Level Up Studios LLC, Senior Web Developer. Built LootBound as a family project.
 - **Pheline** (Mom) — co-parent, both parents share the admin PIN.
-- **Donovan** (age 12) — pre-loaded with age-appropriate tasks including homework, reading, shower, chores.
-- **Imani** (age 6) — pre-loaded with simpler tasks like picking up toys, putting shoes away, practicing reading.
-- **Melody** (age 2) — not yet in the system. Will be added when she's ready for structured tasks.
+- **Donovan** (age 12) — age-appropriate tasks including homework, reading, chores.
+- **Imani** (age 6) — simpler tasks like picking up toys, putting shoes away.
+- **Melody** (age 2) — not yet in the system. Will be added when ready.
 
-The app is designed to run on iPads — each kid logs into their own profile on a shared family tablet or their personal device. PINs prevent kids from accessing each other's profiles.
+The app is designed to run on iPads — each kid logs into their own profile on a shared family tablet or personal device.
