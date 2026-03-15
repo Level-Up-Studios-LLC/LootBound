@@ -1,10 +1,11 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBed, faCamera } from '../fa.ts';
+import { faBed, faCamera, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV, SL, DAYS_SHORT, TIER_COLORS, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
+import EmptyState from '../components/ui/EmptyState.tsx';
 import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
@@ -31,21 +32,30 @@ export default function TasksScreen(): React.ReactElement | null {
   });
 
   return (
-    <div className='p-4 pb-20'>
-      <div className='font-display text-2xl font-bold mb-4 text-qslate'>
-        Today's Missions
-      </div>
-      {bedLock && (
-        <div className='bg-qcoral-dim rounded-badge px-4 py-3 mb-4 text-[13px] text-qcoral text-center'>
-          <FontAwesomeIcon
-            icon={faBed}
-            style={FA_ICON_STYLE}
-            className='mr-1.5'
-          />
-          Bedtime cutoff passed. Incomplete missions marked as missed.
+    <div className='pb-20'>
+      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+        <div className='font-display text-2xl font-bold text-qslate'>
+          Today's Missions
         </div>
-      )}
-      <div className='flex flex-col gap-3'>
+        {bedLock && (
+          <div className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'>
+            <FontAwesomeIcon
+              icon={faBed}
+              style={FA_ICON_STYLE}
+              className='mr-1.5'
+            />
+            Bedtime cutoff passed. Incomplete missions marked as missed.
+          </div>
+        )}
+      </div>
+      <div className='px-4 pt-3 flex flex-col gap-3'>
+        {todayTasks.length === 0 && (
+          <EmptyState
+            icon={faGamepadModern}
+            title='No missions today!'
+            description='Enjoy your free time. Check back tomorrow for new missions!'
+          />
+        )}
         {sorted.map(function (t, idx) {
           var entry = tLog[t.id];
           var isRej = entry && entry.rejected;

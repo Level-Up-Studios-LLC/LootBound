@@ -162,7 +162,8 @@ export default function SettingsTab(): React.ReactElement {
           Bedtime Cutoff
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Missions lock after this time. Incomplete missions are marked as missed.
+          Missions lock after this time. Incomplete missions are marked as
+          missed.
         </div>
         <div className='flex gap-3 items-center'>
           <input
@@ -172,9 +173,7 @@ export default function SettingsTab(): React.ReactElement {
               var h = Math.floor(bt / 60);
               var m = bt % 60;
               return (
-                String(h).padStart(2, '0') +
-                ':' +
-                String(m).padStart(2, '0')
+                String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0')
               );
             })()}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
@@ -241,8 +240,9 @@ export default function SettingsTab(): React.ReactElement {
         </div>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
-        <div className='text-xs text-qslate'>
-          Missions are recurring. Daily repeats every day, weekly on assigned day.
+        <div className='text-xs text-qmuted'>
+          Missions are recurring. Daily repeats every day, weekly on assigned
+          day.
         </div>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
@@ -265,8 +265,8 @@ export default function SettingsTab(): React.ReactElement {
       {showFeedback && (
         <FeedbackForm
           familyId={ctx.familyId}
-          userRole="parent"
-          userName="Parent"
+          userRole='parent'
+          userName='Parent'
           onClose={function () {
             setShowFeedback(false);
           }}
@@ -295,11 +295,11 @@ export default function SettingsTab(): React.ReactElement {
       </div>
       {showResetConfirm && (
         <ConfirmDialog
-          title="Reset All Data?"
-          message="This will permanently erase all coins, streaks, mission history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain."
-          warning="This action cannot be undone."
-          confirmLabel="Yes, Reset Everything"
-          confirmColor="bg-qcoral"
+          title='Reset All Data?'
+          message='This will permanently erase all coins, streaks, mission history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain.'
+          warning='This action cannot be undone.'
+          confirmLabel='Yes, Reset Everything'
+          confirmColor='bg-qcoral'
           onConfirm={function () {
             setShowResetConfirm(false);
             ctx.resetAll();

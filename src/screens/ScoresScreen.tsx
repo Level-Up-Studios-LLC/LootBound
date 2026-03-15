@@ -180,11 +180,13 @@ export default function ScoresScreen(): React.ReactElement | null {
   });
 
   return (
-    <div className='p-4 pb-20'>
-      <div className='font-display text-2xl font-bold mb-4 text-qslate'>
-        Leaderboard
+    <div className='pb-20'>
+      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+        <div className='font-display text-2xl font-bold text-qslate'>
+          Leaderboard
+        </div>
       </div>
-      <div className='flex flex-col gap-4'>
+      <div className='px-4 pt-3 flex flex-col gap-4'>
         {sorted.map(function (c, idx) {
           var udata = allU[c.id] || freshUser();
           var tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);

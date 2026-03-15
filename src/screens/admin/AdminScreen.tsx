@@ -35,24 +35,58 @@ export default function AdminScreen(): React.ReactElement {
   ];
 
   function handleCopyCode(): void {
-    if (cfg && cfg.familyCode) {
-      navigator.clipboard.writeText(cfg.familyCode).then(function () {
-        setCodeCopied(true);
-        ctx.notify('Copied!');
-        setTimeout(function () {
-          setCodeCopied(false);
-        }, 2000);
+    if (!cfg || !cfg.familyCode) return;
+    var text = cfg.familyCode;
+
+    function onSuccess() {
+      setCodeCopied(true);
+      ctx.notify('Copied!');
+      setTimeout(function () {
+        setCodeCopied(false);
+      }, 2000);
+    }
+
+    // Try modern clipboard API first, fall back to execCommand for iOS Safari
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
+        fallbackCopy(text, onSuccess);
       });
+    } else {
+      fallbackCopy(text, onSuccess);
+    }
+  }
+
+  function fallbackCopy(text: string, cb: () => void): void {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      var ok = document.execCommand('copy');
+      if (ok) {
+        cb();
+      } else {
+        ctx.notify('Long-press the code to copy', 'error');
+      }
+    } catch (_e) {
+      ctx.notify('Long-press the code to copy', 'error');
+    } finally {
+      document.body.removeChild(ta);
     }
   }
 
   return (
-    <div className='p-4 pb-[72px]'>
-      <div className='flex justify-between items-center mb-4'>
-        <div className='font-display text-2xl font-bold text-qslate'>
-          Parent Dashboard
-        </div>
-        <HamburgerMenu
+    <div className='pb-[72px]'>
+      <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+        <div className='flex justify-between items-center mb-3'>
+          <div className='font-display text-2xl font-bold text-qslate'>
+            Parent Dashboard
+          </div>
+          <HamburgerMenu
           items={[
             {
               id: 'children',
@@ -87,7 +121,7 @@ export default function AdminScreen(): React.ReactElement {
         />
       </div>
       {cfg && cfg.familyCode && (
-        <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3 mb-4'>
+        <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3'>
           <div className='flex items-center gap-1.5'>
             <span className='font-semibold'>Family Code</span>
             <div className='relative group'>
@@ -111,8 +145,10 @@ export default function AdminScreen(): React.ReactElement {
           </div>
         </div>
       )}
+      </div>
 
       {/* Tab Content */}
+      <div className='px-4 pt-3'>
       {atab === 'overview' && <OverviewTab onSwitchTab={setAtab} />}
       {atab === 'approvals' && <ApprovalsTab />}
       {atab === 'review' && <ReviewTab />}
@@ -120,6 +156,7 @@ export default function AdminScreen(): React.ReactElement {
       {atab === 'rewards' && <RewardsTab />}
       {atab === 'children' && <ChildrenTab />}
       {atab === 'settings' && <SettingsTab />}
+      </div>
 
       {/* Bottom Navigation */}
       <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>

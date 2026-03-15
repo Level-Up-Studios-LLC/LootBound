@@ -16,7 +16,7 @@ export default function AddChildForm(
   return (
     <div className='flex flex-col gap-4'>
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Name</label>
+        <label className='text-qslate font-semibold mb-1 block'>Name</label>
         <input
           value={f.name}
           onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
@@ -27,7 +27,7 @@ export default function AddChildForm(
         />
       </div>
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Age</label>
+        <label className='text-qslate font-semibold mb-1 block'>Age</label>
         <input
           type='number'
           value={f.age}
@@ -41,7 +41,7 @@ export default function AddChildForm(
         />
       </div>
       <div>
-        <label className='text-xs text-qmuted mb-1 block'>Avatar</label>
+        <label className='text-qslate font-semibold mb-1 block'>Avatar</label>
         <div className='flex gap-1 flex-wrap'>
           {AVATARS.map(function (a) {
             return (
@@ -62,7 +62,7 @@ export default function AddChildForm(
         </div>
       </div>
       <div>
-        <label className='text-xs text-qmuted mb-2 block'>Color</label>
+        <label className='text-qslate font-semibold mb-2 block'>Color</label>
         <div className='flex gap-2 flex-wrap'>
           {COLORS.map(function (cl) {
             return (
@@ -75,9 +75,7 @@ export default function AddChildForm(
                 style={{
                   background: cl,
                   boxShadow:
-                    f.color === cl
-                      ? '0 0 0 3px #fff, 0 0 0 5px ' + cl
-                      : 'none',
+                    f.color === cl ? '0 0 0 3px #fff, 0 0 0 5px ' + cl : 'none',
                 }}
               />
             );

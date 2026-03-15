@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPartyHorn } from '../fa.ts';
+import { faPartyHorn, faAngleLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 
 interface AuthScreenProps {
@@ -124,10 +124,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   return (
     <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
+      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
       </div>
-      <div className='text-sm text-qmuted mb-10'>
+      <div className='text-sm text-qmuted mb-5'>
         {mode === 'signin'
           ? 'Sign in with your family account'
           : 'Create a new family account'}
@@ -135,7 +135,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
         <div>
-          <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Email
           </label>
           <input
@@ -152,7 +152,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </div>
 
         <div>
-          <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Password
           </label>
           <input
@@ -172,7 +172,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
         {mode === 'signup' && (
           <div>
-            <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
               Confirm Password
             </label>
             <input
@@ -191,11 +191,8 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
         {mode === 'signup' && (
           <div>
-            <label className='block text-xs text-qmuted font-semibold mb-1.5 tracking-wide uppercase'>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
               Family Code{' '}
-              <span className='text-qdim normal-case'>
-                (optional — enter to join an existing family)
-              </span>
             </label>
             <input
               type='text'
@@ -208,6 +205,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               autoComplete='off'
               className='quest-input tracking-[4px] font-semibold'
             />
+            <span className='text-qmuted text-xs font-normal'>
+              (optional — enter to join an existing family)
+            </span>
           </div>
         )}
 
@@ -238,6 +238,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </button>
 
         <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+          <FontAwesomeIcon icon={faAngleLeft} />
           Back
         </button>
       </div>

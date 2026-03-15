@@ -1,9 +1,10 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThumbsUp, faThumbsDown } from '../../fa.ts';
+import { faThumbsUp, faThumbsDown, faCircleCheck } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { altBg } from '../../constants.ts';
 import { freshUser } from '../../utils.ts';
+import EmptyState from '../../components/ui/EmptyState.tsx';
 import type { ApprovalItem } from '../../types.ts';
 
 export default function ApprovalsTab(): React.ReactElement {
@@ -27,9 +28,11 @@ export default function ApprovalsTab(): React.ReactElement {
         deduct coins and grant the loot, or deny to cancel.
       </div>
       {items.length === 0 && (
-        <div className='text-center p-5 text-qmuted'>
-          No pending approvals.
-        </div>
+        <EmptyState
+          icon={faCircleCheck}
+          title='All clear!'
+          description='No pending approvals right now. When children redeem loot that requires approval, requests will appear here.'
+        />
       )}
       {items.map(function (item, i) {
         return (

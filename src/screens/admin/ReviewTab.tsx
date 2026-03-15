@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye } from '../../fa.ts';
+import { faEye, faMagnifyingGlass } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { SL, altBg } from '../../constants.ts';
 import { freshUser, getToday } from '../../utils.ts';
 import Badge from '../../components/Badge.tsx';
 import Modal from '../../components/ui/Modal.tsx';
+import EmptyState from '../../components/ui/EmptyState.tsx';
 import type { StatusLabel, ReviewTaskItem } from '../../types.ts';
 
 export default function ReviewTab(): React.ReactElement {
@@ -38,9 +39,11 @@ export default function ReviewTab(): React.ReactElement {
         child to redo.
       </div>
       {items.length === 0 && (
-        <div className='text-center p-5 text-qmuted'>
-          No missions to review today.
-        </div>
+        <EmptyState
+          icon={faMagnifyingGlass}
+          title='Nothing to review'
+          description='No completed missions to review today. Once children complete missions, they will show up here with photo proof.'
+        />
       )}
       {items.map(function (item, ri) {
         return (

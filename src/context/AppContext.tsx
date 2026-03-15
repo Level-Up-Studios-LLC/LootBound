@@ -286,14 +286,17 @@ export function AppProvider(props: {
 
       var needsSeed = !fc && fsChildren.length === 0;
       if (needsSeed) {
+        // Re-read config in case CreatePinPrompt wrote parentPin
+        // between our initial read and now
+        var freshCfg = await fsGetConfig(familyId);
         var defConfig = {
-          parentPin: '1234',
           tierConfig: JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
           approvalThreshold: 300,
           lastWeeklyReset: getWeekStart(),
         };
+        // merge: true in fsSaveConfig preserves any existing parentPin
         await fsSaveConfig(familyId, defConfig);
-        fc = defConfig;
+        fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : Object.assign({ parentPin: '1234' }, defConfig);
       }
 
       // Migration: tierPoints (numeric) -> tierConfig (letter-based)

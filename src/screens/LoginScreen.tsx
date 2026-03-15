@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
+import { saveChild as fsSaveChild } from '../services/firestoreStorage.ts';
 import type { Child } from '../types.ts';
 
 interface LoginScreenProps {
@@ -75,19 +76,25 @@ export default function LoginScreen(
       setPinErr('PINs do not match');
       return;
     }
-    // Save PIN to child profile
+    // Save PIN directly to the child's Firestore doc (kids are anonymous
+    // and don't have parent-level write access to the full config)
     var ch = ctx.getChild(pinTarget!);
-    if (!ch || !ctx.cfg) return;
-    var newCfg = JSON.parse(JSON.stringify(ctx.cfg));
-    var childList = newCfg.children || [];
-    for (var i = 0; i < childList.length; i++) {
-      if (childList[i].id === pinTarget) {
-        childList[i].pin = newPin;
-        break;
-      }
+    if (!ch || !ctx.familyId) return;
+    try {
+      await fsSaveChild(ctx.familyId, pinTarget!, { pin: newPin });
+    } catch (err) {
+      console.error('Failed to save PIN:', err);
+      setPinErr('Could not save PIN. Please try again.');
+      return;
     }
     newCfg.children = childList;
-    await ctx.saveCfg(newCfg);
+    try {
+      await ctx.saveCfg(newCfg);
+    } catch (err) {
+      console.error('Failed to save PIN:', err);
+      setPinErr('Could not save PIN. Please try again.');
+      return;
+    }
     ctx.setCurUser(pinTarget);
     ctx.setScreen('dashboard');
     setPinTarget(null);
@@ -99,14 +106,12 @@ export default function LoginScreen(
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <div className="font-display text-[42px] font-bold text-qslate tracking-wider mb-1 animate-fade-in">
+    <div className='flex flex-col items-center justify-center min-h-screen p-6'>
+      <div className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 animate-fade-in'>
         LOOTBOUND
       </div>
-      <div className="text-base text-qmuted mb-10">
-        Choose your profile
-      </div>
-      <div className="flex gap-5 flex-wrap justify-center mb-10">
+      <div className='text-base text-qmuted mb-5'>Choose your profile</div>
+      <div className='flex gap-5 flex-wrap justify-center mb-10'>
         {children.map(function (c, idx) {
           var cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
           return (
@@ -115,17 +120,18 @@ export default function LoginScreen(
               onClick={function () {
                 doKidLogin(c.id);
               }}
-              className={"flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 " + cardBg}
+              className={
+                'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 ' +
+                cardBg
+              }
             >
-              <div className="text-[40px] animate-float">{c.avatar}</div>
-              <div className="font-display text-lg font-semibold">
-                {c.name}
-              </div>
+              <div className='text-[40px] animate-float'>{c.avatar}</div>
+              <div className='font-display text-lg font-semibold'>{c.name}</div>
               {c.pin && (
-                <div className="text-[10px] text-qmuted">
+                <div className='text-[10px] text-qmuted'>
                   <FontAwesomeIcon
                     icon={faLock}
-                    className="mr-1"
+                    className='mr-1'
                     style={FA_ICON_STYLE}
                   />
                   PIN protected
@@ -137,18 +143,18 @@ export default function LoginScreen(
       </div>
 
       {children.length === 0 && (
-        <div className="text-qdim mb-8 text-center max-w-[280px]">
+        <div className='text-qdim mb-8 text-center max-w-[280px]'>
           No profiles yet. Ask your parent to add you!
         </div>
       )}
 
       {/* PIN entry for existing PIN */}
       {pinTarget && !createPin && (
-        <div className="flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up">
-          <div className="text-sm text-qmuted">
+        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up'>
+          <div className='text-sm text-qmuted'>
             Enter PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
           </div>
-          <div className="flex gap-2">
+          <div className='flex gap-2'>
             <input
               type='password'
               maxLength={4}
@@ -160,25 +166,24 @@ export default function LoginScreen(
               onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
                 if (e.key === 'Enter') submitKidPin();
               }}
-              className="quest-input w-[100px] text-center"
+              className='quest-input w-[100px] text-center'
               autoFocus
             />
-            <button
-              onClick={submitKidPin}
-              className="btn-primary"
-            >
+            <button onClick={submitKidPin} className='btn-primary'>
               Go
             </button>
           </div>
           {pinErr && (
-            <div className="text-qcoral text-[13px] animate-shake">{pinErr}</div>
+            <div className='text-qcoral text-[13px] animate-shake'>
+              {pinErr}
+            </div>
           )}
           <button
             onClick={function () {
               setPinTarget(null);
               setPinErr('');
             }}
-            className="btn-ghost"
+            className='btn-ghost'
           >
             Cancel
           </button>
@@ -187,7 +192,7 @@ export default function LoginScreen(
               setPinTarget(null);
               setPinErr('');
             }}
-            className="text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors"
+            className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
           >
             Forgot PIN? Ask a parent to reset it.
           </button>
@@ -196,12 +201,11 @@ export default function LoginScreen(
 
       {/* PIN creation for first-time kids */}
       {pinTarget && createPin && (
-        <div className="flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up">
-          <div className="text-sm text-qmuted">
-            Create a PIN for{' '}
-            {(ctx.getChild(pinTarget) || ({} as Child)).name}
+        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up'>
+          <div className='text-sm text-qmuted'>
+            Create a PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
           </div>
-          <div className="text-xs text-qdim">
+          <div className='text-xs text-qdim'>
             Choose a 4-digit PIN to protect your profile
           </div>
           <input
@@ -213,7 +217,7 @@ export default function LoginScreen(
               setNewPin(e.target.value.replace(/[^0-9]/g, ''));
               setPinErr('');
             }}
-            className="quest-input w-[120px] text-center"
+            className='quest-input w-[120px] text-center'
             autoFocus
           />
           <input
@@ -228,15 +232,14 @@ export default function LoginScreen(
             onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
               if (e.key === 'Enter') submitCreatePin();
             }}
-            className="quest-input w-[120px] text-center"
+            className='quest-input w-[120px] text-center'
           />
           {pinErr && (
-            <div className="text-qcoral text-[13px] animate-shake">{pinErr}</div>
+            <div className='text-qcoral text-[13px] animate-shake'>
+              {pinErr}
+            </div>
           )}
-          <button
-            onClick={submitCreatePin}
-            className="btn-primary"
-          >
+          <button onClick={submitCreatePin} className='btn-primary'>
             Set PIN
           </button>
           <button
@@ -245,7 +248,7 @@ export default function LoginScreen(
               setCreatePin(false);
               setPinErr('');
             }}
-            className="btn-ghost"
+            className='btn-ghost'
           >
             Cancel
           </button>
@@ -254,10 +257,7 @@ export default function LoginScreen(
 
       {/* Switch family button for kid devices */}
       {props.onSwitchFamily && (
-        <button
-          onClick={props.onSwitchFamily}
-          className="btn-ghost mt-5"
-        >
+        <button onClick={props.onSwitchFamily} className='btn-ghost mt-5'>
           Switch Family
         </button>
       )}
