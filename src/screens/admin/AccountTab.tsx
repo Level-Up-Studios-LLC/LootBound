@@ -17,10 +17,12 @@ import { deleteFamily } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 
-export default function AccountTab(): React.ReactElement {
+export default function AccountTab(): React.ReactElement | null {
   var ctx = useAppContext();
   var auth = useAuthContext();
   var cfg = ctx.cfg;
+
+  if (!cfg) return null;
 
   var _newPin = useState(''),
     newPin = _newPin[0],
@@ -92,10 +94,13 @@ export default function AccountTab(): React.ReactElement {
   async function handleDeleteFamily() {
     setDeleteBusy(true);
     try {
-      // Delete all photos from Storage
-      deleteAllFamilyPhotos(ctx.familyId).catch(function (err) {
-        console.warn('Photo cleanup failed:', err);
-      });
+      // Delete all photos from Storage (await so cleanup finishes before account removal)
+      try {
+        await deleteAllFamilyPhotos(ctx.familyId);
+      } catch (photoErr) {
+        console.warn('Photo cleanup failed:', photoErr);
+        ctx.notify('Some photos could not be deleted', 'error');
+      }
       // Delete all Firestore data
       var uid = getCurrentUid();
       if (!uid) throw new Error('Not signed in');
@@ -142,7 +147,7 @@ export default function AccountTab(): React.ReactElement {
           <FontAwesomeIcon icon={faKey} style={FA_ICON_STYLE} />
           Parent PIN
         </div>
-        {!cfg!.parentPin && (
+        {!cfg.parentPin && (
           <div className='text-[13px] text-qslate mb-2 px-4 py-3 bg-qcoral-dim rounded-badge leading-relaxed'>
             <FontAwesomeIcon
               icon={faTriangleExclamation}
@@ -156,7 +161,7 @@ export default function AccountTab(): React.ReactElement {
           <input
             type='password'
             maxLength={6}
-            placeholder={cfg!.parentPin ? 'New PIN' : 'Create PIN'}
+            placeholder={cfg.parentPin ? 'New PIN' : 'Create PIN'}
             value={newPin}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setNewPin(e.target.value);
@@ -166,7 +171,7 @@ export default function AccountTab(): React.ReactElement {
           <button
             onClick={function () {
               if (newPin.length >= 4) {
-                ctx.saveCfg(Object.assign({}, cfg!, { parentPin: newPin }));
+                ctx.saveCfg(Object.assign({}, cfg, { parentPin: newPin }));
                 setNewPin('');
                 ctx.notify('PIN updated');
               }

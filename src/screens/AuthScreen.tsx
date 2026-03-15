@@ -56,12 +56,8 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       return;
     }
     setBusy(true);
-    try {
-      await auth.doResetPassword(email.trim());
-      setResetSent(true);
-    } catch (_e) {
-      // Error already set in auth context
-    }
+    var ok = await auth.doResetPassword(email.trim());
+    if (ok) setResetSent(true);
     setBusy(false);
   }
 

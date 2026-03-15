@@ -62,7 +62,7 @@ service cloud.firestore {
     match /familyCodes/{code} {
       allow read: if true;
       allow create: if isAuthenticated();
-      allow delete: if request.auth != null;
+      allow delete: if isParent(resource.data.familyId);
       allow update: if false;
     }
 

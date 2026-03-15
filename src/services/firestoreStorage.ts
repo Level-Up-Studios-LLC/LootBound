@@ -274,7 +274,7 @@ export async function deleteChildData(
 // Delete entire family — all subcollections and related docs
 // ---------------------------------------------------------------------------
 
-export async function deleteFamily(familyId: string, currentUid: string): Promise<void> {
+export async function deleteFamily(familyId: string, _currentUid: string): Promise<void> {
   // Read family code — check config doc first, then query familyCodes collection
   var configSnap = await getDoc(doc(db, 'families', familyId));
   var familyCode = configSnap.exists() && configSnap.data().familyCode
@@ -282,7 +282,6 @@ export async function deleteFamily(familyId: string, currentUid: string): Promis
     : null;
 
   if (!familyCode) {
-    // Family code may not be on the config doc — query the familyCodes collection
     var codeQuery = query(
       collection(db, 'familyCodes'),
       where('familyId', '==', familyId)
@@ -293,29 +292,46 @@ export async function deleteFamily(familyId: string, currentUid: string): Promis
     }
   }
 
-  var batch = writeBatch(db);
+  // Collect all document refs to delete
+  var refs: import('firebase/firestore').DocumentReference[] = [];
 
-  // Delete subcollections
+  // Subcollection docs
   var subs = ['children', 'tasks', 'rewards', 'childData'];
   for (var i = 0; i < subs.length; i++) {
     var snap = await getDocs(collection(db, 'families', familyId, subs[i]));
     snap.forEach(function (d) {
-      batch.delete(d.ref);
+      refs.push(d.ref);
     });
   }
 
-  // Delete family config doc
-  batch.delete(doc(db, 'families', familyId));
+  // Family config doc
+  refs.push(doc(db, 'families', familyId));
 
-  // Delete current user's parent member mapping
-  batch.delete(doc(db, 'parentMembers', currentUid));
+  // All parent member mappings for this family (not just current user)
+  var memberQuery = query(
+    collection(db, 'parentMembers'),
+    where('familyId', '==', familyId)
+  );
+  var memberSnap = await getDocs(memberQuery);
+  memberSnap.forEach(function (d) {
+    refs.push(d.ref);
+  });
 
-  // Delete family code mapping
+  // Family code mapping
   if (familyCode) {
-    batch.delete(doc(db, 'familyCodes', familyCode));
+    refs.push(doc(db, 'familyCodes', familyCode));
   }
 
-  await batch.commit();
+  // Commit in chunks of 500 (Firestore batch limit)
+  var BATCH_LIMIT = 500;
+  for (var start = 0; start < refs.length; start += BATCH_LIMIT) {
+    var chunk = refs.slice(start, start + BATCH_LIMIT);
+    var batch = writeBatch(db);
+    for (var j = 0; j < chunk.length; j++) {
+      batch.delete(chunk[j]);
+    }
+    await batch.commit();
+  }
 }
 
 // ---------------------------------------------------------------------------

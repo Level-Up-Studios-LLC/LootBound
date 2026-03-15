@@ -23,7 +23,7 @@ interface AuthContextValue {
     code: string
   ) => Promise<void>;
   doSignOut: () => Promise<void>;
-  doResetPassword: (email: string) => Promise<void>;
+  doResetPassword: (email: string) => Promise<boolean>;
   clearAuthError: () => void;
   clearLastFamilyCode: () => void;
   clearJustSignedIn: () => void;
@@ -124,13 +124,14 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   }
 
-  async function doResetPassword(email: string) {
+  async function doResetPassword(email: string): Promise<boolean> {
     setAuthError(null);
     try {
       await resetPassword(email);
+      return true;
     } catch (err: any) {
       setAuthError(mapError(err));
-      throw err;
+      return false;
     }
   }
 

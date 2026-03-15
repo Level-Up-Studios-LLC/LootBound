@@ -156,23 +156,39 @@ export async function changePassword(
 }
 
 /**
- * Delete the current user's Firebase Auth account and sign out.
+ * Delete the current user's Firebase Auth account.
+ * If the session is stale, re-authenticates with the provided password
+ * and retries the deletion.
  */
-export async function deleteAuthAccount(): Promise<void> {
+export async function deleteAuthAccount(password?: string): Promise<void> {
   var user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
-  await user.delete();
+  try {
+    await user.delete();
+  } catch (err: any) {
+    if (err.code === 'auth/requires-recent-login') {
+      if (!password || !user.email) throw err;
+      var cred = EmailAuthProvider.credential(user.email, password);
+      await reauthenticateWithCredential(user, cred);
+      await user.delete();
+    } else {
+      throw err;
+    }
+  }
 }
 
-export function getCurrentFamilyId(): string | null {
-  var user = auth.currentUser;
-  return user ? user.uid : null;
-}
-
+/**
+ * Get the current Firebase Auth UID.
+ * Note: for the family creator, uid === familyId. For joined parents,
+ * the familyId is resolved via /parentMembers/{uid} (see resolveFamilyId).
+ */
 export function getCurrentUid(): string | null {
   var user = auth.currentUser;
   return user ? user.uid : null;
 }
+
+/** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */
+export var getCurrentFamilyId = getCurrentUid;
 
 /**
  * Sign in anonymously for kid sessions.
