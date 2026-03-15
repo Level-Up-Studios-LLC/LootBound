@@ -59,7 +59,14 @@ export default function DashboardScreen(): React.ReactElement | null {
               style={FA_ICON_STYLE}
               className='mr-1.5'
             />
-            Past 9 PM bedtime. Missions are locked for today.
+            Past {(function () {
+              var bt = ctx.cfg && ctx.cfg.bedtime != null ? ctx.cfg.bedtime : 21 * 60;
+              var h = Math.floor(bt / 60);
+              var m = bt % 60;
+              var ampm = h >= 12 ? 'PM' : 'AM';
+              var h12 = h % 12 || 12;
+              return m > 0 ? h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm : h12 + ' ' + ampm;
+            })()} bedtime. Missions are locked for today.
           </div>
         )}
       </div>

@@ -81,7 +81,9 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         </label>
         <div className='flex gap-3' role='radiogroup' aria-label='Frequency'>
           <button
-            aria-pressed={f.daily}
+            role='radio'
+            aria-checked={f.daily}
+            tabIndex={f.daily ? 0 : -1}
             onClick={function () {
               u('daily', true);
             }}
@@ -93,7 +95,9 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             Daily
           </button>
           <button
-            aria-pressed={!f.daily}
+            role='radio'
+            aria-checked={!f.daily}
+            tabIndex={!f.daily ? 0 : -1}
             onClick={function () {
               u('daily', false);
             }}

@@ -132,7 +132,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 var recentBg = i % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
                 return (
                   <div
-                    key={i}
+                    key={r.rewardId + '-' + r.date + '-' + i}
                     className={
                       'flex justify-between rounded-badge px-3 py-2 mb-2 text-[13px] ' +
                       recentBg
