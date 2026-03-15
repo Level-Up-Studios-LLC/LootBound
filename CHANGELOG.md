@@ -44,15 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Firebase Hosting configuration with SPA rewrites and cache headers
 - Deployed to https://quest-board-app-2973b.web.app
+- Storage rules: 5MB file size limit and image-only content type restriction
 
 ### Changed
 - Firestore security rules hardened with `isParent()` helper function
 - Joined parents now properly authorized via parentMembers lookup
 - Anonymous kids granted read access to family data
 - Family codes locked to create-only (no update/delete)
-
-### Added
-- Storage rules: 5MB file size limit and image-only content type restriction
 
 ## [0.10.0] - 2026-03-14
 

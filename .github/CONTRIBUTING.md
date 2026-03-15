@@ -1,6 +1,6 @@
 # Contributing to LootBound
 
-LootBound is proprietary software owned by Level Up Studios LLC. By contributing to this project, you agree to grant Level Up Studios LLC full, irrevocable rights to all contributions, including the right to use, modify, distribute, and sublicense the contributed code without restriction.
+LootBound is proprietary software owned by Level Up Studios LLC. By contributing to this project, you agree to grant Level Up Studios LLC a perpetual, worldwide, non-exclusive, royalty-free, irrevocable license to use, reproduce, modify, distribute, sublicense, and otherwise exploit your contributions in any form and for any purpose, as described in the [LICENSE](../LICENSE).
 
 ## Development Setup
 
@@ -73,7 +73,7 @@ These conventions are strictly enforced throughout the codebase.
 
 Write clear, descriptive commit messages in imperative mood:
 
-```
+```text
 Short summary of the change (under 72 characters)
 
 Optional longer description explaining the why, not the what.

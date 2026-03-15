@@ -30,7 +30,7 @@ Built as a mobile-first progressive web app designed for shared family tablets (
 
 ```bash
 git clone <repo-url>
-cd quest-board
+cd LootBound
 npm install
 npm run dev
 ```
@@ -134,7 +134,7 @@ Coins scale based on when a mission is completed relative to its time window:
 
 ## Firebase Collections
 
-```
+```text
 families/{familyId}              -- Family config (PIN, tier values, thresholds)
   /children/{childId}            -- Child profiles (name, age, avatar, color, PIN)
   /tasks/{taskId}                -- Mission definitions (name, tier, time window, schedule)
@@ -191,7 +191,7 @@ Firebase configuration is managed through `.firebaserc` and `firebase.json`.
 
 ## Project Structure
 
-```
+```text
 quest-board/
   index.html
   package.json
