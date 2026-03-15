@@ -139,7 +139,7 @@ export default function ParentPinScreen(
           )}
           <div className="text-xs text-qdim text-center">
             {forgot
-              ? 'Enter your account password to reset your PIN to 1234'
+              ? 'Enter your account password to clear your PIN. You will be prompted to create a new one.'
               : 'Enter your account password to continue'}
           </div>
           <input

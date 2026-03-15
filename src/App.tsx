@@ -196,7 +196,7 @@ function AppRouter() {
   }, [auth.authLoading, auth.authUser, role, initDone]);
 
   // When parent authenticates, load their parent PIN from Firestore
-  // A PIN of '1234' (default) means no custom PIN has been set
+  // An empty string means no custom PIN has been set
   useEffect(
     function () {
       if (auth.authUser && role === 'parent') {
