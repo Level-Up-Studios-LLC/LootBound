@@ -87,7 +87,13 @@ export default function LoginScreen(
       }
     }
     newCfg.children = childList;
-    await ctx.saveCfg(newCfg);
+    try {
+      await ctx.saveCfg(newCfg);
+    } catch (err) {
+      console.error('Failed to save PIN:', err);
+      setPinErr('Could not save PIN. Please try again.');
+      return;
+    }
     ctx.setCurUser(pinTarget);
     ctx.setScreen('dashboard');
     setPinTarget(null);

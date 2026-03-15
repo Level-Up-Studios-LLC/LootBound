@@ -9,6 +9,9 @@ export default function StoreScreen(): React.ReactElement | null {
   var _confirmR = useState<Reward | null>(null),
     confirmR = _confirmR[0],
     setConfirmR = _confirmR[1];
+  var _redeeming = useState(false),
+    redeeming = _redeeming[0],
+    setRedeeming = _redeeming[1];
 
   var ctx = useAppContext();
   var ch = ctx.currentChild;
@@ -73,7 +76,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 '/' +
                 r.limitMax +
                 ' ' +
-                (r.limitType === 'daily' ? 'today' : 'wk');
+                (r.limitType === 'daily' ? 'today' : r.limitType === 'weekly' ? 'wk' : 'total');
             }
             var cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
             var dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
@@ -180,17 +183,22 @@ export default function StoreScreen(): React.ReactElement | null {
                   Cancel
                 </button>
                 <button
+                  disabled={redeeming}
                   onClick={async function () {
+                    if (redeeming) return;
+                    setRedeeming(true);
                     try {
                       await requestRedemption(confirmR!);
                       setConfirmR(null);
                     } catch (err) {
                       console.error('Redemption failed:', err);
+                    } finally {
+                      setRedeeming(false);
                     }
                   }}
-                  className='btn-primary rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body hover:brightness-110 transition-all'
+                  className='btn-primary rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body hover:brightness-110 transition-all disabled:opacity-60'
                 >
-                  {needsApproval(confirmR) ? 'Request' : 'Confirm'}
+                  {redeeming ? 'Processing...' : needsApproval(confirmR) ? 'Request' : 'Confirm'}
                 </button>
               </div>
             </div>
