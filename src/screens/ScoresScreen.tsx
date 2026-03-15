@@ -16,15 +16,23 @@ function countPerfectDays(ud: UserData, tasks: import('../types.ts').Task[], wee
     if (dt < weekStart || dt.charAt(0) === '_') continue;
     var log = ud.taskLog[dt];
     if (!log) continue;
+    // Filter tasks to only those active on this date
+    var dow = new Date(dt + 'T12:00:00').getDay();
+    var activeTasks = tasks.filter(function (t) {
+      if (t.daily) return true;
+      if (t.dueDay != null) return t.dueDay === dow;
+      return true;
+    });
+    if (activeTasks.length === 0) continue;
     var allGood = true;
-    for (var j = 0; j < tasks.length; j++) {
-      var entry = log[tasks[j].id];
+    for (var j = 0; j < activeTasks.length; j++) {
+      var entry = log[activeTasks[j].id];
       if (!entry || entry.rejected || entry.status === 'missed') {
         allGood = false;
         break;
       }
     }
-    if (allGood && tasks.length > 0) count++;
+    if (allGood) count++;
   }
   return count;
 }
@@ -40,7 +48,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   var d = getToday();
   var ws = getWeekStart(cfg ? cfg.weeklyResetDay : undefined);
 
-  if (!ch || !ud) return null;
+  if (!ch || !ud || !cfg) return null;
 
   // Solo kid: show personal stats instead of leaderboard
   if (children.length === 1) {
@@ -212,9 +220,14 @@ export default function ScoresScreen(): React.ReactElement | null {
                       {c.name}
                       {isMe ? ' (You)' : ''}
                     </div>
-                    <div className='text-xs font-semibold' style={{ color: getLevelTitle(udata.level || 1).color }}>
-                      Lv.{udata.level || 1} {getLevelTitle(udata.level || 1).title}
+                  {(function () {
+                    var lt = getLevelTitle(udata.level || 1);
+                    return (
+                    <div className='text-xs font-semibold' style={{ color: lt.color }}>
+                      Lv.{udata.level || 1} {lt.title}
                     </div>
+                    );
+                  })()}
                   </div>
                 </div>
                 <div className='text-right'>

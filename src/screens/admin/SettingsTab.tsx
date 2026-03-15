@@ -52,6 +52,7 @@ export default function SettingsTab(): React.ReactElement {
                 </span>
                 <input
                   type='number'
+                  min={0}
                   value={tc.coins}
                   onChange={function (
                     e: React.ChangeEvent<HTMLInputElement>
@@ -60,7 +61,7 @@ export default function SettingsTab(): React.ReactElement {
                       JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    n[tier].coins = Number(e.target.value) || 0;
+                    n[tier].coins = Math.max(0, Number(e.target.value) || 0);
                     ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'
@@ -68,6 +69,7 @@ export default function SettingsTab(): React.ReactElement {
                 <span className='text-[11px] text-qmuted'>coins</span>
                 <input
                   type='number'
+                  min={0}
                   value={tc.xp}
                   onChange={function (
                     e: React.ChangeEvent<HTMLInputElement>
@@ -76,7 +78,7 @@ export default function SettingsTab(): React.ReactElement {
                       JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    n[tier].xp = Number(e.target.value) || 0;
+                    n[tier].xp = Math.max(0, Number(e.target.value) || 0);
                     ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'

@@ -310,13 +310,19 @@ export function AppProvider(props: {
         (fc as any).tierConfig = migrated;
         await fsSaveConfig(familyId, { tierConfig: migrated } as any);
         // Migrate task tiers from numeric to letter
+        var taskMigrations: Promise<void>[] = [];
         fsTasks.forEach(function (t: any) {
           var letter = numToLetter[String(t.tier)];
           if (letter) {
             t.tier = letter;
-            fsSaveTask(familyId, t.id, { tier: letter } as any);
+            taskMigrations.push(fsSaveTask(familyId, t.id, { tier: letter } as any));
           }
         });
+        if (taskMigrations.length > 0) {
+          await Promise.all(taskMigrations).catch(function (err) {
+            console.error('Task tier migration failed:', err);
+          });
+        }
       }
 
       if (fc && !(fc as any).familyCode) {
