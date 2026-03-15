@@ -70,6 +70,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           </div>
         )}
       </div>
+      <div className='px-4 pt-4'>
       {(function () {
         var lvl = ud.level || 1;
         var lt = getLevelTitle(lvl);

@@ -57,6 +57,7 @@ export default function OverviewTab(
           var l = log[t.id];
           return l && !l.rejected && l.status !== 'missed';
         }).length;
+        var lt = getLevelTitle(udata.level || 1);
         return (
           <div key={c.id} className={altBg(ci) + ' rounded-btn p-4 mb-4'}>
             <div className='flex justify-between font-bold mb-1.5'>
@@ -64,8 +65,8 @@ export default function OverviewTab(
                 <span className='text-qslate'>
                   {c.avatar} {c.name} (age {c.age})
                 </span>
-                <div className='text-[11px] font-semibold' style={{ color: getLevelTitle(udata.level || 1).color }}>
-                  Lv.{udata.level || 1} {getLevelTitle(udata.level || 1).title}
+                <div className='text-[11px] font-semibold' style={{ color: lt.color }}>
+                  Lv.{udata.level || 1} {lt.title}
                 </div>
               </div>
               <span className='text-qslate font-display'>

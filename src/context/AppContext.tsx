@@ -319,14 +319,20 @@ export function AppProvider(props: {
             taskMigrations.push(fsSaveTask(familyId, t.id, { tier: letter } as any));
           }
         });
+        var migrationOk = true;
         if (taskMigrations.length > 0) {
-          await Promise.all(taskMigrations).catch(function (err) {
-            console.error('Task tier migration failed:', err);
-          });
+          try {
+            await Promise.all(taskMigrations);
+          } catch (err) {
+            console.error('Task tier migration failed, will retry on next load:', err);
+            migrationOk = false;
+          }
         }
-        // Save config only after tasks are migrated
-        (fc as any).tierConfig = migrated;
-        await fsSaveConfig(familyId, { tierConfig: migrated } as any);
+        // Save config only after all tasks are migrated successfully
+        if (migrationOk) {
+          (fc as any).tierConfig = migrated;
+          await fsSaveConfig(familyId, { tierConfig: migrated } as any);
+        }
       }
 
       if (fc && !(fc as any).familyCode) {

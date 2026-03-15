@@ -89,7 +89,6 @@ import {
   faTreasureChest as fasTreasureChest,
   faEllipsisVertical as fasEllipsisVertical,
   faLeftFromBracket as fasLeftFromBracket,
-  faAngleLeft as fasAngleLeft,
 } from '@awesome.me/kit-e916efbc87/icons/classic/solid';
 
 library.add(
