@@ -37,7 +37,7 @@ npm run dev
 
 The dev server starts at **http://localhost:3000**.
 
-**Default parent PIN:** `1234`
+**Default parent PIN (dev only):** `1234` — the app prompts parents to set a custom PIN on first login.
 
 ### Environment Variables
 
