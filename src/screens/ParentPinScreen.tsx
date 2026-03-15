@@ -72,13 +72,16 @@ export default function ParentPinScreen(
     setErr('');
     try {
       await signInFamily(props.email, pass);
-      await fsSaveConfig(props.familyId, { parentPin: '1234' });
-      setForgot(false);
-      setPass('');
-      setPin('');
-      setErr('PIN reset to 1234. Enter it below.');
     } catch (_e) {
       setErr('Incorrect password');
+      setBusy(false);
+      return;
+    }
+    try {
+      await fsSaveConfig(props.familyId, { parentPin: '' });
+      props.onSuccess();
+    } catch (_e) {
+      setErr('Failed to clear PIN. Please try again.');
     }
     setBusy(false);
   }
@@ -142,7 +145,7 @@ export default function ParentPinScreen(
           )}
           <div className="text-xs text-qdim text-center">
             {forgot
-              ? 'Enter your account password to reset your PIN to 1234'
+              ? 'Enter your account password to clear your PIN. You will be prompted to create a new one.'
               : 'Enter your account password to continue'}
           </div>
           <input

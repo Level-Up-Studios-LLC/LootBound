@@ -290,13 +290,14 @@ export function AppProvider(props: {
         // between our initial read and now
         var freshCfg = await fsGetConfig(familyId);
         var defConfig = {
+          parentPin: '',
           tierConfig: JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
           approvalThreshold: 300,
           lastWeeklyReset: getWeekStart(),
         };
         // merge: true in fsSaveConfig preserves any existing parentPin
         await fsSaveConfig(familyId, defConfig);
-        fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : Object.assign({ parentPin: '1234' }, defConfig);
+        fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : defConfig;
       } else if (fc) {
         // Config doc exists (e.g. parentPin was saved during signup)
         // but may be missing seed defaults — fill them in without

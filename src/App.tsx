@@ -209,13 +209,16 @@ function AppRouter() {
   );
 
   // When parent authenticates, load their parent PIN from Firestore
-  // A PIN of '1234' (default) means no custom PIN has been set
+  // An empty string means no custom PIN has been set
   useEffect(
     function () {
       if (auth.authUser && role === 'parent') {
         fsGetConfig(auth.authUser.familyId).then(function (cfg) {
-          var pin = cfg ? cfg.parentPin : '';
-          setParentPin(pin && pin !== '1234' ? pin : '');
+          var pin = cfg ? cfg.parentPin || '' : '';
+          setParentPin(pin);
+        }).catch(function (err) {
+          console.error('Failed to load parent PIN:', err);
+          setParentPin('');
         });
       }
     },
@@ -289,6 +292,8 @@ function AppRouter() {
               setShowCreatePin(false);
               setParentVerified(true);
               auth.clearJustSignedIn();
+            }).catch(function (err) {
+              console.error('Failed to save PIN:', err);
             });
           }}
           onSkip={function () {
