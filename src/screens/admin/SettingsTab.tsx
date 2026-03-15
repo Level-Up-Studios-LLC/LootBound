@@ -53,6 +53,7 @@ export default function SettingsTab(): React.ReactElement {
                 <input
                   type='number'
                   min={0}
+                  aria-label={tier + ' coins'}
                   value={tc.coins}
                   onChange={function (
                     e: React.ChangeEvent<HTMLInputElement>
@@ -61,7 +62,8 @@ export default function SettingsTab(): React.ReactElement {
                       JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    n[tier].coins = Math.max(0, Number(e.target.value) || 0);
+                    var v = Number(e.target.value);
+                    n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
                     ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'
@@ -70,6 +72,7 @@ export default function SettingsTab(): React.ReactElement {
                 <input
                   type='number'
                   min={0}
+                  aria-label={tier + ' XP'}
                   value={tc.xp}
                   onChange={function (
                     e: React.ChangeEvent<HTMLInputElement>
@@ -78,7 +81,8 @@ export default function SettingsTab(): React.ReactElement {
                       JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    n[tier].xp = Math.max(0, Number(e.target.value) || 0);
+                    var v = Number(e.target.value);
+                    n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
                     ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'

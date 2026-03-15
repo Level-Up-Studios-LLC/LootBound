@@ -198,6 +198,7 @@ export default function ScoresScreen(): React.ReactElement | null {
           var isMe = c.id === curUser;
           var isTop = topPerfect > 0 && topIds.indexOf(c.id) !== -1;
           var cardBg = isTop ? 'bg-qyellow' : idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+          var lt = getLevelTitle(udata.level || 1);
           return (
             <div
               key={c.id}
@@ -222,14 +223,9 @@ export default function ScoresScreen(): React.ReactElement | null {
                       {c.name}
                       {isMe ? ' (You)' : ''}
                     </div>
-                  {(function () {
-                    var lt = getLevelTitle(udata.level || 1);
-                    return (
                     <div className='text-xs font-semibold' style={{ color: lt.color }}>
                       Lv.{udata.level || 1} {lt.title}
                     </div>
-                    );
-                  })()}
                   </div>
                 </div>
                 <div className='text-right'>

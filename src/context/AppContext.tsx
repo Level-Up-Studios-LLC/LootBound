@@ -310,9 +310,7 @@ export function AppProvider(props: {
             migrated[letter].coins = oldTp[k];
           }
         });
-        (fc as any).tierConfig = migrated;
-        await fsSaveConfig(familyId, { tierConfig: migrated } as any);
-        // Migrate task tiers from numeric to letter
+        // Migrate task tiers from numeric to letter first
         var taskMigrations: Promise<void>[] = [];
         fsTasks.forEach(function (t: any) {
           var letter = numToLetter[String(t.tier)];
@@ -326,6 +324,9 @@ export function AppProvider(props: {
             console.error('Task tier migration failed:', err);
           });
         }
+        // Save config only after tasks are migrated
+        (fc as any).tierConfig = migrated;
+        await fsSaveConfig(familyId, { tierConfig: migrated } as any);
       }
 
       if (fc && !(fc as any).familyCode) {
