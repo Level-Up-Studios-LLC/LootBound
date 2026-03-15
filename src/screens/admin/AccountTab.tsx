@@ -12,7 +12,7 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, deleteAuthAccount } from '../../services/auth.ts';
+import { changePassword, deleteAuthAccount, getCurrentUid } from '../../services/auth.ts';
 import { deleteFamily } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -97,7 +97,9 @@ export default function AccountTab(): React.ReactElement {
         console.warn('Photo cleanup failed:', err);
       });
       // Delete all Firestore data
-      await deleteFamily(ctx.familyId);
+      var uid = getCurrentUid();
+      if (!uid) throw new Error('Not signed in');
+      await deleteFamily(ctx.familyId, uid);
       // Delete the Firebase Auth account
       await deleteAuthAccount();
     } catch (err) {

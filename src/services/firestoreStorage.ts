@@ -274,7 +274,7 @@ export async function deleteChildData(
 // Delete entire family — all subcollections and related docs
 // ---------------------------------------------------------------------------
 
-export async function deleteFamily(familyId: string): Promise<void> {
+export async function deleteFamily(familyId: string, currentUid: string): Promise<void> {
   // Read family code before deleting anything
   var configSnap = await getDoc(doc(db, 'families', familyId));
   var familyCode = configSnap.exists() && configSnap.data().familyCode
@@ -295,8 +295,8 @@ export async function deleteFamily(familyId: string): Promise<void> {
   // Delete family config doc
   batch.delete(doc(db, 'families', familyId));
 
-  // Delete parent member mapping
-  batch.delete(doc(db, 'parentMembers', familyId));
+  // Delete current user's parent member mapping
+  batch.delete(doc(db, 'parentMembers', currentUid));
 
   // Delete family code mapping
   if (familyCode) {

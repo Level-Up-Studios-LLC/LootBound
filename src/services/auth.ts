@@ -169,6 +169,11 @@ export function getCurrentFamilyId(): string | null {
   return user ? user.uid : null;
 }
 
+export function getCurrentUid(): string | null {
+  var user = auth.currentUser;
+  return user ? user.uid : null;
+}
+
 /**
  * Sign in anonymously for kid sessions.
  * Gives kids a Firebase Auth token so they can upload photos
