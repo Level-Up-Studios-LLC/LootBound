@@ -43,7 +43,7 @@ The dev server starts at **http://localhost:3000**.
 
 Copy `.env.example` to `.env` and fill in your Firebase config values.
 
-### Available Scripts
+### Common Commands
 
 | Command              | Description                         |
 | -------------------- | ----------------------------------- |
