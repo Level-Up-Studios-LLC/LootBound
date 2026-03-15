@@ -73,7 +73,7 @@ export default function OverviewTab(
               </span>
               <span>Streak: {udata.streak || 0}</span>
             </div>
-            <div className='flex gap-1.5 flex-wrap items-center'>
+            <div className='flex gap-2 flex-wrap items-center'>
               <span className='text-xs text-qmuted'>Adjust:</span>
               {[10, 25, 50, -10, -25, -50].map(function (p) {
                 return (
@@ -83,7 +83,7 @@ export default function OverviewTab(
                       ctx.addBonus(c.id, p);
                     }}
                     className={
-                      'rounded-[6px] px-3.5 py-1.5 text-xs font-bold border-none cursor-pointer font-body ' +
+                      'rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body ' +
                       (p > 0
                         ? 'bg-qblue-dim text-qblue'
                         : 'bg-qred-dim text-qred')

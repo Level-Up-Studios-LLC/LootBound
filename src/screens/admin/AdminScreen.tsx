@@ -80,12 +80,13 @@ export default function AdminScreen(): React.ReactElement {
   }
 
   return (
-    <div className='p-4 pb-[72px]'>
-      <div className='flex justify-between items-center mb-4'>
-        <div className='font-display text-2xl font-bold text-qslate'>
-          Parent Dashboard
-        </div>
-        <HamburgerMenu
+    <div className='pb-[72px]'>
+      <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+        <div className='flex justify-between items-center mb-3'>
+          <div className='font-display text-2xl font-bold text-qslate'>
+            Parent Dashboard
+          </div>
+          <HamburgerMenu
           items={[
             {
               id: 'children',
@@ -120,7 +121,7 @@ export default function AdminScreen(): React.ReactElement {
         />
       </div>
       {cfg && cfg.familyCode && (
-        <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3 mb-4'>
+        <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3'>
           <div className='flex items-center gap-1.5'>
             <span className='font-semibold'>Family Code</span>
             <div className='relative group'>
@@ -144,8 +145,10 @@ export default function AdminScreen(): React.ReactElement {
           </div>
         </div>
       )}
+      </div>
 
       {/* Tab Content */}
+      <div className='px-4 pt-3'>
       {atab === 'overview' && <OverviewTab onSwitchTab={setAtab} />}
       {atab === 'approvals' && <ApprovalsTab />}
       {atab === 'review' && <ReviewTab />}
@@ -153,6 +156,7 @@ export default function AdminScreen(): React.ReactElement {
       {atab === 'rewards' && <RewardsTab />}
       {atab === 'children' && <ChildrenTab />}
       {atab === 'settings' && <SettingsTab />}
+      </div>
 
       {/* Bottom Navigation */}
       <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>

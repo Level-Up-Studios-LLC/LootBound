@@ -69,6 +69,7 @@ import {
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
+  faAngleLeft as fasAngleLeft,
   faHouse as fasHouse,
   faHouseChimney as fasHouseChimney,
   faClipboardList as fasClipboardList,
