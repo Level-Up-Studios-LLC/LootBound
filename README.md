@@ -66,7 +66,7 @@ Dev server starts at **http://localhost:3000**.
 
 - **📊 Overview** — All children at a glance with coins, levels, progress, and quick +/- adjustments
 - **✅ Approvals** — Queue for high-value redemptions with approve/deny actions
-- **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins + XP)
+- **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins and XP, XP cannot go below 0)
 - **📋 Mission Management** — Add, edit, delete missions per child with tier (S-F), time windows, and scheduling
 - **🎁 Loot Management** — Full CRUD for rewards with cost, icon, limits, and approval flags
 - **👶 Children Management** — Add/remove children, manage profiles and PINs
@@ -155,7 +155,19 @@ Kids earn XP alongside coins. XP never goes negative — missed tasks deduct coi
 | 16-18 | Legend | Gold |
 | 19-20 | Mythic | Red |
 
-Higher levels earn a coin bonus on every mission (up to +25% at Level 20).
+### 💰 Level Coin Bonus
+
+Higher levels earn a percentage bonus on coins per mission, scaling linearly:
+
+| Level | Bonus |
+| --- | --- |
+| 1 | +0% |
+| 5 | +6% |
+| 10 | +13% |
+| 15 | +19% |
+| 20 | +25% (cap) |
+
+Formula: `Math.min(Math.floor(level * 1.32), 25)` percent.
 
 ---
 
