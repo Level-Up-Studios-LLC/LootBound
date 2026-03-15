@@ -78,7 +78,7 @@ Kids earn XP alongside coins. XP feeds into a 20-level progression system.
 
 **Level titles:** Rookie (1-3) → Adventurer (4-6) → Guardian (7-9) → Champion (10-12) → Hero (13-15) → Legend (16-18) → Mythic (19-20)
 
-**Level coin bonus:** Higher levels earn a percentage bonus on coins per mission: `Math.min(Math.floor(level * 1.32), 25)` percent (0% at Lv.1, 25% at Lv.20).
+**Level coin bonus:** Higher levels earn a percentage bonus on coins per mission: `Math.min(Math.floor(level * 1.32), 25)` percent (+1% at Lv.1, +25% at Lv.20).
 
 **Streak XP multiplier (capped at 2.0x):**
 
@@ -278,7 +278,7 @@ GitHub repo: https://github.com/Level-Up-Studios-LLC/LootBound.git
 Uses semantic versioning (SemVer). Update `package.json` version and CHANGELOG.md for each release.
 
 - **Patch** (X.X.+1) — Bug fixes
-- **Minor** (X.+1.0) — New features, backward compatible
+- **Minor** (X.+1.0) — New features, backward-compatible
 - **Major** (+1.0.0) — Breaking changes
 
 ---
