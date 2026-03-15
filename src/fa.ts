@@ -1,6 +1,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
   faAngleLeft,
+  faCircleUser,
   faHouse,
   faClipboardList,
   faTrophy,
@@ -71,6 +72,7 @@ import {
 
 import {
   faAngleLeft as fasAngleLeft,
+  faCircleUser as fasCircleUser,
   faHouse as fasHouse,
   faHouseChimney as fasHouseChimney,
   faClipboardList as fasClipboardList,
@@ -93,7 +95,9 @@ import {
 
 library.add(
   faAngleLeft,
+  faCircleUser,
   fasAngleLeft,
+  fasCircleUser,
   fasHouse,
   fasHouseChimney,
   fasClipboardList,
@@ -182,6 +186,7 @@ library.add(
 
 export {
   faAngleLeft,
+  faCircleUser,
   faHouse,
   faClipboardList,
   faTrophy,

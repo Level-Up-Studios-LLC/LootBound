@@ -14,6 +14,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -136,6 +139,29 @@ export function onAuthChange(
  */
 export async function resetPassword(email: string): Promise<void> {
   await sendPasswordResetEmail(auth, email);
+}
+
+/**
+ * Change the current user's password. Requires re-authentication first.
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  var cred = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, cred);
+  await updatePassword(user, newPassword);
+}
+
+/**
+ * Delete the current user's Firebase Auth account and sign out.
+ */
+export async function deleteAuthAccount(): Promise<void> {
+  var user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  await user.delete();
 }
 
 export function getCurrentFamilyId(): string | null {

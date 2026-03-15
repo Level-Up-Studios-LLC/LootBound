@@ -271,6 +271,42 @@ export async function deleteChildData(
 }
 
 // ---------------------------------------------------------------------------
+// Delete entire family — all subcollections and related docs
+// ---------------------------------------------------------------------------
+
+export async function deleteFamily(familyId: string): Promise<void> {
+  // Read family code before deleting anything
+  var configSnap = await getDoc(doc(db, 'families', familyId));
+  var familyCode = configSnap.exists() && configSnap.data().familyCode
+    ? configSnap.data().familyCode
+    : null;
+
+  var batch = writeBatch(db);
+
+  // Delete subcollections
+  var subs = ['children', 'tasks', 'rewards', 'childData'];
+  for (var i = 0; i < subs.length; i++) {
+    var snap = await getDocs(collection(db, 'families', familyId, subs[i]));
+    snap.forEach(function (d) {
+      batch.delete(d.ref);
+    });
+  }
+
+  // Delete family config doc
+  batch.delete(doc(db, 'families', familyId));
+
+  // Delete parent member mapping
+  batch.delete(doc(db, 'parentMembers', familyId));
+
+  // Delete family code mapping
+  if (familyCode) {
+    batch.delete(doc(db, 'familyCodes', familyCode));
+  }
+
+  await batch.commit();
+}
+
+// ---------------------------------------------------------------------------
 // Batch write helper — useful for initial data seeding and migrations
 // ---------------------------------------------------------------------------
 

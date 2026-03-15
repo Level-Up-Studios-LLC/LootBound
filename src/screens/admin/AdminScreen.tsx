@@ -10,6 +10,7 @@ import TasksTab from './TasksTab.tsx';
 import RewardsTab from './RewardsTab.tsx';
 import ChildrenTab from './ChildrenTab.tsx';
 import SettingsTab from './SettingsTab.tsx';
+import AccountTab from './AccountTab.tsx';
 
 export default function AdminScreen(): React.ReactElement {
   var _atab = useState<string>('overview'),
@@ -89,6 +90,14 @@ export default function AdminScreen(): React.ReactElement {
           <HamburgerMenu
           items={[
             {
+              id: 'account',
+              icon: 'circle-user',
+              label: 'Account',
+              onClick: function () {
+                setAtab('account');
+              },
+            },
+            {
               id: 'children',
               icon: 'children',
               label: 'Children',
@@ -156,6 +165,7 @@ export default function AdminScreen(): React.ReactElement {
       {atab === 'rewards' && <RewardsTab />}
       {atab === 'children' && <ChildrenTab />}
       {atab === 'settings' && <SettingsTab />}
+      {atab === 'account' && <AccountTab />}
       </div>
 
       {/* Bottom Navigation */}
