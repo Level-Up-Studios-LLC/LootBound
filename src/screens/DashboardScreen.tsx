@@ -5,7 +5,7 @@ import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
-import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
+import { getTaskStatus, fmtTime, timeToMin, getLevelTitle, getXpProgress, getStreakMultiplier } from '../utils.ts';
 
 export default function DashboardScreen(): React.ReactElement | null {
   var ctx = useAppContext();
@@ -71,6 +71,39 @@ export default function DashboardScreen(): React.ReactElement | null {
         )}
       </div>
       <div className='px-4 pt-4'>
+      {(function () {
+        var lvl = ud.level || 1;
+        var lt = getLevelTitle(lvl);
+        var xpProg = getXpProgress(ud.xp || 0, lvl);
+        var sMult = getStreakMultiplier(ud.streak || 0);
+        return (
+          <div className='bg-qmint rounded-btn p-4 mb-5'>
+            <div className='flex justify-between items-center mb-2'>
+              <div className='font-display font-bold text-sm' style={{ color: lt.color }}>
+                Lv.{lvl} {lt.title}
+              </div>
+              <div className='text-[11px] text-qmuted font-bold'>
+                {lvl >= 20 ? 'MAX' : xpProg.current + ' / ' + xpProg.needed + ' XP'}
+              </div>
+            </div>
+            <div className='h-2.5 bg-qmint-dim rounded-sm'>
+              <div
+                className='h-full rounded-sm transition-all duration-500'
+                style={{
+                  width: xpProg.pct + '%',
+                  background: lt.color,
+                }}
+              />
+            </div>
+            {sMult > 1 && (
+              <div className='text-[11px] text-qmuted mt-1.5 font-semibold'>
+                <FontAwesomeIcon icon={faFire} style={FA_ICON_STYLE} className='mr-1' />
+                {sMult}x XP streak bonus
+              </div>
+            )}
+          </div>
+        );
+      })()}
       <div className='grid grid-cols-3 gap-3.5 mb-6'>
         <div className='bg-qmint rounded-btn p-4'>
           <div className='font-display text-[22px] font-bold text-qslate'>

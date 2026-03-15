@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import type { Config, UserData } from '../types.ts';
+import type { Config, TierConfig, UserData } from '../types.ts';
 import { COOLDOWN, SL } from '../constants.ts';
 import {
   freshUser,
@@ -10,7 +10,11 @@ import {
   prevDate,
   isPastBedtime,
   isTaskActiveToday,
-  calcPts,
+  calcRewards,
+  getStreakMultiplier,
+  getLevelFromXp,
+  getLevelCoinBonus,
+  getLevelTitle,
   resizeImg,
 } from '../utils.ts';
 import {
@@ -25,7 +29,8 @@ interface TaskActionsDeps {
   familyId: string;
   saveUsr: (uid: string, data: UserData) => Promise<void>;
   notify: (msg: string, type?: string) => void;
-  tp: (tier: number) => number;
+  tp: (tier: string) => number;
+  tierCfg: (tier: string) => TierConfig;
 }
 
 export function useTaskActions(deps: TaskActionsDeps) {
@@ -115,16 +120,27 @@ export function useTaskActions(deps: TaskActionsDeps) {
       }
     }
 
-    var bp = deps.tp(task.tier);
-    var pts = calcPts(bp, status);
+    var tc = deps.tierCfg(task.tier);
+    var rewards = calcRewards(tc, status);
+    // Apply level coin bonus
+    var lvlBonus = getLevelCoinBonus(ud.level || 1);
+    var coins = lvlBonus > 0 ? Math.round(rewards.coins * (1 + lvlBonus / 100)) : rewards.coins;
+    // Apply streak XP multiplier
+    var streakMult = getStreakMultiplier(ud.streak || 0);
+    var xp = Math.round(rewards.xp * streakMult);
     ud.taskLog[d][taskId] = {
       completedAt: now,
       status: status,
-      points: pts,
+      points: coins,
+      xp: xp,
       photo: photoUrl,
       rejected: false,
     };
-    ud.points = (ud.points || 0) + pts;
+    ud.points = (ud.points || 0) + coins;
+    ud.xp = (ud.xp || 0) + xp;
+    // Check for level up
+    var oldLevel = ud.level || 1;
+    ud.level = getLevelFromXp(ud.xp);
     ud.lastTaskTime = nowSec();
     var todayActive = (deps.cfg.tasks[uid] || []).filter(isTaskActiveToday);
     var allDone = todayActive.every(function (t) {
@@ -149,14 +165,24 @@ export function useTaskActions(deps: TaskActionsDeps) {
       } else if (ud.streak === 7) {
         ud.points += 75;
         deps.notify('+75: 7-day streak!');
+      } else if (ud.streak === 15) {
+        ud.points += 150;
+        deps.notify('+150: 15-day streak!');
       } else if (ud.streak === 30) {
         ud.points += 300;
         deps.notify('+300: 30-day streak!');
       }
     }
     await deps.saveUsr(uid, ud);
+    // Notify with coins + XP, and level-up if applicable
     var sl = SL[status] || {};
-    deps.notify((sl.text || '') + ': ' + (pts > 0 ? '+' : '') + pts + ' coins');
+    var msg = (sl.text || '') + ': ' + (coins > 0 ? '+' : '') + coins + ' coins, +' + xp + ' XP';
+    if (streakMult > 1) msg += ' (' + streakMult + 'x)';
+    deps.notify(msg);
+    if (ud.level > oldLevel) {
+      var title = getLevelTitle(ud.level);
+      deps.notify('LEVEL UP! Lv.' + ud.level + ' ' + title.title + '!', 'levelup');
+    }
   }
 
   async function rejectTask(uid: string, taskId: string) {
@@ -176,6 +202,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
     }
 
     ud.points = (ud.points || 0) - (entry.points || 0);
+    ud.xp = Math.max(0, (ud.xp || 0) - (entry.xp || 0));
+    ud.level = getLevelFromXp(ud.xp);
     entry.rejected = true;
     entry.photo = null;
     await deps.saveUsr(uid, ud);

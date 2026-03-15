@@ -66,6 +66,7 @@ import {
   faBug,
   faLightbulb,
   faComments,
+  faMedal,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
@@ -88,7 +89,6 @@ import {
   faTreasureChest as fasTreasureChest,
   faEllipsisVertical as fasEllipsisVertical,
   faLeftFromBracket as fasLeftFromBracket,
-  faAngleLeft as fasAngleLeft,
 } from '@awesome.me/kit-e916efbc87/icons/classic/solid';
 
 library.add(
@@ -176,7 +176,8 @@ library.add(
   faPaperPlane,
   faBug,
   faLightbulb,
-  faComments
+  faComments,
+  faMedal
 );
 
 export {
@@ -246,4 +247,5 @@ export {
   faBug,
   faLightbulb,
   faComments,
+  faMedal,
 };

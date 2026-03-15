@@ -6,13 +6,14 @@ import React, {
 } from 'react';
 import type {
   Config,
+  TierConfig,
   UserData,
   Child,
   Reward,
   AddChildFormData,
   Notification,
 } from '../types.ts';
-import { DEF_TIER_PTS } from '../constants.ts';
+import { DEF_TIER_CONFIG } from '../constants.ts';
 import {
   freshUser,
   getToday,
@@ -66,7 +67,8 @@ interface AppContextValue {
   setCurUser: (u: string | null) => void;
   setViewPhoto: (p: string | null) => void;
   notify: (msg: string, type?: string) => void;
-  tp: (tier: number) => number;
+  tp: (tier: string) => number;
+  tierCfg: (tier: string) => TierConfig;
 
   saveCfg: (c: Config) => Promise<void>;
   saveUsr: (uid: string, data: UserData) => Promise<void>;
@@ -142,10 +144,15 @@ export function AppProvider(props: {
     );
   }
 
-  function tp(tier: number): number {
-    return cfg && cfg.tierPoints
-      ? cfg.tierPoints[tier] || 0
-      : DEF_TIER_PTS[tier] || 0;
+  function tierCfg(tier: string): TierConfig {
+    var tc = cfg && cfg.tierConfig ? cfg.tierConfig[tier] : null;
+    if (tc) return tc;
+    var def = DEF_TIER_CONFIG[tier];
+    return def || { coins: 0, xp: 0 };
+  }
+
+  function tp(tier: string): number {
+    return tierCfg(tier).coins;
   }
 
   // --- Persistence ---
@@ -173,7 +180,7 @@ export function AppProvider(props: {
 
     var cfgFields: Record<string, any> = {
       parentPin: newCfg.parentPin,
-      tierPoints: newCfg.tierPoints,
+      tierConfig: newCfg.tierConfig,
       approvalThreshold: newCfg.approvalThreshold,
       lastWeeklyReset: newCfg.lastWeeklyReset,
     };
@@ -239,6 +246,7 @@ export function AppProvider(props: {
     saveUsr: saveUsr,
     notify: notification.notify,
     tp: tp,
+    tierCfg: tierCfg,
   });
 
   var rewardActions = useRewardActions({
@@ -282,13 +290,49 @@ export function AppProvider(props: {
         // between our initial read and now
         var freshCfg = await fsGetConfig(familyId);
         var defConfig = {
-          tierPoints: Object.assign({}, DEF_TIER_PTS),
+          tierConfig: JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
           approvalThreshold: 300,
           lastWeeklyReset: getWeekStart(),
         };
         // merge: true in fsSaveConfig preserves any existing parentPin
         await fsSaveConfig(familyId, defConfig);
         fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : Object.assign({ parentPin: '1234' }, defConfig);
+      }
+
+      // Migration: tierPoints (numeric) -> tierConfig (letter-based)
+      if (fc && !fc.tierConfig && (fc as any).tierPoints) {
+        var oldTp = (fc as any).tierPoints;
+        var numToLetter: Record<string, string> = { '1': 'D', '2': 'C', '3': 'B', '4': 'A' };
+        var migrated: Record<string, { coins: number; xp: number }> = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
+        Object.keys(oldTp).forEach(function (k) {
+          var letter = numToLetter[k];
+          if (letter && migrated[letter]) {
+            migrated[letter].coins = oldTp[k];
+          }
+        });
+        // Migrate task tiers from numeric to letter first
+        var taskMigrations: Promise<void>[] = [];
+        fsTasks.forEach(function (t: any) {
+          var letter = numToLetter[String(t.tier)];
+          if (letter) {
+            t.tier = letter;
+            taskMigrations.push(fsSaveTask(familyId, t.id, { tier: letter } as any));
+          }
+        });
+        var migrationOk = true;
+        if (taskMigrations.length > 0) {
+          try {
+            await Promise.all(taskMigrations);
+          } catch (err) {
+            console.error('Task tier migration failed, will retry on next load:', err);
+            migrationOk = false;
+          }
+        }
+        // Save config only after all tasks are migrated successfully
+        if (migrationOk) {
+          (fc as any).tierConfig = migrated;
+          await fsSaveConfig(familyId, { tierConfig: migrated } as any);
+        }
       }
 
       if (fc && !(fc as any).familyCode) {
@@ -318,10 +362,10 @@ export function AppProvider(props: {
         tasks: tasksMap,
         rewards: fsRewards as Reward[],
         parentPin: fc ? fc.parentPin : '1234',
-        tierPoints:
-          fc && fc.tierPoints
-            ? fc.tierPoints
-            : Object.assign({}, DEF_TIER_PTS),
+        tierConfig:
+          fc && (fc as any).tierConfig
+            ? (fc as any).tierConfig
+            : JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
         approvalThreshold:
           fc != null && fc.approvalThreshold != null
             ? fc.approvalThreshold
@@ -342,7 +386,7 @@ export function AppProvider(props: {
             : undefined,
       };
       if (!c.children) c.children = [];
-      if (!c.tierPoints) c.tierPoints = Object.assign({}, DEF_TIER_PTS);
+      if (!c.tierConfig) c.tierConfig = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
 
       var users: Record<string, UserData> = {};
       var ws = getWeekStart(c.weeklyResetDay);
@@ -352,7 +396,12 @@ export function AppProvider(props: {
         var ud =
           (await fsGetChildData(familyId, ch.id)) as UserData | null;
         if (!ud) ud = freshUser();
+        // Migration: add xp/level fields if missing
+        if (ud.xp == null) ud.xp = 0;
+        if (ud.level == null) ud.level = 1;
+        if (ud.missedDaysThisWeek == null) ud.missedDaysThisWeek = 0;
         if (needsReset) {
+          ud.missedDaysThisWeek = 0;
           // Delete photos from Storage before clearing the log
           deleteAllChildPhotos(familyId, ch.id).catch(function (err) {
             console.warn('Photo cleanup failed for ' + ch.id + ':', err);
@@ -417,22 +466,27 @@ export function AppProvider(props: {
         tasks.forEach(function (t) {
           var entry = updated.taskLog[d][t.id];
           if (!entry || entry.rejected) {
-            var bp = cfg!.tierPoints[t.tier] || 0;
+            var tc = tierCfg(t.tier);
             updated.taskLog[d][t.id] = {
               completedAt: null,
               status: 'missed',
-              points: -bp,
+              points: -tc.coins,
+              xp: 0,
               photo: null,
               rejected: false,
               autoCutoff: true,
             };
-            updated.points = (updated.points || 0) - bp;
+            updated.points = (updated.points || 0) - tc.coins;
             changed = true;
           }
         });
         if (changed) {
           updated.taskLog[d]._bedtimeApplied = true;
-          updated.streak = 0;
+          // Grace day: allow 1 missed day per week
+          updated.missedDaysThisWeek = (updated.missedDaysThisWeek || 0) + 1;
+          if (updated.missedDaysThisWeek > 1) {
+            updated.streak = 0;
+          }
           await saveUsr(ch.id, updated);
         }
       }
@@ -482,6 +536,7 @@ export function AppProvider(props: {
     setViewPhoto: setViewPhoto,
     notify: notification.notify,
     tp: tp,
+    tierCfg: tierCfg,
     saveCfg: saveCfg,
     saveUsr: saveUsr,
     startCapture: taskActions.startCapture,

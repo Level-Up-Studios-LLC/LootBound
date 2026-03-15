@@ -13,7 +13,8 @@ import {
   faCommentDots,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { DEF_TIER_PTS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
+import { DEF_TIER_CONFIG, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
+import type { TierConfig } from '../../types.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import FeedbackForm from '../../components/forms/FeedbackForm.tsx';
 
@@ -36,29 +37,57 @@ export default function SettingsTab(): React.ReactElement {
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCoins} style={FA_ICON_STYLE} />
-          Rank Coin Values
+          Tier Coin & XP Values
         </div>
-        <div className='grid grid-cols-2 gap-3'>
-          {[1, 2, 3, 4].map(function (tier) {
+        <div className='flex flex-col gap-3'>
+          {TIER_ORDER.map(function (tier) {
+            var tc = ctx.tierCfg(tier);
             return (
               <div key={tier} className='flex items-center gap-2'>
-                <span className='text-[13px] text-qmuted min-w-[50px]'>
-                  Rank {tier}
+                <span
+                  className='text-[13px] font-bold min-w-[32px] text-center'
+                  style={{ color: TIER_COLORS[tier] || '#6b7280' }}
+                >
+                  {tier}
                 </span>
                 <input
                   type='number'
-                  value={ctx.tp(tier)}
-                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                    var n: Record<number, number> = Object.assign(
-                      {},
-                      cfg!.tierPoints || DEF_TIER_PTS
+                  min={0}
+                  aria-label={tier + ' coins'}
+                  value={tc.coins}
+                  onChange={function (
+                    e: React.ChangeEvent<HTMLInputElement>
+                  ) {
+                    var n: Record<string, TierConfig> = JSON.parse(
+                      JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
-                    n[tier] = Number(e.target.value) || 0;
-                    ctx.saveCfg(Object.assign({}, cfg!, { tierPoints: n }));
+                    if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
+                    var v = Number(e.target.value);
+                    n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
+                    ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
-                  className='quest-input !w-[70px] text-center'
+                  className='quest-input !w-[60px] text-center'
                 />
-                <span className='text-xs text-qmuted'>coins</span>
+                <span className='text-[11px] text-qmuted'>coins</span>
+                <input
+                  type='number'
+                  min={0}
+                  aria-label={tier + ' XP'}
+                  value={tc.xp}
+                  onChange={function (
+                    e: React.ChangeEvent<HTMLInputElement>
+                  ) {
+                    var n: Record<string, TierConfig> = JSON.parse(
+                      JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
+                    );
+                    if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
+                    var v = Number(e.target.value);
+                    n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
+                    ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
+                  }}
+                  className='quest-input !w-[60px] text-center'
+                />
+                <span className='text-[11px] text-qmuted'>XP</span>
               </div>
             );
           })}

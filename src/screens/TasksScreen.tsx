@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faCamera, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import { KID_NAV, SL, DAYS_SHORT, FA_ICON_STYLE } from '../constants.ts';
+import { KID_NAV, SL, DAYS_SHORT, TIER_COLORS, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
@@ -18,6 +18,7 @@ export default function TasksScreen(): React.ReactElement | null {
   var startCapture = ctx.startCapture;
   var setViewPhoto = ctx.setViewPhoto;
   var tp = ctx.tp;
+  var tierCfgFn = ctx.tierCfg;
 
   if (!ch || !ud) return null;
 
@@ -77,6 +78,11 @@ export default function TasksScreen(): React.ReactElement | null {
             : isMissed
               ? entry.points
               : tp(t.tier);
+          var xpVal = isDone
+            ? (entry.xp || 0)
+            : isMissed
+              ? 0
+              : tierCfgFn(t.tier).xp;
 
           var animClass = '';
           if (isDone) {
@@ -102,10 +108,19 @@ export default function TasksScreen(): React.ReactElement | null {
                 <div>
                   <div
                     className={
-                      'text-sm font-semibold text-qslate' +
+                      'text-sm font-semibold text-qslate flex items-center gap-1.5' +
                       (isDone ? ' line-through' : '')
                     }
                   >
+                    <span
+                      className='text-[10px] font-bold px-1.5 py-0.5 rounded-badge'
+                      style={{
+                        color: TIER_COLORS[t.tier] || '#6b7280',
+                        background: (TIER_COLORS[t.tier] || '#6b7280') + '18',
+                      }}
+                    >
+                      {t.tier}
+                    </span>
                     {t.name}
                   </div>
                   <div className='text-[11px] text-qmuted'>
@@ -129,6 +144,13 @@ export default function TasksScreen(): React.ReactElement | null {
                         : coins
                       : tp(t.tier)}{' '}
                     coins
+                  </div>
+                  <div className='text-[10px] text-qmuted font-semibold'>
+                    {isDone
+                      ? '+' + xpVal + ' XP'
+                      : isMissed
+                        ? '0 XP'
+                        : xpVal + ' XP'}
                   </div>
                 </div>
               </div>

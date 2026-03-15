@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare, faTrashCan, faClipboardList } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { DEF_TIER_PTS, DAYS_SHORT, altBg } from '../../constants.ts';
+import { DEF_TIER_CONFIG, DAYS_SHORT, TIER_COLORS, altBg } from '../../constants.ts';
 import { fmtTime } from '../../utils.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
@@ -55,7 +55,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     uid: c.id,
                     id: '',
                     name: '',
-                    tier: 1,
+                    tier: 'C',
                     windowStart: '08:00',
                     windowEnd: '10:00',
                     daily: true,
@@ -80,7 +80,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                   <div>
                     <div className='font-semibold text-qslate'>{t.name}</div>
                     <div className='text-xs text-qmuted'>
-                      Rank {t.tier} ({ctx.tp(t.tier)} coins) |{' '}
+                      <span style={{ color: TIER_COLORS[t.tier] || '#6b7280', fontWeight: 700 }}>{t.tier}</span>-Tier ({ctx.tp(t.tier)} coins, {ctx.tierCfg(t.tier).xp} XP) |{' '}
                       {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
                       {t.daily
                         ? 'Daily'
@@ -124,7 +124,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
         <Modal title={editTask ? 'Edit Mission' : 'Add Mission'}>
           <TaskForm
             task={(editTask || addTask)!}
-            tierPts={cfg!.tierPoints || DEF_TIER_PTS}
+            tierConfig={cfg!.tierConfig || DEF_TIER_CONFIG}
             onSave={function (t) {
               var uid = t.uid;
               var nt: Record<string, Task[]> = Object.assign({}, cfg!.tasks);

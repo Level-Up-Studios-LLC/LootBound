@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFamilyPants } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE, altBg } from '../../constants.ts';
-import { freshUser, getToday, isTaskActiveToday } from '../../utils.ts';
+import { freshUser, getToday, isTaskActiveToday, getLevelTitle } from '../../utils.ts';
 
 interface OverviewTabProps {
   onSwitchTab: (tab: string) => void;
@@ -57,12 +57,18 @@ export default function OverviewTab(
           var l = log[t.id];
           return l && !l.rejected && l.status !== 'missed';
         }).length;
+        var lt = getLevelTitle(udata.level || 1);
         return (
           <div key={c.id} className={altBg(ci) + ' rounded-btn p-4 mb-4'}>
             <div className='flex justify-between font-bold mb-1.5'>
-              <span className='text-qslate'>
-                {c.avatar} {c.name} (age {c.age})
-              </span>
+              <div>
+                <span className='text-qslate'>
+                  {c.avatar} {c.name} (age {c.age})
+                </span>
+                <div className='text-[11px] font-semibold' style={{ color: lt.color }}>
+                  Lv.{udata.level || 1} {lt.title}
+                </div>
+              </div>
               <span className='text-qslate font-display'>
                 {(udata.points || 0).toLocaleString()} coins
               </span>

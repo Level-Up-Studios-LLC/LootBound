@@ -45,7 +45,7 @@ export interface TaskDef {
   id: string;
   childId?: string;
   name: string;
-  tier: number;
+  tier: string;
   windowStart: string;
   windowEnd: string;
   daily: boolean;
@@ -65,15 +65,17 @@ export interface RewardDef {
 
 export interface FamilyConfig {
   parentPin: string;
-  tierPoints: Record<number, number>;
+  tierConfig: Record<string, { coins: number; xp: number }>;
   approvalThreshold: number;
   lastWeeklyReset: string;
+  tierPoints?: Record<number, number>;
 }
 
 export interface TaskLogEntry {
   completedAt: number | null;
   status: string;
   points: number;
+  xp: number;
   photo: string | null;
   rejected: boolean;
   autoCutoff?: boolean;
@@ -97,8 +99,11 @@ export interface PendingRedemption {
 
 export interface ChildData {
   points: number;
+  xp: number;
+  level: number;
   streak: number;
   bestStreak: number;
+  missedDaysThisWeek: number;
   lastPerfectDate: string | null;
   lastTaskTime: number;
   taskLog: Record<string, Record<string, TaskLogEntry | boolean>>;
