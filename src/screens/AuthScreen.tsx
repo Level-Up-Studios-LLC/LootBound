@@ -30,6 +30,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   var _localErr = useState<string | null>(null),
     localErr = _localErr[0],
     setLocalErr = _localErr[1];
+  var _resetSent = useState(false),
+    resetSent = _resetSent[0],
+    setResetSent = _resetSent[1];
+  var _showReset = useState(false),
+    showReset = _showReset[0],
+    setShowReset = _showReset[1];
 
   var auth = useAuthContext();
 
@@ -37,7 +43,26 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     setLocalErr(null);
     setJoinCode('');
+    setShowReset(false);
+    setResetSent(false);
     auth.clearAuthError();
+  }
+
+  async function handleResetPassword() {
+    setLocalErr(null);
+    auth.clearAuthError();
+    if (!email.trim()) {
+      setLocalErr('Enter your email address');
+      return;
+    }
+    setBusy(true);
+    try {
+      await auth.doResetPassword(email.trim());
+      setResetSent(true);
+    } catch (_e) {
+      // Error already set in auth context
+    }
+    setBusy(false);
   }
 
   async function handleSubmit() {
@@ -116,6 +141,93 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         >
           Get Started
         </button>
+      </div>
+    );
+  }
+
+  // Password reset view
+  if (showReset) {
+    var resetError = localErr || auth.authError;
+    return (
+      <div className='page-wrapper page-centered'>
+        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+          LOOTBOUND
+        </div>
+        <div className='text-sm text-qmuted mb-5'>Reset your password</div>
+        <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
+          {resetSent ? (
+            <div className='text-center'>
+              <div className='text-[32px] mb-3'>
+                <FontAwesomeIcon icon={faPartyHorn} style={FA_ICON_STYLE} />
+              </div>
+              <div className='font-display text-lg font-bold text-qslate mb-2'>
+                Check your email
+              </div>
+              <div className='text-sm text-qmuted mb-4'>
+                We sent a password reset link to <strong>{email}</strong>. Check your inbox and follow the link to set a new password.
+              </div>
+              <button
+                onClick={function () {
+                  setShowReset(false);
+                  setResetSent(false);
+                  setLocalErr(null);
+                  auth.clearAuthError();
+                }}
+                className='btn-primary w-full'
+              >
+                Back to Sign In
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className='text-sm text-qmuted'>
+                Enter your email and we'll send you a link to reset your password.
+              </div>
+              <div>
+                <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+                  Email
+                </label>
+                <input
+                  type='email'
+                  placeholder='family@example.com'
+                  value={email}
+                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                    setEmail(e.target.value);
+                  }}
+                  onKeyDown={function (e: React.KeyboardEvent) {
+                    if (e.key === 'Enter' && !busy) handleResetPassword();
+                  }}
+                  className='quest-input'
+                  autoComplete='email'
+                  autoFocus
+                />
+              </div>
+              {resetError && (
+                <div className='text-qcoral text-[13px] text-center py-1.5'>
+                  {resetError}
+                </div>
+              )}
+              <button
+                onClick={handleResetPassword}
+                disabled={busy}
+                className='btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed'
+              >
+                {busy ? 'Sending...' : 'Send Reset Link'}
+              </button>
+              <button
+                onClick={function () {
+                  setShowReset(false);
+                  setLocalErr(null);
+                  auth.clearAuthError();
+                }}
+                disabled={busy}
+                className='btn-ghost'
+              >
+                Back to Sign In
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -230,6 +342,20 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
                 ? 'Join Family'
                 : 'Create Family'}
         </button>
+
+        {mode === 'signin' && (
+          <button
+            onClick={function () {
+              setLocalErr(null);
+              auth.clearAuthError();
+              setShowReset(true);
+            }}
+            disabled={busy}
+            className='text-qteal text-[13px] bg-transparent border-none cursor-pointer font-body hover:underline'
+          >
+            Forgot password?
+          </button>
+        )}
 
         <button onClick={switchMode} disabled={busy} className='btn-ghost'>
           {mode === 'signin'

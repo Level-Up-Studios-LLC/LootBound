@@ -13,6 +13,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -128,6 +129,13 @@ export function onAuthChange(
       callback(null);
     }
   });
+}
+
+/**
+ * Send a password reset email via Firebase Auth.
+ */
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
 }
 
 export function getCurrentFamilyId(): string | null {
