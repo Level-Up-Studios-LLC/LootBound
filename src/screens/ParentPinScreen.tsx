@@ -72,10 +72,16 @@ export default function ParentPinScreen(
     setErr('');
     try {
       await signInFamily(props.email, pass);
+    } catch (_e) {
+      setErr('Incorrect password');
+      setBusy(false);
+      return;
+    }
+    try {
       await fsSaveConfig(props.familyId, { parentPin: '' });
       props.onSuccess();
     } catch (_e) {
-      setErr('Incorrect password');
+      setErr('Failed to clear PIN. Please try again.');
     }
     setBusy(false);
   }

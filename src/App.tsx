@@ -203,6 +203,9 @@ function AppRouter() {
         fsGetConfig(auth.authUser.familyId).then(function (cfg) {
           var pin = cfg ? cfg.parentPin || '' : '';
           setParentPin(pin);
+        }).catch(function (err) {
+          console.error('Failed to load parent PIN:', err);
+          setParentPin('');
         });
       }
     },
