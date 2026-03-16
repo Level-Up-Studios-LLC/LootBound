@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import * as Sentry from '@sentry/react';
 import type { AuthUser } from '../services/auth.ts';
 import {
   onAuthChange,
@@ -58,6 +59,11 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     var unsub = onAuthChange(function (user) {
       setAuthUser(user);
       setAuthLoading(false);
+      if (user) {
+        Sentry.setUser({ id: user.familyId, email: user.email });
+      } else {
+        Sentry.setUser(null);
+      }
     });
     return unsub;
   }, []);

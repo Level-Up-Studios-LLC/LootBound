@@ -4,6 +4,7 @@ import React, {
   createContext,
   useContext,
 } from 'react';
+import * as Sentry from '@sentry/react';
 import type {
   Config,
   TierConfig,
@@ -344,6 +345,7 @@ export function AppProvider(props: {
             await Promise.all(taskMigrations);
           } catch (err) {
             console.error('Task tier migration failed, will retry on next load:', err);
+            Sentry.captureException(err, { tags: { action: 'tier-migration' } });
             migrationOk = false;
           }
         }
@@ -426,6 +428,7 @@ export function AppProvider(props: {
           // Delete photos from Storage before clearing the log
           deleteAllChildPhotos(familyId, ch.id).catch(function (err) {
             console.warn('Photo cleanup failed for ' + ch.id + ':', err);
+            Sentry.captureException(err, { tags: { action: 'weekly-reset-photo-cleanup', childId: ch.id } });
           });
           ud.taskLog = {};
           await fsSaveChildData(familyId, ch.id, ud);

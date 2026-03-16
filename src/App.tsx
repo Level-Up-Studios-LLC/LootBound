@@ -218,6 +218,7 @@ function AppRouter() {
           setParentPin(pin);
         }).catch(function (err) {
           console.error('Failed to load parent PIN:', err);
+          Sentry.captureException(err, { tags: { action: 'load-parent-pin' } });
           setParentPin('');
         });
       }
@@ -294,6 +295,7 @@ function AppRouter() {
               auth.clearJustSignedIn();
             }).catch(function (err) {
               console.error('Failed to save PIN:', err);
+              Sentry.captureException(err, { tags: { action: 'save-parent-pin' } });
             });
           }}
           onSkip={function () {
