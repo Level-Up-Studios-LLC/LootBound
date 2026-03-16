@@ -7,6 +7,8 @@ import {
   signOutFamily,
   joinFamilyByCode,
   resetPassword,
+  sendVerification,
+  refreshEmailVerified,
 } from '../services/auth.ts';
 
 interface AuthContextValue {
@@ -24,6 +26,8 @@ interface AuthContextValue {
   ) => Promise<void>;
   doSignOut: () => Promise<void>;
   doResetPassword: (email: string) => Promise<boolean>;
+  doSendVerification: () => Promise<boolean>;
+  doRefreshVerification: () => Promise<void>;
   clearAuthError: () => void;
   clearLastFamilyCode: () => void;
   clearJustSignedIn: () => void;
@@ -135,6 +139,23 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   }
 
+  async function doSendVerification(): Promise<boolean> {
+    try {
+      await sendVerification();
+      return true;
+    } catch (err: any) {
+      setAuthError(mapError(err));
+      return false;
+    }
+  }
+
+  async function doRefreshVerification() {
+    var verified = await refreshEmailVerified();
+    if (verified && authUser) {
+      setAuthUser(Object.assign({}, authUser, { emailVerified: true }));
+    }
+  }
+
   async function doSignOut() {
     setAuthError(null);
     try {
@@ -167,6 +188,8 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     doJoinFamily: doJoinFamily,
     doSignOut: doSignOut,
     doResetPassword: doResetPassword,
+    doSendVerification: doSendVerification,
+    doRefreshVerification: doRefreshVerification,
     clearAuthError: clearAuthError,
     clearLastFamilyCode: clearLastFamilyCode,
     clearJustSignedIn: clearJustSignedIn,

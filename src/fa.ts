@@ -68,6 +68,7 @@ import {
   faLightbulb,
   faComments,
   faMedal,
+  faEnvelope,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
@@ -181,7 +182,8 @@ library.add(
   faBug,
   faLightbulb,
   faComments,
-  faMedal
+  faMedal,
+  faEnvelope
 );
 
 export {
@@ -253,4 +255,5 @@ export {
   faLightbulb,
   faComments,
   faMedal,
+  faEnvelope,
 };

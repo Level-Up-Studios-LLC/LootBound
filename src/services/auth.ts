@@ -14,6 +14,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
   verifyPasswordResetCode,
@@ -34,6 +35,7 @@ import {
 export interface AuthUser {
   familyId: string;
   email: string;
+  emailVerified: boolean;
 }
 
 /**
@@ -70,8 +72,11 @@ export async function signUpFamily(
   var code = await generateFamilyCode();
   await registerFamilyCode(code, familyId);
 
+  // Send verification email (fire-and-forget)
+  sendEmailVerification(cred.user).catch(function () {});
+
   return {
-    user: { familyId: familyId, email: cred.user.email ?? email },
+    user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -95,8 +100,11 @@ export async function joinFamilyByCode(
     familyId: familyId,
   });
 
+  // Send verification email (fire-and-forget)
+  sendEmailVerification(cred.user).catch(function () {});
+
   return {
-    user: { familyId: familyId, email: cred.user.email ?? email },
+    user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -111,7 +119,7 @@ export async function signInFamily(
 ): Promise<AuthUser> {
   var cred = await signInWithEmailAndPassword(auth, email, password);
   var familyId = await resolveFamilyId(cred.user.uid);
-  return { familyId: familyId, email: cred.user.email ?? email };
+  return { familyId: familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
 }
 
 export async function signOutFamily(): Promise<void> {
@@ -128,7 +136,7 @@ export function onAuthChange(
   return onAuthStateChanged(auth, function (user) {
     if (user && !user.isAnonymous) {
       resolveFamilyId(user.uid).then(function (familyId) {
-        callback({ familyId: familyId, email: user.email ?? '' });
+        callback({ familyId: familyId, email: user.email ?? '', emailVerified: user.emailVerified });
       });
     } else {
       callback(null);
@@ -164,6 +172,26 @@ export async function completePasswordReset(
   newPassword: string
 ): Promise<void> {
   await confirmPasswordReset(auth, code, newPassword);
+}
+
+/**
+ * Send a verification email to the current user.
+ */
+export async function sendVerification(): Promise<void> {
+  var user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  await sendEmailVerification(user);
+}
+
+/**
+ * Reload the current user's profile to pick up emailVerified changes.
+ * Returns the updated verified status.
+ */
+export async function refreshEmailVerified(): Promise<boolean> {
+  var user = auth.currentUser;
+  if (!user) return false;
+  await user.reload();
+  return user.emailVerified;
 }
 
 /**
