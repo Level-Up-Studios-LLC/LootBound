@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-15
+
+### Added
+- GitHub Actions workflow for automatic Firebase Hosting deploy on push to main
+- Account page with password change, PIN management, and family deletion
+- Forgot/reset password flow on parent sign-in screen
+- Password confirmation required before deleting family account
+- `reauthenticate()` helper for session freshness before destructive operations
+- `children` prop on ConfirmDialog for embedded content (e.g., password input)
+
+### Fixed
+- Firestore rules: restrict familyCodes create to parents (`isParent` check)
+- Firestore rules: restrict familyCodes delete to family owner
+- AccountTab hooks ordering — moved null guard after all useState calls
+- `deleteAuthAccount` now handles `auth/requires-recent-login` with re-auth retry
+- `deleteFamily` chunks batches to stay under Firestore 500-operation limit
+- `deleteFamily` deletes all parentMembers for the family, not just current user
+- `doResetPassword` no longer inconsistently re-throws after setting error state
+- Orphaned family codes on account deletion (code now persisted on config doc)
+- Photo cleanup awaited before account deletion instead of fire-and-forget
+
+### Changed
+- Consolidated `getCurrentUid`/`getCurrentFamilyId` into single helper
+- Tier redesign: S/A/B/C/D/F letter grades replacing numeric 1-4 tiers
+- XP leveling system with 20 levels, titles, streak multiplier, level coin bonus
+
+## [1.0.0] - 2026-03-14
+
+### Summary
+First production release of LootBound — a gamified chore/reward system for families. Deployed to Firebase Hosting with full Firestore backend, Firebase Auth, and photo storage.
+
+### Highlights
+- Role-based auth (parent email/password, kid family code + anonymous auth)
+- Mission system with S-F tier grades, time windows, and timing multipliers
+- XP & leveling (20 levels), streak system with grace days
+- Loot Shop with redemption limits and parent approval queue
+- Photo proof on mission completion (camera-only on mobile)
+- Full admin dashboard with mission/loot/children management
+- Real-time sync via Firestore onSnapshot listeners
+- PIN protection for both parents and kids
+- Sentry error tracking
+- In-app feedback submission
+
 ## [0.13.0] - 2026-03-14
 
 ### Added
