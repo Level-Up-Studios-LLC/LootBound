@@ -21,7 +21,8 @@ import {
   confirmPasswordReset,
   EmailAuthProvider,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -125,38 +126,34 @@ export async function signInFamily(
 }
 
 /**
- * Sign in with Google. Handles both new and returning users.
- * New users get a family created automatically.
- * Returning users resolve their existing familyId.
+ * Start Google sign-in via redirect (works on iPads and avoids COOP issues).
  */
-export async function signInWithGoogle(): Promise<{ user: AuthUser; familyCode: string | null; isNew: boolean }> {
+export async function startGoogleSignIn(): Promise<void> {
   var provider = new GoogleAuthProvider();
-  var result = await signInWithPopup(auth, provider);
+  await signInWithRedirect(auth, provider);
+}
+
+/**
+ * Handle the Google redirect result after the page reloads.
+ * Sets up parentMembers and family code for new users.
+ * Returns the family code if a new family was created, null otherwise.
+ */
+export async function handleGoogleRedirectResult(): Promise<string | null> {
+  var result = await getRedirectResult(auth);
+  if (!result) return null;
+
   var user = result.user;
   var uid = user.uid;
 
   // Check if this user already has a parentMembers mapping
   var snap = await getDoc(doc(db, 'parentMembers', uid));
-  if (snap.exists()) {
-    // Returning user
-    var familyId = snap.data().familyId || uid;
-    return {
-      user: { familyId: familyId, email: user.email ?? '', emailVerified: user.emailVerified },
-      familyCode: null,
-      isNew: false,
-    };
-  }
+  if (snap.exists()) return null; // returning user
 
   // New user — create family
   await setDoc(doc(db, 'parentMembers', uid), { familyId: uid });
   var code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
-
-  return {
-    user: { familyId: uid, email: user.email ?? '', emailVerified: user.emailVerified },
-    familyCode: code,
-    isNew: true,
-  };
+  return code;
 }
 
 export async function signOutFamily(): Promise<void> {

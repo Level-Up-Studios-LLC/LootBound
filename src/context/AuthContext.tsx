@@ -6,7 +6,8 @@ import {
   signUpFamily,
   signOutFamily,
   joinFamilyByCode,
-  signInWithGoogle,
+  startGoogleSignIn,
+  handleGoogleRedirectResult,
   resetPassword,
   sendVerification,
   refreshEmailVerified,
@@ -59,6 +60,20 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   var _justSignedIn = useState(false),
     justSignedIn = _justSignedIn[0],
     setJustSignedIn = _justSignedIn[1];
+
+  // Handle Google redirect result on page load
+  useEffect(function () {
+    handleGoogleRedirectResult().then(function (code) {
+      if (code) {
+        setLastFamilyCode(code);
+        setJustSignedIn(true);
+      }
+    }).catch(function (err: any) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setAuthError(err.message || 'Google sign-in failed');
+      }
+    });
+  }, []);
 
   useEffect(function () {
     var unsub = onAuthChange(function (user) {
@@ -144,15 +159,9 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   async function doGoogleSignIn() {
     setAuthError(null);
     try {
-      var result = await signInWithGoogle();
-      if (result.isNew && result.familyCode) {
-        setLastFamilyCode(result.familyCode);
-      }
-      setJustSignedIn(true);
+      await startGoogleSignIn();
     } catch (err: any) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setAuthError(mapError(err));
-      }
+      setAuthError(mapError(err));
     }
   }
 
