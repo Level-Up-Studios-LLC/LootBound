@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   onCancel: () => void;
   bgColor?: string;
   confirmColor?: string;
+  children?: React.ReactNode;
 }
 
 export default function ConfirmDialog(
@@ -30,6 +31,7 @@ export default function ConfirmDialog(
           {props.warning && (
             <div className='text-[13px] text-qcoral mt-2'>{props.warning}</div>
           )}
+          {props.children}
         </div>
         <div className='flex gap-3 justify-end'>
           <button

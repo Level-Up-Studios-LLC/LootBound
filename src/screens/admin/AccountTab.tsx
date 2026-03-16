@@ -12,7 +12,7 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, deleteAuthAccount, getCurrentUid } from '../../services/auth.ts';
+import { changePassword, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
 import { deleteFamily } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -21,8 +21,6 @@ export default function AccountTab(): React.ReactElement | null {
   var ctx = useAppContext();
   var auth = useAuthContext();
   var cfg = ctx.cfg;
-
-  if (!cfg) return null;
 
   var _newPin = useState(''),
     newPin = _newPin[0],
@@ -54,6 +52,14 @@ export default function AccountTab(): React.ReactElement | null {
   var _deleteBusy = useState(false),
     deleteBusy = _deleteBusy[0],
     setDeleteBusy = _deleteBusy[1];
+  var _deletePass = useState(''),
+    deletePass = _deletePass[0],
+    setDeletePass = _deletePass[1];
+  var _deleteErr = useState(''),
+    deleteErr = _deleteErr[0],
+    setDeleteErr = _deleteErr[1];
+
+  if (!cfg) return null;
 
   async function handleChangePassword() {
     setPassErr('');
@@ -92,9 +98,18 @@ export default function AccountTab(): React.ReactElement | null {
   }
 
   async function handleDeleteFamily() {
+    setDeleteErr('');
+    if (!deletePass) {
+      setDeleteErr('Enter your password to confirm deletion');
+      return;
+    }
     setDeleteBusy(true);
     try {
-      // Delete all photos from Storage (await so cleanup finishes before account removal)
+      // Re-authenticate up front to ensure the session is fresh
+      // before any destructive operations
+      await reauthenticate(deletePass);
+
+      // Delete all photos from Storage
       try {
         await deleteAllFamilyPhotos(ctx.familyId);
       } catch (photoErr) {
@@ -105,13 +120,18 @@ export default function AccountTab(): React.ReactElement | null {
       var uid = getCurrentUid();
       if (!uid) throw new Error('Not signed in');
       await deleteFamily(ctx.familyId, uid);
-      // Delete the Firebase Auth account
-      await deleteAuthAccount();
-    } catch (err) {
+      // Delete the Firebase Auth account (session is already fresh)
+      // Note: other parent member auth accounts require Admin SDK to remove
+      await deleteAuthAccount(deletePass);
+    } catch (err: any) {
       console.error('Failed to delete family:', err);
-      ctx.notify('Failed to delete account. Please try again.', 'error');
+      var code = err.code || err.message || '';
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setDeleteErr('Incorrect password');
+      } else {
+        setDeleteErr('Failed to delete account. Please try again.');
+      }
       setDeleteBusy(false);
-      setShowDeleteConfirm(false);
       return;
     }
     // Auth state change will redirect to role selection
@@ -308,9 +328,33 @@ export default function AccountTab(): React.ReactElement | null {
             if (!deleteBusy) handleDeleteFamily();
           }}
           onCancel={function () {
-            if (!deleteBusy) setShowDeleteConfirm(false);
+            if (!deleteBusy) {
+              setShowDeleteConfirm(false);
+              setDeletePass('');
+              setDeleteErr('');
+            }
           }}
-        />
+        >
+          <div className='flex flex-col gap-2 mt-2'>
+            <input
+              type='password'
+              placeholder='Enter your password to confirm'
+              value={deletePass}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setDeletePass(e.target.value);
+                setDeleteErr('');
+              }}
+              onKeyDown={function (e: React.KeyboardEvent) {
+                if (e.key === 'Enter' && !deleteBusy) handleDeleteFamily();
+              }}
+              className='quest-input'
+              autoFocus
+            />
+            {deleteErr && (
+              <div className='text-qcoral text-[13px]'>{deleteErr}</div>
+            )}
+          </div>
+        </ConfirmDialog>
       )}
     </div>
   );

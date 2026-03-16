@@ -156,6 +156,17 @@ export async function changePassword(
 }
 
 /**
+ * Re-authenticate the current user with their password.
+ * Call before destructive operations to ensure the session is fresh.
+ */
+export async function reauthenticate(password: string): Promise<void> {
+  var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  var cred = EmailAuthProvider.credential(user.email, password);
+  await reauthenticateWithCredential(user, cred);
+}
+
+/**
  * Delete the current user's Firebase Auth account.
  * If the session is stale, re-authenticates with the provided password
  * and retries the deletion.

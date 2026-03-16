@@ -61,7 +61,7 @@ service cloud.firestore {
     // Family codes — public read for kid enrollment, parents can create and delete
     match /familyCodes/{code} {
       allow read: if true;
-      allow create: if isAuthenticated();
+      allow create: if isParent(request.resource.data.familyId);
       allow delete: if isParent(resource.data.familyId);
       allow update: if false;
     }
