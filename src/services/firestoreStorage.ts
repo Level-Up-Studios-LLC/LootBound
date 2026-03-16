@@ -271,6 +271,70 @@ export async function deleteChildData(
 }
 
 // ---------------------------------------------------------------------------
+// Delete entire family — all subcollections and related docs
+// ---------------------------------------------------------------------------
+
+export async function deleteFamily(familyId: string, _currentUid: string): Promise<void> {
+  // Read family code — check config doc first, then query familyCodes collection
+  var configSnap = await getDoc(doc(db, 'families', familyId));
+  var familyCode = configSnap.exists() && configSnap.data().familyCode
+    ? configSnap.data().familyCode
+    : null;
+
+  if (!familyCode) {
+    var codeQuery = query(
+      collection(db, 'familyCodes'),
+      where('familyId', '==', familyId)
+    );
+    var codeSnap = await getDocs(codeQuery);
+    if (!codeSnap.empty) {
+      familyCode = codeSnap.docs[0].id;
+    }
+  }
+
+  // Collect all document refs to delete
+  var refs: import('firebase/firestore').DocumentReference[] = [];
+
+  // Subcollection docs
+  var subs = ['children', 'tasks', 'rewards', 'childData'];
+  for (var i = 0; i < subs.length; i++) {
+    var snap = await getDocs(collection(db, 'families', familyId, subs[i]));
+    snap.forEach(function (d) {
+      refs.push(d.ref);
+    });
+  }
+
+  // Family config doc
+  refs.push(doc(db, 'families', familyId));
+
+  // All parent member mappings for this family (not just current user)
+  var memberQuery = query(
+    collection(db, 'parentMembers'),
+    where('familyId', '==', familyId)
+  );
+  var memberSnap = await getDocs(memberQuery);
+  memberSnap.forEach(function (d) {
+    refs.push(d.ref);
+  });
+
+  // Family code mapping
+  if (familyCode) {
+    refs.push(doc(db, 'familyCodes', familyCode));
+  }
+
+  // Commit in chunks of 500 (Firestore batch limit)
+  var BATCH_LIMIT = 500;
+  for (var start = 0; start < refs.length; start += BATCH_LIMIT) {
+    var chunk = refs.slice(start, start + BATCH_LIMIT);
+    var batch = writeBatch(db);
+    for (var j = 0; j < chunk.length; j++) {
+      batch.delete(chunk[j]);
+    }
+    await batch.commit();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Batch write helper — useful for initial data seeding and migrations
 // ---------------------------------------------------------------------------
 

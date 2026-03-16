@@ -6,6 +6,7 @@ import {
   signUpFamily,
   signOutFamily,
   joinFamilyByCode,
+  resetPassword,
 } from '../services/auth.ts';
 
 interface AuthContextValue {
@@ -22,6 +23,7 @@ interface AuthContextValue {
     code: string
   ) => Promise<void>;
   doSignOut: () => Promise<void>;
+  doResetPassword: (email: string) => Promise<boolean>;
   clearAuthError: () => void;
   clearLastFamilyCode: () => void;
   clearJustSignedIn: () => void;
@@ -122,6 +124,17 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   }
 
+  async function doResetPassword(email: string): Promise<boolean> {
+    setAuthError(null);
+    try {
+      await resetPassword(email);
+      return true;
+    } catch (err: any) {
+      setAuthError(mapError(err));
+      return false;
+    }
+  }
+
   async function doSignOut() {
     setAuthError(null);
     try {
@@ -153,6 +166,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     doSignUp: doSignUp,
     doJoinFamily: doJoinFamily,
     doSignOut: doSignOut,
+    doResetPassword: doResetPassword,
     clearAuthError: clearAuthError,
     clearLastFamilyCode: clearLastFamilyCode,
     clearJustSignedIn: clearJustSignedIn,

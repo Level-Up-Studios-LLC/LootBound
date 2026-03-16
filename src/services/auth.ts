@@ -13,6 +13,10 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -130,10 +134,72 @@ export function onAuthChange(
   });
 }
 
-export function getCurrentFamilyId(): string | null {
+/**
+ * Send a password reset email via Firebase Auth.
+ */
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
+}
+
+/**
+ * Change the current user's password. Requires re-authentication first.
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  var cred = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, cred);
+  await updatePassword(user, newPassword);
+}
+
+/**
+ * Re-authenticate the current user with their password.
+ * Call before destructive operations to ensure the session is fresh.
+ */
+export async function reauthenticate(password: string): Promise<void> {
+  var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  var cred = EmailAuthProvider.credential(user.email, password);
+  await reauthenticateWithCredential(user, cred);
+}
+
+/**
+ * Delete the current user's Firebase Auth account.
+ * If the session is stale, re-authenticates with the provided password
+ * and retries the deletion.
+ */
+export async function deleteAuthAccount(password?: string): Promise<void> {
+  var user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  try {
+    await user.delete();
+  } catch (err: any) {
+    if (err.code === 'auth/requires-recent-login') {
+      if (!password || !user.email) throw err;
+      var cred = EmailAuthProvider.credential(user.email, password);
+      await reauthenticateWithCredential(user, cred);
+      await user.delete();
+    } else {
+      throw err;
+    }
+  }
+}
+
+/**
+ * Get the current Firebase Auth UID.
+ * Note: for the family creator, uid === familyId. For joined parents,
+ * the familyId is resolved via /parentMembers/{uid} (see resolveFamilyId).
+ */
+export function getCurrentUid(): string | null {
   var user = auth.currentUser;
   return user ? user.uid : null;
 }
+
+/** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */
+export var getCurrentFamilyId = getCurrentUid;
 
 /**
  * Sign in anonymously for kid sessions.

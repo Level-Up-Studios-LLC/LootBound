@@ -58,11 +58,12 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
-    // Family codes — public read for kid enrollment, parents can create
+    // Family codes — public read for kid enrollment, parents can create and delete
     match /familyCodes/{code} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
+      allow create: if isParent(request.resource.data.familyId);
+      allow delete: if isParent(resource.data.familyId);
+      allow update: if false;
     }
 
     // Parent member mapping — only the owning user can read/write their own doc

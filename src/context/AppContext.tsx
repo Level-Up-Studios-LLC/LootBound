@@ -359,6 +359,8 @@ export function AppProvider(props: {
         var code = await genCode.generateFamilyCode();
         await genCode.registerFamilyCode(code, familyId);
         (fc as any).familyCode = code;
+        // Persist family code on the config doc so deleteFamily can find it
+        await fsSaveConfig(familyId, { familyCode: code } as any);
       }
 
       var tasksMap: Record<string, import('../types.ts').Task[]> = {};
