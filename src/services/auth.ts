@@ -16,6 +16,8 @@ import {
   sendPasswordResetEmail,
   updatePassword,
   reauthenticateWithCredential,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
   EmailAuthProvider,
   signInAnonymously,
   signOut,
@@ -136,9 +138,32 @@ export function onAuthChange(
 
 /**
  * Send a password reset email via Firebase Auth.
+ * Links back to the app so users reset their password on a branded page.
  */
 export async function resetPassword(email: string): Promise<void> {
-  await sendPasswordResetEmail(auth, email);
+  var actionCodeSettings = {
+    url: 'https://app.lootbound.com',
+    handleCodeInApp: true,
+  };
+  await sendPasswordResetEmail(auth, email, actionCodeSettings);
+}
+
+/**
+ * Verify a password reset code from a Firebase action URL.
+ * Returns the email address associated with the code.
+ */
+export async function verifyResetCode(code: string): Promise<string> {
+  return verifyPasswordResetCode(auth, code);
+}
+
+/**
+ * Complete a password reset using the action code and new password.
+ */
+export async function completePasswordReset(
+  code: string,
+  newPassword: string
+): Promise<void> {
+  await confirmPasswordReset(auth, code, newPassword);
 }
 
 /**
