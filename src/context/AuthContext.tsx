@@ -61,8 +61,19 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     justSignedIn = _justSignedIn[0],
     setJustSignedIn = _justSignedIn[1];
 
-  // Handle Google redirect result on page load
+  // Wait for Google redirect result before listening to auth state.
+  // Without this, onAuthStateChanged fires with null before the
+  // redirect credential is resolved, causing a flash of the role selector.
   useEffect(function () {
+    var unsub: (() => void) | null = null;
+
+    function startAuthListener() {
+      unsub = onAuthChange(function (user) {
+        setAuthUser(user);
+        setAuthLoading(false);
+      });
+    }
+
     handleGoogleRedirectResult().then(function (code) {
       if (code) {
         setLastFamilyCode(code);
@@ -72,15 +83,13 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setAuthError(err.message || 'Google sign-in failed');
       }
+    }).finally(function () {
+      startAuthListener();
     });
-  }, []);
 
-  useEffect(function () {
-    var unsub = onAuthChange(function (user) {
-      setAuthUser(user);
-      setAuthLoading(false);
-    });
-    return unsub;
+    return function () {
+      if (unsub) unsub();
+    };
   }, []);
 
   function mapError(err: any): string {
