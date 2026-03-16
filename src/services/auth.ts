@@ -20,6 +20,8 @@ import {
   verifyPasswordResetCode,
   confirmPasswordReset,
   EmailAuthProvider,
+  GoogleAuthProvider,
+  signInWithPopup,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -120,6 +122,41 @@ export async function signInFamily(
   var cred = await signInWithEmailAndPassword(auth, email, password);
   var familyId = await resolveFamilyId(cred.user.uid);
   return { familyId: familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
+}
+
+/**
+ * Sign in with Google. Handles both new and returning users.
+ * New users get a family created automatically.
+ * Returning users resolve their existing familyId.
+ */
+export async function signInWithGoogle(): Promise<{ user: AuthUser; familyCode: string | null; isNew: boolean }> {
+  var provider = new GoogleAuthProvider();
+  var result = await signInWithPopup(auth, provider);
+  var user = result.user;
+  var uid = user.uid;
+
+  // Check if this user already has a parentMembers mapping
+  var snap = await getDoc(doc(db, 'parentMembers', uid));
+  if (snap.exists()) {
+    // Returning user
+    var familyId = snap.data().familyId || uid;
+    return {
+      user: { familyId: familyId, email: user.email ?? '', emailVerified: user.emailVerified },
+      familyCode: null,
+      isNew: false,
+    };
+  }
+
+  // New user — create family
+  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid });
+  var code = await generateFamilyCode();
+  await registerFamilyCode(code, uid);
+
+  return {
+    user: { familyId: uid, email: user.email ?? '', emailVerified: user.emailVerified },
+    familyCode: code,
+    isNew: true,
+  };
 }
 
 export async function signOutFamily(): Promise<void> {

@@ -6,6 +6,7 @@ import {
   signUpFamily,
   signOutFamily,
   joinFamilyByCode,
+  signInWithGoogle,
   resetPassword,
   sendVerification,
   refreshEmailVerified,
@@ -24,6 +25,7 @@ interface AuthContextValue {
     password: string,
     code: string
   ) => Promise<void>;
+  doGoogleSignIn: () => Promise<void>;
   doSignOut: () => Promise<void>;
   doResetPassword: (email: string) => Promise<boolean>;
   doSendVerification: () => Promise<boolean>;
@@ -139,6 +141,21 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   }
 
+  async function doGoogleSignIn() {
+    setAuthError(null);
+    try {
+      var result = await signInWithGoogle();
+      if (result.isNew && result.familyCode) {
+        setLastFamilyCode(result.familyCode);
+      }
+      setJustSignedIn(true);
+    } catch (err: any) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setAuthError(mapError(err));
+      }
+    }
+  }
+
   async function doSendVerification(): Promise<boolean> {
     try {
       await sendVerification();
@@ -186,6 +203,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     doSignIn: doSignIn,
     doSignUp: doSignUp,
     doJoinFamily: doJoinFamily,
+    doGoogleSignIn: doGoogleSignIn,
     doSignOut: doSignOut,
     doResetPassword: doResetPassword,
     doSendVerification: doSendVerification,
