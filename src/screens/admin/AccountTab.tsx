@@ -429,6 +429,9 @@ export default function AccountTab(): React.ReactElement | null {
               setDeletePass(e.target.value);
               setDeleteErr('');
             }}
+            onKeyDown={function (e: React.KeyboardEvent) {
+              if (e.key === 'Enter' && !deleteBusy) handleDeleteFamily();
+            }}
             className='quest-input mt-2'
           />
           {deleteErr && (
