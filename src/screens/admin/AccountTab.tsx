@@ -370,7 +370,8 @@ export default function AccountTab(): React.ReactElement | null {
           title='Reset All Data?'
           message='This will permanently erase all coins, streaks, mission history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain.'
           warning='This action cannot be undone.'
-          confirmLabel='Yes, Reset Everything'
+          requiredText='RESET'
+          confirmLabel='Reset'
           confirmColor='bg-qcoral'
           onConfirm={function () {
             setShowResetConfirm(false);
@@ -405,7 +406,9 @@ export default function AccountTab(): React.ReactElement | null {
           title='Delete Family Account?'
           message='This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
           warning='THIS ACTION CANNOT BE UNDONE.'
-          confirmLabel={deleteBusy ? 'Deleting...' : 'Yes, Delete Everything'}
+          requiredText={cfg && cfg.familyCode ? cfg.familyCode : 'DELETE'}
+          requiredTextLabel={'Enter your family code to confirm:'}
+          confirmLabel={deleteBusy ? 'Deleting...' : 'Delete'}
           confirmColor='bg-qcoral'
           onConfirm={function () {
             if (!deleteBusy) handleDeleteFamily();
@@ -418,25 +421,19 @@ export default function AccountTab(): React.ReactElement | null {
             }
           }}
         >
-          <div className='flex flex-col gap-2 mt-2'>
-            <input
-              type='password'
-              placeholder='Enter your password to confirm'
-              value={deletePass}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setDeletePass(e.target.value);
-                setDeleteErr('');
-              }}
-              onKeyDown={function (e: React.KeyboardEvent) {
-                if (e.key === 'Enter' && !deleteBusy) handleDeleteFamily();
-              }}
-              className='quest-input'
-              autoFocus
-            />
-            {deleteErr && (
-              <div className='text-qcoral text-[13px]'>{deleteErr}</div>
-            )}
-          </div>
+          <input
+            type='password'
+            placeholder='Enter your password'
+            value={deletePass}
+            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              setDeletePass(e.target.value);
+              setDeleteErr('');
+            }}
+            className='quest-input mt-2'
+          />
+          {deleteErr && (
+            <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
+          )}
         </ConfirmDialog>
       )}
     </div>

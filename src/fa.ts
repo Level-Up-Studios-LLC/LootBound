@@ -63,12 +63,9 @@ import {
   faSpinner,
   faDownload,
   faCommentDots,
-  faPaperPlane,
-  faBug,
-  faLightbulb,
-  faComments,
   faMedal,
   faEnvelope,
+  faArrowUpRightFromSquare,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
@@ -178,12 +175,9 @@ library.add(
   faSpinner,
   faDownload,
   faCommentDots,
-  faPaperPlane,
-  faBug,
-  faLightbulb,
-  faComments,
   faMedal,
-  faEnvelope
+  faEnvelope,
+  faArrowUpRightFromSquare
 );
 
 export {
@@ -250,10 +244,7 @@ export {
   faSpinner,
   faDownload,
   faCommentDots,
-  faPaperPlane,
-  faBug,
-  faLightbulb,
-  faComments,
   faMedal,
   faEnvelope,
+  faArrowUpRightFromSquare,
 };

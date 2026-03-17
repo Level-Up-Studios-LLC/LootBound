@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBed,
@@ -7,17 +7,14 @@ import {
   faCoins,
   faShieldHalved,
   faCommentDots,
+  faArrowUpRightFromSquare,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { DEF_TIER_CONFIG, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
 import type { TierConfig } from '../../types.ts';
-import FeedbackForm from '../../components/forms/FeedbackForm.tsx';
+var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 export default function SettingsTab(): React.ReactElement {
-  var _showFeedback = useState(false),
-    showFeedback = _showFeedback[0],
-    setShowFeedback = _showFeedback[1];
-
   var ctx = useAppContext();
   var cfg = ctx.cfg;
 
@@ -198,34 +195,22 @@ export default function SettingsTab(): React.ReactElement {
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCommentDots} style={FA_ICON_STYLE} />
-          Send Feedback
+          Feedback
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Found a bug or have an idea? Let us know!
+          Found a bug or have an idea? Visit our discussions board to share
+          feedback, request features, and vote on ideas.
         </div>
-        <button
-          onClick={function () {
-            setShowFeedback(true);
-          }}
-          className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
+        <a
+          href={DISCUSSIONS_URL}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='inline-flex items-center gap-2 bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body no-underline'
         >
-          Send Feedback
-        </button>
+          Open Discussions
+          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className='text-xs' />
+        </a>
       </div>
-      {showFeedback && (
-        <FeedbackForm
-          familyId={ctx.familyId}
-          userRole='parent'
-          userName='Parent'
-          onClose={function () {
-            setShowFeedback(false);
-          }}
-          onSuccess={function () {
-            setShowFeedback(false);
-            ctx.notify('Feedback sent! Thank you.');
-          }}
-        />
-      )}
     </div>
   );
 }
