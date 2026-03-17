@@ -144,6 +144,11 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
       <div className='text-[11px] text-qmuted'>
         {f.daily ? 'Repeats every day.' : 'Repeats weekly on selected day.'}
       </div>
+      {f.windowStart && f.windowEnd && f.windowEnd <= f.windowStart && (
+        <div className='text-qcoral text-[13px]'>
+          End time must be after start time.
+        </div>
+      )}
       <div className='flex gap-3 justify-end'>
         <button
           onClick={props.onCancel}
@@ -153,7 +158,12 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         </button>
         <button
           onClick={function () {
-            if (f.name && (f.daily || f.dueDay != null)) props.onSave(f);
+            if (
+              f.name &&
+              (f.daily || f.dueDay != null) &&
+              (!f.windowStart || !f.windowEnd || f.windowEnd > f.windowStart)
+            )
+              props.onSave(f);
           }}
           className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
         >
