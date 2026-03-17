@@ -387,6 +387,16 @@ export default function AccountTab(): React.ReactElement | null {
             }
           }}
         >
+          <input
+            type='password'
+            placeholder='Enter your password'
+            value={deletePass}
+            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              setDeletePass(e.target.value);
+              setDeleteErr('');
+            }}
+            className='quest-input mt-2'
+          />
           {deleteErr && (
             <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
           )}

@@ -42,10 +42,11 @@ export default function ConfirmDialog(
           )}
           {props.requiredText && (
             <div className='mt-3'>
-              <div className='text-[13px] text-qmuted mb-1.5'>
+              <label htmlFor='confirm-required-text' className='text-[13px] text-qmuted mb-1.5 block'>
                 {props.requiredTextLabel || 'Type "' + props.requiredText + '" to confirm:'}
-              </div>
+              </label>
               <input
+                id='confirm-required-text'
                 type='text'
                 value={typed}
                 onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
