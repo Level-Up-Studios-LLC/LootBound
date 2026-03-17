@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBed,
@@ -10,8 +10,10 @@ import {
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { DEF_TIER_CONFIG, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
-import type { TierConfig } from '../../types.ts';
+import type { Config, TierConfig } from '../../types.ts';
 import FeedbackForm from '../../components/forms/FeedbackForm.tsx';
+
+var SAVE_DELAY = 1500;
 
 export default function SettingsTab(): React.ReactElement {
   var _showFeedback = useState(false),
@@ -19,7 +21,46 @@ export default function SettingsTab(): React.ReactElement {
     setShowFeedback = _showFeedback[1];
 
   var ctx = useAppContext();
-  var cfg = ctx.cfg;
+  var _local = useState<Config | null>(ctx.cfg),
+    local = _local[0],
+    setLocal = _local[1];
+  var timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  var localRef = useRef(local);
+  localRef.current = local;
+
+  // Sync from context when cfg changes externally (e.g. real-time listener)
+  var ctxCfgRef = useRef(ctx.cfg);
+  useEffect(function () {
+    if (ctx.cfg !== ctxCfgRef.current) {
+      ctxCfgRef.current = ctx.cfg;
+      if (!timerRef.current) {
+        setLocal(ctx.cfg);
+      }
+    }
+  }, [ctx.cfg]);
+
+  // Flush pending save on unmount
+  useEffect(function () {
+    return function () {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        if (localRef.current) ctx.saveCfg(localRef.current);
+      }
+    };
+  }, []);
+
+  function update(next: Config) {
+    setLocal(next);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(function () {
+      timerRef.current = null;
+      ctx.saveCfg(next).then(function () {
+        ctx.notify('Saved!');
+      });
+    }, SAVE_DELAY);
+  }
+
+  var cfg = local;
 
   return (
     <div>
@@ -30,7 +71,7 @@ export default function SettingsTab(): React.ReactElement {
         </div>
         <div className='flex flex-col gap-3'>
           {TIER_ORDER.map(function (tier) {
-            var tc = ctx.tierCfg(tier);
+            var tc = (cfg!.tierConfig || DEF_TIER_CONFIG)[tier] || { coins: 0, xp: 0 };
             return (
               <div key={tier} className='flex items-center gap-2'>
                 <span
@@ -53,7 +94,7 @@ export default function SettingsTab(): React.ReactElement {
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     var v = Number(e.target.value);
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
+                    update(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'
                 />
@@ -72,7 +113,7 @@ export default function SettingsTab(): React.ReactElement {
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     var v = Number(e.target.value);
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
+                    update(Object.assign({}, cfg!, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'
                 />
@@ -95,7 +136,7 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             value={cfg!.approvalThreshold || 300}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              ctx.saveCfg(
+              update(
                 Object.assign({}, cfg!, {
                   approvalThreshold: Number(e.target.value) || 0,
                 })
@@ -129,7 +170,7 @@ export default function SettingsTab(): React.ReactElement {
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               var parts = e.target.value.split(':').map(Number);
               var mins = parts[0] * 60 + parts[1];
-              ctx.saveCfg(Object.assign({}, cfg!, { bedtime: mins }));
+              update(Object.assign({}, cfg!, { bedtime: mins }));
             }}
             className='quest-input !w-[140px]'
           />
@@ -147,7 +188,7 @@ export default function SettingsTab(): React.ReactElement {
           <select
             value={cfg!.weeklyResetDay != null ? cfg!.weeklyResetDay : 0}
             onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
-              ctx.saveCfg(
+              update(
                 Object.assign({}, cfg!, {
                   weeklyResetDay: Number(e.target.value),
                 })
@@ -178,7 +219,7 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             value={cfg!.cooldown != null ? cfg!.cooldown : 60}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              ctx.saveCfg(
+              update(
                 Object.assign({}, cfg!, {
                   cooldown: Number(e.target.value) || 0,
                 })

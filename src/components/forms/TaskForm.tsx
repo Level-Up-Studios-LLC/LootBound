@@ -21,7 +21,10 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
   return (
     <div className='flex flex-col gap-4'>
       <div>
-        <label htmlFor='tf-name' className='text-qslate font-semibold mb-2 block'>
+        <label
+          htmlFor='tf-name'
+          className='text-qslate text-sm font-semibold mb-1 block'
+        >
           Mission Name
         </label>
         <input
@@ -35,7 +38,12 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         />
       </div>
       <div>
-        <label htmlFor='tf-tier' className='text-qslate font-semibold mb-2 block'>Tier</label>
+        <label
+          htmlFor='tf-tier'
+          className='text-qslate text-sm font-semibold mb-1 block'
+        >
+          Tier
+        </label>
         <select
           id='tf-tier'
           value={f.tier}
@@ -56,7 +64,12 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
       </div>
       <div className='flex gap-3'>
         <div className='w-1/2'>
-          <label htmlFor='tf-start' className='text-qslate font-semibold mb-2 block'>Start</label>
+          <label
+            htmlFor='tf-start'
+            className='text-qslate text-sm font-semibold mb-1 block'
+          >
+            Start
+          </label>
           <input
             id='tf-start'
             type='time'
@@ -68,7 +81,12 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           />
         </div>
         <div className='w-1/2'>
-          <label htmlFor='tf-end' className='text-qslate font-semibold mb-2 block'>End</label>
+          <label
+            htmlFor='tf-end'
+            className='text-qslate text-sm font-semibold mb-1 block'
+          >
+            End
+          </label>
           <input
             id='tf-end'
             type='time'
@@ -80,14 +98,14 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             className='quest-input'
           />
           {f.windowStart && f.windowEnd && f.windowEnd <= f.windowStart && (
-            <div className='text-qcoral text-[12px] mt-1'>
-              End time must be after {fmtTime(f.windowStart)}.
+            <div className='text-qred text-xs mt-1'>
+              Must be after {fmtTime(f.windowStart)}.
             </div>
           )}
         </div>
       </div>
       <div>
-        <label className='text-qslate font-semibold mb-2 block'>
+        <label className='text-qslate text-sm font-semibold mb-1 block'>
           Frequency
         </label>
         <div className='flex gap-3' role='radiogroup' aria-label='Frequency'>
@@ -123,7 +141,10 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
       </div>
       {!f.daily && (
         <div>
-          <label htmlFor='tf-dueday' className='text-qslate font-semibold mb-2 block'>
+          <label
+            htmlFor='tf-dueday'
+            className='text-qslate text-sm font-semibold mb-1 block'
+          >
             Due Day
           </label>
           <select
@@ -148,7 +169,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           </select>
         </div>
       )}
-      <div className='text-[11px] text-qmuted'>
+      <div className='text-xs text-qmuted'>
         {f.daily ? 'Repeats every day.' : 'Repeats weekly on selected day.'}
       </div>
       <div className='flex gap-3 justify-end'>
