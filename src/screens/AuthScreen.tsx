@@ -50,6 +50,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   var _showReset = useState(false),
     showReset = _showReset[0],
     setShowReset = _showReset[1];
+  var _parentName = useState(''),
+    parentName = _parentName[0],
+    setParentName = _parentName[1];
   var _referral = useState(''),
     referral = _referral[0],
     setReferral = _referral[1];
@@ -60,6 +63,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     setLocalErr(null);
     setJoinCode('');
+    setParentName('');
     setReferral('');
     setShowReset(false);
     setResetSent(false);
@@ -108,12 +112,15 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     } else {
       await auth.doSignUp(email.trim(), pass);
     }
-    // Save referral source to family doc after signup
-    if (mode === 'signup' && referral && auth.lastFamilyCode) {
+    // Save parent name and referral source to family doc after signup
+    if (mode === 'signup' && (parentName.trim() || referral) && auth.lastFamilyCode) {
       try {
         var uid = auth.authUser ? auth.authUser.familyId : null;
         if (uid) {
-          await saveConfig(uid, { referralSource: referral } as any);
+          var extra: Record<string, string> = {};
+          if (parentName.trim()) extra.parentName = parentName.trim();
+          if (referral) extra.referralSource = referral;
+          await saveConfig(uid, extra as any);
         }
       } catch (_e) {
         // Non-critical — don't block signup
@@ -271,6 +278,24 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       </div>
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
+        {mode === 'signup' && (
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              First Name
+            </label>
+            <input
+              type='text'
+              placeholder='Your first name'
+              value={parentName}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setParentName(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              className='quest-input'
+              autoComplete='given-name'
+            />
+          </div>
+        )}
         <div>
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Email
