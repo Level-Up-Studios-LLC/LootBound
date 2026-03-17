@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DAYS, TIER_ORDER } from '../../constants.ts';
+import { fmtTime } from '../../utils.ts';
 import type { Task, TierConfig } from '../../types.ts';
 
 interface TaskFormProps {
@@ -80,7 +81,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           />
           {f.windowStart && f.windowEnd && f.windowEnd <= f.windowStart && (
             <div className='text-qcoral text-[12px] mt-1'>
-              End time must be after {f.windowStart.replace(/^0/, '')}.
+              End time must be after {fmtTime(f.windowStart)}.
             </div>
           )}
         </div>
