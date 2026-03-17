@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCircleUser,
@@ -122,6 +123,7 @@ export default function AccountTab(): React.ReactElement | null {
         await deleteAllFamilyPhotos(ctx.familyId);
       } catch (photoErr) {
         console.warn('Photo cleanup failed:', photoErr);
+        Sentry.captureException(photoErr, { tags: { action: 'delete-family-photos' } });
         ctx.notify('Some photos could not be deleted', 'error');
       }
       // Delete all Firestore data
@@ -133,6 +135,7 @@ export default function AccountTab(): React.ReactElement | null {
       await deleteAuthAccount(deletePass);
     } catch (err: any) {
       console.error('Failed to delete family:', err);
+      Sentry.captureException(err, { tags: { action: 'delete-family' } });
       var code = err.code || err.message || '';
       if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setDeleteErr('Incorrect password');
