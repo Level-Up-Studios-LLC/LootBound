@@ -30,6 +30,37 @@ import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
 
 var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
+var SESSION_KEY_PARENT = 'qb-parent-session';
+var SESSION_KEY_KID = 'qb-kid-session';
+var SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function getSession(key: string): string | null {
+  try {
+    var raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    var data = JSON.parse(raw);
+    if (Date.now() - data.ts > SESSION_TTL) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    return data.val;
+  } catch (_e) {
+    return null;
+  }
+}
+
+function setSession(key: string, val: string): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ val: val, ts: Date.now() }));
+  } catch (_e) { /* ignore */ }
+}
+
+function clearSession(key: string): void {
+  try {
+    sessionStorage.removeItem(key);
+  } catch (_e) { /* ignore */ }
+}
+
 /**
  * Parse Firebase action URL parameters from the current URL.
  * Firebase sends links like: ?mode=resetPassword&oobCode=ABC123
@@ -152,9 +183,21 @@ function AppRouter() {
   var _kidFamilyId = useState<string | null>(null),
     kidFamilyId = _kidFamilyId[0],
     setKidFamilyId = _kidFamilyId[1];
-  var _parentVerified = useState(false),
+  var _parentVerified = useState(function () {
+      return getSession(SESSION_KEY_PARENT) === 'true';
+    }),
     parentVerified = _parentVerified[0],
-    setParentVerified = _parentVerified[1];
+    setParentVerifiedRaw = _parentVerified[1];
+
+  function setParentVerified(val: boolean) {
+    setParentVerifiedRaw(val);
+    if (val) {
+      setSession(SESSION_KEY_PARENT, 'true');
+    } else {
+      clearSession(SESSION_KEY_PARENT);
+    }
+  }
+
   var _parentPin = useState<string | null>(null),
     parentPin = _parentPin[0],
     setParentPin = _parentPin[1];
@@ -374,12 +417,18 @@ function AppRouter() {
       );
     }
 
-    // Family code resolved → show app (starts at profile selection)
+    // Family code resolved → show app (starts at profile selection or restored session)
+    var storedKid = getSession(SESSION_KEY_KID);
     return (
-      <AppProvider familyId={kidFamilyId}>
+      <AppProvider
+        familyId={kidFamilyId}
+        initialScreen={storedKid ? 'dashboard' : 'login'}
+        initialUser={storedKid || null}
+      >
         <AppInner
           onSwitchFamily={function () {
             clearStoredFamilyCode();
+            clearSession(SESSION_KEY_KID);
             setKidFamilyId(null);
             setRole(null);
           }}
