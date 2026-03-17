@@ -191,6 +191,8 @@ export default function AccountTab(): React.ReactElement | null {
                   try {
                     if (document.execCommand('copy')) {
                       ctx.notify('Copied!');
+                    } else {
+                      ctx.notify('Long-press to copy');
                     }
                   } catch (_e) { /* ignore */ }
                   document.body.removeChild(ta);

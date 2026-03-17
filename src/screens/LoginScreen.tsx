@@ -158,7 +158,7 @@ export default function LoginScreen(
                 maxLength={4}
                 value={kpin}
                 onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                  setKpin(e.target.value);
+                  setKpin(e.target.value.replace(/[^0-9]/g, ''));
                   setPinErr('');
                 }}
                 onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
