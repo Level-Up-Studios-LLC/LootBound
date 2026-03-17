@@ -8,6 +8,8 @@ import {
   faRotate,
   faTrashCan,
   faTriangleExclamation,
+  faEnvelope,
+  faCircleCheck,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
@@ -58,6 +60,12 @@ export default function AccountTab(): React.ReactElement | null {
   var _deleteErr = useState(''),
     deleteErr = _deleteErr[0],
     setDeleteErr = _deleteErr[1];
+  var _verifyBusy = useState(false),
+    verifyBusy = _verifyBusy[0],
+    setVerifyBusy = _verifyBusy[1];
+  var _verifySent = useState(false),
+    verifySent = _verifySent[0],
+    setVerifySent = _verifySent[1];
 
   if (!cfg) return null;
 
@@ -148,8 +156,11 @@ export default function AccountTab(): React.ReactElement | null {
         <div className='flex flex-col gap-2'>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-qmuted'>Email</span>
-            <span className='text-[13px] text-qslate font-semibold'>
+            <span className='text-[13px] text-qslate font-semibold flex items-center gap-1.5'>
               {auth.authUser ? auth.authUser.email : '—'}
+              {auth.authUser && auth.authUser.emailVerified && (
+                <FontAwesomeIcon icon={faCircleCheck} className='text-qteal text-xs' />
+              )}
             </span>
           </div>
           <div className='flex justify-between items-center'>
@@ -160,6 +171,41 @@ export default function AccountTab(): React.ReactElement | null {
           </div>
         </div>
       </div>
+
+      {/* Email Verification Banner */}
+      {auth.authUser && !auth.authUser.emailVerified && (
+        <div className='bg-qcoral-dim rounded-card p-4 mb-4'>
+          <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
+            <FontAwesomeIcon icon={faEnvelope} style={FA_ICON_STYLE} />
+            Verify Your Email
+          </div>
+          <div className='text-[13px] text-qmuted mb-3'>
+            Please verify your email address to secure your account. Check your inbox for a verification link.
+          </div>
+          <div className='flex gap-2'>
+            <button
+              onClick={async function () {
+                setVerifyBusy(true);
+                var ok = await auth.doSendVerification();
+                setVerifyBusy(false);
+                if (ok) setVerifySent(true);
+              }}
+              disabled={verifyBusy || verifySent}
+              className='bg-qteal text-white rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body text-[13px] disabled:opacity-60'
+            >
+              {verifySent ? 'Email Sent!' : verifyBusy ? 'Sending...' : 'Resend Verification'}
+            </button>
+            <button
+              onClick={function () {
+                auth.doRefreshVerification();
+              }}
+              className='bg-qslate-dim text-qslate rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body text-[13px]'
+            >
+              I've Verified
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Parent PIN */}
       <div className='bg-qyellow rounded-card p-4 mb-4'>

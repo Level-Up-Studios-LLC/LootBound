@@ -26,7 +26,22 @@ import ScoresScreen from './screens/ScoresScreen.tsx';
 import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
+import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
+
+/**
+ * Parse Firebase action URL parameters from the current URL.
+ * Firebase sends links like: ?mode=resetPassword&oobCode=ABC123
+ */
+function getFirebaseActionParams(): { mode: string; oobCode: string } | null {
+  var params = new URLSearchParams(window.location.search);
+  var mode = params.get('mode');
+  var oobCode = params.get('oobCode');
+  if (mode && oobCode) {
+    return { mode: mode, oobCode: oobCode };
+  }
+  return null;
+}
 
 function LoadingScreen() {
   return (
@@ -153,6 +168,9 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
 function AppRouter() {
   var auth = useAuthContext();
 
+  var _actionParams = useState(getFirebaseActionParams),
+    actionParams = _actionParams[0],
+    setActionParams = _actionParams[1];
   var _role = useState<'parent' | 'kid' | null>(null),
     role = _role[0],
     setRole = _role[1];
@@ -237,6 +255,19 @@ function AppRouter() {
       setParentVerified(true);
     }
   }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
+
+  // Handle Firebase action URLs (password reset)
+  if (actionParams && actionParams.mode === 'resetPassword') {
+    return (
+      <ResetPasswordScreen
+        oobCode={actionParams.oobCode}
+        onDone={function () {
+          window.history.replaceState({}, '', window.location.pathname);
+          setActionParams(null);
+        }}
+      />
+    );
+  }
 
   if (auth.authLoading || !initDone) {
     return <LoadingScreen />;
