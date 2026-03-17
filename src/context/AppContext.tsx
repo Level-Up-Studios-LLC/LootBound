@@ -405,9 +405,11 @@ export function AppProvider(props: {
         if (needsReset) {
           ud.missedDaysThisWeek = 0;
           // Delete photos from Storage before clearing the log
-          deleteAllChildPhotos(familyId, ch.id).catch(function (err) {
-            console.warn('Photo cleanup failed for ' + ch.id + ':', err);
-          });
+          (function (childId) {
+            deleteAllChildPhotos(familyId, childId).catch(function (err) {
+              console.warn('Photo cleanup failed for ' + childId + ':', err);
+            });
+          })(ch.id);
           ud.taskLog = {};
           await fsSaveChildData(familyId, ch.id, ud);
         }

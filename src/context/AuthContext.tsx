@@ -175,6 +175,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   }
 
   async function doSendVerification(): Promise<boolean> {
+    setAuthError(null);
     try {
       await sendVerification();
       return true;
@@ -185,9 +186,13 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   }
 
   async function doRefreshVerification() {
-    var verified = await refreshEmailVerified();
-    if (verified && authUser) {
-      setAuthUser(Object.assign({}, authUser, { emailVerified: true }));
+    try {
+      var verified = await refreshEmailVerified();
+      if (verified && authUser) {
+        setAuthUser(Object.assign({}, authUser, { emailVerified: true }));
+      }
+    } catch (err: any) {
+      console.warn('Failed to refresh verification status:', err);
     }
   }
 

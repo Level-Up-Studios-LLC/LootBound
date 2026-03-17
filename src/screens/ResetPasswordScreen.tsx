@@ -33,15 +33,33 @@ export default function ResetPasswordScreen(
   var _invalidCode = useState(false),
     invalidCode = _invalidCode[0],
     setInvalidCode = _invalidCode[1];
+  var _retryable = useState(false),
+    retryable = _retryable[0],
+    setRetryable = _retryable[1];
 
-  useEffect(function () {
+  function verifyCode() {
+    setRetryable(false);
+    setInvalidCode(false);
+    setEmail(null);
     verifyResetCode(props.oobCode)
       .then(function (resolvedEmail) {
         setEmail(resolvedEmail);
       })
-      .catch(function () {
-        setInvalidCode(true);
+      .catch(function (err: any) {
+        var code = err.code || '';
+        if (
+          code === 'auth/expired-action-code' ||
+          code === 'auth/invalid-action-code'
+        ) {
+          setInvalidCode(true);
+        } else {
+          setRetryable(true);
+        }
       });
+  }
+
+  useEffect(function () {
+    verifyCode();
   }, [props.oobCode]);
 
   async function handleSubmit() {
@@ -90,6 +108,34 @@ export default function ResetPasswordScreen(
             new one from the sign-in page.
           </div>
           <button onClick={props.onDone} className='btn-primary w-full'>
+            Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Transient error — offer retry
+  if (retryable) {
+    return (
+      <div className='page-wrapper page-centered'>
+        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+          LOOTBOUND
+        </div>
+        <div className='w-full max-w-[360px] rounded-card p-6 bg-qcoral-dim flex flex-col gap-4 items-center'>
+          <div className='text-[32px]'>
+            <FontAwesomeIcon icon={faTriangleExclamation} style={FA_ICON_STYLE} />
+          </div>
+          <div className='font-display text-lg font-bold text-qslate'>
+            Connection Error
+          </div>
+          <div className='text-sm text-qmuted text-center'>
+            Could not verify the reset link. Check your connection and try again.
+          </div>
+          <button onClick={verifyCode} className='btn-primary w-full'>
+            Retry
+          </button>
+          <button onClick={props.onDone} className='btn-secondary w-full'>
             Back to Sign In
           </button>
         </div>

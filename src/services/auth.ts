@@ -184,7 +184,7 @@ export function onAuthChange(
  */
 export async function resetPassword(email: string): Promise<void> {
   var actionCodeSettings = {
-    url: 'https://app.lootbound.com',
+    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
     handleCodeInApp: true,
   };
   await sendPasswordResetEmail(auth, email, actionCodeSettings);
