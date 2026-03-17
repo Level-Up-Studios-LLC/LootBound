@@ -147,11 +147,14 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='number'
+            min={0}
+            aria-label='Approval threshold coins'
             value={cfg.approvalThreshold != null ? cfg.approvalThreshold : 300}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              var v = Number(e.target.value);
               update(
                 Object.assign({}, cfg, {
-                  approvalThreshold: Number(e.target.value) || 0,
+                  approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
                 })
               );
             }}
@@ -172,6 +175,7 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='time'
+            aria-label='Bedtime cutoff'
             value={(function () {
               var bt = cfg.bedtime != null ? cfg.bedtime : 21 * 60;
               var h = Math.floor(bt / 60);
@@ -181,7 +185,9 @@ export default function SettingsTab(): React.ReactElement {
               );
             })()}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              if (!e.target.value) return;
               var parts = e.target.value.split(':').map(Number);
+              if (parts.length < 2 || !Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) return;
               var mins = parts[0] * 60 + parts[1];
               update(Object.assign({}, cfg, { bedtime: mins }));
             }}
@@ -199,6 +205,7 @@ export default function SettingsTab(): React.ReactElement {
         </div>
         <div className='flex gap-3 items-center'>
           <select
+            aria-label='Weekly reset day'
             value={cfg.weeklyResetDay != null ? cfg.weeklyResetDay : 0}
             onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
               update(
@@ -230,11 +237,14 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='number'
+            min={0}
+            aria-label='Mission cooldown seconds'
             value={cfg.cooldown != null ? cfg.cooldown : 60}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              var v = Number(e.target.value);
               update(
                 Object.assign({}, cfg, {
-                  cooldown: Number(e.target.value) || 0,
+                  cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,
                 })
               );
             }}
