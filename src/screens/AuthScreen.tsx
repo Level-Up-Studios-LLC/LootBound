@@ -3,6 +3,19 @@ import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPartyHorn, faAngleLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
+import { saveConfig } from '../services/firestoreStorage.ts';
+
+var REFERRAL_OPTIONS = [
+  'Friend or family',
+  'Social media',
+  'Search engine',
+  'App store',
+  'Blog or article',
+  'YouTube',
+  'Podcast',
+  'School or teacher',
+  'Other',
+];
 
 interface AuthScreenProps {
   onBack: () => void;
@@ -36,6 +49,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   var _showReset = useState(false),
     showReset = _showReset[0],
     setShowReset = _showReset[1];
+  var _parentName = useState(''),
+    parentName = _parentName[0],
+    setParentName = _parentName[1];
+  var _referral = useState(''),
+    referral = _referral[0],
+    setReferral = _referral[1];
 
   var auth = useAuthContext();
 
@@ -43,6 +62,8 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     setLocalErr(null);
     setJoinCode('');
+    setParentName('');
+    setReferral('');
     setShowReset(false);
     setResetSent(false);
     auth.clearAuthError();
@@ -89,6 +110,20 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       await auth.doJoinFamily(email.trim(), pass, joinCode.trim());
     } else {
       await auth.doSignUp(email.trim(), pass);
+    }
+    // Save parent name and referral source to family doc after signup
+    if (mode === 'signup' && (parentName.trim() || referral) && auth.lastFamilyCode) {
+      try {
+        var uid = auth.authUser ? auth.authUser.familyId : null;
+        if (uid) {
+          var extra: Record<string, string> = {};
+          if (parentName.trim()) extra.parentName = parentName.trim();
+          if (referral) extra.referralSource = referral;
+          await saveConfig(uid, extra as any);
+        }
+      } catch (_e) {
+        // Non-critical — don't block signup
+      }
     }
     setBusy(false);
   }
@@ -242,6 +277,24 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       </div>
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
+        {mode === 'signup' && (
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              First Name
+            </label>
+            <input
+              type='text'
+              placeholder='Your first name'
+              value={parentName}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setParentName(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              className='quest-input'
+              autoComplete='given-name'
+            />
+          </div>
+        )}
         <div>
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Email
@@ -319,6 +372,30 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </div>
         )}
 
+        {mode === 'signup' && (
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              How did you hear about us?
+            </label>
+            <select
+              value={referral}
+              onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
+                setReferral(e.target.value);
+              }}
+              className='quest-input'
+            >
+              <option value=''>Select one (optional)</option>
+              {REFERRAL_OPTIONS.map(function (o) {
+                return (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        )}
+
         {error && (
           <div className='text-qcoral text-[13px] text-center py-1.5'>
             {error}
@@ -337,6 +414,28 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               : joinCode.trim()
                 ? 'Join Family'
                 : 'Create Family'}
+        </button>
+
+        <div className='flex items-center gap-3'>
+          <div className='flex-1 h-px bg-qslate/20'></div>
+          <span className='text-xs text-qmuted'>or</span>
+          <div className='flex-1 h-px bg-qslate/20'></div>
+        </div>
+
+        <button
+          onClick={function () {
+            if (!busy) auth.doGoogleSignIn();
+          }}
+          disabled={busy}
+          className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-5 py-2.5 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors'
+        >
+          <svg width='18' height='18' viewBox='0 0 48 48'>
+            <path fill='#EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/>
+            <path fill='#4285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/>
+            <path fill='#FBBC05' d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z'/>
+            <path fill='#34A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/>
+          </svg>
+          Continue with Google
         </button>
 
         {mode === 'signin' && (

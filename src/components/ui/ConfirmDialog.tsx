@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ConfirmDialogProps {
   title: string;
@@ -10,11 +10,20 @@ interface ConfirmDialogProps {
   bgColor?: string;
   confirmColor?: string;
   children?: React.ReactNode;
+  requiredText?: string;
+  requiredTextLabel?: string;
 }
 
 export default function ConfirmDialog(
   props: ConfirmDialogProps
 ): React.ReactElement {
+  var _typed = useState(''),
+    typed = _typed[0],
+    setTyped = _typed[1];
+
+  var confirmed = !props.requiredText ||
+    typed.trim().toLowerCase() === props.requiredText.trim().toLowerCase();
+
   return (
     <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5' role='dialog' aria-modal='true' aria-labelledby='confirm-dialog-title'>
       <div
@@ -31,6 +40,26 @@ export default function ConfirmDialog(
           {props.warning && (
             <div className='text-[13px] text-qcoral mt-2'>{props.warning}</div>
           )}
+          {props.requiredText && (
+            <div className='mt-3'>
+              <label htmlFor='confirm-required-text' className='text-[13px] text-qmuted mb-1.5 block'>
+                {props.requiredTextLabel || 'Type "' + props.requiredText + '" to confirm:'}
+              </label>
+              <input
+                id='confirm-required-text'
+                type='text'
+                value={typed}
+                onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                  setTyped(e.target.value);
+                }}
+                onKeyDown={function (e: React.KeyboardEvent) {
+                  if (e.key === 'Enter' && confirmed) props.onConfirm();
+                }}
+                className='quest-input'
+                autoFocus
+              />
+            </div>
+          )}
           {props.children}
         </div>
         <div className='flex gap-3 justify-end'>
@@ -41,10 +70,14 @@ export default function ConfirmDialog(
             Cancel
           </button>
           <button
-            onClick={props.onConfirm}
+            onClick={function () {
+              if (confirmed) props.onConfirm();
+            }}
+            disabled={!confirmed}
             className={
               (props.confirmColor || 'bg-qcoral') +
-              ' text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
+              ' text-white rounded-badge px-5 py-2.5 font-bold border-none font-body' +
+              (confirmed ? ' cursor-pointer' : ' opacity-40 cursor-not-allowed')
             }
           >
             {props.confirmLabel}

@@ -14,7 +14,7 @@ import { signInAnonymousKid } from './services/auth.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
-import FeedbackForm from './components/forms/FeedbackForm.tsx';
+var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 import RoleSelectScreen from './screens/RoleSelectScreen.tsx';
 import AuthScreen from './screens/AuthScreen.tsx';
 import ParentPinScreen from './screens/ParentPinScreen.tsx';
@@ -26,7 +26,22 @@ import ScoresScreen from './screens/ScoresScreen.tsx';
 import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
+import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
+
+/**
+ * Parse Firebase action URL parameters from the current URL.
+ * Firebase sends links like: ?mode=resetPassword&oobCode=ABC123
+ */
+function getFirebaseActionParams(): { mode: string; oobCode: string } | null {
+  var params = new URLSearchParams(window.location.search);
+  var mode = params.get('mode');
+  var oobCode = params.get('oobCode');
+  if (mode && oobCode) {
+    return { mode: mode, oobCode: oobCode };
+  }
+  return null;
+}
 
 function LoadingScreen() {
   return (
@@ -40,10 +55,6 @@ function LoadingScreen() {
 
 function AppInner(props: { onSwitchFamily?: () => void }) {
   var ctx = useAppContext();
-  var _showFeedback = useState(false),
-    showFeedback = _showFeedback[0],
-    setShowFeedback = _showFeedback[1];
-
   if (ctx.loading) {
     return <LoadingScreen />;
   }
@@ -104,37 +115,15 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
       {ctx.screen === 'admin' && <AdminScreen />}
 
       {showFab && (
-        <button
-          onClick={function () {
-            setShowFeedback(true);
-          }}
-          className='fixed bottom-[100px] right-5 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform'
-          aria-label='Send Feedback'
+        <a
+          href={DISCUSSIONS_URL}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='fixed bottom-[100px] right-5 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform no-underline'
+          aria-label='Open Discussions'
         >
           <FontAwesomeIcon icon={faCommentDots} className='text-lg' />
-          <span className='sr-only'>Send Feedback</span>
-        </button>
-      )}
-
-      {showFeedback && (
-        <FeedbackForm
-          familyId={ctx.familyId}
-          userRole={ctx.curUser || 'unknown'}
-          userName={
-            ctx.curUser === 'parent'
-              ? 'Parent'
-              : ctx.curUser && ctx.getChild(ctx.curUser)
-                ? ctx.getChild(ctx.curUser)!.name
-                : 'Kid'
-          }
-          onClose={function () {
-            setShowFeedback(false);
-          }}
-          onSuccess={function () {
-            setShowFeedback(false);
-            ctx.notify('Feedback sent! Thank you.');
-          }}
-        />
+        </a>
       )}
     </div>
   );
@@ -153,6 +142,9 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
 function AppRouter() {
   var auth = useAuthContext();
 
+  var _actionParams = useState(getFirebaseActionParams),
+    actionParams = _actionParams[0],
+    setActionParams = _actionParams[1];
   var _role = useState<'parent' | 'kid' | null>(null),
     role = _role[0],
     setRole = _role[1];
@@ -218,6 +210,7 @@ function AppRouter() {
           setParentPin(pin);
         }).catch(function (err) {
           console.error('Failed to load parent PIN:', err);
+          Sentry.captureException(err, { tags: { action: 'load-parent-pin' } });
           setParentPin('');
         });
       }
@@ -237,6 +230,19 @@ function AppRouter() {
       setParentVerified(true);
     }
   }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
+
+  // Handle Firebase action URLs (password reset)
+  if (actionParams && actionParams.mode === 'resetPassword') {
+    return (
+      <ResetPasswordScreen
+        oobCode={actionParams.oobCode}
+        onDone={function () {
+          window.history.replaceState({}, '', window.location.pathname);
+          setActionParams(null);
+        }}
+      />
+    );
+  }
 
   if (auth.authLoading || !initDone) {
     return <LoadingScreen />;
@@ -294,6 +300,7 @@ function AppRouter() {
               auth.clearJustSignedIn();
             }).catch(function (err) {
               console.error('Failed to save PIN:', err);
+              Sentry.captureException(err, { tags: { action: 'save-parent-pin' } });
             });
           }}
           onSkip={function () {

@@ -14,9 +14,15 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
   EmailAuthProvider,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -32,6 +38,7 @@ import {
 export interface AuthUser {
   familyId: string;
   email: string;
+  emailVerified: boolean;
 }
 
 /**
@@ -68,8 +75,11 @@ export async function signUpFamily(
   var code = await generateFamilyCode();
   await registerFamilyCode(code, familyId);
 
+  // Send verification email (fire-and-forget)
+  sendEmailVerification(cred.user).catch(function () {});
+
   return {
-    user: { familyId: familyId, email: cred.user.email ?? email },
+    user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -93,8 +103,11 @@ export async function joinFamilyByCode(
     familyId: familyId,
   });
 
+  // Send verification email (fire-and-forget)
+  sendEmailVerification(cred.user).catch(function () {});
+
   return {
-    user: { familyId: familyId, email: cred.user.email ?? email },
+    user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -109,7 +122,38 @@ export async function signInFamily(
 ): Promise<AuthUser> {
   var cred = await signInWithEmailAndPassword(auth, email, password);
   var familyId = await resolveFamilyId(cred.user.uid);
-  return { familyId: familyId, email: cred.user.email ?? email };
+  return { familyId: familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
+}
+
+/**
+ * Start Google sign-in via redirect (works on iPads and avoids COOP issues).
+ */
+export async function startGoogleSignIn(): Promise<void> {
+  var provider = new GoogleAuthProvider();
+  await signInWithRedirect(auth, provider);
+}
+
+/**
+ * Handle the Google redirect result after the page reloads.
+ * Sets up parentMembers and family code for new users.
+ * Returns the family code if a new family was created, null otherwise.
+ */
+export async function handleGoogleRedirectResult(): Promise<string | null> {
+  var result = await getRedirectResult(auth);
+  if (!result) return null;
+
+  var user = result.user;
+  var uid = user.uid;
+
+  // Check if this user already has a parentMembers mapping
+  var snap = await getDoc(doc(db, 'parentMembers', uid));
+  if (snap.exists()) return null; // returning user
+
+  // New user — create family
+  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid });
+  var code = await generateFamilyCode();
+  await registerFamilyCode(code, uid);
+  return code;
 }
 
 export async function signOutFamily(): Promise<void> {
@@ -126,7 +170,7 @@ export function onAuthChange(
   return onAuthStateChanged(auth, function (user) {
     if (user && !user.isAnonymous) {
       resolveFamilyId(user.uid).then(function (familyId) {
-        callback({ familyId: familyId, email: user.email ?? '' });
+        callback({ familyId: familyId, email: user.email ?? '', emailVerified: user.emailVerified });
       });
     } else {
       callback(null);
@@ -136,9 +180,52 @@ export function onAuthChange(
 
 /**
  * Send a password reset email via Firebase Auth.
+ * Links back to the app so users reset their password on a branded page.
  */
 export async function resetPassword(email: string): Promise<void> {
-  await sendPasswordResetEmail(auth, email);
+  var actionCodeSettings = {
+    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
+    handleCodeInApp: true,
+  };
+  await sendPasswordResetEmail(auth, email, actionCodeSettings);
+}
+
+/**
+ * Verify a password reset code from a Firebase action URL.
+ * Returns the email address associated with the code.
+ */
+export async function verifyResetCode(code: string): Promise<string> {
+  return verifyPasswordResetCode(auth, code);
+}
+
+/**
+ * Complete a password reset using the action code and new password.
+ */
+export async function completePasswordReset(
+  code: string,
+  newPassword: string
+): Promise<void> {
+  await confirmPasswordReset(auth, code, newPassword);
+}
+
+/**
+ * Send a verification email to the current user.
+ */
+export async function sendVerification(): Promise<void> {
+  var user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  await sendEmailVerification(user);
+}
+
+/**
+ * Reload the current user's profile to pick up emailVerified changes.
+ * Returns the updated verified status.
+ */
+export async function refreshEmailVerified(): Promise<boolean> {
+  var user = auth.currentUser;
+  if (!user) return false;
+  await user.reload();
+  return user.emailVerified;
 }
 
 /**
