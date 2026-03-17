@@ -11,6 +11,7 @@ import {
   faTriangleExclamation,
   faEnvelope,
   faCircleCheck,
+  faCopy,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
@@ -168,9 +169,42 @@ export default function AccountTab(): React.ReactElement | null {
           </div>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-qmuted'>Family Code</span>
-            <span className='text-[13px] text-qslate font-semibold tracking-[2px]'>
+            <button
+              onClick={function () {
+                if (!cfg || !cfg.familyCode) return;
+                var text = cfg.familyCode;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                  navigator.clipboard.writeText(text).then(function () {
+                    ctx.notify('Copied!');
+                  }).catch(function () {
+                    ctx.notify('Long-press to copy', 'error');
+                  });
+                } else {
+                  var ta = document.createElement('textarea');
+                  ta.value = text;
+                  ta.style.position = 'fixed';
+                  ta.style.left = '-9999px';
+                  ta.style.opacity = '0';
+                  document.body.appendChild(ta);
+                  ta.focus();
+                  ta.select();
+                  try {
+                    if (document.execCommand('copy')) {
+                      ctx.notify('Copied!');
+                    } else {
+                      ctx.notify('Long-press to copy');
+                    }
+                  } catch (_e) { /* ignore */ }
+                  document.body.removeChild(ta);
+                }
+              }}
+              className='text-[13px] text-qslate font-semibold tracking-[2px] bg-transparent border-none cursor-pointer p-0 flex items-center gap-1.5 hover:opacity-80 transition-opacity'
+            >
               {cfg && cfg.familyCode ? cfg.familyCode : '—'}
-            </span>
+              {cfg && cfg.familyCode && (
+                <FontAwesomeIcon icon={faCopy} className='text-xs text-qmuted' />
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -336,7 +370,8 @@ export default function AccountTab(): React.ReactElement | null {
           title='Reset All Data?'
           message='This will permanently erase all coins, streaks, mission history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain.'
           warning='This action cannot be undone.'
-          confirmLabel='Yes, Reset Everything'
+          requiredText='RESET'
+          confirmLabel='Reset'
           confirmColor='bg-qcoral'
           onConfirm={function () {
             setShowResetConfirm(false);
@@ -371,7 +406,9 @@ export default function AccountTab(): React.ReactElement | null {
           title='Delete Family Account?'
           message='This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
           warning='THIS ACTION CANNOT BE UNDONE.'
-          confirmLabel={deleteBusy ? 'Deleting...' : 'Yes, Delete Everything'}
+          requiredText={cfg && cfg.familyCode ? cfg.familyCode : 'DELETE'}
+          requiredTextLabel={'Enter your family code to confirm:'}
+          confirmLabel={deleteBusy ? 'Deleting...' : 'Delete'}
           confirmColor='bg-qcoral'
           onConfirm={function () {
             if (!deleteBusy) handleDeleteFamily();
@@ -384,25 +421,19 @@ export default function AccountTab(): React.ReactElement | null {
             }
           }}
         >
-          <div className='flex flex-col gap-2 mt-2'>
-            <input
-              type='password'
-              placeholder='Enter your password to confirm'
-              value={deletePass}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setDeletePass(e.target.value);
-                setDeleteErr('');
-              }}
-              onKeyDown={function (e: React.KeyboardEvent) {
-                if (e.key === 'Enter' && !deleteBusy) handleDeleteFamily();
-              }}
-              className='quest-input'
-              autoFocus
-            />
-            {deleteErr && (
-              <div className='text-qcoral text-[13px]'>{deleteErr}</div>
-            )}
-          </div>
+          <input
+            type='password'
+            placeholder='Enter your password'
+            value={deletePass}
+            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              setDeletePass(e.target.value);
+              setDeleteErr('');
+            }}
+            className='quest-input mt-2'
+          />
+          {deleteErr && (
+            <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
+          )}
         </ConfirmDialog>
       )}
     </div>
