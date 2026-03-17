@@ -8,4 +8,5 @@ Sentry.init({
   enabled: !!dsn,
   integrations: [Sentry.browserTracingIntegration()],
   tracesSampleRate: 0.2,
+  sendDefaultPii: false,
 });

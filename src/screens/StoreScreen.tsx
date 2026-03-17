@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV } from '../constants.ts';
 import BNav from '../components/BNav.tsx';
@@ -192,6 +193,7 @@ export default function StoreScreen(): React.ReactElement | null {
                       setConfirmR(null);
                     } catch (err) {
                       console.error('Redemption failed:', err);
+                      Sentry.captureException(err, { tags: { action: 'redemption' } });
                     } finally {
                       setRedeeming(false);
                     }

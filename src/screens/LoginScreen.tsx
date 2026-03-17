@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
@@ -84,6 +85,7 @@ export default function LoginScreen(
       await fsSaveChild(ctx.familyId, pinTarget!, { pin: newPin });
     } catch (err) {
       console.error('Failed to save PIN:', err);
+      Sentry.captureException(err, { tags: { action: 'save-kid-pin' } });
       setPinErr('Could not save PIN. Please try again.');
       return;
     }

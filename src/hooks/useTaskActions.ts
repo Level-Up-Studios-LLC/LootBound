@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import * as Sentry from '@sentry/react';
 import type { Config, TierConfig, UserData } from '../types.ts';
 import { COOLDOWN, SL } from '../constants.ts';
 import {
@@ -116,6 +117,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         photoUrl = await uploadTaskPhoto(deps.familyId, uid, d, taskId, photo);
       } catch (err) {
         console.warn('Photo upload failed, storing locally:', err);
+        Sentry.captureException(err, { tags: { action: 'photo-upload' } });
         photoUrl = photo; // fallback to base64 if upload fails
       }
     }
@@ -198,6 +200,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     if (entry.photo && entry.photo.indexOf('firebasestorage') !== -1) {
       deleteTaskPhoto(deps.familyId, uid, d, taskId).catch(function (err) {
         console.warn('Photo delete failed:', err);
+        Sentry.captureException(err, { tags: { action: 'photo-delete' } });
       });
     }
 

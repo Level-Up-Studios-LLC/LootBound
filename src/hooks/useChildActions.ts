@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react';
 import type { Config, UserData, Child, AddChildFormData } from '../types.ts';
 import { freshUser, slugify } from '../utils.ts';
 import { deleteChildData as fsDeleteChildData } from '../services/firestoreStorage.ts';
@@ -46,20 +47,26 @@ export function useChildActions(deps: ChildActionsDeps) {
     delete newTasks[id];
     newCfg.tasks = newTasks;
     await deps.saveCfg(newCfg);
+    var childDataDeleted = true;
     try {
       await fsDeleteChildData(deps.familyId, id);
-    } catch (_e) {
-      /* ignore */
+    } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'delete-child-data', childId: id } });
+      childDataDeleted = false;
     }
-    deleteAllChildPhotos(deps.familyId, id).catch(function () {
-      /* ignore */
+    deleteAllChildPhotos(deps.familyId, id).catch(function (err) {
+      Sentry.captureException(err, { tags: { action: 'delete-child-photos', childId: id } });
     });
     deps.setAllU(function (p) {
       var o: Record<string, UserData> = {};
       for (var k in p) if (k !== id) o[k] = p[k];
       return o;
     });
-    deps.notify('Child removed');
+    if (childDataDeleted) {
+      deps.notify('Child removed');
+    } else {
+      deps.notify('Child removed, but some data cleanup failed');
+    }
   }
 
   async function addBonus(uid: string, pts: number) {
@@ -81,6 +88,7 @@ export function useChildActions(deps: ChildActionsDeps) {
     // Delete all photos from Storage
     deleteAllFamilyPhotos(deps.familyId).catch(function (err) {
       console.warn('Photo cleanup failed during reset:', err);
+      Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
     });
     for (var i = 0; i < children.length; i++) {
       await deps.saveUsr(children[i].id, freshUser());
