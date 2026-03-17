@@ -52,7 +52,7 @@ export default function SettingsTab(): React.ReactElement {
                     e: React.ChangeEvent<HTMLInputElement>
                   ) {
                     var n: Record<string, TierConfig> = JSON.parse(
-                      JSON.stringify(cfg.tierConfig || DEF_TIER_CONFIG)
+                      JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     var v = Number(e.target.value);
@@ -71,7 +71,7 @@ export default function SettingsTab(): React.ReactElement {
                     e: React.ChangeEvent<HTMLInputElement>
                   ) {
                     var n: Record<string, TierConfig> = JSON.parse(
-                      JSON.stringify(cfg.tierConfig || DEF_TIER_CONFIG)
+                      JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     var v = Number(e.target.value);
@@ -97,7 +97,7 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='number'
-            value={cfg.approvalThreshold || 300}
+            value={cfg.approvalThreshold ?? 300}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               ctx.saveCfg(
                 Object.assign({}, cfg, {

@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { saveChild as fsSaveChild } from '../services/firestoreStorage.ts';
-import type { Child } from '../types.ts';
 
 interface LoginScreenProps {
   onSwitchFamily?: () => void;
@@ -142,7 +141,8 @@ export default function LoginScreen(
 
       {/* PIN entry for existing PIN */}
       {pinTarget && !createPin && (function () {
-        var targetChild = ctx.getChild(pinTarget) || ({} as Child);
+        var targetChild = ctx.getChild(pinTarget);
+        if (!targetChild) return null;
         return (
         <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up' role='dialog' aria-modal='true' aria-label={'Enter PIN for ' + targetChild.name}>
           <div className='text-sm text-qmuted'>
@@ -196,7 +196,8 @@ export default function LoginScreen(
 
       {/* PIN creation for first-time kids */}
       {pinTarget && createPin && (function () {
-        var targetChild = ctx.getChild(pinTarget) || ({} as Child);
+        var targetChild = ctx.getChild(pinTarget);
+        if (!targetChild) return null;
         return (
         <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up' role='dialog' aria-modal='true' aria-label={'Create PIN for ' + targetChild.name}>
           <div className='text-sm text-qmuted'>
