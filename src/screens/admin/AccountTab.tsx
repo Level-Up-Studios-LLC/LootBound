@@ -194,7 +194,9 @@ export default function AccountTab(): React.ReactElement | null {
                     } else {
                       ctx.notify('Long-press to copy');
                     }
-                  } catch (_e) { /* ignore */ }
+                  } catch (_e) {
+                    ctx.notify('Long-press to copy', 'error');
+                  }
                   document.body.removeChild(ta);
                 }
               }}
