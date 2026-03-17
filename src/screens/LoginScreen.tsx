@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { saveChild as fsSaveChild } from '../services/firestoreStorage.ts';
-import type { Child } from '../types.ts';
 
 interface LoginScreenProps {
   onSwitchFamily?: () => void;
@@ -143,14 +142,17 @@ export default function LoginScreen(
       )}
 
       {/* PIN entry modal for existing PIN */}
-      {pinTarget && !createPin && (
+      {pinTarget && !createPin && (function () {
+        var targetChild = ctx.getChild(pinTarget);
+        if (!targetChild) return null;
+        return (
         <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up'>
+          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={'Enter PIN for ' + targetChild.name}>
             <div className='text-[32px] mb-1'>
-              {(ctx.getChild(pinTarget) || ({} as Child)).avatar}
+              {targetChild.avatar}
             </div>
             <div className='text-sm text-qmuted'>
-              Enter PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
+              Enter PIN for {targetChild.name}
             </div>
             <div className='flex gap-2'>
               <input
@@ -196,17 +198,21 @@ export default function LoginScreen(
             </button>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* PIN creation modal for first-time kids */}
-      {pinTarget && createPin && (
+      {pinTarget && createPin && (function () {
+        var targetChild = ctx.getChild(pinTarget);
+        if (!targetChild) return null;
+        return (
         <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up'>
+          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={'Create PIN for ' + targetChild.name}>
             <div className='text-[32px] mb-1'>
-              {(ctx.getChild(pinTarget) || ({} as Child)).avatar}
+              {targetChild.avatar}
             </div>
             <div className='text-sm text-qmuted'>
-              Create a PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
+              Create a PIN for {targetChild.name}
             </div>
             <div className='text-xs text-qdim'>
               Choose a 4-digit PIN to protect your profile
@@ -257,7 +263,8 @@ export default function LoginScreen(
             </button>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Switch family button for kid devices */}
       {props.onSwitchFamily && (

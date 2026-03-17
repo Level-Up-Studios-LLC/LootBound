@@ -146,7 +146,7 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Approval threshold coins'
-            value={cfg.approvalThreshold != null ? cfg.approvalThreshold : 300}
+            value={cfg.approvalThreshold ?? 300}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               var v = Number(e.target.value);
               update(
