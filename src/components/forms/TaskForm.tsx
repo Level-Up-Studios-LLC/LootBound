@@ -77,6 +77,11 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             }}
             className='quest-input'
           />
+          {f.windowStart && f.windowEnd && f.windowEnd <= f.windowStart && (
+            <div className='text-qcoral text-[12px] mt-1'>
+              End time must be after {f.windowStart.replace(/^0/, '')}.
+            </div>
+          )}
         </div>
       </div>
       <div>
@@ -144,11 +149,6 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
       <div className='text-[11px] text-qmuted'>
         {f.daily ? 'Repeats every day.' : 'Repeats weekly on selected day.'}
       </div>
-      {f.windowStart && f.windowEnd && f.windowEnd <= f.windowStart && (
-        <div className='text-qcoral text-[13px]'>
-          End time must be after start time.
-        </div>
-      )}
       <div className='flex gap-3 justify-end'>
         <button
           onClick={props.onCancel}
