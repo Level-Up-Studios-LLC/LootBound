@@ -275,6 +275,24 @@ Always checkout the correct branch before making changes:
 
 GitHub repo: https://github.com/Level-Up-Studios-LLC/LootBound.git
 
+### Syncing Branches After Merging to Main
+
+After PRs are merged to `main`, update active working branches so they have the latest code:
+
+```bash
+git checkout main && git pull                # get latest main
+git checkout <branch> && git merge main      # bring main into your branch
+```
+
+**When to sync:**
+- Before starting new work on a branch
+- Before opening a PR (keeps the diff clean and avoids conflicts)
+- When main has changes your branch depends on (e.g., a bugfix or shared utility)
+
+**When you can skip it:**
+- Branches you're not actively working on — update them when you pick them back up
+- Branches already in PR review with no conflicts
+
 ### Versioning
 
 Uses semantic versioning (SemVer). Update `package.json` version and CHANGELOG.md for each release.
