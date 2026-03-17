@@ -144,7 +144,7 @@ export default function LoginScreen(
         var targetChild = ctx.getChild(pinTarget);
         if (!targetChild) return null;
         return (
-        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up' role='dialog' aria-modal='true' aria-label={'Enter PIN for ' + targetChild.name}>
+        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up' role='dialog' aria-label={'Enter PIN for ' + targetChild.name}>
           <div className='text-sm text-qmuted'>
             Enter PIN for {targetChild.name}
           </div>
@@ -199,7 +199,7 @@ export default function LoginScreen(
         var targetChild = ctx.getChild(pinTarget);
         if (!targetChild) return null;
         return (
-        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up' role='dialog' aria-modal='true' aria-label={'Create PIN for ' + targetChild.name}>
+        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up' role='dialog' aria-label={'Create PIN for ' + targetChild.name}>
           <div className='text-sm text-qmuted'>
             Create a PIN for {targetChild.name}
           </div>
