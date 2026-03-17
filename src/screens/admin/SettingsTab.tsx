@@ -21,6 +21,10 @@ export default function SettingsTab(): React.ReactElement {
   var ctx = useAppContext();
   var cfg = ctx.cfg;
 
+  if (!cfg) {
+    return <div className='text-qmuted'>Loading settings...</div>;
+  }
+
   return (
     <div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
@@ -48,12 +52,12 @@ export default function SettingsTab(): React.ReactElement {
                     e: React.ChangeEvent<HTMLInputElement>
                   ) {
                     var n: Record<string, TierConfig> = JSON.parse(
-                      JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
+                      JSON.stringify(cfg.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     var v = Number(e.target.value);
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
+                    ctx.saveCfg(Object.assign({}, cfg, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'
                 />
@@ -67,12 +71,12 @@ export default function SettingsTab(): React.ReactElement {
                     e: React.ChangeEvent<HTMLInputElement>
                   ) {
                     var n: Record<string, TierConfig> = JSON.parse(
-                      JSON.stringify(cfg!.tierConfig || DEF_TIER_CONFIG)
+                      JSON.stringify(cfg.tierConfig || DEF_TIER_CONFIG)
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     var v = Number(e.target.value);
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    ctx.saveCfg(Object.assign({}, cfg!, { tierConfig: n }));
+                    ctx.saveCfg(Object.assign({}, cfg, { tierConfig: n }));
                   }}
                   className='quest-input !w-[60px] text-center'
                 />
@@ -93,10 +97,10 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='number'
-            value={cfg!.approvalThreshold || 300}
+            value={cfg.approvalThreshold || 300}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               ctx.saveCfg(
-                Object.assign({}, cfg!, {
+                Object.assign({}, cfg, {
                   approvalThreshold: Number(e.target.value) || 0,
                 })
               );
@@ -119,7 +123,7 @@ export default function SettingsTab(): React.ReactElement {
           <input
             type='time'
             value={(function () {
-              var bt = cfg!.bedtime != null ? cfg!.bedtime : 21 * 60;
+              var bt = cfg.bedtime != null ? cfg.bedtime : 21 * 60;
               var h = Math.floor(bt / 60);
               var m = bt % 60;
               return (
@@ -129,7 +133,7 @@ export default function SettingsTab(): React.ReactElement {
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               var parts = e.target.value.split(':').map(Number);
               var mins = parts[0] * 60 + parts[1];
-              ctx.saveCfg(Object.assign({}, cfg!, { bedtime: mins }));
+              ctx.saveCfg(Object.assign({}, cfg, { bedtime: mins }));
             }}
             className='quest-input !w-[140px]'
           />
@@ -145,10 +149,10 @@ export default function SettingsTab(): React.ReactElement {
         </div>
         <div className='flex gap-3 items-center'>
           <select
-            value={cfg!.weeklyResetDay != null ? cfg!.weeklyResetDay : 0}
+            value={cfg.weeklyResetDay != null ? cfg.weeklyResetDay : 0}
             onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
               ctx.saveCfg(
-                Object.assign({}, cfg!, {
+                Object.assign({}, cfg, {
                   weeklyResetDay: Number(e.target.value),
                 })
               );
@@ -176,10 +180,10 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='number'
-            value={cfg!.cooldown != null ? cfg!.cooldown : 60}
+            value={cfg.cooldown != null ? cfg.cooldown : 60}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               ctx.saveCfg(
-                Object.assign({}, cfg!, {
+                Object.assign({}, cfg, {
                   cooldown: Number(e.target.value) || 0,
                 })
               );

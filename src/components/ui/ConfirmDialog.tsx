@@ -16,14 +16,14 @@ export default function ConfirmDialog(
   props: ConfirmDialogProps
 ): React.ReactElement {
   return (
-    <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'>
+    <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5' role='dialog' aria-modal='true' aria-labelledby='confirm-dialog-title'>
       <div
         className={
           (props.bgColor || 'bg-white') +
           ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg'
         }
       >
-        <div className='font-display text-xl font-bold mb-4 text-qslate'>
+        <div id='confirm-dialog-title' className='font-display text-xl font-bold mb-4 text-qslate'>
           {props.title}
         </div>
         <div className='mb-4'>

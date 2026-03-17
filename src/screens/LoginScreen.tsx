@@ -141,10 +141,12 @@ export default function LoginScreen(
       )}
 
       {/* PIN entry for existing PIN */}
-      {pinTarget && !createPin && (
-        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up'>
+      {pinTarget && !createPin && (function () {
+        var targetChild = ctx.getChild(pinTarget) || ({} as Child);
+        return (
+        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up' role='dialog' aria-modal='true' aria-label={'Enter PIN for ' + targetChild.name}>
           <div className='text-sm text-qmuted'>
-            Enter PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
+            Enter PIN for {targetChild.name}
           </div>
           <div className='flex gap-2'>
             <input
@@ -152,7 +154,7 @@ export default function LoginScreen(
               maxLength={4}
               value={kpin}
               onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setKpin(e.target.value);
+                setKpin(e.target.value.replace(/[^0-9]/g, ''));
                 setPinErr('');
               }}
               onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
@@ -189,13 +191,16 @@ export default function LoginScreen(
             Forgot PIN? Ask a parent to reset it.
           </button>
         </div>
-      )}
+        );
+      })()}
 
       {/* PIN creation for first-time kids */}
-      {pinTarget && createPin && (
-        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up'>
+      {pinTarget && createPin && (function () {
+        var targetChild = ctx.getChild(pinTarget) || ({} as Child);
+        return (
+        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up' role='dialog' aria-modal='true' aria-label={'Create PIN for ' + targetChild.name}>
           <div className='text-sm text-qmuted'>
-            Create a PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
+            Create a PIN for {targetChild.name}
           </div>
           <div className='text-xs text-qdim'>
             Choose a 4-digit PIN to protect your profile
@@ -245,7 +250,8 @@ export default function LoginScreen(
             Cancel
           </button>
         </div>
-      )}
+        );
+      })()}
 
       {/* Switch family button for kid devices */}
       {props.onSwitchFamily && (
