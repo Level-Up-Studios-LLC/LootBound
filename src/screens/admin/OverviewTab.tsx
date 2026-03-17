@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFamilyPants } from '../../fa.ts';
+import { faFamilyPants, faCartShopping, faChevronRight } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE, altBg } from '../../constants.ts';
 import { freshUser, getToday, isTaskActiveToday, getLevelTitle } from '../../utils.ts';
@@ -12,6 +12,9 @@ interface OverviewTabProps {
 export default function OverviewTab(
   props: OverviewTabProps
 ): React.ReactElement {
+  var _expanded = useState<Record<string, boolean>>({}),
+    expanded = _expanded[0],
+    setExpanded = _expanded[1];
   var ctx = useAppContext();
   var children = ctx.children;
   var allU = ctx.allU;
@@ -101,6 +104,54 @@ export default function OverviewTab(
                 );
               })}
             </div>
+            {(function () {
+              var redeems = udata.redemptions || [];
+              if (redeems.length === 0) return null;
+              var isOpen = expanded[c.id] || false;
+              return (
+                <div className='mt-3 pt-3 border-t border-qslate/10'>
+                  <button
+                    onClick={function () {
+                      var next = Object.assign({}, expanded);
+                      next[c.id] = !isOpen;
+                      setExpanded(next);
+                    }}
+                    className='flex items-center gap-1.5 bg-transparent border-none cursor-pointer p-0 font-body'
+                  >
+                    <FontAwesomeIcon
+                      icon={faCartShopping}
+                      className='text-[11px] text-qmuted'
+                      style={FA_ICON_STYLE}
+                    />
+                    <span className='text-xs font-bold text-qslate'>
+                      Purchases ({redeems.length})
+                    </span>
+                    <FontAwesomeIcon
+                      icon={faChevronRight}
+                      className={'text-[9px] text-qmuted transition-transform' + (isOpen ? ' rotate-90' : '')}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className='mt-2'>
+                      {redeems.slice().reverse().map(function (r, i) {
+                        return (
+                          <div
+                            key={r.rewardId + '-' + r.date + '-' + i}
+                            className='flex justify-between items-center rounded-badge px-2.5 py-1.5 mb-1 text-[11px] bg-white/60'
+                          >
+                            <span className='text-qslate'>{r.name}</span>
+                            <span className='text-qcoral font-semibold'>
+                              -{r.cost}
+                            </span>
+                            <span className='text-qmuted'>{r.date}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         );
       })}
