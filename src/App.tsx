@@ -14,7 +14,6 @@ import { signInAnonymousKid } from './services/auth.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
-var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 import RoleSelectScreen from './screens/RoleSelectScreen.tsx';
 import AuthScreen from './screens/AuthScreen.tsx';
 import ParentPinScreen from './screens/ParentPinScreen.tsx';
@@ -28,6 +27,8 @@ import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
+
+var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 /**
  * Parse Firebase action URL parameters from the current URL.

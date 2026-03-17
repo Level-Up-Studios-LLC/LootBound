@@ -54,7 +54,8 @@ export default function LoginScreen(
   }
 
   function submitKidPin(): void {
-    var ch = ctx.getChild(pinTarget!);
+    if (!pinTarget) return;
+    var ch = ctx.getChild(pinTarget);
     if (!ch) return;
     if (kpin === ch.pin) {
       ctx.setCurUser(pinTarget);
@@ -78,10 +79,11 @@ export default function LoginScreen(
     }
     // Save PIN directly to the child's Firestore doc (kids are anonymous
     // and don't have parent-level write access to the full config)
-    var ch = ctx.getChild(pinTarget!);
+    if (!pinTarget) return;
+    var ch = ctx.getChild(pinTarget);
     if (!ch || !ctx.familyId) return;
     try {
-      await fsSaveChild(ctx.familyId, pinTarget!, { pin: newPin });
+      await fsSaveChild(ctx.familyId, pinTarget, { pin: newPin });
     } catch (err) {
       console.error('Failed to save PIN:', err);
       Sentry.captureException(err, { tags: { action: 'save-kid-pin' } });

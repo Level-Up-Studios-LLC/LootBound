@@ -194,7 +194,9 @@ export default function AccountTab(): React.ReactElement | null {
                     } else {
                       ctx.notify('Long-press to copy');
                     }
-                  } catch (_e) { /* ignore */ }
+                  } catch (_e) {
+                    ctx.notify('Long-press to copy', 'error');
+                  }
                   document.body.removeChild(ta);
                 }
               }}
@@ -428,6 +430,9 @@ export default function AccountTab(): React.ReactElement | null {
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setDeletePass(e.target.value);
               setDeleteErr('');
+            }}
+            onKeyDown={function (e: React.KeyboardEvent) {
+              if (e.key === 'Enter' && !deleteBusy) handleDeleteFamily();
             }}
             className='quest-input mt-2'
           />
