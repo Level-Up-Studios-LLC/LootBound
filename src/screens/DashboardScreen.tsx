@@ -91,7 +91,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                 className='h-full rounded-sm transition-all duration-500'
                 style={{
                   width: xpProg.pct + '%',
-                  background: lt.color,
+                  background: ch.color,
                 }}
               />
             </div>
@@ -112,12 +112,10 @@ export default function DashboardScreen(): React.ReactElement | null {
           <div className='text-xs text-qmuted'>Today</div>
           <div className='h-1 bg-qmint-dim rounded-sm mt-1.5'>
             <div
-              className={
-                'h-full rounded-sm transition-all duration-500 ' +
-                (pct === 100 ? 'bg-qteal' : 'bg-qyellow')
-              }
+              className='h-full rounded-sm transition-all duration-500'
               style={{
                 width: pct + '%',
+                background: ch.color,
               }}
             />
           </div>
