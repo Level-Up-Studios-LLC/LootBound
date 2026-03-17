@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faKey, faUserPlus, faTrashCan, faChildren, faCartShopping, faChevronRight } from '../../fa.ts';
+import { faXmark, faKey, faUserPlus, faTrashCan, faChildren } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { AVATARS, COLORS, altBg, FA_ICON_STYLE } from '../../constants.ts';
+import { AVATARS, COLORS, altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
+import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
 export default function ChildrenTab(): React.ReactElement {
@@ -157,55 +158,16 @@ export default function ChildrenTab(): React.ReactElement {
                 </button>
               </div>
             </div>
-            {(function () {
-              var udata = allU[c.id] || ({} as UserData);
-              var redeems = udata.redemptions || [];
-              if (redeems.length === 0) return null;
-              var isOpen = expanded[c.id] || false;
-              return (
-                <div className='mt-3 pt-3 border-t border-qslate/10'>
-                  <button
-                    onClick={function () {
-                      var next = Object.assign({}, expanded);
-                      next[c.id] = !isOpen;
-                      setExpanded(next);
-                    }}
-                    className='flex items-center gap-1.5 bg-transparent border-none cursor-pointer p-0 font-body'
-                  >
-                    <FontAwesomeIcon
-                      icon={faCartShopping}
-                      className='text-[11px] text-qmuted'
-                      style={FA_ICON_STYLE}
-                    />
-                    <span className='text-xs font-bold text-qslate'>
-                      Purchases ({redeems.length})
-                    </span>
-                    <FontAwesomeIcon
-                      icon={faChevronRight}
-                      className={'text-[9px] text-qmuted transition-transform' + (isOpen ? ' rotate-90' : '')}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className='mt-2'>
-                      {redeems.slice().reverse().map(function (r, i) {
-                        return (
-                          <div
-                            key={r.rewardId + '-' + r.date + '-' + i}
-                            className='flex justify-between items-center rounded-badge px-2.5 py-1.5 mb-1 text-[11px] bg-white/60'
-                          >
-                            <span className='text-qslate'>{r.name}</span>
-                            <span className='text-qcoral font-semibold'>
-                              -{r.cost}
-                            </span>
-                            <span className='text-qmuted'>{r.date}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            <PurchasesToggle
+              id={c.id}
+              redeems={(allU[c.id] || ({} as UserData)).redemptions || []}
+              isOpen={expanded[c.id] || false}
+              onToggle={function (id) {
+                var next = Object.assign({}, expanded);
+                next[id] = !next[id];
+                setExpanded(next);
+              }}
+            />
           </div>
         );
       })}

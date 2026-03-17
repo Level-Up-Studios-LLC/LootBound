@@ -6,7 +6,6 @@ import { FA_ICON_STYLE } from '../constants.ts';
 import { saveConfig } from '../services/firestoreStorage.ts';
 
 var REFERRAL_OPTIONS = [
-  '',
   'Friend or family',
   'Social media',
   'Search engine',
@@ -386,7 +385,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               className='quest-input'
             >
               <option value=''>Select one (optional)</option>
-              {REFERRAL_OPTIONS.filter(function (o) { return o !== ''; }).map(function (o) {
+              {REFERRAL_OPTIONS.map(function (o) {
                 return (
                   <option key={o} value={o}>
                     {o}
