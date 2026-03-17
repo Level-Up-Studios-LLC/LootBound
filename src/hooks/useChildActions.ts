@@ -47,10 +47,12 @@ export function useChildActions(deps: ChildActionsDeps) {
     delete newTasks[id];
     newCfg.tasks = newTasks;
     await deps.saveCfg(newCfg);
+    var childDataDeleted = true;
     try {
       await fsDeleteChildData(deps.familyId, id);
     } catch (err) {
       Sentry.captureException(err, { tags: { action: 'delete-child-data', childId: id } });
+      childDataDeleted = false;
     }
     deleteAllChildPhotos(deps.familyId, id).catch(function (err) {
       Sentry.captureException(err, { tags: { action: 'delete-child-photos', childId: id } });
@@ -60,7 +62,11 @@ export function useChildActions(deps: ChildActionsDeps) {
       for (var k in p) if (k !== id) o[k] = p[k];
       return o;
     });
-    deps.notify('Child removed');
+    if (childDataDeleted) {
+      deps.notify('Child removed');
+    } else {
+      deps.notify('Child removed, but some data cleanup failed');
+    }
   }
 
   async function addBonus(uid: string, pts: number) {

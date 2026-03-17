@@ -60,7 +60,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       setAuthUser(user);
       setAuthLoading(false);
       if (user) {
-        Sentry.setUser({ id: user.familyId, email: user.email });
+        Sentry.setUser({ id: user.familyId });
       } else {
         Sentry.setUser(null);
       }
