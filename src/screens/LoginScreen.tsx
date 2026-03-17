@@ -142,110 +142,120 @@ export default function LoginScreen(
         </div>
       )}
 
-      {/* PIN entry for existing PIN */}
+      {/* PIN entry modal for existing PIN */}
       {pinTarget && !createPin && (
-        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn animate-slide-up'>
-          <div className='text-sm text-qmuted'>
-            Enter PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
-          </div>
-          <div className='flex gap-2'>
-            <input
-              type='password'
-              maxLength={4}
-              value={kpin}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setKpin(e.target.value);
+        <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
+          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up'>
+            <div className='text-[32px] mb-1'>
+              {(ctx.getChild(pinTarget) || ({} as Child)).avatar}
+            </div>
+            <div className='text-sm text-qmuted'>
+              Enter PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
+            </div>
+            <div className='flex gap-2'>
+              <input
+                type='password'
+                maxLength={4}
+                value={kpin}
+                onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                  setKpin(e.target.value);
+                  setPinErr('');
+                }}
+                onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
+                  if (e.key === 'Enter') submitKidPin();
+                }}
+                className='quest-input w-[100px] text-center'
+                autoFocus
+              />
+              <button onClick={submitKidPin} className='btn-primary'>
+                Go
+              </button>
+            </div>
+            {pinErr && (
+              <div className='text-qcoral text-[13px] animate-shake'>
+                {pinErr}
+              </div>
+            )}
+            <button
+              onClick={function () {
+                setPinTarget(null);
                 setPinErr('');
               }}
-              onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
-                if (e.key === 'Enter') submitKidPin();
+              className='btn-ghost'
+            >
+              Cancel
+            </button>
+            <button
+              onClick={function () {
+                setPinTarget(null);
+                setPinErr('');
               }}
-              className='quest-input w-[100px] text-center'
-              autoFocus
-            />
-            <button onClick={submitKidPin} className='btn-primary'>
-              Go
+              className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
+            >
+              Forgot PIN? Ask a parent to reset it.
             </button>
           </div>
-          {pinErr && (
-            <div className='text-qcoral text-[13px] animate-shake'>
-              {pinErr}
-            </div>
-          )}
-          <button
-            onClick={function () {
-              setPinTarget(null);
-              setPinErr('');
-            }}
-            className='btn-ghost'
-          >
-            Cancel
-          </button>
-          <button
-            onClick={function () {
-              setPinTarget(null);
-              setPinErr('');
-            }}
-            className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
-          >
-            Forgot PIN? Ask a parent to reset it.
-          </button>
         </div>
       )}
 
-      {/* PIN creation for first-time kids */}
+      {/* PIN creation modal for first-time kids */}
       {pinTarget && createPin && (
-        <div className='flex flex-col items-center gap-3 mb-8 bg-qmint p-6 rounded-btn w-full max-w-[280px] animate-slide-up'>
-          <div className='text-sm text-qmuted'>
-            Create a PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
-          </div>
-          <div className='text-xs text-qdim'>
-            Choose a 4-digit PIN to protect your profile
-          </div>
-          <input
-            type='password'
-            maxLength={4}
-            placeholder='New PIN'
-            value={newPin}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              setNewPin(e.target.value.replace(/[^0-9]/g, ''));
-              setPinErr('');
-            }}
-            className='quest-input w-[120px] text-center'
-            autoFocus
-          />
-          <input
-            type='password'
-            maxLength={4}
-            placeholder='Confirm PIN'
-            value={confirmPin}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
-              setPinErr('');
-            }}
-            onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
-              if (e.key === 'Enter') submitCreatePin();
-            }}
-            className='quest-input w-[120px] text-center'
-          />
-          {pinErr && (
-            <div className='text-qcoral text-[13px] animate-shake'>
-              {pinErr}
+        <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
+          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up'>
+            <div className='text-[32px] mb-1'>
+              {(ctx.getChild(pinTarget) || ({} as Child)).avatar}
             </div>
-          )}
-          <button onClick={submitCreatePin} className='btn-primary'>
-            Set PIN
-          </button>
-          <button
-            onClick={function () {
-              setPinTarget(null);
-              setCreatePin(false);
-              setPinErr('');
-            }}
-            className='btn-ghost'
-          >
-            Cancel
-          </button>
+            <div className='text-sm text-qmuted'>
+              Create a PIN for {(ctx.getChild(pinTarget) || ({} as Child)).name}
+            </div>
+            <div className='text-xs text-qdim'>
+              Choose a 4-digit PIN to protect your profile
+            </div>
+            <input
+              type='password'
+              maxLength={4}
+              placeholder='New PIN'
+              value={newPin}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setNewPin(e.target.value.replace(/[^0-9]/g, ''));
+                setPinErr('');
+              }}
+              className='quest-input w-[120px] text-center'
+              autoFocus
+            />
+            <input
+              type='password'
+              maxLength={4}
+              placeholder='Confirm PIN'
+              value={confirmPin}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
+                setPinErr('');
+              }}
+              onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
+                if (e.key === 'Enter') submitCreatePin();
+              }}
+              className='quest-input w-[120px] text-center'
+            />
+            {pinErr && (
+              <div className='text-qcoral text-[13px] animate-shake'>
+                {pinErr}
+              </div>
+            )}
+            <button onClick={submitCreatePin} className='btn-primary'>
+              Set PIN
+            </button>
+            <button
+              onClick={function () {
+                setPinTarget(null);
+                setCreatePin(false);
+                setPinErr('');
+              }}
+              className='btn-ghost'
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
