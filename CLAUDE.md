@@ -256,6 +256,8 @@ When AppContext loads config, it checks for the old numeric `tierPoints` format 
 - **FontAwesome icons** — must be imported in `src/fa.ts` and added to `library.add()`
 - **Firestore writes** — always use `{ merge: true }` via `fsSaveConfig`/`fsSaveChild` etc.
 - **No Co-Authored-By** — do not add "Co-Authored-By: Claude" to commit messages
+- **TypeScript only** — all source files must be `.ts`/`.tsx`. Never create `.js`/`.jsx` files in `src/`.
+- **Post-feature cleanup** — after completing a major change or feature, scan for and remove dead code, unused imports, orphaned files, and leftover artifacts before committing.
 
 ### Branch Workflow
 
