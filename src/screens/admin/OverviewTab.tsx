@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFamilyPants } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE, altBg } from '../../constants.ts';
 import { freshUser, getToday, isTaskActiveToday, getLevelTitle } from '../../utils.ts';
+import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 
 interface OverviewTabProps {
   onSwitchTab: (tab: string) => void;
@@ -12,6 +13,9 @@ interface OverviewTabProps {
 export default function OverviewTab(
   props: OverviewTabProps
 ): React.ReactElement {
+  var _expanded = useState<Record<string, boolean>>({}),
+    expanded = _expanded[0],
+    setExpanded = _expanded[1];
   var ctx = useAppContext();
   var children = ctx.children;
   var allU = ctx.allU;
@@ -101,6 +105,16 @@ export default function OverviewTab(
                 );
               })}
             </div>
+            <PurchasesToggle
+              id={c.id}
+              redeems={udata.redemptions || []}
+              isOpen={expanded[c.id] || false}
+              onToggle={function (id) {
+                var next = Object.assign({}, expanded);
+                next[id] = !next[id];
+                setExpanded(next);
+              }}
+            />
           </div>
         );
       })}

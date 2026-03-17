@@ -85,7 +85,9 @@ export default function AdminScreen(): React.ReactElement {
       <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center mb-3'>
           <div className='font-display text-2xl font-bold text-qslate'>
-            Parent Dashboard
+            {cfg && cfg.parentName
+              ? 'Hey, ' + cfg.parentName + '!'
+              : 'Parent Dashboard'}
           </div>
           <HamburgerMenu
           items={[

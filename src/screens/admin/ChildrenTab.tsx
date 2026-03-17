@@ -7,6 +7,7 @@ import Modal from '../../components/ui/Modal.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
+import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
 export default function ChildrenTab(): React.ReactElement {
@@ -19,6 +20,9 @@ export default function ChildrenTab(): React.ReactElement {
   var _removeChild = useState<Child | null>(null),
     removeChild = _removeChild[0],
     setRemoveChild = _removeChild[1];
+  var _expanded = useState<Record<string, boolean>>({}),
+    expanded = _expanded[0],
+    setExpanded = _expanded[1];
 
   var ctx = useAppContext();
   var children = ctx.children;
@@ -154,6 +158,16 @@ export default function ChildrenTab(): React.ReactElement {
                 </button>
               </div>
             </div>
+            <PurchasesToggle
+              id={c.id}
+              redeems={(allU[c.id] || ({} as UserData)).redemptions || []}
+              isOpen={expanded[c.id] || false}
+              onToggle={function (id) {
+                var next = Object.assign({}, expanded);
+                next[id] = !next[id];
+                setExpanded(next);
+              }}
+            />
           </div>
         );
       })}

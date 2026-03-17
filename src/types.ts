@@ -91,6 +91,8 @@ export interface Config {
   bedtime?: number;
   weeklyResetDay?: number;
   cooldown?: number;
+  parentName?: string;
+  referralSource?: string;
 }
 
 export interface Notification {
