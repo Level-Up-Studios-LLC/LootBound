@@ -426,7 +426,7 @@ export function AppProvider(props: {
         if (needsReset) {
           ud.missedDaysThisWeek = 0;
           // Delete photos from Storage before clearing the log
-          (function (childId) {
+          (function (childId: string) {
             deleteAllChildPhotos(familyId, childId).catch(function (err) {
               console.warn('Photo cleanup failed for ' + childId + ':', err);
               Sentry.captureException(err, { tags: { action: 'weekly-reset-photo-cleanup', childId: childId } });
