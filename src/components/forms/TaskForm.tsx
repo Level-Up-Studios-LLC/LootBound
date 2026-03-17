@@ -72,6 +72,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             id='tf-end'
             type='time'
             value={f.windowEnd}
+            min={f.windowStart || undefined}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               u('windowEnd', e.target.value);
             }}
