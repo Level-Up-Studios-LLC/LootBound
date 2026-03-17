@@ -5,17 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-03-15
+## [1.2.0] - 2026-03-17
 
 ### Added
+- Google sign-in for parents (redirect-based, iPad-compatible)
+- Email verification flow with resend and refresh
+- Custom branded password reset page with Firebase action URL handling
+- Sentry error tracking at critical points across contexts, hooks, and screens
+- `sendDefaultPii: false` in Sentry init for privacy protection
+- `VITE_APP_URL` env var for configurable password reset redirect URL
+- Retryable error state on reset code verification (network errors show retry button)
 - GitHub Actions workflow for automatic Firebase Hosting deploy on push to main
 - Account page with password change, PIN management, and family deletion
 - Forgot/reset password flow on parent sign-in screen
 - Password confirmation required before deleting family account
 - `reauthenticate()` helper for session freshness before destructive operations
 - `children` prop on ConfirmDialog for embedded content (e.g., password input)
+- TypeScript-only and post-feature cleanup conventions in CLAUDE.md
+- Branch syncing workflow documentation in CLAUDE.md
 
 ### Fixed
+- `var` closure bug in weekly reset photo cleanup loop (IIFE with typed parameter)
+- Raw email PII removed from Sentry user context (now only sends familyId)
+- `doRemoveChild` now surfaces partial failure when child data deletion fails
+- `doRefreshVerification` missing error handling (added try/catch)
+- `doSendVerification` not clearing prior auth error state
+- Google sign-in redirect landing on role selector instead of app
 - Firestore rules: restrict familyCodes create to parents (`isParent` check)
 - Firestore rules: restrict familyCodes delete to family owner
 - AccountTab hooks ordering — moved null guard after all useState calls
