@@ -11,6 +11,7 @@ import {
   faTriangleExclamation,
   faEnvelope,
   faCircleCheck,
+  faCopy,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
@@ -168,9 +169,42 @@ export default function AccountTab(): React.ReactElement | null {
           </div>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-qmuted'>Family Code</span>
-            <span className='text-[13px] text-qslate font-semibold tracking-[2px]'>
+            <button
+              onClick={function () {
+                if (!cfg || !cfg.familyCode) return;
+                var text = cfg.familyCode;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                  navigator.clipboard.writeText(text).then(function () {
+                    ctx.notify('Copied!');
+                  }).catch(function () {
+                    ctx.notify('Long-press to copy', 'error');
+                  });
+                } else {
+                  var ta = document.createElement('textarea');
+                  ta.value = text;
+                  ta.style.position = 'fixed';
+                  ta.style.left = '-9999px';
+                  ta.style.opacity = '0';
+                  document.body.appendChild(ta);
+                  ta.focus();
+                  ta.select();
+                  try {
+                    if (document.execCommand('copy')) {
+                      ctx.notify('Copied!');
+                    } else {
+                      ctx.notify('Long-press to copy');
+                    }
+                  } catch (_e) { /* ignore */ }
+                  document.body.removeChild(ta);
+                }
+              }}
+              className='text-[13px] text-qslate font-semibold tracking-[2px] bg-transparent border-none cursor-pointer p-0 flex items-center gap-1.5 hover:opacity-80 transition-opacity'
+            >
               {cfg && cfg.familyCode ? cfg.familyCode : '—'}
-            </span>
+              {cfg && cfg.familyCode && (
+                <FontAwesomeIcon icon={faCopy} className='text-xs text-qmuted' />
+              )}
+            </button>
           </div>
         </div>
       </div>
