@@ -16,6 +16,7 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   updatePassword,
+  verifyBeforeUpdateEmail,
   reauthenticateWithCredential,
   verifyPasswordResetCode,
   confirmPasswordReset,
@@ -240,6 +241,21 @@ export async function changePassword(
   var cred = EmailAuthProvider.credential(user.email, currentPassword);
   await reauthenticateWithCredential(user, cred);
   await updatePassword(user, newPassword);
+}
+
+/**
+ * Update the current user's email. Requires re-authentication first.
+ * Sends a verification link to the new email before changing it.
+ */
+export async function changeEmail(
+  currentPassword: string,
+  newEmail: string
+): Promise<void> {
+  var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  var cred = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, cred);
+  await verifyBeforeUpdateEmail(user, newEmail);
 }
 
 /**

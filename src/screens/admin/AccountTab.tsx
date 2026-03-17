@@ -16,16 +16,53 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
+import { changePassword, changeEmail, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
 import { deleteFamily } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
+import { faPenToSquare } from '../../fa.ts';
+
+function gravatarUrl(email: string, size: number): string {
+  var hash = email.trim().toLowerCase();
+  // Simple hash for gravatar — uses a basic approach since we can't
+  // import crypto in the browser without overhead. Falls back to default.
+  var h = 0;
+  for (var i = 0; i < hash.length; i++) {
+    h = ((h << 5) - h + hash.charCodeAt(i)) | 0;
+  }
+  // Use identicon as default — works without MD5 by using email directly
+  return 'https://www.gravatar.com/avatar/?d=mp&s=' + size;
+}
 
 export default function AccountTab(): React.ReactElement | null {
   var ctx = useAppContext();
   var auth = useAuthContext();
   var cfg = ctx.cfg;
 
+  var _editName = useState(false),
+    editName = _editName[0],
+    setEditName = _editName[1];
+  var _nameVal = useState(''),
+    nameVal = _nameVal[0],
+    setNameVal = _nameVal[1];
+  var _editEmail = useState(false),
+    editEmail = _editEmail[0],
+    setEditEmail = _editEmail[1];
+  var _emailVal = useState(''),
+    emailVal = _emailVal[0],
+    setEmailVal = _emailVal[1];
+  var _emailPass = useState(''),
+    emailPass = _emailPass[0],
+    setEmailPass = _emailPass[1];
+  var _emailErr = useState(''),
+    emailErr = _emailErr[0],
+    setEmailErr = _emailErr[1];
+  var _emailBusy = useState(false),
+    emailBusy = _emailBusy[0],
+    setEmailBusy = _emailBusy[1];
+  var _emailSuccess = useState(false),
+    emailSuccess = _emailSuccess[0],
+    setEmailSuccess = _emailSuccess[1];
   var _newPin = useState(''),
     newPin = _newPin[0],
     setNewPin = _newPin[1];
@@ -107,6 +144,51 @@ export default function AccountTab(): React.ReactElement | null {
     setPassBusy(false);
   }
 
+  async function handleChangeName() {
+    var trimmed = nameVal.trim();
+    if (!trimmed) return;
+    await ctx.saveCfg(Object.assign({}, cfg, { parentName: trimmed }));
+    setEditName(false);
+    ctx.notify('Name updated');
+  }
+
+  async function handleChangeEmail() {
+    setEmailErr('');
+    setEmailSuccess(false);
+    if (!emailVal.trim()) {
+      setEmailErr('Email is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal.trim())) {
+      setEmailErr('Enter a valid email address');
+      return;
+    }
+    if (!emailPass) {
+      setEmailErr('Password is required to change email');
+      return;
+    }
+    setEmailBusy(true);
+    try {
+      await changeEmail(emailPass, emailVal.trim());
+      setEmailSuccess(true);
+      setEditEmail(false);
+      setEmailPass('');
+      ctx.notify('Verification sent to ' + emailVal.trim());
+    } catch (err: any) {
+      var code = err.code || err.message || '';
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setEmailErr('Incorrect password');
+      } else if (code === 'auth/email-already-in-use') {
+        setEmailErr('That email is already in use');
+      } else if (code === 'auth/invalid-email') {
+        setEmailErr('Invalid email address');
+      } else {
+        setEmailErr('Failed to update email. Please try again.');
+      }
+    }
+    setEmailBusy(false);
+  }
+
   async function handleDeleteFamily() {
     setDeleteErr('');
     if (!deletePass) {
@@ -157,16 +239,136 @@ export default function AccountTab(): React.ReactElement | null {
           <FontAwesomeIcon icon={faCircleUser} style={FA_ICON_STYLE} />
           Account
         </div>
-        <div className='flex flex-col gap-2'>
-          <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-qmuted'>Email</span>
-            <span className='text-[13px] text-qslate font-semibold flex items-center gap-1.5'>
+        <div className='flex items-center gap-3 mb-3'>
+          <img
+            src={gravatarUrl(auth.authUser ? auth.authUser.email : '', 80)}
+            alt='Profile'
+            className='w-[40px] h-[40px] rounded-full bg-qslate-dim'
+          />
+          <div>
+            {editName ? (
+              <div className='flex gap-1.5 items-center'>
+                <input
+                  type='text'
+                  value={nameVal}
+                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                    setNameVal(e.target.value);
+                  }}
+                  onKeyDown={function (e: React.KeyboardEvent) {
+                    if (e.key === 'Enter') handleChangeName();
+                    if (e.key === 'Escape') setEditName(false);
+                  }}
+                  className='quest-input !py-1 !px-2 !text-sm !w-[160px]'
+                  autoFocus
+                />
+                <button
+                  onClick={handleChangeName}
+                  className='bg-qteal text-white rounded-badge px-2 py-1 text-[11px] font-bold border-none cursor-pointer font-body'
+                >
+                  Save
+                </button>
+                <button
+                  onClick={function () { setEditName(false); }}
+                  className='bg-qslate-dim text-qslate rounded-badge px-2 py-1 text-[11px] font-semibold border-none cursor-pointer font-body'
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className='flex items-center gap-1.5'>
+                <span className='text-sm font-bold text-qslate'>
+                  {cfg.parentName || 'Parent'}
+                </span>
+                <button
+                  onClick={function () {
+                    setNameVal(cfg ? cfg.parentName || '' : '');
+                    setEditName(true);
+                  }}
+                  className='bg-transparent border-none cursor-pointer p-0 text-qmuted hover:text-qteal transition-colors'
+                  aria-label='Edit name'
+                >
+                  <FontAwesomeIcon icon={faPenToSquare} className='text-[11px]' />
+                </button>
+              </div>
+            )}
+            <div className='text-[11px] text-qmuted'>
               {auth.authUser ? auth.authUser.email : '—'}
               {auth.authUser && auth.authUser.emailVerified && (
-                <FontAwesomeIcon icon={faCircleCheck} className='text-qteal text-xs' />
+                <FontAwesomeIcon icon={faCircleCheck} className='text-qteal text-[9px] ml-1' />
               )}
-            </span>
+            </div>
           </div>
+        </div>
+        <div className='flex flex-col gap-2'>
+          {/* Editable Email */}
+          <div>
+            <div className='flex justify-between items-center'>
+              <span className='text-[13px] text-qmuted'>Email</span>
+              {!editEmail ? (
+                <button
+                  onClick={function () {
+                    setEmailVal(auth.authUser ? auth.authUser.email : '');
+                    setEmailPass('');
+                    setEmailErr('');
+                    setEmailSuccess(false);
+                    setEditEmail(true);
+                  }}
+                  className='text-[11px] text-qteal font-semibold bg-transparent border-none cursor-pointer p-0 font-body'
+                >
+                  Change
+                </button>
+              ) : (
+                <button
+                  onClick={function () { setEditEmail(false); setEmailErr(''); }}
+                  className='text-[11px] text-qmuted font-semibold bg-transparent border-none cursor-pointer p-0 font-body'
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+            {editEmail && (
+              <div className='flex flex-col gap-2 mt-2'>
+                <input
+                  type='email'
+                  placeholder='New email address'
+                  value={emailVal}
+                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                    setEmailVal(e.target.value);
+                    setEmailErr('');
+                  }}
+                  className='quest-input'
+                  autoFocus
+                />
+                <input
+                  type='password'
+                  placeholder='Current password'
+                  value={emailPass}
+                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                    setEmailPass(e.target.value);
+                    setEmailErr('');
+                  }}
+                  onKeyDown={function (e: React.KeyboardEvent) {
+                    if (e.key === 'Enter' && !emailBusy) handleChangeEmail();
+                  }}
+                  className='quest-input'
+                />
+                {emailErr && (
+                  <div className='text-qcoral text-[13px]'>{emailErr}</div>
+                )}
+                {emailSuccess && (
+                  <div className='text-qteal text-[13px]'>Verification email sent. Check your new inbox.</div>
+                )}
+                <button
+                  onClick={handleChangeEmail}
+                  disabled={emailBusy}
+                  className='bg-qteal text-white rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body text-[13px] disabled:opacity-60'
+                >
+                  {emailBusy ? 'Sending...' : 'Update Email'}
+                </button>
+              </div>
+            )}
+          </div>
+          {/* Family Code */}
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-qmuted'>Family Code</span>
             <button
