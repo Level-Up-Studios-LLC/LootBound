@@ -147,7 +147,7 @@ export default function SettingsTab(): React.ReactElement {
         <div className='flex gap-3 items-center'>
           <input
             type='number'
-            value={cfg.approvalThreshold || 300}
+            value={cfg.approvalThreshold != null ? cfg.approvalThreshold : 300}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               update(
                 Object.assign({}, cfg, {
