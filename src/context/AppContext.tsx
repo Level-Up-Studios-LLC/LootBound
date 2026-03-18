@@ -114,7 +114,19 @@ export function AppProvider(props: {
     setScreen = _screen[1];
   var _curUser = useState<string | null>(props.initialUser || null),
     curUser = _curUser[0],
-    setCurUser = _curUser[1];
+    setCurUserRaw = _curUser[1];
+
+  function setCurUser(uid: string | null) {
+    setCurUserRaw(uid);
+    try {
+      if (uid && uid !== 'parent') {
+        sessionStorage.setItem('qb-kid-session', JSON.stringify({ val: uid, ts: Date.now() }));
+      } else if (!uid) {
+        sessionStorage.removeItem('qb-kid-session');
+        if (props.onLogout) props.onLogout();
+      }
+    } catch (_e) { /* ignore */ }
+  }
   var _cfg = useState<Config | null>(null),
     cfg = _cfg[0],
     setCfg = _cfg[1];
@@ -518,6 +530,21 @@ export function AppProvider(props: {
       }
     })();
   });
+
+  // Validate restored kid session — promote to dashboard if valid, reset if not
+  useEffect(function () {
+    if (!loading && cfg && curUser && curUser !== 'parent') {
+      var found = cfg.children.some(function (c) { return c.id === curUser; });
+      if (found) {
+        // Valid restored session — go to dashboard
+        if (screen === 'login') setScreen('dashboard');
+      } else {
+        // Invalid child ID — reset
+        setCurUser(null);
+        setScreen('login');
+      }
+    }
+  }, [loading, cfg, curUser]);
 
   // --- Derived values ---
   var children = cfg ? cfg.children : [];

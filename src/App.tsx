@@ -30,6 +30,42 @@ import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
 
 var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
+var SESSION_KEY_PARENT = 'qb-parent-session';
+var SESSION_KEY_KID = 'qb-kid-session';
+var SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function getSession(key: string): string | null {
+  try {
+    var raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    var data = JSON.parse(raw);
+    if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    if (Date.now() - data.ts > SESSION_TTL) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    return data.val;
+  } catch (_e) {
+    try { sessionStorage.removeItem(key); } catch (_e2) { /* ignore */ }
+    return null;
+  }
+}
+
+function setSession(key: string, val: string): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ val: val, ts: Date.now() }));
+  } catch (_e) { /* ignore */ }
+}
+
+function clearSession(key: string): void {
+  try {
+    sessionStorage.removeItem(key);
+  } catch (_e) { /* ignore */ }
+}
+
 /**
  * Parse Firebase action URL parameters from the current URL.
  * Firebase sends links like: ?mode=resetPassword&oobCode=ABC123
@@ -154,7 +190,36 @@ function AppRouter() {
     setKidFamilyId = _kidFamilyId[1];
   var _parentVerified = useState(false),
     parentVerified = _parentVerified[0],
-    setParentVerified = _parentVerified[1];
+    setParentVerifiedRaw = _parentVerified[1];
+
+  // Restore parent session only if the stored UID matches the current auth user
+  useEffect(function () {
+    if (auth.authLoading) return;
+    if (auth.authUser) {
+      var stored = getSession(SESSION_KEY_PARENT);
+      if (stored === auth.authUser.familyId) {
+        setParentVerifiedRaw(true);
+      } else if (stored) {
+        // Stored session belongs to a different user — clear it
+        clearSession(SESSION_KEY_PARENT);
+        setParentVerifiedRaw(false);
+      }
+    } else {
+      // No user — clear any stale session from memory and storage
+      clearSession(SESSION_KEY_PARENT);
+      setParentVerifiedRaw(false);
+    }
+  }, [auth.authUser, auth.authLoading]);
+
+  function setParentVerified(val: boolean) {
+    setParentVerifiedRaw(val);
+    if (val && auth.authUser) {
+      setSession(SESSION_KEY_PARENT, auth.authUser.familyId);
+    } else {
+      clearSession(SESSION_KEY_PARENT);
+    }
+  }
+
   var _parentPin = useState<string | null>(null),
     parentPin = _parentPin[0],
     setParentPin = _parentPin[1];
@@ -374,12 +439,19 @@ function AppRouter() {
       );
     }
 
-    // Family code resolved → show app (starts at profile selection)
+    // Family code resolved → show app
+    // Pass stored kid as initialUser but start at 'login' — AppContext will
+    // validate the child ID against cfg.children and promote to 'dashboard'
+    var storedKid = getSession(SESSION_KEY_KID);
     return (
-      <AppProvider familyId={kidFamilyId}>
+      <AppProvider
+        familyId={kidFamilyId}
+        initialUser={storedKid || null}
+      >
         <AppInner
           onSwitchFamily={function () {
             clearStoredFamilyCode();
+            clearSession(SESSION_KEY_KID);
             setKidFamilyId(null);
             setRole(null);
           }}
