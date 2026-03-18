@@ -16,22 +16,21 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, changeEmail, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
+import { changePassword, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
 import { deleteFamily } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
 
-function gravatarUrl(email: string, size: number): string {
-  var hash = email.trim().toLowerCase();
-  // Simple hash for gravatar — uses a basic approach since we can't
-  // import crypto in the browser without overhead. Falls back to default.
-  var h = 0;
-  for (var i = 0; i < hash.length; i++) {
-    h = ((h << 5) - h + hash.charCodeAt(i)) | 0;
+function getInitials(name: string | undefined, email: string): string {
+  if (name && name.trim()) {
+    var parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
   }
-  // Use identicon as default — works without MD5 by using email directly
-  return 'https://www.gravatar.com/avatar/?d=mp&s=' + size;
+  return email ? email[0].toUpperCase() : '?';
 }
 
 export default function AccountTab(): React.ReactElement | null {
@@ -39,30 +38,21 @@ export default function AccountTab(): React.ReactElement | null {
   var auth = useAuthContext();
   var cfg = ctx.cfg;
 
-  var _editName = useState(false),
-    editName = _editName[0],
-    setEditName = _editName[1];
+  var _editing = useState(false),
+    editing = _editing[0],
+    setEditing = _editing[1];
   var _nameVal = useState(''),
     nameVal = _nameVal[0],
     setNameVal = _nameVal[1];
-  var _editEmail = useState(false),
-    editEmail = _editEmail[0],
-    setEditEmail = _editEmail[1];
   var _emailVal = useState(''),
     emailVal = _emailVal[0],
     setEmailVal = _emailVal[1];
-  var _emailPass = useState(''),
-    emailPass = _emailPass[0],
-    setEmailPass = _emailPass[1];
-  var _emailErr = useState(''),
-    emailErr = _emailErr[0],
-    setEmailErr = _emailErr[1];
-  var _emailBusy = useState(false),
-    emailBusy = _emailBusy[0],
-    setEmailBusy = _emailBusy[1];
-  var _emailSuccess = useState(false),
-    emailSuccess = _emailSuccess[0],
-    setEmailSuccess = _emailSuccess[1];
+  var _editErr = useState(''),
+    editErr = _editErr[0],
+    setEditErr = _editErr[1];
+  var _editBusy = useState(false),
+    editBusy = _editBusy[0],
+    setEditBusy = _editBusy[1];
   var _newPin = useState(''),
     newPin = _newPin[0],
     setNewPin = _newPin[1];
@@ -144,49 +134,45 @@ export default function AccountTab(): React.ReactElement | null {
     setPassBusy(false);
   }
 
-  async function handleChangeName() {
-    var trimmed = nameVal.trim();
-    if (!trimmed) return;
-    await ctx.saveCfg(Object.assign({}, cfg, { parentName: trimmed }));
-    setEditName(false);
-    ctx.notify('Name updated');
-  }
+  async function handleSaveProfile() {
+    setEditErr('');
+    var trimmedName = nameVal.trim();
+    var trimmedEmail = emailVal.trim();
+    var currentEmail = auth.authUser ? auth.authUser.email : '';
+    var emailChanged = trimmedEmail && trimmedEmail !== currentEmail;
 
-  async function handleChangeEmail() {
-    setEmailErr('');
-    setEmailSuccess(false);
-    if (!emailVal.trim()) {
-      setEmailErr('Email is required');
+    if (emailChanged && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEditErr('Enter a valid email address');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal.trim())) {
-      setEmailErr('Enter a valid email address');
-      return;
-    }
-    if (!emailPass) {
-      setEmailErr('Password is required to change email');
-      return;
-    }
-    setEmailBusy(true);
+
+    setEditBusy(true);
     try {
-      await changeEmail(emailPass, emailVal.trim());
-      setEmailSuccess(true);
-      setEditEmail(false);
-      setEmailPass('');
-      ctx.notify('Verification sent to ' + emailVal.trim());
+      // Save name to Firestore
+      if (trimmedName) {
+        await ctx.saveCfg(Object.assign({}, cfg, { parentName: trimmedName }));
+      }
+
+      // Send verification to new email if changed
+      if (emailChanged) {
+        await auth.doSendVerification();
+        ctx.notify('Verification sent to ' + trimmedEmail);
+      } else if (trimmedName) {
+        ctx.notify('Profile updated');
+      }
+
+      setEditing(false);
     } catch (err: any) {
       var code = err.code || err.message || '';
-      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        setEmailErr('Incorrect password');
-      } else if (code === 'auth/email-already-in-use') {
-        setEmailErr('That email is already in use');
+      if (code === 'auth/email-already-in-use') {
+        setEditErr('That email is already in use');
       } else if (code === 'auth/invalid-email') {
-        setEmailErr('Invalid email address');
+        setEditErr('Invalid email address');
       } else {
-        setEmailErr('Failed to update email. Please try again.');
+        setEditErr('Failed to update. Please try again.');
       }
     }
-    setEmailBusy(false);
+    setEditBusy(false);
   }
 
   async function handleDeleteFamily() {
@@ -240,176 +226,127 @@ export default function AccountTab(): React.ReactElement | null {
           Account
         </div>
         <div className='flex items-center gap-3 mb-3'>
-          <img
-            src={gravatarUrl(auth.authUser ? auth.authUser.email : '', 80)}
-            alt='Profile'
-            className='w-[40px] h-[40px] rounded-full bg-qslate-dim'
-          />
-          <div>
-            {editName ? (
-              <div className='flex gap-1.5 items-center'>
+          <div
+            className='w-[44px] h-[44px] rounded-full flex items-center justify-center font-display font-bold text-white text-base shrink-0'
+            style={{ backgroundColor: '#4AC7A8' }}
+          >
+            {getInitials(cfg.parentName, auth.authUser ? auth.authUser.email : '')}
+          </div>
+          <div className='flex-1 min-w-0'>
+            {editing ? (
+              <div className='flex flex-col gap-2'>
                 <input
                   type='text'
+                  placeholder='Your name'
                   value={nameVal}
                   onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
                     setNameVal(e.target.value);
+                    setEditErr('');
                   }}
-                  onKeyDown={function (e: React.KeyboardEvent) {
-                    if (e.key === 'Enter') handleChangeName();
-                    if (e.key === 'Escape') setEditName(false);
-                  }}
-                  className='quest-input !py-1 !px-2 !text-sm !w-[160px]'
+                  className='quest-input !py-1.5 !px-2.5 !text-sm'
                   autoFocus
                 />
-                <button
-                  onClick={handleChangeName}
-                  className='bg-qteal text-white rounded-badge px-2 py-1 text-[11px] font-bold border-none cursor-pointer font-body'
-                >
-                  Save
-                </button>
-                <button
-                  onClick={function () { setEditName(false); }}
-                  className='bg-qslate-dim text-qslate rounded-badge px-2 py-1 text-[11px] font-semibold border-none cursor-pointer font-body'
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className='flex items-center gap-1.5'>
-                <span className='text-sm font-bold text-qslate'>
-                  {cfg.parentName || 'Parent'}
-                </span>
-                <button
-                  onClick={function () {
-                    setNameVal(cfg ? cfg.parentName || '' : '');
-                    setEditName(true);
-                  }}
-                  className='bg-transparent border-none cursor-pointer p-0 text-qmuted hover:text-qteal transition-colors'
-                  aria-label='Edit name'
-                >
-                  <FontAwesomeIcon icon={faPenToSquare} className='text-[11px]' />
-                </button>
-              </div>
-            )}
-            <div className='text-[11px] text-qmuted'>
-              {auth.authUser ? auth.authUser.email : '—'}
-              {auth.authUser && auth.authUser.emailVerified && (
-                <FontAwesomeIcon icon={faCircleCheck} className='text-qteal text-[9px] ml-1' />
-              )}
-            </div>
-          </div>
-        </div>
-        <div className='flex flex-col gap-2'>
-          {/* Editable Email */}
-          <div>
-            <div className='flex justify-between items-center'>
-              <span className='text-[13px] text-qmuted'>Email</span>
-              {!editEmail ? (
-                <button
-                  onClick={function () {
-                    setEmailVal(auth.authUser ? auth.authUser.email : '');
-                    setEmailPass('');
-                    setEmailErr('');
-                    setEmailSuccess(false);
-                    setEditEmail(true);
-                  }}
-                  className='text-[11px] text-qteal font-semibold bg-transparent border-none cursor-pointer p-0 font-body'
-                >
-                  Change
-                </button>
-              ) : (
-                <button
-                  onClick={function () { setEditEmail(false); setEmailErr(''); }}
-                  className='text-[11px] text-qmuted font-semibold bg-transparent border-none cursor-pointer p-0 font-body'
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-            {editEmail && (
-              <div className='flex flex-col gap-2 mt-2'>
                 <input
                   type='email'
-                  placeholder='New email address'
+                  placeholder='Email address'
                   value={emailVal}
                   onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
                     setEmailVal(e.target.value);
-                    setEmailErr('');
-                  }}
-                  className='quest-input'
-                  autoFocus
-                />
-                <input
-                  type='password'
-                  placeholder='Current password'
-                  value={emailPass}
-                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                    setEmailPass(e.target.value);
-                    setEmailErr('');
+                    setEditErr('');
                   }}
                   onKeyDown={function (e: React.KeyboardEvent) {
-                    if (e.key === 'Enter' && !emailBusy) handleChangeEmail();
+                    if (e.key === 'Enter' && !editBusy) handleSaveProfile();
                   }}
-                  className='quest-input'
+                  className='quest-input !py-1.5 !px-2.5 !text-sm'
                 />
-                {emailErr && (
-                  <div className='text-qcoral text-[13px]'>{emailErr}</div>
+                {editErr && (
+                  <div className='text-qcoral text-[12px]'>{editErr}</div>
                 )}
-                {emailSuccess && (
-                  <div className='text-qteal text-[13px]'>Verification email sent. Check your new inbox.</div>
-                )}
-                <button
-                  onClick={handleChangeEmail}
-                  disabled={emailBusy}
-                  className='bg-qteal text-white rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body text-[13px] disabled:opacity-60'
-                >
-                  {emailBusy ? 'Sending...' : 'Update Email'}
-                </button>
+                <div className='flex gap-1.5'>
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={editBusy}
+                    className='bg-qteal text-white rounded-badge px-3 py-1.5 text-[12px] font-bold border-none cursor-pointer font-body disabled:opacity-60'
+                  >
+                    {editBusy ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={function () { setEditing(false); setEditErr(''); }}
+                    className='bg-qslate-dim text-qslate rounded-badge px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer font-body'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className='flex items-center gap-1.5'>
+                  <span className='text-sm font-bold text-qslate'>
+                    {cfg.parentName || 'Parent'}
+                  </span>
+                  <button
+                    onClick={function () {
+                      setNameVal(cfg ? cfg.parentName || '' : '');
+                      setEmailVal(auth.authUser ? auth.authUser.email : '');
+                      setEditErr('');
+                      setEditing(true);
+                    }}
+                    className='bg-transparent border-none cursor-pointer p-0 text-qmuted hover:text-qteal transition-colors'
+                    aria-label='Edit profile'
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} className='text-[11px]' />
+                  </button>
+                </div>
+                <div className='text-[12px] text-qmuted'>
+                  {auth.authUser ? auth.authUser.email : '—'}
+                  {auth.authUser && auth.authUser.emailVerified && (
+                    <FontAwesomeIcon icon={faCircleCheck} className='text-qteal text-[9px] ml-1' />
+                  )}
+                </div>
               </div>
             )}
           </div>
-          {/* Family Code */}
-          <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-qmuted'>Family Code</span>
-            <button
-              onClick={function () {
-                if (!cfg || !cfg.familyCode) return;
-                var text = cfg.familyCode;
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                  navigator.clipboard.writeText(text).then(function () {
+        </div>
+        <div className='flex justify-between items-center'>
+          <span className='text-[13px] text-qmuted'>Family Code</span>
+          <button
+            onClick={function () {
+              if (!cfg || !cfg.familyCode) return;
+              var text = cfg.familyCode;
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                  ctx.notify('Copied!');
+                }).catch(function () {
+                  ctx.notify('Long-press to copy', 'error');
+                });
+              } else {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                try {
+                  if (document.execCommand('copy')) {
                     ctx.notify('Copied!');
-                  }).catch(function () {
-                    ctx.notify('Long-press to copy', 'error');
-                  });
-                } else {
-                  var ta = document.createElement('textarea');
-                  ta.value = text;
-                  ta.style.position = 'fixed';
-                  ta.style.left = '-9999px';
-                  ta.style.opacity = '0';
-                  document.body.appendChild(ta);
-                  ta.focus();
-                  ta.select();
-                  try {
-                    if (document.execCommand('copy')) {
-                      ctx.notify('Copied!');
-                    } else {
-                      ctx.notify('Long-press to copy');
-                    }
-                  } catch (_e) {
-                    ctx.notify('Long-press to copy', 'error');
+                  } else {
+                    ctx.notify('Long-press to copy');
                   }
-                  document.body.removeChild(ta);
+                } catch (_e) {
+                  ctx.notify('Long-press to copy', 'error');
                 }
-              }}
-              className='text-[13px] text-qslate font-semibold tracking-[2px] bg-transparent border-none cursor-pointer p-0 flex items-center gap-1.5 hover:opacity-80 transition-opacity'
-            >
-              {cfg && cfg.familyCode ? cfg.familyCode : '—'}
-              {cfg && cfg.familyCode && (
-                <FontAwesomeIcon icon={faCopy} className='text-xs text-qmuted' />
-              )}
-            </button>
-          </div>
+                document.body.removeChild(ta);
+              }
+            }}
+            className='text-[13px] text-qslate font-semibold tracking-[2px] bg-transparent border-none cursor-pointer p-0 flex items-center gap-1.5 hover:opacity-80 transition-opacity'
+          >
+            {cfg && cfg.familyCode ? cfg.familyCode : '—'}
+            {cfg && cfg.familyCode && (
+              <FontAwesomeIcon icon={faCopy} className='text-xs text-qmuted' />
+            )}
+          </button>
         </div>
       </div>
 
