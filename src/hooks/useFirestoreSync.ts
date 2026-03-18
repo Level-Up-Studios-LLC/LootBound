@@ -50,31 +50,22 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
         return;
       }
       setCfg(function (prev) {
-        if (!prev) return prev;
+        if (!prev || !fc) return prev;
         return Object.assign({}, prev, {
-          parentPin: fc ? fc.parentPin : prev.parentPin,
-          tierConfig: fc && fc.tierConfig ? fc.tierConfig : prev.tierConfig,
+          parentPin: fc.parentPin != null ? fc.parentPin : prev.parentPin,
+          tierConfig: fc.tierConfig || prev.tierConfig,
           approvalThreshold:
-            fc && fc.approvalThreshold != null
+            fc.approvalThreshold != null
               ? fc.approvalThreshold
               : prev.approvalThreshold,
-          lastWeeklyReset: fc ? fc.lastWeeklyReset || '' : prev.lastWeeklyReset,
-          bedtime:
-            fc && (fc as any).bedtime != null
-              ? (fc as any).bedtime
-              : prev.bedtime,
+          lastWeeklyReset: fc.lastWeeklyReset || prev.lastWeeklyReset,
+          bedtime: fc.bedtime != null ? fc.bedtime : prev.bedtime,
           weeklyResetDay:
-            fc && (fc as any).weeklyResetDay != null
-              ? (fc as any).weeklyResetDay
-              : prev.weeklyResetDay,
-          cooldown:
-            fc && (fc as any).cooldown != null
-              ? (fc as any).cooldown
-              : prev.cooldown,
-          familyCode:
-            fc && (fc as any).familyCode
-              ? (fc as any).familyCode
-              : prev.familyCode,
+            fc.weeklyResetDay != null ? fc.weeklyResetDay : prev.weeklyResetDay,
+          cooldown: fc.cooldown != null ? fc.cooldown : prev.cooldown,
+          familyCode: fc.familyCode || prev.familyCode,
+          parentName:
+            fc.parentName != null ? fc.parentName : prev.parentName,
         });
       });
     });

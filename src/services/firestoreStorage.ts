@@ -69,6 +69,12 @@ export interface FamilyConfig {
   approvalThreshold: number;
   lastWeeklyReset: string;
   tierPoints?: Record<number, number>;
+  parentName?: string;
+  referralSource?: string;
+  familyCode?: string;
+  bedtime?: number;
+  weeklyResetDay?: number;
+  cooldown?: number;
 }
 
 export interface TaskLogEntry {
