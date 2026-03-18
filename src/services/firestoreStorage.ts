@@ -313,15 +313,12 @@ export async function deleteFamily(familyId: string, _currentUid: string): Promi
   // Family config doc
   refs.push(doc(db, 'families', familyId));
 
-  // All parent member mappings for this family (not just current user)
-  var memberQuery = query(
-    collection(db, 'parentMembers'),
-    where('familyId', '==', familyId)
-  );
-  var memberSnap = await getDocs(memberQuery);
-  memberSnap.forEach(function (d) {
-    refs.push(d.ref);
-  });
+  // Delete the current user's parent member mapping.
+  // Other parent members' mappings can only be cleaned up via Admin SDK
+  // since Firestore rules restrict parentMembers to the owning user.
+  if (_currentUid) {
+    refs.push(doc(db, 'parentMembers', _currentUid));
+  }
 
   // Family code mapping
   if (familyCode) {
