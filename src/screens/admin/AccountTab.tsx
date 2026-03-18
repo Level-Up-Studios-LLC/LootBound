@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -17,7 +17,7 @@ import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
 import { changePassword, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
-import { deleteFamily } from '../../services/firestoreStorage.ts';
+import { deleteFamily, saveParentMember, getParentMember } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
@@ -37,6 +37,24 @@ export default function AccountTab(): React.ReactElement | null {
   var ctx = useAppContext();
   var auth = useAuthContext();
   var cfg = ctx.cfg;
+
+  var _myName = useState<string | undefined>(undefined),
+    myName = _myName[0],
+    setMyName = _myName[1];
+  var _myPin = useState(''),
+    myPin = _myPin[0],
+    setMyPin = _myPin[1];
+
+  useEffect(function () {
+    var uid = getCurrentUid();
+    if (!uid) return;
+    getParentMember(uid).then(function (member) {
+      if (member) {
+        setMyName(member.parentName || undefined);
+        setMyPin(member.parentPin || '');
+      }
+    });
+  }, []);
 
   var _editing = useState(false),
     editing = _editing[0],
@@ -148,9 +166,13 @@ export default function AccountTab(): React.ReactElement | null {
 
     setEditBusy(true);
     try {
-      // Save name to Firestore
+      // Save name to per-parent doc
       if (trimmedName) {
-        await ctx.saveCfg(Object.assign({}, cfg, { parentName: trimmedName }));
+        var uid = getCurrentUid();
+        if (uid) {
+          await saveParentMember(uid, { parentName: trimmedName });
+          setMyName(trimmedName);
+        }
       }
 
       // Send verification to new email if changed
@@ -230,7 +252,7 @@ export default function AccountTab(): React.ReactElement | null {
             className='w-[44px] h-[44px] rounded-full flex items-center justify-center font-display font-bold text-white text-base shrink-0'
             style={{ backgroundColor: '#4AC7A8' }}
           >
-            {getInitials(cfg.parentName, auth.authUser ? auth.authUser.email : '')}
+            {getInitials(myName, auth.authUser ? auth.authUser.email : '')}
           </div>
           <div className='flex-1 min-w-0'>
             {editing ? (
@@ -282,7 +304,7 @@ export default function AccountTab(): React.ReactElement | null {
               <div>
                 <div className='flex items-center gap-1.5'>
                   <span className='text-sm font-bold text-qslate'>
-                    {cfg.parentName || 'Parent'}
+                    {myName || 'Parent'}
                   </span>
                   <span className={
                     'text-[10px] font-bold px-1.5 py-0.5 rounded-badge ' +
@@ -294,7 +316,7 @@ export default function AccountTab(): React.ReactElement | null {
                   </span>
                   <button
                     onClick={function () {
-                      setNameVal(cfg ? cfg.parentName || '' : '');
+                      setNameVal(myName || '');
                       setEmailVal(auth.authUser ? auth.authUser.email : '');
                       setEditErr('');
                       setEditing(true);
@@ -399,7 +421,7 @@ export default function AccountTab(): React.ReactElement | null {
           <FontAwesomeIcon icon={faKey} style={FA_ICON_STYLE} />
           Parent PIN
         </div>
-        {!cfg.parentPin && (
+        {!myPin && (
           <div className='text-[13px] text-qslate mb-2 px-4 py-3 bg-qcoral-dim rounded-badge leading-relaxed'>
             <FontAwesomeIcon
               icon={faTriangleExclamation}
@@ -413,7 +435,7 @@ export default function AccountTab(): React.ReactElement | null {
           <input
             type='password'
             maxLength={6}
-            placeholder={cfg.parentPin ? 'New PIN' : 'Create PIN'}
+            placeholder={myPin ? 'New PIN' : 'Create PIN'}
             value={newPin}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setNewPin(e.target.value);
@@ -423,7 +445,11 @@ export default function AccountTab(): React.ReactElement | null {
           <button
             onClick={function () {
               if (newPin.length >= 4) {
-                ctx.saveCfg(Object.assign({}, cfg, { parentPin: newPin }));
+                var uid = getCurrentUid();
+                if (uid) {
+                  saveParentMember(uid, { parentPin: newPin });
+                  setMyPin(newPin);
+                }
                 setNewPin('');
                 ctx.notify('PIN updated');
               }

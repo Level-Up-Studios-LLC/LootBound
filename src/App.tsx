@@ -5,13 +5,13 @@ import { faCommentDots, faCircleCheck } from './fa.ts';
 import { FA_ICON_STYLE } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-import { getConfig as fsGetConfig } from './services/firestoreStorage.ts';
+import { getParentMember, saveParentMember } from './services/firestoreStorage.ts';
 import {
   getStoredFamilyCode,
   clearStoredFamilyCode,
   lookupFamilyCode,
 } from './services/familyCode.ts';
-import { signInAnonymousKid } from './services/auth.ts';
+import { signInAnonymousKid, getCurrentUid } from './services/auth.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
@@ -27,7 +27,6 @@ import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
-import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
 
 var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
@@ -202,13 +201,16 @@ function AppRouter() {
     [auth.authLoading, auth.authUser, role, initDone]
   );
 
-  // When parent authenticates, load their parent PIN from Firestore
+  // When parent authenticates, load their PIN from their own parentMembers doc
   // An empty string means no custom PIN has been set
   useEffect(
     function () {
       if (auth.authUser && role === 'parent') {
-        fsGetConfig(auth.authUser.familyId).then(function (cfg) {
-          var pin = cfg ? cfg.parentPin || '' : '';
+        var uid = auth.authUser.familyId;
+        // For joined parents, their UID differs from familyId — use getCurrentUid
+        var actualUid = getCurrentUid() || uid;
+        getParentMember(actualUid).then(function (member) {
+          var pin = member ? member.parentPin || '' : '';
           setParentPin(pin);
         }).catch(function (err) {
           console.error('Failed to load parent PIN:', err);
@@ -331,7 +333,7 @@ function AppRouter() {
       return (
         <CreatePinPrompt
           onCreated={function (newPin) {
-            fsSaveConfig(auth.authUser!.familyId, { parentPin: newPin }).then(function () {
+            saveParentMember(getCurrentUid() || auth.authUser!.familyId, { parentPin: newPin }).then(function () {
               setParentPin(newPin);
               setShowCreatePin(false);
               setParentVerified(true);

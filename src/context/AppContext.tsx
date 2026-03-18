@@ -180,7 +180,6 @@ export function AppProvider(props: {
     var promises: Promise<void>[] = [];
 
     var cfgFields: Record<string, any> = {
-      parentPin: newCfg.parentPin,
       tierConfig: newCfg.tierConfig,
       approvalThreshold: newCfg.approvalThreshold,
       lastWeeklyReset: newCfg.lastWeeklyReset,

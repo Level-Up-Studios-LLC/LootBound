@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { signInFamily } from '../services/auth.ts';
-import { saveConfig as fsSaveConfig } from '../services/firestoreStorage.ts';
+import { signInFamily, getCurrentUid } from '../services/auth.ts';
+import { saveParentMember } from '../services/firestoreStorage.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
@@ -78,7 +78,7 @@ export default function ParentPinScreen(
       return;
     }
     try {
-      await fsSaveConfig(props.familyId, { parentPin: '' });
+      await saveParentMember(getCurrentUid() || props.familyId, { parentPin: '' });
       props.onSuccess();
     } catch (_e) {
       setErr('Failed to clear PIN. Please try again.');

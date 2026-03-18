@@ -3,7 +3,8 @@ import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPartyHorn, faAngleLeft, faArrowLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
-import { saveConfig } from '../services/firestoreStorage.ts';
+import { saveConfig, saveParentMember } from '../services/firestoreStorage.ts';
+import { getCurrentUid } from '../services/auth.ts';
 
 var REFERRAL_OPTIONS = [
   'Friend or family',
@@ -132,13 +133,16 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     } else {
       familyId = await auth.doSignUp(email.trim(), pass);
     }
-    // Save parent name and referral source to family doc after signup
-    if (mode === 'signup' && familyId && (parentName.trim() || referral)) {
+    // Save parent name to per-parent doc, referral to family doc
+    if (mode === 'signup' && familyId) {
       try {
-        var extra: Record<string, string> = {};
-        if (parentName.trim()) extra.parentName = parentName.trim();
-        if (referral) extra.referralSource = referral;
-        await saveConfig(familyId, extra as any);
+        var uid = getCurrentUid();
+        if (uid && parentName.trim()) {
+          await saveParentMember(uid, { parentName: parentName.trim() });
+        }
+        if (referral) {
+          await saveConfig(familyId, { referralSource: referral } as any);
+        }
       } catch (_e) {
         // Non-critical — don't block signup
       }

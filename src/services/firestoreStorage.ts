@@ -118,6 +118,37 @@ export interface ChildData {
 }
 
 // ---------------------------------------------------------------------------
+// Per-parent data (parentMembers/{uid})
+// ---------------------------------------------------------------------------
+
+export interface ParentMember {
+  familyId: string;
+  parentPin?: string;
+  parentName?: string;
+}
+
+export async function getParentMember(uid: string): Promise<ParentMember | null> {
+  var snap = await getDoc(doc(db, 'parentMembers', uid));
+  return snap.exists() ? (snap.data() as ParentMember) : null;
+}
+
+export async function saveParentMember(
+  uid: string,
+  data: Partial<ParentMember>
+): Promise<void> {
+  await setDoc(doc(db, 'parentMembers', uid), data, { merge: true });
+}
+
+export function onParentMemberSnapshot(
+  uid: string,
+  callback: (data: ParentMember | null) => void
+): () => void {
+  return onSnapshot(doc(db, 'parentMembers', uid), function (snap) {
+    callback(snap.exists() ? (snap.data() as ParentMember) : null);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Family config
 // ---------------------------------------------------------------------------
 
