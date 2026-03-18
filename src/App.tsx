@@ -205,7 +205,8 @@ function AppRouter() {
         setParentVerifiedRaw(false);
       }
     } else {
-      // No user — clear any stale session
+      // No user — clear any stale session from memory and storage
+      clearSession(SESSION_KEY_PARENT);
       setParentVerifiedRaw(false);
     }
   }, [auth.authUser, auth.authLoading]);
