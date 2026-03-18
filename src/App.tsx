@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots } from './fa.ts';
+import { faCommentDots, faCircleCheck } from './fa.ts';
+import { FA_ICON_STYLE } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
 import { getConfig as fsGetConfig } from './services/firestoreStorage.ts';
@@ -232,7 +233,42 @@ function AppRouter() {
     }
   }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
 
-  // Handle Firebase action URLs (password reset)
+  // Auto-refresh email verification status when app loads
+  useEffect(function () {
+    if (auth.authUser && !auth.authUser.emailVerified) {
+      auth.doRefreshVerification();
+    }
+  }, [auth.authUser]);
+
+  // Handle Firebase action URLs (password reset, email verification)
+  if (actionParams && actionParams.mode === 'verifyEmail') {
+    // Firebase already verified the email server-side when the link was clicked.
+    // Show a confirmation and refresh the local auth state.
+    auth.doRefreshVerification();
+    return (
+      <div className='page-wrapper page-centered'>
+        <div className='text-5xl mb-5'>
+          <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
+        </div>
+        <div className='font-display text-2xl font-bold mb-3'>
+          Email Verified!
+        </div>
+        <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
+          Your email has been verified. You're all set.
+        </div>
+        <button
+          onClick={function () {
+            window.history.replaceState({}, '', window.location.pathname);
+            setActionParams(null);
+          }}
+          className='btn-primary'
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
   if (actionParams && actionParams.mode === 'resetPassword') {
     return (
       <ResetPasswordScreen
@@ -286,6 +322,7 @@ function AppRouter() {
         setParentVerified(true);
       } else if (!showCreatePin) {
         setShowCreatePin(true);
+        return <LoadingScreen />;
       }
     }
 

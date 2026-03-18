@@ -386,27 +386,21 @@ export function AppProvider(props: {
         rewards: fsRewards as Reward[],
         parentPin: fc && fc.parentPin ? fc.parentPin : '',
         tierConfig:
-          fc && (fc as any).tierConfig
-            ? (fc as any).tierConfig
+          fc && fc.tierConfig
+            ? fc.tierConfig
             : JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
         approvalThreshold:
           fc != null && fc.approvalThreshold != null
             ? fc.approvalThreshold
             : 300,
         lastWeeklyReset: fc ? fc.lastWeeklyReset || '' : '',
-        familyCode: fc ? (fc as any).familyCode || '' : '',
-        bedtime:
-          fc && (fc as any).bedtime != null
-            ? (fc as any).bedtime
-            : undefined,
+        familyCode: fc ? fc.familyCode || '' : '',
+        bedtime: fc && fc.bedtime != null ? fc.bedtime : undefined,
         weeklyResetDay:
-          fc && (fc as any).weeklyResetDay != null
-            ? (fc as any).weeklyResetDay
-            : undefined,
-        cooldown:
-          fc && (fc as any).cooldown != null
-            ? (fc as any).cooldown
-            : undefined,
+          fc && fc.weeklyResetDay != null ? fc.weeklyResetDay : undefined,
+        cooldown: fc && fc.cooldown != null ? fc.cooldown : undefined,
+        parentName: fc && fc.parentName ? fc.parentName : undefined,
+        referralSource: fc && fc.referralSource ? fc.referralSource : undefined,
       };
       if (!c.children) c.children = [];
       if (!c.tierConfig) c.tierConfig = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
