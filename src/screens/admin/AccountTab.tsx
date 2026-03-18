@@ -547,12 +547,10 @@ export default function AccountTab(): React.ReactElement | null {
           title='Delete Family Account?'
           message='This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
           warning='THIS ACTION CANNOT BE UNDONE.'
-          requiredText={cfg && cfg.familyCode ? cfg.familyCode : 'DELETE'}
-          requiredTextLabel={'Enter your family code to confirm:'}
           confirmLabel={deleteBusy ? 'Deleting...' : 'Delete'}
           confirmColor='bg-qcoral'
           onConfirm={function () {
-            if (!deleteBusy) handleDeleteFamily();
+            if (!deleteBusy && deletePass) handleDeleteFamily();
           }}
           onCancel={function () {
             if (!deleteBusy) {
@@ -562,19 +560,26 @@ export default function AccountTab(): React.ReactElement | null {
             }
           }}
         >
-          <input
-            type='password'
-            placeholder='Enter your password'
-            value={deletePass}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              setDeletePass(e.target.value);
-              setDeleteErr('');
-            }}
-            onKeyDown={function (e: React.KeyboardEvent) {
-              if (e.key === 'Enter' && !deleteBusy) handleDeleteFamily();
-            }}
-            className='quest-input mt-2'
-          />
+          <div className='mt-3'>
+            <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
+              Enter your password to confirm:
+            </label>
+            <input
+              id='delete-pass'
+              type='password'
+              placeholder='Password'
+              value={deletePass}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setDeletePass(e.target.value);
+                setDeleteErr('');
+              }}
+              onKeyDown={function (e: React.KeyboardEvent) {
+                if (e.key === 'Enter' && !deleteBusy && deletePass) handleDeleteFamily();
+              }}
+              className='quest-input'
+              autoFocus
+            />
+          </div>
           {deleteErr && (
             <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
           )}
