@@ -284,6 +284,14 @@ export default function AccountTab(): React.ReactElement | null {
                   <span className='text-sm font-bold text-qslate'>
                     {cfg.parentName || 'Parent'}
                   </span>
+                  <span className={
+                    'text-[10px] font-bold px-1.5 py-0.5 rounded-badge ' +
+                    (getCurrentUid() === ctx.familyId
+                      ? 'bg-qteal/15 text-qteal'
+                      : 'bg-qslate/10 text-qmuted')
+                  }>
+                    {getCurrentUid() === ctx.familyId ? 'Owner' : 'Member'}
+                  </span>
                   <button
                     onClick={function () {
                       setNameVal(cfg ? cfg.parentName || '' : '');
