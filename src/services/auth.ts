@@ -79,7 +79,7 @@ export async function signUpFamily(
   // Register parent member mapping
   await setDoc(doc(db, 'parentMembers', familyId), {
     familyId: familyId,
-  });
+  }, { merge: true });
 
   // Generate and register family code
   var code = await generateFamilyCode();
@@ -111,7 +111,7 @@ export async function joinFamilyByCode(
   // Map this parent to the existing family
   await setDoc(doc(db, 'parentMembers', cred.user.uid), {
     familyId: familyId,
-  });
+  }, { merge: true });
 
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch(function () {});
@@ -169,7 +169,7 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
   if (snap.exists()) return null;
 
   // New user — create family
-  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid });
+  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid }, { merge: true });
   var code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
   return code;

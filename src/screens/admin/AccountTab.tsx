@@ -37,6 +37,7 @@ export default function AccountTab(): React.ReactElement | null {
   var ctx = useAppContext();
   var auth = useAuthContext();
   var cfg = ctx.cfg;
+  var currentUid = getCurrentUid();
 
   var _myName = useState<string | undefined>(undefined),
     myName = _myName[0],
@@ -46,7 +47,7 @@ export default function AccountTab(): React.ReactElement | null {
     setMyPin = _myPin[1];
 
   useEffect(function () {
-    var uid = getCurrentUid();
+    var uid = currentUid;
     if (!uid) return;
     return onParentMemberSnapshot(uid, function (member) {
       setMyName(member && member.parentName ? member.parentName : undefined);
@@ -197,7 +198,7 @@ export default function AccountTab(): React.ReactElement | null {
     try {
       // Save name to per-parent doc
       if (trimmedName) {
-        var uid = getCurrentUid();
+        var uid = currentUid;
         if (uid) {
           await saveParentMember(uid, { parentName: trimmedName });
           setMyName(trimmedName);
@@ -226,7 +227,7 @@ export default function AccountTab(): React.ReactElement | null {
     setEditBusy(false);
   }
 
-  var isOwner = getCurrentUid() === ctx.familyId;
+  var isOwner = currentUid === ctx.familyId;
 
   async function handleDeleteFamily() {
     setDeleteErr('');
@@ -249,7 +250,7 @@ export default function AccountTab(): React.ReactElement | null {
         ctx.notify('Some photos could not be deleted', 'error');
       }
       // Delete all Firestore data
-      var uid = getCurrentUid();
+      var uid = currentUid;
       if (!uid) throw new Error('Not signed in');
       await deleteFamily(ctx.familyId, uid);
       await deleteAuthAccount(deletePass);
@@ -278,7 +279,7 @@ export default function AccountTab(): React.ReactElement | null {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
-      var uid = getCurrentUid();
+      var uid = currentUid;
       if (!uid) throw new Error('Not signed in');
       // Only remove own parentMembers doc and auth account
       await deleteParentMember(uid);
@@ -366,11 +367,11 @@ export default function AccountTab(): React.ReactElement | null {
                   </span>
                   <span className={
                     'text-[10px] font-bold px-1.5 py-0.5 rounded-badge ' +
-                    (getCurrentUid() === ctx.familyId
+                    (currentUid === ctx.familyId
                       ? 'bg-qteal/15 text-qteal'
                       : 'bg-qslate/10 text-qmuted')
                   }>
-                    {getCurrentUid() === ctx.familyId ? 'Owner' : 'Member'}
+                    {currentUid === ctx.familyId ? 'Owner' : 'Member'}
                   </span>
                   <button
                     onClick={function () {
@@ -503,7 +504,7 @@ export default function AccountTab(): React.ReactElement | null {
           <button
             onClick={async function () {
               if (newPin.length >= 4) {
-                var uid = getCurrentUid();
+                var uid = currentUid;
                 if (uid) {
                   try {
                     await saveParentMember(uid, { parentPin: newPin });
