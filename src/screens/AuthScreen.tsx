@@ -124,23 +124,21 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     }
 
     setBusy(true);
+    var familyId: string | null = null;
     if (mode === 'signin') {
       await auth.doSignIn(email.trim(), pass);
     } else if (joinCode.trim()) {
-      await auth.doJoinFamily(email.trim(), pass, joinCode.trim());
+      familyId = await auth.doJoinFamily(email.trim(), pass, joinCode.trim());
     } else {
-      await auth.doSignUp(email.trim(), pass);
+      familyId = await auth.doSignUp(email.trim(), pass);
     }
     // Save parent name and referral source to family doc after signup
-    if (mode === 'signup' && (parentName.trim() || referral) && auth.lastFamilyCode) {
+    if (mode === 'signup' && familyId && (parentName.trim() || referral)) {
       try {
-        var uid = auth.authUser ? auth.authUser.familyId : null;
-        if (uid) {
-          var extra: Record<string, string> = {};
-          if (parentName.trim()) extra.parentName = parentName.trim();
-          if (referral) extra.referralSource = referral;
-          await saveConfig(uid, extra as any);
-        }
+        var extra: Record<string, string> = {};
+        if (parentName.trim()) extra.parentName = parentName.trim();
+        if (referral) extra.referralSource = referral;
+        await saveConfig(familyId, extra as any);
       } catch (_e) {
         // Non-critical — don't block signup
       }

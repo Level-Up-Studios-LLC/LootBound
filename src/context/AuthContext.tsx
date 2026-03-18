@@ -21,12 +21,12 @@ interface AuthContextValue {
   lastFamilyCode: string | null;
   justSignedIn: boolean;
   doSignIn: (email: string, password: string) => Promise<void>;
-  doSignUp: (email: string, password: string) => Promise<void>;
+  doSignUp: (email: string, password: string) => Promise<string | null>;
   doJoinFamily: (
     email: string,
     password: string,
     code: string
-  ) => Promise<void>;
+  ) => Promise<string | null>;
   doGoogleSignIn: () => Promise<void>;
   doSignOut: () => Promise<void>;
   doResetPassword: (email: string) => Promise<boolean>;
@@ -134,14 +134,16 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   }
 
-  async function doSignUp(email: string, password: string) {
+  async function doSignUp(email: string, password: string): Promise<string | null> {
     setAuthError(null);
     try {
       var result = await signUpFamily(email, password);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
+      return result.user.familyId;
     } catch (err: any) {
       setAuthError(mapError(err));
+      return null;
     }
   }
 
@@ -149,14 +151,16 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     email: string,
     password: string,
     code: string
-  ) {
+  ): Promise<string | null> {
     setAuthError(null);
     try {
       var result = await joinFamilyByCode(email, password, code);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
+      return result.user.familyId;
     } catch (err: any) {
       setAuthError(mapError(err));
+      return null;
     }
   }
 
