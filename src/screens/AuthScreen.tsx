@@ -141,7 +141,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           await saveParentMember(uid, { parentName: parentName.trim() });
         }
         if (referral) {
-          await saveConfig(familyId, { referralSource: referral } as any);
+          await saveConfig(familyId, { referralSource: referral });
         }
       } catch (_e) {
         // Non-critical — don't block signup

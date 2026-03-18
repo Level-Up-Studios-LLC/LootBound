@@ -19,6 +19,7 @@ import {
   reauthenticateWithCredential,
   verifyPasswordResetCode,
   confirmPasswordReset,
+  applyActionCode,
   EmailAuthProvider,
   GoogleAuthProvider,
   signInWithRedirect,
@@ -232,6 +233,18 @@ export async function sendVerification(): Promise<void> {
   var user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
   await sendEmailVerification(user, appActionCodeSettings());
+}
+
+/**
+ * Apply a Firebase action code (e.g. email verification).
+ * This confirms the action server-side before refreshing local state.
+ */
+export async function applyVerificationCode(oobCode: string): Promise<void> {
+  await applyActionCode(auth, oobCode);
+  // Reload user to pick up the verified status
+  if (auth.currentUser) {
+    await auth.currentUser.reload();
+  }
 }
 
 /**

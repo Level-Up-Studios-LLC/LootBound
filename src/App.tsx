@@ -11,7 +11,7 @@ import {
   clearStoredFamilyCode,
   lookupFamilyCode,
 } from './services/familyCode.ts';
-import { signInAnonymousKid, getCurrentUid } from './services/auth.ts';
+import { signInAnonymousKid, getCurrentUid, applyVerificationCode } from './services/auth.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
@@ -42,6 +42,52 @@ function getFirebaseActionParams(): { mode: string; oobCode: string } | null {
     return { mode: mode, oobCode: oobCode };
   }
   return null;
+}
+
+function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
+  var _done = useState(false),
+    done = _done[0],
+    setDone = _done[1];
+  var _err = useState<string | null>(null),
+    err = _err[0],
+    setErr = _err[1];
+
+  useEffect(function () {
+    applyVerificationCode(props.oobCode).then(function () {
+      setDone(true);
+    }).catch(function (e: any) {
+      console.error('Email verification failed:', e);
+      setErr(e.message || 'Verification failed');
+      setDone(true);
+    });
+  }, []);
+
+  if (!done) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <div className='font-display text-2xl text-qteal animate-pulse rounded-card px-6 py-3'>
+          Verifying email...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className='page-wrapper page-centered'>
+      <div className='text-5xl mb-5'>
+        <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
+      </div>
+      <div className='font-display text-2xl font-bold mb-3'>
+        {err ? 'Verification Failed' : 'Email Verified!'}
+      </div>
+      <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
+        {err || 'Your email has been verified. You\'re all set.'}
+      </div>
+      <button onClick={props.onDone} className='btn-primary'>
+        Continue
+      </button>
+    </div>
+  );
 }
 
 function LoadingScreen() {
@@ -206,9 +252,8 @@ function AppRouter() {
   useEffect(
     function () {
       if (auth.authUser && role === 'parent') {
-        var uid = auth.authUser.familyId;
-        // For joined parents, their UID differs from familyId — use getCurrentUid
-        var actualUid = getCurrentUid() || uid;
+        var actualUid = getCurrentUid();
+        if (!actualUid) return;
         getParentMember(actualUid).then(function (member) {
           var pin = member ? member.parentPin || '' : '';
           setParentPin(pin);
@@ -234,30 +279,15 @@ function AppRouter() {
 
   // Handle Firebase action URLs (password reset, email verification)
   if (actionParams && actionParams.mode === 'verifyEmail') {
-    // Firebase already verified the email server-side when the link was clicked.
-    // Show a confirmation and refresh the local auth state.
-    auth.doRefreshVerification();
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='text-5xl mb-5'>
-          <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
-        </div>
-        <div className='font-display text-2xl font-bold mb-3'>
-          Email Verified!
-        </div>
-        <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
-          Your email has been verified. You're all set.
-        </div>
-        <button
-          onClick={function () {
-            window.history.replaceState({}, '', window.location.pathname);
-            setActionParams(null);
-          }}
-          className='btn-primary'
-        >
-          Continue
-        </button>
-      </div>
+      <VerifyEmailScreen
+        oobCode={actionParams.oobCode}
+        onDone={function () {
+          auth.doRefreshVerification();
+          window.history.replaceState({}, '', window.location.pathname);
+          setActionParams(null);
+        }}
+      />
     );
   }
 

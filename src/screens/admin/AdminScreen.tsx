@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCircleQuestion } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
-import { getParentMember } from '../../services/firestoreStorage.ts';
+import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
 import HamburgerMenu from '../../components/HamburgerMenu.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';
@@ -27,8 +27,8 @@ export default function AdminScreen(): React.ReactElement {
   useEffect(function () {
     var uid = getCurrentUid();
     if (!uid) return;
-    getParentMember(uid).then(function (member) {
-      if (member && member.parentName) setMyName(member.parentName);
+    return onParentMemberSnapshot(uid, function (member) {
+      setMyName(member && member.parentName ? member.parentName : undefined);
     });
   }, []);
 

@@ -499,15 +499,19 @@ export default function AccountTab(): React.ReactElement | null {
             className='quest-input !w-[120px] text-center'
           />
           <button
-            onClick={function () {
+            onClick={async function () {
               if (newPin.length >= 4) {
                 var uid = getCurrentUid();
                 if (uid) {
-                  saveParentMember(uid, { parentPin: newPin });
-                  setMyPin(newPin);
+                  try {
+                    await saveParentMember(uid, { parentPin: newPin });
+                    setMyPin(newPin);
+                    setNewPin('');
+                    ctx.notify('PIN updated');
+                  } catch (_e) {
+                    ctx.notify('Failed to save PIN', 'error');
+                  }
                 }
-                setNewPin('');
-                ctx.notify('PIN updated');
               }
             }}
             className='bg-qteal text-white rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body flex items-center gap-1.5'
