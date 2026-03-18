@@ -39,6 +39,10 @@ function getSession(key: string): string | null {
     var raw = sessionStorage.getItem(key);
     if (!raw) return null;
     var data = JSON.parse(raw);
+    if (typeof data.val !== 'string' || typeof data.ts !== 'number') {
+      sessionStorage.removeItem(key);
+      return null;
+    }
     if (Date.now() - data.ts > SESSION_TTL) {
       sessionStorage.removeItem(key);
       return null;
@@ -183,16 +187,24 @@ function AppRouter() {
   var _kidFamilyId = useState<string | null>(null),
     kidFamilyId = _kidFamilyId[0],
     setKidFamilyId = _kidFamilyId[1];
-  var _parentVerified = useState(function () {
-      return getSession(SESSION_KEY_PARENT) === 'true';
-    }),
+  var _parentVerified = useState(false),
     parentVerified = _parentVerified[0],
     setParentVerifiedRaw = _parentVerified[1];
 
+  // Restore parent session only if the stored UID matches the current auth user
+  useEffect(function () {
+    if (auth.authUser && !auth.authLoading) {
+      var stored = getSession(SESSION_KEY_PARENT);
+      if (stored === auth.authUser.familyId || stored === auth.authUser.email) {
+        setParentVerifiedRaw(true);
+      }
+    }
+  }, [auth.authUser, auth.authLoading]);
+
   function setParentVerified(val: boolean) {
     setParentVerifiedRaw(val);
-    if (val) {
-      setSession(SESSION_KEY_PARENT, 'true');
+    if (val && auth.authUser) {
+      setSession(SESSION_KEY_PARENT, auth.authUser.familyId);
     } else {
       clearSession(SESSION_KEY_PARENT);
     }
@@ -417,12 +429,13 @@ function AppRouter() {
       );
     }
 
-    // Family code resolved → show app (starts at profile selection or restored session)
+    // Family code resolved → show app
+    // Pass stored kid as initialUser but start at 'login' — AppContext will
+    // validate the child ID against cfg.children and promote to 'dashboard'
     var storedKid = getSession(SESSION_KEY_KID);
     return (
       <AppProvider
         familyId={kidFamilyId}
-        initialScreen={storedKid ? 'dashboard' : 'login'}
         initialUser={storedKid || null}
       >
         <AppInner

@@ -531,11 +531,15 @@ export function AppProvider(props: {
     })();
   });
 
-  // Validate restored kid session — if child no longer exists, reset to login
+  // Validate restored kid session — promote to dashboard if valid, reset if not
   useEffect(function () {
     if (!loading && cfg && curUser && curUser !== 'parent') {
       var found = cfg.children.some(function (c) { return c.id === curUser; });
-      if (!found) {
+      if (found) {
+        // Valid restored session — go to dashboard
+        if (screen === 'login') setScreen('dashboard');
+      } else {
+        // Invalid child ID — reset
         setCurUser(null);
         setScreen('login');
       }
