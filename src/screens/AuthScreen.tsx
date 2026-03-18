@@ -291,8 +291,22 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   var error = localErr || auth.authError;
 
-  // --- Sign In (single step) ---
-  if (mode === 'signin') {
+  function handleSigninStep1() {
+    setLocalErr(null);
+    auth.clearAuthError();
+    if (!email.trim()) {
+      setLocalErr('Email is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setLocalErr('Enter a valid email address');
+      return;
+    }
+    setStep(2);
+  }
+
+  // --- Sign In Step 1: Email + Google ---
+  if (mode === 'signin' && step === 1) {
     return (
       <div className='page-wrapper page-centered'>
         <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
@@ -313,27 +327,14 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               value={email}
               onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
                 setEmail(e.target.value);
+                setLocalErr(null);
               }}
-              onKeyDown={handleKeyDown}
+              onKeyDown={function (e: React.KeyboardEvent) {
+                if (e.key === 'Enter') handleSigninStep1();
+              }}
               className='quest-input'
               autoComplete='email'
-            />
-          </div>
-
-          <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-              Password
-            </label>
-            <input
-              type='password'
-              placeholder='Enter password'
-              value={pass}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setPass(e.target.value);
-              }}
-              onKeyDown={handleKeyDown}
-              className='quest-input'
-              autoComplete='current-password'
+              autoFocus
             />
           </div>
 
@@ -344,11 +345,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           )}
 
           <button
-            onClick={handleSubmit}
-            disabled={busy}
-            className='btn-primary w-full mt-2 disabled:opacity-60 disabled:cursor-not-allowed'
+            onClick={handleSigninStep1}
+            className='btn-primary w-full mt-2'
           >
-            {busy ? 'Please wait...' : 'Sign In'}
+            Continue
           </button>
 
           <div className='flex items-center gap-3'>
@@ -373,6 +373,66 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             Continue with Google
           </button>
 
+          <button onClick={switchMode} disabled={busy} className='btn-ghost'>
+            Don't have an account? Create one
+          </button>
+
+          <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+            <FontAwesomeIcon icon={faAngleLeft} />
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Sign In Step 2: Password ---
+  if (mode === 'signin' && step === 2) {
+    return (
+      <div className='page-wrapper page-centered'>
+        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+          LOOTBOUND
+        </div>
+        <div className='text-sm text-qmuted mb-1'>
+          Welcome back
+        </div>
+        <div className='text-xs text-qmuted mb-5'>
+          {email}
+        </div>
+
+        <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              Password
+            </label>
+            <input
+              type='password'
+              placeholder='Enter password'
+              value={pass}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setPass(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              className='quest-input'
+              autoComplete='current-password'
+              autoFocus
+            />
+          </div>
+
+          {error && (
+            <div className='text-qcoral text-[13px] text-center py-1.5'>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={busy}
+            className='btn-primary w-full mt-2 disabled:opacity-60 disabled:cursor-not-allowed'
+          >
+            {busy ? 'Please wait...' : 'Sign In'}
+          </button>
+
           <button
             onClick={function () {
               setLocalErr(null);
@@ -385,12 +445,17 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             Forgot password?
           </button>
 
-          <button onClick={switchMode} disabled={busy} className='btn-ghost'>
-            Don't have an account? Create one
-          </button>
-
-          <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
-            <FontAwesomeIcon icon={faAngleLeft} />
+          <button
+            onClick={function () {
+              setStep(1);
+              setPass('');
+              setLocalErr(null);
+              auth.clearAuthError();
+            }}
+            disabled={busy}
+            className='btn-ghost'
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className='mr-1' />
             Back
           </button>
         </div>
