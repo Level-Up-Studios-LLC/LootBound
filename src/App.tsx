@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentDots, faCircleCheck } from './fa.ts';
@@ -271,10 +271,17 @@ function AppRouter() {
   // Auto-verify is handled inline in the render flow below to avoid
   // a flash of the PIN screen when no PIN is set.
 
-  // Auto-refresh email verification status when app loads
+  // Auto-refresh email verification status once per user
+  var verifyRefreshedRef = useRef<string | null>(null);
   useEffect(function () {
     if (auth.authUser && !auth.authUser.emailVerified) {
-      auth.doRefreshVerification();
+      var uid = auth.authUser.familyId;
+      if (verifyRefreshedRef.current !== uid) {
+        verifyRefreshedRef.current = uid;
+        auth.doRefreshVerification();
+      }
+    } else if (!auth.authUser) {
+      verifyRefreshedRef.current = null;
     }
   }, [auth.authUser]);
 
