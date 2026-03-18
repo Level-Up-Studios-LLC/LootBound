@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPartyHorn, faAngleLeft } from '../fa.ts';
+import { faPartyHorn, faAngleLeft, faArrowLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { saveConfig } from '../services/firestoreStorage.ts';
 
@@ -25,6 +25,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   var _mode = useState<'signin' | 'signup'>('signin'),
     mode = _mode[0],
     setMode = _mode[1];
+  var _step = useState(1),
+    step = _step[0],
+    setStep = _step[1];
   var _email = useState(''),
     email = _email[0],
     setEmail = _email[1];
@@ -60,13 +63,30 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   function switchMode() {
     setMode(mode === 'signin' ? 'signup' : 'signin');
+    setStep(1);
     setLocalErr(null);
     setJoinCode('');
     setParentName('');
     setReferral('');
+    setPass('');
+    setConfirm('');
     setShowReset(false);
     setResetSent(false);
     auth.clearAuthError();
+  }
+
+  function handleSignupStep1() {
+    setLocalErr(null);
+    auth.clearAuthError();
+    if (!email.trim()) {
+      setLocalErr('Email is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setLocalErr('Enter a valid email address');
+      return;
+    }
+    setStep(2);
   }
 
   async function handleResetPassword() {
@@ -130,7 +150,11 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !busy) {
-      handleSubmit();
+      if (mode === 'signup' && step === 1) {
+        handleSignupStep1();
+      } else {
+        handleSubmit();
+      }
     }
   }
 
@@ -265,50 +289,221 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   var error = localErr || auth.authError;
 
+  // --- Sign In (single step) ---
+  if (mode === 'signin') {
+    return (
+      <div className='page-wrapper page-centered'>
+        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+          LOOTBOUND
+        </div>
+        <div className='text-sm text-qmuted mb-5'>
+          Sign in with your family account
+        </div>
+
+        <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              Email
+            </label>
+            <input
+              type='email'
+              placeholder='family@example.com'
+              value={email}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setEmail(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              className='quest-input'
+              autoComplete='email'
+            />
+          </div>
+
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              Password
+            </label>
+            <input
+              type='password'
+              placeholder='Enter password'
+              value={pass}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setPass(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              className='quest-input'
+              autoComplete='current-password'
+            />
+          </div>
+
+          {error && (
+            <div className='text-qcoral text-[13px] text-center py-1.5'>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={busy}
+            className='btn-primary w-full mt-2 disabled:opacity-60 disabled:cursor-not-allowed'
+          >
+            {busy ? 'Please wait...' : 'Sign In'}
+          </button>
+
+          <div className='flex items-center gap-3'>
+            <div className='flex-1 h-px bg-qslate/20'></div>
+            <span className='text-xs text-qmuted'>or</span>
+            <div className='flex-1 h-px bg-qslate/20'></div>
+          </div>
+
+          <button
+            onClick={function () {
+              if (!busy) auth.doGoogleSignIn();
+            }}
+            disabled={busy}
+            className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-5 py-2.5 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors'
+          >
+            <svg width='18' height='18' viewBox='0 0 48 48'>
+              <path fill='#EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/>
+              <path fill='#4285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/>
+              <path fill='#FBBC05' d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z'/>
+              <path fill='#34A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <button
+            onClick={function () {
+              setLocalErr(null);
+              auth.clearAuthError();
+              setShowReset(true);
+            }}
+            disabled={busy}
+            className='text-qteal text-[13px] bg-transparent border-none cursor-pointer font-body hover:underline'
+          >
+            Forgot password?
+          </button>
+
+          <button onClick={switchMode} disabled={busy} className='btn-ghost'>
+            Don't have an account? Create one
+          </button>
+
+          <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+            <FontAwesomeIcon icon={faAngleLeft} />
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Sign Up Step 1: Email + Google ---
+  if (mode === 'signup' && step === 1) {
+    return (
+      <div className='page-wrapper page-centered'>
+        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+          LOOTBOUND
+        </div>
+        <div className='text-sm text-qmuted mb-5'>
+          Create a new family account
+        </div>
+
+        <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
+          <div>
+            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+              Email
+            </label>
+            <input
+              type='email'
+              placeholder='family@example.com'
+              value={email}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setEmail(e.target.value);
+                setLocalErr(null);
+              }}
+              onKeyDown={handleKeyDown}
+              className='quest-input'
+              autoComplete='email'
+              autoFocus
+            />
+          </div>
+
+          {error && (
+            <div className='text-qcoral text-[13px] text-center py-1.5'>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleSignupStep1}
+            className='btn-primary w-full mt-2'
+          >
+            Continue
+          </button>
+
+          <div className='flex items-center gap-3'>
+            <div className='flex-1 h-px bg-qslate/20'></div>
+            <span className='text-xs text-qmuted'>or</span>
+            <div className='flex-1 h-px bg-qslate/20'></div>
+          </div>
+
+          <button
+            onClick={function () {
+              if (!busy) auth.doGoogleSignIn();
+            }}
+            disabled={busy}
+            className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-5 py-2.5 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors'
+          >
+            <svg width='18' height='18' viewBox='0 0 48 48'>
+              <path fill='#EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/>
+              <path fill='#4285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/>
+              <path fill='#FBBC05' d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z'/>
+              <path fill='#34A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <button onClick={switchMode} disabled={busy} className='btn-ghost'>
+            Already have an account? Sign in
+          </button>
+
+          <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+            <FontAwesomeIcon icon={faAngleLeft} />
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Sign Up Step 2: Name, Password, Family Code, Referral ---
   return (
     <div className='page-wrapper page-centered'>
       <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
       </div>
-      <div className='text-sm text-qmuted mb-5'>
-        {mode === 'signin'
-          ? 'Sign in with your family account'
-          : 'Create a new family account'}
+      <div className='text-sm text-qmuted mb-1'>
+        Almost there!
+      </div>
+      <div className='text-xs text-qmuted mb-5'>
+        {email}
       </div>
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
-        {mode === 'signup' && (
-          <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-              First Name
-            </label>
-            <input
-              type='text'
-              placeholder='Your first name'
-              value={parentName}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setParentName(e.target.value);
-              }}
-              onKeyDown={handleKeyDown}
-              className='quest-input'
-              autoComplete='given-name'
-            />
-          </div>
-        )}
         <div>
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-            Email
+            First Name
           </label>
           <input
-            type='email'
-            placeholder='family@example.com'
-            value={email}
+            type='text'
+            placeholder='Your first name'
+            value={parentName}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              setEmail(e.target.value);
+              setParentName(e.target.value);
             }}
             onKeyDown={handleKeyDown}
             className='quest-input'
-            autoComplete='email'
+            autoComplete='given-name'
+            autoFocus
           />
         </div>
 
@@ -318,83 +513,75 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </label>
           <input
             type='password'
-            placeholder='Enter password'
+            placeholder='At least 6 characters'
             value={pass}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setPass(e.target.value);
             }}
             onKeyDown={handleKeyDown}
             className='quest-input'
-            autoComplete={
-              mode === 'signin' ? 'current-password' : 'new-password'
-            }
+            autoComplete='new-password'
           />
         </div>
 
-        {mode === 'signup' && (
-          <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-              Confirm Password
-            </label>
-            <input
-              type='password'
-              placeholder='Confirm password'
-              value={confirm}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-                setConfirm(e.target.value);
-              }}
-              onKeyDown={handleKeyDown}
-              className='quest-input'
-              autoComplete='new-password'
-            />
-          </div>
-        )}
+        <div>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+            Confirm Password
+          </label>
+          <input
+            type='password'
+            placeholder='Confirm password'
+            value={confirm}
+            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              setConfirm(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            className='quest-input'
+            autoComplete='new-password'
+          />
+        </div>
 
-        {mode === 'signup' && (
-          <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-              Family Code{' '}
-            </label>
-            <input
-              type='text'
-              placeholder='e.g. ABC123'
-              value={joinCode}
-              onChange={handleJoinCodeChange}
-              onKeyDown={handleKeyDown}
-              maxLength={6}
-              autoCapitalize='characters'
-              autoComplete='off'
-              className='quest-input tracking-[4px] font-semibold'
-            />
-            <span className='text-qmuted text-xs font-normal'>
-              (optional — enter to join an existing family)
-            </span>
-          </div>
-        )}
+        <div>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+            Family Code
+          </label>
+          <input
+            type='text'
+            placeholder='e.g. ABC123'
+            value={joinCode}
+            onChange={handleJoinCodeChange}
+            onKeyDown={handleKeyDown}
+            maxLength={6}
+            autoCapitalize='characters'
+            autoComplete='off'
+            className='quest-input tracking-[4px] font-semibold'
+          />
+          <span className='text-qmuted text-xs font-normal'>
+            (optional — enter to join an existing family)
+          </span>
+        </div>
 
-        {mode === 'signup' && (
-          <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-              How did you hear about us?
-            </label>
-            <select
-              value={referral}
-              onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
-                setReferral(e.target.value);
-              }}
-              className='quest-input'
-            >
-              <option value=''>Select one (optional)</option>
-              {REFERRAL_OPTIONS.map(function (o) {
-                return (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        )}
+        <div>
+          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+            How did you hear about us?
+          </label>
+          <select
+            value={referral}
+            onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
+              setReferral(e.target.value);
+            }}
+            className='quest-input'
+          >
+            <option value=''>Select one (optional)</option>
+            {REFERRAL_OPTIONS.map(function (o) {
+              return (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              );
+            })}
+          </select>
+        </div>
 
         {error && (
           <div className='text-qcoral text-[13px] text-center py-1.5'>
@@ -409,57 +596,21 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         >
           {busy
             ? 'Please wait...'
-            : mode === 'signin'
-              ? 'Sign In'
-              : joinCode.trim()
-                ? 'Join Family'
-                : 'Create Family'}
+            : joinCode.trim()
+              ? 'Join Family'
+              : 'Create Family'}
         </button>
-
-        <div className='flex items-center gap-3'>
-          <div className='flex-1 h-px bg-qslate/20'></div>
-          <span className='text-xs text-qmuted'>or</span>
-          <div className='flex-1 h-px bg-qslate/20'></div>
-        </div>
 
         <button
           onClick={function () {
-            if (!busy) auth.doGoogleSignIn();
+            setStep(1);
+            setLocalErr(null);
+            auth.clearAuthError();
           }}
           disabled={busy}
-          className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-5 py-2.5 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors'
+          className='btn-ghost'
         >
-          <svg width='18' height='18' viewBox='0 0 48 48'>
-            <path fill='#EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/>
-            <path fill='#4285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/>
-            <path fill='#FBBC05' d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z'/>
-            <path fill='#34A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/>
-          </svg>
-          Continue with Google
-        </button>
-
-        {mode === 'signin' && (
-          <button
-            onClick={function () {
-              setLocalErr(null);
-              auth.clearAuthError();
-              setShowReset(true);
-            }}
-            disabled={busy}
-            className='text-qteal text-[13px] bg-transparent border-none cursor-pointer font-body hover:underline'
-          >
-            Forgot password?
-          </button>
-        )}
-
-        <button onClick={switchMode} disabled={busy} className='btn-ghost'>
-          {mode === 'signin'
-            ? "Don't have an account? Create one"
-            : 'Already have an account? Sign in'}
-        </button>
-
-        <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
-          <FontAwesomeIcon icon={faAngleLeft} />
+          <FontAwesomeIcon icon={faArrowLeft} className='mr-1' />
           Back
         </button>
       </div>
