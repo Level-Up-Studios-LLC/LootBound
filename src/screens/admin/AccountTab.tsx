@@ -17,7 +17,7 @@ import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
 import { changePassword, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
-import { deleteFamily, saveParentMember, getParentMember } from '../../services/firestoreStorage.ts';
+import { deleteFamily, saveParentMember, getParentMember, deleteParentMember } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
@@ -197,6 +197,8 @@ export default function AccountTab(): React.ReactElement | null {
     setEditBusy(false);
   }
 
+  var isOwner = getCurrentUid() === ctx.familyId;
+
   async function handleDeleteFamily() {
     setDeleteErr('');
     if (!deletePass) {
@@ -205,8 +207,6 @@ export default function AccountTab(): React.ReactElement | null {
     }
     setDeleteBusy(true);
     try {
-      // Re-authenticate up front to ensure the session is fresh
-      // before any destructive operations
       await reauthenticate(deletePass);
 
       // Delete all photos from Storage
@@ -221,8 +221,6 @@ export default function AccountTab(): React.ReactElement | null {
       var uid = getCurrentUid();
       if (!uid) throw new Error('Not signed in');
       await deleteFamily(ctx.familyId, uid);
-      // Delete the Firebase Auth account (session is already fresh)
-      // Note: other parent member auth accounts require Admin SDK to remove
       await deleteAuthAccount(deletePass);
     } catch (err: any) {
       console.error('Failed to delete family:', err);
@@ -236,7 +234,34 @@ export default function AccountTab(): React.ReactElement | null {
       setDeleteBusy(false);
       return;
     }
-    // Auth state change will redirect to role selection
+  }
+
+  async function handleLeaveFamily() {
+    setDeleteErr('');
+    if (!deletePass) {
+      setDeleteErr('Enter your password to confirm');
+      return;
+    }
+    setDeleteBusy(true);
+    try {
+      await reauthenticate(deletePass);
+      var uid = getCurrentUid();
+      if (!uid) throw new Error('Not signed in');
+      // Only remove own parentMembers doc and auth account
+      await deleteParentMember(uid);
+      await deleteAuthAccount(deletePass);
+    } catch (err: any) {
+      console.error('Failed to leave family:', err);
+      Sentry.captureException(err, { tags: { action: 'leave-family' } });
+      var code = err.code || err.message || '';
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setDeleteErr('Incorrect password');
+      } else {
+        setDeleteErr('Failed to leave family. Please try again.');
+      }
+      setDeleteBusy(false);
+      return;
+    }
   }
 
   return (
@@ -521,8 +546,8 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
       </div>
 
-      {/* Reset All Data */}
-      <div className='bg-qyellow rounded-card p-4 mb-4'>
+      {/* Reset All Data — owner only */}
+      {isOwner && <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faRotate} style={FA_ICON_STYLE} />
           Reset All Data
@@ -540,6 +565,7 @@ export default function AccountTab(): React.ReactElement | null {
           Reset Everything
         </button>
       </div>
+      }
       {showResetConfirm && (
         <ConfirmDialog
           title='Reset All Data?'
@@ -558,14 +584,16 @@ export default function AccountTab(): React.ReactElement | null {
         />
       )}
 
-      {/* Delete Family Account */}
+      {/* Delete / Leave Family */}
       <div className='bg-qcoral-dim rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qcoral flex items-center gap-2'>
           <FontAwesomeIcon icon={faTrashCan} style={{ '--fa-primary-color': '#e05a5a', '--fa-secondary-color': '#FF8C94', '--fa-secondary-opacity': '1' } as any} />
-          Delete Family Account
+          {isOwner ? 'Delete Family Account' : 'Leave Family'}
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Permanently delete your family account, all children, missions, loot, photos, and data. This cannot be undone.
+          {isOwner
+            ? 'Permanently delete your family account, all children, missions, loot, photos, and data. This cannot be undone.'
+            : 'Remove yourself from this family. Your login will be deleted. The family and its data will remain for other members.'}
         </div>
         <button
           onClick={function () {
@@ -573,18 +601,26 @@ export default function AccountTab(): React.ReactElement | null {
           }}
           className='bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
         >
-          Delete My Family Account
+          {isOwner ? 'Delete My Family Account' : 'Leave Family'}
         </button>
       </div>
       {showDeleteConfirm && (
         <ConfirmDialog
-          title='Delete Family Account?'
-          message='This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
-          warning='THIS ACTION CANNOT BE UNDONE.'
-          confirmLabel={deleteBusy ? 'Deleting...' : 'Delete'}
+          title={isOwner ? 'Delete Family Account?' : 'Leave Family?'}
+          message={isOwner
+            ? 'This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
+            : 'This will remove your account from this family. You will no longer be able to access this family\'s data. The family will remain for other members.'}
+          warning={isOwner ? 'THIS ACTION CANNOT BE UNDONE.' : undefined}
+          confirmLabel={deleteBusy ? (isOwner ? 'Deleting...' : 'Leaving...') : (isOwner ? 'Delete' : 'Leave')}
           confirmColor='bg-qcoral'
           onConfirm={function () {
-            if (!deleteBusy && deletePass) handleDeleteFamily();
+            if (!deleteBusy && deletePass) {
+              if (isOwner) {
+                handleDeleteFamily();
+              } else {
+                handleLeaveFamily();
+              }
+            }
           }}
           onCancel={function () {
             if (!deleteBusy) {
@@ -608,7 +644,13 @@ export default function AccountTab(): React.ReactElement | null {
                 setDeleteErr('');
               }}
               onKeyDown={function (e: React.KeyboardEvent) {
-                if (e.key === 'Enter' && !deleteBusy && deletePass) handleDeleteFamily();
+                if (e.key === 'Enter' && !deleteBusy && deletePass) {
+                  if (isOwner) {
+                    handleDeleteFamily();
+                  } else {
+                    handleLeaveFamily();
+                  }
+                }
               }}
               className='quest-input'
               autoFocus

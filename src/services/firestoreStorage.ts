@@ -139,6 +139,10 @@ export async function saveParentMember(
   await setDoc(doc(db, 'parentMembers', uid), data, { merge: true });
 }
 
+export async function deleteParentMember(uid: string): Promise<void> {
+  await deleteDoc(doc(db, 'parentMembers', uid));
+}
+
 export function onParentMemberSnapshot(
   uid: string,
   callback: (data: ParentMember | null) => void
