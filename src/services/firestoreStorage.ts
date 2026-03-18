@@ -136,7 +136,12 @@ export async function saveParentMember(
   uid: string,
   data: Partial<ParentMember>
 ): Promise<void> {
-  await setDoc(doc(db, 'parentMembers', uid), data, { merge: true });
+  // Only pass known fields — merge: true preserves existing familyId
+  var clean: Record<string, any> = {};
+  if (data.parentPin != null) clean.parentPin = data.parentPin;
+  if (data.parentName != null) clean.parentName = data.parentName;
+  if (data.familyId != null) clean.familyId = data.familyId;
+  await setDoc(doc(db, 'parentMembers', uid), clean, { merge: true });
 }
 
 export async function deleteParentMember(uid: string): Promise<void> {

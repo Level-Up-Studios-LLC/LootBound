@@ -353,7 +353,9 @@ function AppRouter() {
       return (
         <CreatePinPrompt
           onCreated={function (newPin) {
-            saveParentMember(getCurrentUid() || auth.authUser!.familyId, { parentPin: newPin }).then(function () {
+            var pinUid = getCurrentUid();
+            if (!pinUid) return;
+            saveParentMember(pinUid, { parentPin: newPin }).then(function () {
               setParentPin(newPin);
               setShowCreatePin(false);
               setParentVerified(true);

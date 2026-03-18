@@ -232,13 +232,15 @@ export default function AccountTab(): React.ReactElement | null {
 
   async function handleDeleteFamily() {
     setDeleteErr('');
-    if (!deletePass) {
+    if (hasPasswordProvider() && !deletePass) {
       setDeleteErr('Enter your password to confirm deletion');
       return;
     }
     setDeleteBusy(true);
     try {
-      await reauthenticate(deletePass);
+      if (hasPasswordProvider()) {
+        await reauthenticate(deletePass);
+      }
 
       // Delete all photos from Storage
       try {
@@ -269,13 +271,15 @@ export default function AccountTab(): React.ReactElement | null {
 
   async function handleLeaveFamily() {
     setDeleteErr('');
-    if (!deletePass) {
+    if (hasPasswordProvider() && !deletePass) {
       setDeleteErr('Enter your password to confirm');
       return;
     }
     setDeleteBusy(true);
     try {
-      await reauthenticate(deletePass);
+      if (hasPasswordProvider()) {
+        await reauthenticate(deletePass);
+      }
       var uid = getCurrentUid();
       if (!uid) throw new Error('Not signed in');
       // Only remove own parentMembers doc and auth account
@@ -670,7 +674,7 @@ export default function AccountTab(): React.ReactElement | null {
           confirmLabel={deleteBusy ? (isOwner ? 'Deleting...' : 'Leaving...') : (isOwner ? 'Delete' : 'Leave')}
           confirmColor='bg-qcoral'
           onConfirm={function () {
-            if (!deleteBusy && deletePass) {
+            if (!deleteBusy && (!hasPasswordProvider() || deletePass)) {
               if (isOwner) {
                 handleDeleteFamily();
               } else {
@@ -686,6 +690,7 @@ export default function AccountTab(): React.ReactElement | null {
             }
           }}
         >
+          {hasPasswordProvider() && (
           <div className='mt-3'>
             <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
               Enter your password to confirm:
@@ -700,7 +705,7 @@ export default function AccountTab(): React.ReactElement | null {
                 setDeleteErr('');
               }}
               onKeyDown={function (e: React.KeyboardEvent) {
-                if (e.key === 'Enter' && !deleteBusy && deletePass) {
+                if (e.key === 'Enter' && !deleteBusy) {
                   if (isOwner) {
                     handleDeleteFamily();
                   } else {
@@ -712,6 +717,7 @@ export default function AccountTab(): React.ReactElement | null {
               autoFocus
             />
           </div>
+          )}
           {deleteErr && (
             <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
           )}
