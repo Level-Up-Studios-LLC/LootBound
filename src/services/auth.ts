@@ -17,8 +17,11 @@ import {
   sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
+  linkWithCredential,
+  verifyBeforeUpdateEmail,
   verifyPasswordResetCode,
   confirmPasswordReset,
+  applyActionCode,
   EmailAuthProvider,
   GoogleAuthProvider,
   signInWithRedirect,
@@ -39,6 +42,13 @@ export interface AuthUser {
   familyId: string;
   email: string;
   emailVerified: boolean;
+}
+
+function appActionCodeSettings() {
+  return {
+    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
+    handleCodeInApp: true,
+  };
 }
 
 /**
@@ -69,14 +79,16 @@ export async function signUpFamily(
   // Register parent member mapping
   await setDoc(doc(db, 'parentMembers', familyId), {
     familyId: familyId,
-  });
+  }, { merge: true });
 
   // Generate and register family code
   var code = await generateFamilyCode();
   await registerFamilyCode(code, familyId);
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user).catch(function () {});
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function (err) {
+    console.warn('Verification email failed:', err);
+  });
 
   return {
     user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
@@ -101,10 +113,12 @@ export async function joinFamilyByCode(
   // Map this parent to the existing family
   await setDoc(doc(db, 'parentMembers', cred.user.uid), {
     familyId: familyId,
-  });
+  }, { merge: true });
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user).catch(function () {});
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function (err) {
+    console.warn('Verification email failed:', err);
+  });
 
   return {
     user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
@@ -130,12 +144,20 @@ export async function signInFamily(
  */
 export async function startGoogleSignIn(): Promise<void> {
   var provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
   await signInWithRedirect(auth, provider);
 }
 
 /**
  * Handle the Google redirect result after the page reloads.
  * Sets up parentMembers and family code for new users.
+ *
+ * With Firebase's "One account per email" setting (the default),
+ * signing in with Google using an email that already has an
+ * email/password account automatically links the providers under
+ * the same UID. So the existing parentMembers mapping is preserved
+ * and this function returns null (returning user).
+ *
  * Returns the family code if a new family was created, null otherwise.
  */
 export async function handleGoogleRedirectResult(): Promise<string | null> {
@@ -146,17 +168,23 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
   var uid = user.uid;
 
   // Check if this user already has a parentMembers mapping
+  // (returning user, or email/password account that was auto-linked with Google)
   var snap = await getDoc(doc(db, 'parentMembers', uid));
-  if (snap.exists()) return null; // returning user
+  if (snap.exists()) return null;
 
   // New user — create family
-  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid });
+  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid }, { merge: true });
   var code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
   return code;
 }
 
 export async function signOutFamily(): Promise<void> {
+  // Clear any session persistence data
+  try {
+    sessionStorage.removeItem('qb-parent-session');
+    sessionStorage.removeItem('qb-kid-session');
+  } catch (_e) { /* ignore */ }
   return signOut(auth);
 }
 
@@ -183,11 +211,7 @@ export function onAuthChange(
  * Links back to the app so users reset their password on a branded page.
  */
 export async function resetPassword(email: string): Promise<void> {
-  var actionCodeSettings = {
-    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
-    handleCodeInApp: true,
-  };
-  await sendPasswordResetEmail(auth, email, actionCodeSettings);
+  await sendPasswordResetEmail(auth, email, appActionCodeSettings());
 }
 
 /**
@@ -214,7 +238,19 @@ export async function completePasswordReset(
 export async function sendVerification(): Promise<void> {
   var user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
-  await sendEmailVerification(user);
+  await sendEmailVerification(user, appActionCodeSettings());
+}
+
+/**
+ * Apply a Firebase action code (e.g. email verification).
+ * This confirms the action server-side before refreshing local state.
+ */
+export async function applyVerificationCode(oobCode: string): Promise<void> {
+  await applyActionCode(auth, oobCode);
+  // Reload user to pick up the verified status
+  if (auth.currentUser) {
+    await auth.currentUser.reload();
+  }
 }
 
 /**
@@ -240,6 +276,32 @@ export async function changePassword(
   var cred = EmailAuthProvider.credential(user.email, currentPassword);
   await reauthenticateWithCredential(user, cred);
   await updatePassword(user, newPassword);
+}
+
+/**
+ * Set a password for a Google-only user, adding the email/password provider.
+ * Uses linkWithCredential to add the password provider, falling back to
+ * updatePassword if already linked.
+ */
+export async function setPassword(newPassword: string): Promise<void> {
+  var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  if (!hasPasswordProvider()) {
+    var cred = EmailAuthProvider.credential(user.email, newPassword);
+    await linkWithCredential(user, cred);
+  } else {
+    await updatePassword(user, newPassword);
+  }
+}
+
+/**
+ * Update the current user's email. Sends a verification link to the new
+ * address — the email only changes after the user clicks the link.
+ */
+export async function changeEmail(newEmail: string): Promise<void> {
+  var user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  await verifyBeforeUpdateEmail(user, newEmail, appActionCodeSettings());
 }
 
 /**
@@ -283,6 +345,18 @@ export async function deleteAuthAccount(password?: string): Promise<void> {
 export function getCurrentUid(): string | null {
   var user = auth.currentUser;
   return user ? user.uid : null;
+}
+
+/**
+ * Check if the current user has a password (email/password) provider.
+ * Google-only users won't have this until they set a password.
+ */
+export function hasPasswordProvider(): boolean {
+  var user = auth.currentUser;
+  if (!user) return false;
+  return user.providerData.some(function (p) {
+    return p.providerId === 'password';
+  });
 }
 
 /** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */

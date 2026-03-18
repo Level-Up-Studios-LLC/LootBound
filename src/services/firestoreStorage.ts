@@ -69,6 +69,12 @@ export interface FamilyConfig {
   approvalThreshold: number;
   lastWeeklyReset: string;
   tierPoints?: Record<number, number>;
+  parentName?: string;
+  referralSource?: string;
+  familyCode?: string;
+  bedtime?: number;
+  weeklyResetDay?: number;
+  cooldown?: number;
 }
 
 export interface TaskLogEntry {
@@ -109,6 +115,46 @@ export interface ChildData {
   taskLog: Record<string, Record<string, TaskLogEntry | boolean>>;
   redemptions: Redemption[];
   pendingRedemptions: PendingRedemption[];
+}
+
+// ---------------------------------------------------------------------------
+// Per-parent data (parentMembers/{uid})
+// ---------------------------------------------------------------------------
+
+export interface ParentMember {
+  familyId: string;
+  parentPin?: string;
+  parentName?: string;
+}
+
+export async function getParentMember(uid: string): Promise<ParentMember | null> {
+  var snap = await getDoc(doc(db, 'parentMembers', uid));
+  return snap.exists() ? (snap.data() as ParentMember) : null;
+}
+
+export async function saveParentMember(
+  uid: string,
+  data: Partial<ParentMember>
+): Promise<void> {
+  // Only pass known fields — merge: true preserves existing familyId
+  var clean: Record<string, any> = {};
+  if (data.parentPin != null) clean.parentPin = data.parentPin;
+  if (data.parentName != null) clean.parentName = data.parentName;
+  if (data.familyId != null) clean.familyId = data.familyId;
+  await setDoc(doc(db, 'parentMembers', uid), clean, { merge: true });
+}
+
+export async function deleteParentMember(uid: string): Promise<void> {
+  await deleteDoc(doc(db, 'parentMembers', uid));
+}
+
+export function onParentMemberSnapshot(
+  uid: string,
+  callback: (data: ParentMember | null) => void
+): () => void {
+  return onSnapshot(doc(db, 'parentMembers', uid), function (snap) {
+    callback(snap.exists() ? (snap.data() as ParentMember) : null);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -307,7 +353,9 @@ export async function deleteFamily(familyId: string, _currentUid: string): Promi
   // Family config doc
   refs.push(doc(db, 'families', familyId));
 
-  // All parent member mappings for this family (not just current user)
+  // Delete all parent member mappings for this family.
+  // The family owner (uid == familyId) has permission to delete
+  // other members' docs via security rules.
   var memberQuery = query(
     collection(db, 'parentMembers'),
     where('familyId', '==', familyId)
@@ -316,6 +364,10 @@ export async function deleteFamily(familyId: string, _currentUid: string): Promi
   memberSnap.forEach(function (d) {
     refs.push(d.ref);
   });
+  // Also include the current user's doc in case the query missed it
+  if (_currentUid && !memberSnap.docs.some(function (d) { return d.id === _currentUid; })) {
+    refs.push(doc(db, 'parentMembers', _currentUid));
+  }
 
   // Family code mapping
   if (familyCode) {

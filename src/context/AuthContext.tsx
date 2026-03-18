@@ -21,12 +21,12 @@ interface AuthContextValue {
   lastFamilyCode: string | null;
   justSignedIn: boolean;
   doSignIn: (email: string, password: string) => Promise<void>;
-  doSignUp: (email: string, password: string) => Promise<void>;
+  doSignUp: (email: string, password: string) => Promise<string | null>;
   doJoinFamily: (
     email: string,
     password: string,
     code: string
-  ) => Promise<void>;
+  ) => Promise<string | null>;
   doGoogleSignIn: () => Promise<void>;
   doSignOut: () => Promise<void>;
   doResetPassword: (email: string) => Promise<boolean>;
@@ -113,13 +113,19 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       return 'Invalid email address';
     }
     if (msg === 'auth/email-already-in-use') {
-      return 'An account with that email already exists';
+      return 'An account with that email already exists. Try signing in with Google instead.';
     }
     if (msg === 'auth/weak-password') {
       return 'Password must be at least 6 characters';
     }
     if (msg === 'auth/invalid-family-code') {
       return 'Invalid family code';
+    }
+    if (msg === 'auth/account-exists-with-different-credential') {
+      return 'An account with that email exists using a different sign-in method. Try email/password or Google.';
+    }
+    if (msg === 'auth/credential-already-in-use') {
+      return 'This credential is already linked to another account.';
     }
     return msg;
   }
@@ -134,14 +140,16 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   }
 
-  async function doSignUp(email: string, password: string) {
+  async function doSignUp(email: string, password: string): Promise<string | null> {
     setAuthError(null);
     try {
       var result = await signUpFamily(email, password);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
+      return result.user.familyId;
     } catch (err: any) {
       setAuthError(mapError(err));
+      return null;
     }
   }
 
@@ -149,14 +157,16 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     email: string,
     password: string,
     code: string
-  ) {
+  ): Promise<string | null> {
     setAuthError(null);
     try {
       var result = await joinFamilyByCode(email, password, code);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
+      return result.user.familyId;
     } catch (err: any) {
       setAuthError(mapError(err));
+      return null;
     }
   }
 

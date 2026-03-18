@@ -83,7 +83,7 @@ export default function ChildrenTab(): React.ReactElement {
                       ) {
                         setKidPinEdit({ uid: c.id, val: e.target.value });
                       }}
-                      className='quest-input !w-[60px] text-center !py-1 !px-1.5 !text-xs'
+                      className='quest-input w-[60px]! text-center py-1! px-1.5! text-xs!'
                     />
                     <button
                       onClick={function () {

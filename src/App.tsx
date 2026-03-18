@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots } from './fa.ts';
+import { faCommentDots, faCircleCheck } from './fa.ts';
+import { FA_ICON_STYLE } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-import { getConfig as fsGetConfig } from './services/firestoreStorage.ts';
+import { getParentMember, saveParentMember } from './services/firestoreStorage.ts';
 import {
   getStoredFamilyCode,
   clearStoredFamilyCode,
   lookupFamilyCode,
 } from './services/familyCode.ts';
-import { signInAnonymousKid } from './services/auth.ts';
+import { signInAnonymousKid, getCurrentUid, applyVerificationCode } from './services/auth.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
@@ -26,7 +27,6 @@ import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
-import { saveConfig as fsSaveConfig } from './services/firestoreStorage.ts';
 
 var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
@@ -78,6 +78,53 @@ function getFirebaseActionParams(): { mode: string; oobCode: string } | null {
     return { mode: mode, oobCode: oobCode };
   }
   return null;
+}
+
+function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
+  var _done = useState(false),
+    done = _done[0],
+    setDone = _done[1];
+  var _err = useState<string | null>(null),
+    err = _err[0],
+    setErr = _err[1];
+
+  useEffect(function () {
+    if (!props.oobCode) return;
+    applyVerificationCode(props.oobCode).then(function () {
+      setDone(true);
+    }).catch(function (e: any) {
+      console.error('Email verification failed:', e);
+      setErr(e.message || 'Verification failed');
+      setDone(true);
+    });
+  }, [props.oobCode]);
+
+  if (!done) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <div className='font-display text-2xl text-qteal animate-pulse rounded-card px-6 py-3'>
+          Verifying email...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className='page-wrapper page-centered'>
+      <div className='text-5xl mb-5'>
+        <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
+      </div>
+      <div className='font-display text-2xl font-bold mb-3'>
+        {err ? 'Verification Failed' : 'Email Verified!'}
+      </div>
+      <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
+        {err || 'Your email has been verified. You\'re all set.'}
+      </div>
+      <button onClick={props.onDone} className='btn-primary'>
+        Continue
+      </button>
+    </div>
+  );
 }
 
 function LoadingScreen() {
@@ -266,13 +313,15 @@ function AppRouter() {
     [auth.authLoading, auth.authUser, role, initDone]
   );
 
-  // When parent authenticates, load their parent PIN from Firestore
+  // When parent authenticates, load their PIN from their own parentMembers doc
   // An empty string means no custom PIN has been set
   useEffect(
     function () {
       if (auth.authUser && role === 'parent') {
-        fsGetConfig(auth.authUser.familyId).then(function (cfg) {
-          var pin = cfg ? cfg.parentPin || '' : '';
+        var actualUid = getCurrentUid();
+        if (!actualUid) return;
+        getParentMember(actualUid).then(function (member) {
+          var pin = member ? member.parentPin || '' : '';
           setParentPin(pin);
         }).catch(function (err) {
           console.error('Failed to load parent PIN:', err);
@@ -284,20 +333,37 @@ function AppRouter() {
     [auth.authUser, role]
   );
 
-  // Auto-verify parent when no PIN is set (persisted session, not fresh sign-in)
-  useEffect(function () {
-    if (
-      auth.authUser &&
-      role === 'parent' &&
-      parentPin === '' &&
-      !parentVerified &&
-      !auth.justSignedIn
-    ) {
-      setParentVerified(true);
-    }
-  }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
+  // Auto-verify is handled inline in the render flow below to avoid
+  // a flash of the PIN screen when no PIN is set.
 
-  // Handle Firebase action URLs (password reset)
+  // Auto-refresh email verification status once per user
+  var verifyRefreshedRef = useRef<string | null>(null);
+  useEffect(function () {
+    if (auth.authUser && !auth.authUser.emailVerified) {
+      var userKey = auth.authUser.email;
+      if (verifyRefreshedRef.current !== userKey) {
+        verifyRefreshedRef.current = userKey;
+        auth.doRefreshVerification();
+      }
+    } else if (!auth.authUser) {
+      verifyRefreshedRef.current = null;
+    }
+  }, [auth.authUser]);
+
+  // Handle Firebase action URLs (password reset, email verification)
+  if (actionParams && actionParams.mode === 'verifyEmail') {
+    return (
+      <VerifyEmailScreen
+        oobCode={actionParams.oobCode}
+        onDone={function () {
+          auth.doRefreshVerification();
+          window.history.replaceState({}, '', window.location.pathname);
+          setActionParams(null);
+        }}
+      />
+    );
+  }
+
   if (actionParams && actionParams.mode === 'resetPassword') {
     return (
       <ResetPasswordScreen
@@ -351,6 +417,7 @@ function AppRouter() {
         setParentVerified(true);
       } else if (!showCreatePin) {
         setShowCreatePin(true);
+        return <LoadingScreen />;
       }
     }
 
@@ -359,7 +426,9 @@ function AppRouter() {
       return (
         <CreatePinPrompt
           onCreated={function (newPin) {
-            fsSaveConfig(auth.authUser!.familyId, { parentPin: newPin }).then(function () {
+            var pinUid = getCurrentUid();
+            if (!pinUid) return;
+            saveParentMember(pinUid, { parentPin: newPin }).then(function () {
               setParentPin(newPin);
               setShowCreatePin(false);
               setParentVerified(true);
@@ -400,7 +469,8 @@ function AppRouter() {
         );
       }
 
-      // No PIN — will be auto-verified via useEffect below
+      // No PIN set — auto-verify immediately (no flash)
+      setParentVerified(true);
       return <LoadingScreen />;
     }
 

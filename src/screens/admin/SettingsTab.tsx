@@ -106,7 +106,7 @@ export default function SettingsTab(): React.ReactElement {
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update(Object.assign({}, cfg, { tierConfig: n }));
                   }}
-                  className='quest-input !w-[60px] text-center'
+                  className='quest-input w-[60px]! text-center'
                 />
                 <span className='text-[11px] text-qmuted'>coins</span>
                 <input
@@ -125,7 +125,7 @@ export default function SettingsTab(): React.ReactElement {
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update(Object.assign({}, cfg, { tierConfig: n }));
                   }}
-                  className='quest-input !w-[60px] text-center'
+                  className='quest-input w-[60px]! text-center'
                 />
                 <span className='text-[11px] text-qmuted'>XP</span>
               </div>
@@ -155,7 +155,7 @@ export default function SettingsTab(): React.ReactElement {
                 })
               );
             }}
-            className='quest-input !w-[100px] text-center'
+            className='quest-input w-[100px]! text-center'
           />
           <span className='text-[13px] text-qmuted'>coins</span>
         </div>
@@ -188,7 +188,7 @@ export default function SettingsTab(): React.ReactElement {
               var mins = parts[0] * 60 + parts[1];
               update(Object.assign({}, cfg, { bedtime: mins }));
             }}
-            className='quest-input !w-[140px]'
+            className='quest-input w-[140px]!'
           />
         </div>
       </div>
@@ -211,7 +211,7 @@ export default function SettingsTab(): React.ReactElement {
                 })
               );
             }}
-            className='quest-input !w-[140px]'
+            className='quest-input w-[140px]!'
           >
             {DAYS.map(function (dayName, i) {
               return (
@@ -245,7 +245,7 @@ export default function SettingsTab(): React.ReactElement {
                 })
               );
             }}
-            className='quest-input !w-[100px] text-center'
+            className='quest-input w-[100px]! text-center'
           />
           <span className='text-[13px] text-qmuted'>seconds</span>
         </div>

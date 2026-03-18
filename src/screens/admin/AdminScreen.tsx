@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCircleQuestion } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
+import { getCurrentUid } from '../../services/auth.ts';
+import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
 import HamburgerMenu from '../../components/HamburgerMenu.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';
@@ -18,6 +20,17 @@ export default function AdminScreen(): React.ReactElement {
     setAtab = _atab[1];
   var _codeCopied = useState<boolean>(false),
     setCodeCopied = _codeCopied[1];
+  var _myName = useState<string | undefined>(undefined),
+    myName = _myName[0],
+    setMyName = _myName[1];
+
+  useEffect(function () {
+    var uid = getCurrentUid();
+    if (!uid) return;
+    return onParentMemberSnapshot(uid, function (member) {
+      setMyName(member && member.parentName ? member.parentName : undefined);
+    });
+  }, []);
 
   var ctx = useAppContext();
   var cfg = ctx.cfg;
@@ -85,8 +98,8 @@ export default function AdminScreen(): React.ReactElement {
       <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center mb-3'>
           <div className='font-display text-2xl font-bold text-qslate'>
-            {cfg && cfg.parentName
-              ? 'Hey, ' + cfg.parentName + '!'
+            {myName
+              ? 'Hey, ' + myName + '!'
               : 'Parent Dashboard'}
           </div>
           <HamburgerMenu
