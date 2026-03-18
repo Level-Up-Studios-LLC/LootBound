@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-18
+
+### Added
+- Multi-step sign-up form (Step 1: email/Google, Step 2: name, password, family code, referral)
+- Multi-step sign-in form (Step 1: email/Google, Step 2: password)
+- Per-parent data model: PIN and name stored on `parentMembers/{uid}` instead of shared family config
+- Owner/Member role system with role badge on Account page
+- "Leave Family" option for members (only removes own account, preserves family data)
+- Editable parent name and email on Account page with inline edit mode
+- Initials-based avatar (e.g. "MJ" for Marc Joseph) on Account page
+- Google + email/password account linking (auto-link via Firebase, set password for Google-only users)
+- `hasPasswordProvider()` helper to detect sign-in methods
+- `setPassword()` using `linkWithCredential` for Google-only users
+- `changeEmail()` using `verifyBeforeUpdateEmail` with app action URL redirect
+- Email verification confirmation page with `applyActionCode` server-side verification
+- Auto-refresh email verification status on app load (once per user via ref guard)
+- Session persistence for parents (sessionStorage with 24h TTL, per-user binding)
+- Session persistence for kids (sessionStorage, validated against cfg.children before dashboard)
+- Collapsible purchase history (PurchasesToggle component) on Overview and Children tabs
+- "How did you hear about us?" referral dropdown on signup (saved to family doc)
+- Personalized dashboard greeting ("Hey, Marc!")
+- Settings save debounce (1.5s delay with unmount flush)
+- `ParentMember` interface and CRUD helpers (get, save, delete, onSnapshot)
+- `deleteParentMember` helper for member account removal
+- `prompt: 'select_account'` on Google sign-in to force account picker
+- CreatePinPrompt shown after signup (skippable)
+
+### Fixed
+- Parent name not persisting: added `parentName` to initial config load and Firestore sync
+- PIN creation prompt not appearing after signup (state update during render timing fix)
+- PIN screen flash on load (inline auto-verify instead of async useEffect)
+- Family deletion failing with insufficient permissions (parentMembers query scope)
+- Session leakage between parent accounts (per-UID session binding with mismatch clearing)
+- `getSession` now validates parsed shape and uses `Number.isFinite` for timestamps
+- Malformed sessionStorage entries cleaned up in catch block
+- Sign-out clears sessionStorage (parent + kid sessions)
+- Kid session validated against cfg.children before promoting to dashboard
+- `saveParentMember` filters to known fields only (prevents accidental familyId removal)
+- Firestore rules: `familyId` immutable on `parentMembers` updates
+- Firestore rules: family owner can read/delete other members' docs for deletion cleanup
+- `FamilyConfig` interface updated with all fields (was missing parentName, bedtime, cooldown, etc.)
+- Real-time snapshot listener for parent name in AdminScreen and AccountTab
+- PIN save now awaited before UI update
+- Tailwind v4 important modifier syntax (prefix `!` → suffix `!`)
+- `sendEmailVerification` catch blocks now log warnings
+
+### Changed
+- Delete Family dialog simplified to password-only (removed family code typed confirmation)
+- Reset All Data restricted to owner role only
+- `doSignUp` and `doJoinFamily` return familyId for immediate post-signup data saves
+- All `parentMembers` setDoc calls use `{ merge: true }`
+- `useFirestoreSync` config snapshot cleaned up: removed `(fc as any)` casts
+
 ## [1.2.0] - 2026-03-17
 
 ### Added

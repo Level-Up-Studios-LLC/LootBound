@@ -24,7 +24,7 @@ LootBound is proprietary software owned by Level Up Studios LLC. By contributing
    npm run dev
    ```
 5. Open [http://localhost:3000](http://localhost:3000)
-6. Default parent PIN is `1234`
+6. Each parent sets their own PIN during signup (or later in Account settings)
 
 ## Branch Naming
 

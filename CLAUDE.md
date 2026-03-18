@@ -180,16 +180,27 @@ families/{familyId}              — Family config
   /rewards/{rewardId}            — Reward definitions
   /childData/{childId}           — Runtime data (coins, XP, level, streaks, logs)
 
-parentMembers/{uid}              — Maps parent auth UIDs to family IDs
+parentMembers/{uid}              — Per-parent data (familyId, PIN, name)
 familyCodes/{code}               — Maps family codes to family IDs
 feedback/{docId}                 — User-submitted feedback
 ```
+
+### Parent Member (Firestore document: `parentMembers/{uid}`)
+
+```js
+{
+  familyId: "abc123",              // Links parent to their family
+  parentPin: "1234",               // Per-parent PIN (empty string = no PIN set)
+  parentName: "Marc",              // Per-parent display name
+}
+```
+
+**Roles:** Owner (uid === familyId) vs Member (joined via family code). Each parent has their own PIN and name.
 
 ### Family Config (Firestore document)
 
 ```js
 {
-  parentPin: "",                    // Empty string = no PIN set
   tierConfig: {
     S: { coins: 50, xp: 40 },
     A: { coins: 30, xp: 25 },
@@ -239,10 +250,14 @@ When AppContext loads config, it checks for the old numeric `tierPoints` format 
 ## Auth Flow
 
 1. **Role Selection** — "I'm a Parent" or "I'm a Kid"
-2. **Parent Flow** — Sign up/in with email/password → Optional PIN creation → App
-3. **Kid Flow** — Enter family code → Select profile → Enter/create PIN → App
-4. **PIN semantics** — Empty string = no PIN set. Any non-empty value is a valid PIN.
-5. **Family code** — 6-character alphanumeric, persisted in localStorage for kid devices
+2. **Parent Sign-Up** — Step 1: email/Google → Step 2: name, password, family code, referral → PIN creation (skippable) → App
+3. **Parent Sign-In** — Step 1: email/Google → Step 2: password → PIN (if set) → App
+4. **Returning Parent** — Firebase session persists → PIN screen (if set) or auto-verify → App
+5. **Kid Flow** — Enter family code → Select profile → Enter/create PIN → App
+6. **PIN semantics** — Per-parent, stored on `parentMembers/{uid}`. Empty string = no PIN set.
+7. **Family code** — 6-character alphanumeric, persisted in localStorage for kid devices
+8. **Session persistence** — `sessionStorage` with 24h TTL. Parent session bound to UID. Kid session validated against `cfg.children`.
+9. **Google linking** — Firebase "one account per email" auto-links. Google-only users can set password from Account page.
 
 ---
 

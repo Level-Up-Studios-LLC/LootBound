@@ -64,14 +64,17 @@ Dev server starts at **http://localhost:3000**.
 
 ### 👨‍👩‍👧‍👦 Parent Features
 
-- **📊 Overview** — All children at a glance with coins, levels, progress, and quick +/- adjustments
+- **📊 Overview** — All children at a glance with coins, levels, progress, quick +/- adjustments, and collapsible purchase history
 - **✅ Approvals** — Queue for high-value redemptions with approve/deny actions
 - **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins and XP, XP cannot go below 0)
 - **📋 Mission Management** — Add, edit, delete missions per child with tier (S-F), time windows, and scheduling
 - **🎁 Loot Management** — Full CRUD for rewards with cost, icon, limits, and approval flags
-- **👶 Children Management** — Add/remove children, manage profiles and PINs
-- **⚙️ Settings** — Tier coin/XP values, approval threshold, parent PIN, bedtime, weekly reset day, cooldown
-- **💬 Feedback** — In-app feedback submission
+- **👶 Children Management** — Add/remove children, manage profiles and PINs, view purchase history
+- **👤 Account** — Editable name and email, initials avatar, Owner/Member role badge, PIN management, password change (or set for Google users), email verification
+- **⚙️ Settings** — Tier coin/XP values, approval threshold, bedtime, weekly reset day, cooldown (with debounced auto-save)
+- **💬 Feedback** — Links to GitHub Discussions
+- **🔐 Multi-parent support** — Each parent has their own PIN, name, and role. Owners can delete the family; members can leave.
+- **📱 Session persistence** — Refreshing preserves login state (24h session window)
 
 ---
 
