@@ -39,7 +39,7 @@ function getSession(key: string): string | null {
     var raw = sessionStorage.getItem(key);
     if (!raw) return null;
     var data = JSON.parse(raw);
-    if (typeof data.val !== 'string' || typeof data.ts !== 'number') {
+    if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) {
       sessionStorage.removeItem(key);
       return null;
     }
@@ -49,6 +49,7 @@ function getSession(key: string): string | null {
     }
     return data.val;
   } catch (_e) {
+    try { sessionStorage.removeItem(key); } catch (_e2) { /* ignore */ }
     return null;
   }
 }
@@ -193,11 +194,19 @@ function AppRouter() {
 
   // Restore parent session only if the stored UID matches the current auth user
   useEffect(function () {
-    if (auth.authUser && !auth.authLoading) {
+    if (auth.authLoading) return;
+    if (auth.authUser) {
       var stored = getSession(SESSION_KEY_PARENT);
-      if (stored === auth.authUser.familyId || stored === auth.authUser.email) {
+      if (stored === auth.authUser.familyId) {
         setParentVerifiedRaw(true);
+      } else if (stored) {
+        // Stored session belongs to a different user — clear it
+        clearSession(SESSION_KEY_PARENT);
+        setParentVerifiedRaw(false);
       }
+    } else {
+      // No user — clear any stale session
+      setParentVerifiedRaw(false);
     }
   }, [auth.authUser, auth.authLoading]);
 
