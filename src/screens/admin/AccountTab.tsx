@@ -47,13 +47,12 @@ export default function AccountTab(): React.ReactElement | null {
     setMyPin = _myPin[1];
 
   useEffect(function () {
-    var uid = currentUid;
-    if (!uid) return;
-    return onParentMemberSnapshot(uid, function (member) {
+    if (!currentUid) return;
+    return onParentMemberSnapshot(currentUid, function (member) {
       setMyName(member && member.parentName ? member.parentName : undefined);
       setMyPin(member && member.parentPin ? member.parentPin : '');
     });
-  }, []);
+  }, [currentUid]);
 
   var _editing = useState(false),
     editing = _editing[0],
@@ -195,21 +194,19 @@ export default function AccountTab(): React.ReactElement | null {
     }
 
     setEditBusy(true);
+    var nameChanged = trimmedName !== (myName || '');
     try {
-      // Save name to per-parent doc
-      if (trimmedName) {
-        var uid = currentUid;
-        if (uid) {
-          await saveParentMember(uid, { parentName: trimmedName });
-          setMyName(trimmedName);
-        }
+      // Save name to per-parent doc (including clearing)
+      if (nameChanged && currentUid) {
+        await saveParentMember(currentUid, { parentName: trimmedName });
+        setMyName(trimmedName || undefined);
       }
 
       // Update email — sends verification to the new address
       if (emailChanged) {
         await changeEmail(trimmedEmail);
         ctx.notify('Verification sent to ' + trimmedEmail);
-      } else if (trimmedName) {
+      } else if (nameChanged) {
         ctx.notify('Profile updated');
       }
 
@@ -324,7 +321,7 @@ export default function AccountTab(): React.ReactElement | null {
                     setNameVal(e.target.value);
                     setEditErr('');
                   }}
-                  className='quest-input !py-1.5 !px-2.5 !text-sm'
+                  className='quest-input py-1.5! px-2.5! text-sm!'
                   autoFocus
                 />
                 <input
@@ -338,7 +335,7 @@ export default function AccountTab(): React.ReactElement | null {
                   onKeyDown={function (e: React.KeyboardEvent) {
                     if (e.key === 'Enter' && !editBusy) handleSaveProfile();
                   }}
-                  className='quest-input !py-1.5 !px-2.5 !text-sm'
+                  className='quest-input py-1.5! px-2.5! text-sm!'
                 />
                 {editErr && (
                   <div className='text-qcoral text-[12px]'>{editErr}</div>
@@ -499,7 +496,7 @@ export default function AccountTab(): React.ReactElement | null {
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setNewPin(e.target.value);
             }}
-            className='quest-input !w-[120px] text-center'
+            className='quest-input w-[120px]! text-center'
           />
           <button
             onClick={async function () {

@@ -86,7 +86,9 @@ export async function signUpFamily(
   await registerFamilyCode(code, familyId);
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function () {});
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function (err) {
+    console.warn('Verification email failed:', err);
+  });
 
   return {
     user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
@@ -114,7 +116,9 @@ export async function joinFamilyByCode(
   }, { merge: true });
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function () {});
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function (err) {
+    console.warn('Verification email failed:', err);
+  });
 
   return {
     user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },

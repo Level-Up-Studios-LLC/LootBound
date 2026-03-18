@@ -275,9 +275,9 @@ function AppRouter() {
   var verifyRefreshedRef = useRef<string | null>(null);
   useEffect(function () {
     if (auth.authUser && !auth.authUser.emailVerified) {
-      var uid = auth.authUser.familyId;
-      if (verifyRefreshedRef.current !== uid) {
-        verifyRefreshedRef.current = uid;
+      var userKey = auth.authUser.email;
+      if (verifyRefreshedRef.current !== userKey) {
+        verifyRefreshedRef.current = userKey;
         auth.doRefreshVerification();
       }
     } else if (!auth.authUser) {
