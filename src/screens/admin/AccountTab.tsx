@@ -16,8 +16,8 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, setPassword, deleteAuthAccount, reauthenticate, getCurrentUid, hasPasswordProvider } from '../../services/auth.ts';
-import { deleteFamily, saveParentMember, getParentMember, deleteParentMember } from '../../services/firestoreStorage.ts';
+import { changePassword, changeEmail, setPassword, deleteAuthAccount, reauthenticate, getCurrentUid, hasPasswordProvider } from '../../services/auth.ts';
+import { deleteFamily, saveParentMember, deleteParentMember, onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
@@ -48,11 +48,9 @@ export default function AccountTab(): React.ReactElement | null {
   useEffect(function () {
     var uid = getCurrentUid();
     if (!uid) return;
-    getParentMember(uid).then(function (member) {
-      if (member) {
-        setMyName(member.parentName || undefined);
-        setMyPin(member.parentPin || '');
-      }
+    return onParentMemberSnapshot(uid, function (member) {
+      setMyName(member && member.parentName ? member.parentName : undefined);
+      setMyPin(member && member.parentPin ? member.parentPin : '');
     });
   }, []);
 
@@ -206,9 +204,9 @@ export default function AccountTab(): React.ReactElement | null {
         }
       }
 
-      // Send verification to new email if changed
+      // Update email — sends verification to the new address
       if (emailChanged) {
-        await auth.doSendVerification();
+        await changeEmail(trimmedEmail);
         ctx.notify('Verification sent to ' + trimmedEmail);
       } else if (trimmedName) {
         ctx.notify('Profile updated');

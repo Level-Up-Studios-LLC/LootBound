@@ -17,6 +17,8 @@ import {
   sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
+  linkWithCredential,
+  verifyBeforeUpdateEmail,
   verifyPasswordResetCode,
   confirmPasswordReset,
   applyActionCode,
@@ -274,12 +276,28 @@ export async function changePassword(
 
 /**
  * Set a password for a Google-only user, adding the email/password provider.
- * This allows Google users to also sign in with email/password.
+ * Uses linkWithCredential to add the password provider, falling back to
+ * updatePassword if already linked.
  */
 export async function setPassword(newPassword: string): Promise<void> {
   var user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Not signed in');
+  if (!hasPasswordProvider()) {
+    var cred = EmailAuthProvider.credential(user.email, newPassword);
+    await linkWithCredential(user, cred);
+  } else {
+    await updatePassword(user, newPassword);
+  }
+}
+
+/**
+ * Update the current user's email. Sends a verification link to the new
+ * address — the email only changes after the user clicks the link.
+ */
+export async function changeEmail(newEmail: string): Promise<void> {
+  var user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
-  await updatePassword(user, newPassword);
+  await verifyBeforeUpdateEmail(user, newEmail, appActionCodeSettings());
 }
 
 /**

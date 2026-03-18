@@ -53,6 +53,7 @@ function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
     setErr = _err[1];
 
   useEffect(function () {
+    if (!props.oobCode) return;
     applyVerificationCode(props.oobCode).then(function () {
       setDone(true);
     }).catch(function (e: any) {
@@ -60,7 +61,7 @@ function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
       setErr(e.message || 'Verification failed');
       setDone(true);
     });
-  }, []);
+  }, [props.oobCode]);
 
   if (!done) {
     return (
