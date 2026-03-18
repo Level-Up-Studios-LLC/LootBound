@@ -137,6 +137,7 @@ export async function signInFamily(
  */
 export async function startGoogleSignIn(): Promise<void> {
   var provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
   await signInWithRedirect(auth, provider);
 }
 
@@ -172,6 +173,11 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
 }
 
 export async function signOutFamily(): Promise<void> {
+  // Clear any session persistence data
+  try {
+    sessionStorage.removeItem('qb-parent-session');
+    sessionStorage.removeItem('qb-kid-session');
+  } catch (_e) { /* ignore */ }
   return signOut(auth);
 }
 

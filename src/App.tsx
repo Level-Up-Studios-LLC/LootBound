@@ -222,18 +222,8 @@ function AppRouter() {
     [auth.authUser, role]
   );
 
-  // Auto-verify parent when no PIN is set (persisted session, not fresh sign-in)
-  useEffect(function () {
-    if (
-      auth.authUser &&
-      role === 'parent' &&
-      parentPin === '' &&
-      !parentVerified &&
-      !auth.justSignedIn
-    ) {
-      setParentVerified(true);
-    }
-  }, [auth.authUser, role, parentPin, parentVerified, auth.justSignedIn]);
+  // Auto-verify is handled inline in the render flow below to avoid
+  // a flash of the PIN screen when no PIN is set.
 
   // Auto-refresh email verification status when app loads
   useEffect(function () {
@@ -374,7 +364,8 @@ function AppRouter() {
         );
       }
 
-      // No PIN — will be auto-verified via useEffect below
+      // No PIN set — auto-verify immediately (no flash)
+      setParentVerified(true);
       return <LoadingScreen />;
     }
 
