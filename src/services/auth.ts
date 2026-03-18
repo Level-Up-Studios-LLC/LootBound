@@ -41,6 +41,13 @@ export interface AuthUser {
   emailVerified: boolean;
 }
 
+function appActionCodeSettings() {
+  return {
+    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
+    handleCodeInApp: true,
+  };
+}
+
 /**
  * Resolve the familyId for a given auth UID.
  * Checks /parentMembers/{uid} first, falls back to uid.
@@ -76,7 +83,7 @@ export async function signUpFamily(
   await registerFamilyCode(code, familyId);
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user).catch(function () {});
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function () {});
 
   return {
     user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
@@ -104,7 +111,7 @@ export async function joinFamilyByCode(
   });
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user).catch(function () {});
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function () {});
 
   return {
     user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
@@ -183,11 +190,7 @@ export function onAuthChange(
  * Links back to the app so users reset their password on a branded page.
  */
 export async function resetPassword(email: string): Promise<void> {
-  var actionCodeSettings = {
-    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
-    handleCodeInApp: true,
-  };
-  await sendPasswordResetEmail(auth, email, actionCodeSettings);
+  await sendPasswordResetEmail(auth, email, appActionCodeSettings());
 }
 
 /**
@@ -214,7 +217,7 @@ export async function completePasswordReset(
 export async function sendVerification(): Promise<void> {
   var user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
-  await sendEmailVerification(user);
+  await sendEmailVerification(user, appActionCodeSettings());
 }
 
 /**
