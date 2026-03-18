@@ -143,6 +143,13 @@ export async function startGoogleSignIn(): Promise<void> {
 /**
  * Handle the Google redirect result after the page reloads.
  * Sets up parentMembers and family code for new users.
+ *
+ * With Firebase's "One account per email" setting (the default),
+ * signing in with Google using an email that already has an
+ * email/password account automatically links the providers under
+ * the same UID. So the existing parentMembers mapping is preserved
+ * and this function returns null (returning user).
+ *
  * Returns the family code if a new family was created, null otherwise.
  */
 export async function handleGoogleRedirectResult(): Promise<string | null> {
@@ -153,8 +160,9 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
   var uid = user.uid;
 
   // Check if this user already has a parentMembers mapping
+  // (returning user, or email/password account that was auto-linked with Google)
   var snap = await getDoc(doc(db, 'parentMembers', uid));
-  if (snap.exists()) return null; // returning user
+  if (snap.exists()) return null;
 
   // New user — create family
   await setDoc(doc(db, 'parentMembers', uid), { familyId: uid });
@@ -246,6 +254,16 @@ export async function changePassword(
 }
 
 /**
+ * Set a password for a Google-only user, adding the email/password provider.
+ * This allows Google users to also sign in with email/password.
+ */
+export async function setPassword(newPassword: string): Promise<void> {
+  var user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  await updatePassword(user, newPassword);
+}
+
+/**
  * Re-authenticate the current user with their password.
  * Call before destructive operations to ensure the session is fresh.
  */
@@ -286,6 +304,18 @@ export async function deleteAuthAccount(password?: string): Promise<void> {
 export function getCurrentUid(): string | null {
   var user = auth.currentUser;
   return user ? user.uid : null;
+}
+
+/**
+ * Check if the current user has a password (email/password) provider.
+ * Google-only users won't have this until they set a password.
+ */
+export function hasPasswordProvider(): boolean {
+  var user = auth.currentUser;
+  if (!user) return false;
+  return user.providerData.some(function (p) {
+    return p.providerId === 'password';
+  });
 }
 
 /** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */

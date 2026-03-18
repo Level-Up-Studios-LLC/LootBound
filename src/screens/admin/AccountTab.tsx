@@ -16,7 +16,7 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, deleteAuthAccount, reauthenticate, getCurrentUid } from '../../services/auth.ts';
+import { changePassword, setPassword, deleteAuthAccount, reauthenticate, getCurrentUid, hasPasswordProvider } from '../../services/auth.ts';
 import { deleteFamily, saveParentMember, getParentMember, deleteParentMember } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -147,6 +147,37 @@ export default function AccountTab(): React.ReactElement | null {
         setPassErr('New password is too weak');
       } else {
         setPassErr('Failed to update password. Please try again.');
+      }
+    }
+    setPassBusy(false);
+  }
+
+  async function handleSetPassword() {
+    setPassErr('');
+    setPassSuccess(false);
+    if (newPass.length < 6) {
+      setPassErr('Password must be at least 6 characters');
+      return;
+    }
+    if (newPass !== confirmPass) {
+      setPassErr('Passwords do not match');
+      return;
+    }
+    setPassBusy(true);
+    try {
+      await setPassword(newPass);
+      setNewPass('');
+      setConfirmPass('');
+      setPassSuccess(true);
+      ctx.notify('Password set! You can now sign in with email and password.');
+    } catch (err: any) {
+      var code = err.code || err.message || '';
+      if (code === 'auth/weak-password') {
+        setPassErr('Password is too weak');
+      } else if (code === 'auth/requires-recent-login') {
+        setPassErr('Please sign out and sign back in with Google, then try again.');
+      } else {
+        setPassErr('Failed to set password. Please try again.');
       }
     }
     setPassBusy(false);
@@ -487,27 +518,34 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
       </div>
 
-      {/* Change Password */}
+      {/* Password Section */}
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faLock} style={FA_ICON_STYLE} />
-          Change Password
+          {hasPasswordProvider() ? 'Change Password' : 'Set Password'}
         </div>
+        {!hasPasswordProvider() && (
+          <div className='text-[13px] text-qmuted mb-2'>
+            You signed in with Google. Set a password to also sign in with email and password.
+          </div>
+        )}
         <div className='flex flex-col gap-3'>
+          {hasPasswordProvider() && (
+            <input
+              type='password'
+              placeholder='Current password'
+              value={curPass}
+              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                setCurPass(e.target.value);
+                setPassErr('');
+                setPassSuccess(false);
+              }}
+              className='quest-input'
+            />
+          )}
           <input
             type='password'
-            placeholder='Current password'
-            value={curPass}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              setCurPass(e.target.value);
-              setPassErr('');
-              setPassSuccess(false);
-            }}
-            className='quest-input'
-          />
-          <input
-            type='password'
-            placeholder='New password (6+ characters)'
+            placeholder={hasPasswordProvider() ? 'New password (6+ characters)' : 'Password (6+ characters)'}
             value={newPass}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setNewPass(e.target.value);
@@ -518,7 +556,7 @@ export default function AccountTab(): React.ReactElement | null {
           />
           <input
             type='password'
-            placeholder='Confirm new password'
+            placeholder='Confirm password'
             value={confirmPass}
             onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
               setConfirmPass(e.target.value);
@@ -526,7 +564,13 @@ export default function AccountTab(): React.ReactElement | null {
               setPassSuccess(false);
             }}
             onKeyDown={function (e: React.KeyboardEvent) {
-              if (e.key === 'Enter' && !passBusy) handleChangePassword();
+              if (e.key === 'Enter' && !passBusy) {
+                if (hasPasswordProvider()) {
+                  handleChangePassword();
+                } else {
+                  handleSetPassword();
+                }
+              }
             }}
             className='quest-input'
           />
@@ -534,14 +578,22 @@ export default function AccountTab(): React.ReactElement | null {
             <div className='text-qcoral text-[13px]'>{passErr}</div>
           )}
           {passSuccess && (
-            <div className='text-qteal text-[13px]'>Password updated successfully.</div>
+            <div className='text-qteal text-[13px]'>
+              {hasPasswordProvider() ? 'Password updated successfully.' : 'Password set! You can now sign in with email and password.'}
+            </div>
           )}
           <button
-            onClick={handleChangePassword}
+            onClick={function () {
+              if (hasPasswordProvider()) {
+                handleChangePassword();
+              } else {
+                handleSetPassword();
+              }
+            }}
             disabled={passBusy}
             className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body disabled:opacity-60'
           >
-            {passBusy ? 'Updating...' : 'Update Password'}
+            {passBusy ? 'Updating...' : (hasPasswordProvider() ? 'Update Password' : 'Set Password')}
           </button>
         </div>
       </div>
