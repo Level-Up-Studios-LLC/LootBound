@@ -49,6 +49,7 @@ export async function deleteAllChildPhotos(
   familyId: string,
   childId: string
 ): Promise<void> {
+  await signInAnonymousKid();
   var folderRef = ref(
     storage,
     'families/' + familyId + '/photos/' + childId
@@ -98,6 +99,7 @@ export async function deleteAllChildPhotos(
 export async function deleteAllFamilyPhotos(
   familyId: string
 ): Promise<void> {
+  await signInAnonymousKid();
   var folderRef = ref(storage, 'families/' + familyId + '/photos');
   try {
     var result = await listAll(folderRef);
@@ -151,6 +153,7 @@ export async function deleteTaskPhoto(
   date: string,
   taskId: string
 ): Promise<void> {
+  await signInAnonymousKid();
   var path =
     'families/' +
     familyId +
