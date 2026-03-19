@@ -24,7 +24,7 @@ interface RewardFormProps {
 
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
   const [f, setF] = useState<Reward>(props.reward);
-  const u = (k: string, v: any): void => {
+  const u = <K extends keyof Reward>(k: K, v: Reward[K]): void => {
     setF((prev) => Object.assign({}, prev, { [k]: v }));
   };
   return (

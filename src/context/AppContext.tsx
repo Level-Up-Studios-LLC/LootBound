@@ -301,7 +301,7 @@ export function AppProvider(props: {
         // but may be missing seed defaults — fill them in without
         // overwriting fields that already have values.
         const patches: Record<string, any> = {};
-        if (!(fc as any).tierConfig) {
+        if (!(fc as any).tierConfig && !(fc as any).tierPoints) {
           patches.tierConfig = structuredClone(DEF_TIER_CONFIG);
         }
         if (fc.approvalThreshold == null) {
