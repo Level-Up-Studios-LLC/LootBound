@@ -17,12 +17,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper: family member — parent (via parentMembers) or anonymous kid
-    // (went through family code flow; can't verify which family in rules).
-    function isFamilyMember(familyId) {
-      return isParent(familyId) ||
-        (request.auth != null && request.auth.token.firebase.sign_in_provider == 'anonymous');
-    }
+
 
     match /families/{familyId} {
       // Parents can read and write family config.
@@ -59,10 +54,23 @@ service cloud.firestore {
       }
 
       match /notifications/{notifId} {
-        // Family members can read and create notifications
-        allow read, create: if isFamilyMember(familyId);
-        // Family members can mark notifications as read (only the 'read' field)
-        allow update: if isFamilyMember(familyId) &&
+        // Both parents and kids need read/create (kids trigger notifications
+        // for parents via task completions and loot requests).
+        // Anonymous kids can't be tied to a specific family in rules.
+        allow read: if isAuthenticated();
+        // Validate schema and restrict to known types
+        allow create: if isAuthenticated() &&
+          request.resource.data.keys().hasAll(['type', 'title', 'body', 'targetRole', 'read', 'createdAt']) &&
+          request.resource.data.type in [
+            'mission_complete', 'mission_rejected', 'loot_request',
+            'loot_approved', 'loot_denied', 'level_up', 'streak'
+          ] &&
+          request.resource.data.targetRole in ['parent', 'kid'] &&
+          request.resource.data.read == false &&
+          request.resource.data.title is string &&
+          request.resource.data.body is string;
+        // Only allow updating the 'read' field
+        allow update: if isAuthenticated() &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
         // Parents can delete notifications
         allow delete: if isParent(familyId);

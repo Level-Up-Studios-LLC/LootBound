@@ -24,7 +24,7 @@ import {
 } from '../services/photoStorage.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
 import { capturePhoto as nativeCapturePhoto, triggerHaptic, isNative } from '../services/platform.ts';
-import { playSound } from '../services/notificationSound.ts';
+import type { SoundKey } from '../services/notificationSound.ts';
 
 interface TaskActionsDeps {
   cfg: Config | null;
@@ -36,6 +36,7 @@ interface TaskActionsDeps {
   tp: (tier: string) => number;
   tierCfg: (tier: string) => TierConfig;
   getChildName?: (id: string) => string;
+  playSound: (key: SoundKey) => void;
 }
 
 export function useTaskActions(deps: TaskActionsDeps) {
@@ -82,6 +83,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
       if (fileRef.current) {
         fileRef.current.value = '';
         fileRef.current.click();
+      } else {
+        setCapturing(null);
       }
     }
   }
@@ -186,26 +189,26 @@ export function useTaskActions(deps: TaskActionsDeps) {
       if (ud.streak === 3) {
         ud.points += 20;
         deps.notify('+20: 3-day streak!', 'streak');
-        playSound('streak');
+        deps.playSound('streak');
       } else if (ud.streak === 7) {
         ud.points += 75;
         deps.notify('+75: 7-day streak!', 'streak');
-        playSound('streak');
+        deps.playSound('streak');
       } else if (ud.streak === 15) {
         ud.points += 150;
         deps.notify('+150: 15-day streak!', 'streak');
-        playSound('streak');
+        deps.playSound('streak');
       } else if (ud.streak === 30) {
         ud.points += 300;
         deps.notify('+300: 30-day streak!', 'streak');
-        playSound('streak');
+        deps.playSound('streak');
       }
     }
     await deps.saveUsr(uid, ud);
     // Haptic feedback + sound on task completion
 
     triggerHaptic('success');
-    playSound('success');
+    deps.playSound('success');
     // Notify with coins + XP, and level-up if applicable
     var sl = SL[status] || {};
     var msg = (sl.text || '') + ': ' + (coins > 0 ? '+' : '') + coins + ' coins, +' + xp + ' XP';
@@ -226,7 +229,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       deps.notify('LEVEL UP! Lv.' + ud.level + ' ' + title.title + '!', 'levelup');
   
       triggerHaptic('medium');
-      playSound('levelup');
+      deps.playSound('levelup');
       writeNotification(deps.familyId, {
         type: 'level_up',
         title: 'Level Up!',
@@ -274,7 +277,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     await deps.saveUsr(uid, ud);
 
     triggerHaptic('error');
-    playSound('error');
+    deps.playSound('error');
     // Write in-app notification for kid
     var childName = deps.getChildName ? deps.getChildName(uid) : uid;
     var taskName = '';

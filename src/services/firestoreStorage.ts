@@ -28,6 +28,7 @@ import {
   limit,
   DocumentData,
   serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase.ts';
 
@@ -527,7 +528,7 @@ export interface InAppNotificationDoc {
   childName?: string;
   targetRole: string;
   read: boolean;
-  createdAt: number;
+  createdAt: any; // serverTimestamp() → Firestore Timestamp; legacy → number
 }
 
 export async function saveNotification(
@@ -581,16 +582,15 @@ export function onNotificationsSnapshot(
 
 export async function cleanupOldNotifications(familyId: string): Promise<void> {
   var BATCH_LIMIT = 500;
-  var cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  var snap = await getDocs(collection(db, 'families', familyId, 'notifications'));
+  var cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  var q = query(
+    collection(db, 'families', familyId, 'notifications'),
+    where('createdAt', '<', cutoffTs)
+  );
+  var snap = await getDocs(q);
   var refs: import('firebase/firestore').DocumentReference[] = [];
   snap.forEach(function (d) {
-    var data = d.data();
-    var ts = data.createdAt;
-    var ms = typeof ts === 'number' ? ts : (ts && typeof ts.toMillis === 'function' ? ts.toMillis() : 0);
-    if (ms > 0 && ms < cutoff) {
-      refs.push(d.ref);
-    }
+    refs.push(d.ref);
   });
   for (var start = 0; start < refs.length; start += BATCH_LIMIT) {
     var chunk = refs.slice(start, start + BATCH_LIMIT);

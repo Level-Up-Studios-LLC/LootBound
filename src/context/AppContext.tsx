@@ -47,7 +47,8 @@ import { useApprovalActions } from '../hooks/useApprovalActions.ts';
 import { useChildActions } from '../hooks/useChildActions.ts';
 import { useFirestoreSync } from '../hooks/useFirestoreSync.ts';
 import { useNotificationListener } from '../hooks/useNotificationListener.ts';
-import { unlockAudio, preloadSounds } from '../services/notificationSound.ts';
+import { unlockAudio, preloadSounds, playSound } from '../services/notificationSound.ts';
+import type { SoundKey } from '../services/notificationSound.ts';
 import { cleanupOldNotifications } from '../services/firestoreStorage.ts';
 
 interface AppContextValue {
@@ -259,6 +260,14 @@ export function AppProvider(props: {
     return ch ? ch.name : id;
   }
 
+  // --- Pref-aware sound helper ---
+  function playSoundIfAllowed(key: SoundKey): void {
+    var prefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+    if (prefs.soundEnabled) {
+      playSound(key);
+    }
+  }
+
   // --- Compose action hooks ---
   var taskActions = useTaskActions({
     cfg: cfg,
@@ -270,6 +279,7 @@ export function AppProvider(props: {
     tp: tp,
     tierCfg: tierCfg,
     getChildName: getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   var rewardActions = useRewardActions({
@@ -280,6 +290,7 @@ export function AppProvider(props: {
     saveUsr: saveUsr,
     notify: notification.notify,
     getChildName: getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   var approvalActions = useApprovalActions({
@@ -288,6 +299,7 @@ export function AppProvider(props: {
     saveUsr: saveUsr,
     notify: notification.notify,
     getChildName: getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   var childActions = useChildActions({

@@ -242,8 +242,8 @@ function AppRouter() {
       getSessionAsync(SESSION_KEY_PARENT).then(function (stored) {
         if (stored === auth.authUser!.familyId) {
           setParentVerifiedRaw(true);
-        } else if (stored) {
-          clearSession(SESSION_KEY_PARENT);
+        } else {
+          if (stored) clearSession(SESSION_KEY_PARENT);
           setParentVerifiedRaw(false);
         }
       });
@@ -292,6 +292,7 @@ function AppRouter() {
           } else {
             // Stored code is no longer valid
             await clearStoredFamilyCode();
+            setStoredKid(null);
           }
         }
       } catch (err) {
@@ -303,11 +304,13 @@ function AppRouter() {
   }, []);
 
   // Auto-detect persisted parent session
+  var roleRef = useRef(role);
+  roleRef.current = role;
   useEffect(
     function () {
       if (!auth.authLoading && auth.authUser && !role && initDone) {
         getStoredFamilyCodeAsync().then(function (storedCode) {
-          if (!storedCode) {
+          if (!storedCode && !roleRef.current) {
             setRole('parent');
           }
         });
@@ -524,6 +527,7 @@ function AppRouter() {
           onSwitchFamily={function () {
             clearStoredFamilyCode().catch(function () { /* ignore */ });
             clearSession(SESSION_KEY_KID);
+            setStoredKid(null);
             setKidFamilyId(null);
             setRole(null);
           }}

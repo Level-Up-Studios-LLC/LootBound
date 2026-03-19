@@ -65,8 +65,12 @@ export async function removeStorage(key: string): Promise<void> {
 
 export async function getPersistentStorage(key: string): Promise<string | null> {
   if (isNative()) {
-    var result = await Preferences.get({ key: key });
-    return result.value;
+    try {
+      var result = await Preferences.get({ key: key });
+      return result.value;
+    } catch (_e) {
+      return null;
+    }
   }
   try {
     return localStorage.getItem(key);
@@ -77,7 +81,9 @@ export async function getPersistentStorage(key: string): Promise<string | null> 
 
 export async function setPersistentStorage(key: string, val: string): Promise<void> {
   if (isNative()) {
-    await Preferences.set({ key: key, value: val });
+    try {
+      await Preferences.set({ key: key, value: val });
+    } catch (_e) { /* ignore */ }
     return;
   }
   try {
@@ -87,7 +93,9 @@ export async function setPersistentStorage(key: string, val: string): Promise<vo
 
 export async function removePersistentStorage(key: string): Promise<void> {
   if (isNative()) {
-    await Preferences.remove({ key: key });
+    try {
+      await Preferences.remove({ key: key });
+    } catch (_e) { /* ignore */ }
     return;
   }
   try {
