@@ -6,9 +6,9 @@ interface NotificationToastProps {
 
 export default function NotificationToast(p: NotificationToastProps) {
   if (!p.notif) return null;
-  var isLevelUp = p.notif.type === 'levelup';
-  var isSuccess = p.notif.type === 'success' || isLevelUp;
-  var bg = isLevelUp ? 'bg-qpurple' : isSuccess ? 'bg-qteal' : 'bg-qcoral';
+  const isLevelUp = p.notif.type === 'levelup';
+  const isSuccess = p.notif.type === 'success' || isLevelUp;
+  const bg = isLevelUp ? 'bg-qpurple' : isSuccess ? 'bg-qteal' : 'bg-qcoral';
   return (
     <div
       className={

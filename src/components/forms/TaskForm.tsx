@@ -11,13 +11,12 @@ interface TaskFormProps {
 }
 
 export default function TaskForm(props: TaskFormProps): React.ReactElement {
-  var _s = useState<Task & { uid: string }>(props.task),
-    f = _s[0],
-    setF = _s[1];
-  var tc = props.tierConfig;
-  function u(k: string, v: any): void {
-    setF(Object.assign({}, f, { [k]: v }));
-  }
+  const [f, setF] = useState<Task & { uid: string }>(props.task);
+  const tc = props.tierConfig;
+  type FormState = Task & { uid: string };
+  const u = <K extends keyof FormState>(k: K, v: FormState[K]): void => {
+    setF((prev) => ({ ...prev, [k]: v }));
+  };
   return (
     <div className='flex flex-col gap-4'>
       <div>
@@ -31,7 +30,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           id='tf-name'
           placeholder='Mission name'
           value={f.name}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             u('name', e.target.value);
           }}
           className='quest-input'
@@ -47,13 +46,13 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         <select
           id='tf-tier'
           value={f.tier}
-          onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
             u('tier', e.target.value);
           }}
           className='quest-input'
         >
-          {TIER_ORDER.map(function (t) {
-            var cfg = tc[t] || { coins: 0, xp: 0 };
+          {TIER_ORDER.map((t) => {
+            const cfg = tc[t] || { coins: 0, xp: 0 };
             return (
               <option key={t} value={t}>
                 {t}-Tier ({cfg.coins} coins, {cfg.xp} XP)
@@ -74,7 +73,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             id='tf-start'
             type='time'
             value={f.windowStart}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               u('windowStart', e.target.value);
             }}
             className='quest-input'
@@ -92,7 +91,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             type='time'
             value={f.windowEnd}
             min={f.windowStart || undefined}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               u('windowEnd', e.target.value);
             }}
             className='quest-input'
@@ -113,7 +112,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             role='radio'
             aria-checked={f.daily}
             tabIndex={f.daily ? 0 : -1}
-            onClick={function () {
+            onClick={() => {
               u('daily', true);
             }}
             className={
@@ -127,7 +126,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             role='radio'
             aria-checked={!f.daily}
             tabIndex={!f.daily ? 0 : -1}
-            onClick={function () {
+            onClick={() => {
               u('daily', false);
             }}
             className={
@@ -150,7 +149,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           <select
             id='tf-dueday'
             value={f.dueDay != null ? f.dueDay : ''}
-            onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               u(
                 'dueDay',
                 e.target.value !== '' ? Number(e.target.value) : null
@@ -159,7 +158,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             className='quest-input'
           >
             <option value=''>Select day...</option>
-            {DAYS.map(function (day, i) {
+            {DAYS.map((day, i) => {
               return (
                 <option key={i} value={i}>
                   {day}
@@ -180,7 +179,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           Cancel
         </button>
         <button
-          onClick={function () {
+          onClick={() => {
             if (
               f.name &&
               (f.daily || f.dueDay != null) &&

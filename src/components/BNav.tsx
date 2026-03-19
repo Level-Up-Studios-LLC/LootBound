@@ -12,15 +12,15 @@ interface BNavProps {
 }
 
 export default function BNav(p: BNavProps) {
-  var ctx = useAppContext();
+  const ctx = useAppContext();
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-3 z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-      {p.tabs.map(function (t) {
-        var isActive = ctx.screen === t.id;
+      {p.tabs.map((t) => {
+        const isActive = ctx.screen === t.id;
         return (
           <button
             key={t.id}
-            onClick={function () {
+            onClick={() => {
               ctx.setScreen(t.id);
             }}
             className={

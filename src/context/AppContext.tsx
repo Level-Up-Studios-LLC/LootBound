@@ -94,10 +94,10 @@ interface AppContextValue {
   onLogout: (() => void) | null;
 }
 
-var AppContext = createContext<AppContextValue | null>(null);
+const AppContext = createContext<AppContextValue | null>(null);
 
 export function useAppContext(): AppContextValue {
-  var ctx = useContext(AppContext);
+  const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useAppContext must be used inside AppProvider');
   return ctx;
 }
@@ -109,14 +109,10 @@ export function AppProvider(props: {
   initialUser?: string | null;
   onLogout?: () => void;
 }) {
-  var _screen = useState(props.initialScreen || 'login'),
-    screen = _screen[0],
-    setScreen = _screen[1];
-  var _curUser = useState<string | null>(props.initialUser || null),
-    curUser = _curUser[0],
-    setCurUserRaw = _curUser[1];
+  const [screen, setScreen] = useState(props.initialScreen || 'login');
+  const [curUser, setCurUserRaw] = useState<string | null>(props.initialUser || null);
 
-  function setCurUser(uid: string | null) {
+  const setCurUser = (uid: string | null) => {
     setCurUserRaw(uid);
     try {
       if (uid && uid !== 'parent') {
@@ -126,72 +122,61 @@ export function AppProvider(props: {
         if (props.onLogout) props.onLogout();
       }
     } catch (_e) { /* ignore */ }
-  }
-  var _cfg = useState<Config | null>(null),
-    cfg = _cfg[0],
-    setCfg = _cfg[1];
-  var _allU = useState<Record<string, UserData>>({}),
-    allU = _allU[0],
-    setAllU = _allU[1];
-  var _load = useState(true),
-    loading = _load[0],
-    setLoading = _load[1];
-  var _tick = useState(0),
-    setTick = _tick[1];
+  };
+  const [cfg, setCfg] = useState<Config | null>(null);
+  const [allU, setAllU] = useState<Record<string, UserData>>({});
+  const [loading, setLoading] = useState(true);
+  const [_tick, setTick] = useState(0);
   void _tick;
-  var _vp = useState<string | null>(null),
-    viewPhoto = _vp[0],
-    setViewPhoto = _vp[1];
-  var familyId = props.familyId;
+  const [viewPhoto, setViewPhoto] = useState<string | null>(null);
+  const familyId = props.familyId;
 
   // --- Notification hook ---
-  var notification = useNotification();
+  const notification = useNotification();
 
   // --- Helper functions ---
-  function getChild(id: string): Child | null {
+  const getChild = (id: string): Child | null => {
     if (!cfg || !cfg.children) return null;
     return (
-      cfg.children.find(function (c) {
-        return c.id === id;
-      }) || null
+      cfg.children.find((c) => c.id === id) || null
     );
-  }
+  };
 
-  function tierCfg(tier: string): TierConfig {
-    var tc = cfg && cfg.tierConfig ? cfg.tierConfig[tier] : null;
+  const tierCfg = (tier: string): TierConfig => {
+    const tc = cfg && cfg.tierConfig ? cfg.tierConfig[tier] : null;
     if (tc) return tc;
-    var def = DEF_TIER_CONFIG[tier];
+    const def = DEF_TIER_CONFIG[tier];
     return def || { coins: 0, xp: 0 };
-  }
+  };
 
-  function tp(tier: string): number {
+  const tp = (tier: string): number => {
     return tierCfg(tier).coins;
-  }
+  };
 
   // --- Persistence ---
-  async function saveUsr(uid: string, data: UserData) {
-    setAllU(function (p) {
-      var o: Record<string, UserData> = {};
-      for (var k in p) o[k] = p[k];
+  const saveUsr = async (uid: string, data: UserData) => {
+    setAllU((p) => {
+      const o: Record<string, UserData> = {};
+      for (const k in p) o[k] = p[k];
       o[uid] = data;
       return o;
     });
     await fsSaveChildData(familyId, uid, data);
-  }
+  };
 
-  async function saveCfg(newCfg: Config) {
-    var oldCfg = cfg;
+  const saveCfg = async (newCfg: Config) => {
+    const oldCfg = cfg;
     setCfg(newCfg);
     await syncCfgToFirestore(oldCfg, newCfg);
-  }
+  };
 
-  async function syncCfgToFirestore(
+  const syncCfgToFirestore = async (
     oldCfg: Config | null,
     newCfg: Config
-  ) {
-    var promises: Promise<void>[] = [];
+  ) => {
+    const promises: Promise<void>[] = [];
 
-    var cfgFields: Record<string, any> = {
+    const cfgFields: Record<string, any> = {
       tierConfig: newCfg.tierConfig,
       approvalThreshold: newCfg.approvalThreshold,
       lastWeeklyReset: newCfg.lastWeeklyReset,
@@ -202,121 +187,122 @@ export function AppProvider(props: {
     if (newCfg.cooldown != null) cfgFields.cooldown = newCfg.cooldown;
     promises.push(fsSaveConfig(familyId, cfgFields));
 
-    (newCfg.children || []).forEach(function (ch) {
+    (newCfg.children || []).forEach((ch) => {
       promises.push(fsSaveChild(familyId, ch.id, ch));
     });
     if (oldCfg) {
-      var newChildIds: Record<string, boolean> = {};
-      (newCfg.children || []).forEach(function (ch) {
+      const newChildIds: Record<string, boolean> = {};
+      (newCfg.children || []).forEach((ch) => {
         newChildIds[ch.id] = true;
       });
-      (oldCfg.children || []).forEach(function (ch) {
+      (oldCfg.children || []).forEach((ch) => {
         if (!newChildIds[ch.id])
           promises.push(fsDeleteChild(familyId, ch.id));
       });
     }
 
-    var newTaskIds: Record<string, boolean> = {};
-    Object.keys(newCfg.tasks || {}).forEach(function (cid) {
-      (newCfg.tasks[cid] || []).forEach(function (t) {
+    const newTaskIds: Record<string, boolean> = {};
+    Object.keys(newCfg.tasks || {}).forEach((cid) => {
+      (newCfg.tasks[cid] || []).forEach((t) => {
         newTaskIds[t.id] = true;
         promises.push(
-          fsSaveTask(familyId, t.id, Object.assign({ childId: cid }, t))
+          fsSaveTask(familyId, t.id, { childId: cid, ...t })
         );
       });
     });
     if (oldCfg) {
-      Object.keys(oldCfg.tasks || {}).forEach(function (cid) {
-        (oldCfg!.tasks[cid] || []).forEach(function (t) {
+      Object.keys(oldCfg.tasks || {}).forEach((cid) => {
+        (oldCfg!.tasks[cid] || []).forEach((t) => {
           if (!newTaskIds[t.id])
             promises.push(fsDeleteTask(familyId, t.id));
         });
       });
     }
 
-    var newRewardIds: Record<string, boolean> = {};
-    (newCfg.rewards || []).forEach(function (r) {
+    const newRewardIds: Record<string, boolean> = {};
+    (newCfg.rewards || []).forEach((r) => {
       newRewardIds[r.id] = true;
       promises.push(fsSaveReward(familyId, r.id, r));
     });
     if (oldCfg) {
-      (oldCfg.rewards || []).forEach(function (r) {
+      (oldCfg.rewards || []).forEach((r) => {
         if (!newRewardIds[r.id])
           promises.push(fsDeleteReward(familyId, r.id));
       });
     }
 
     await Promise.all(promises);
-  }
+  };
 
   // --- Compose action hooks ---
-  var taskActions = useTaskActions({
-    cfg: cfg,
-    allU: allU,
-    curUser: curUser,
-    familyId: familyId,
-    saveUsr: saveUsr,
+  const taskActions = useTaskActions({
+    cfg,
+    allU,
+    curUser,
+    familyId,
+    saveUsr,
     notify: notification.notify,
-    tp: tp,
-    tierCfg: tierCfg,
+    tp,
+    tierCfg,
   });
 
-  var rewardActions = useRewardActions({
-    cfg: cfg,
-    allU: allU,
-    curUser: curUser,
-    saveUsr: saveUsr,
-    notify: notification.notify,
-  });
-
-  var approvalActions = useApprovalActions({
-    allU: allU,
-    saveUsr: saveUsr,
+  const rewardActions = useRewardActions({
+    cfg,
+    allU,
+    curUser,
+    saveUsr,
     notify: notification.notify,
   });
 
-  var childActions = useChildActions({
-    cfg: cfg,
-    allU: allU,
-    familyId: familyId,
-    saveCfg: saveCfg,
-    saveUsr: saveUsr,
-    setAllU: setAllU,
+  const approvalActions = useApprovalActions({
+    allU,
+    saveUsr,
     notify: notification.notify,
-    getChild: getChild,
+  });
+
+  const childActions = useChildActions({
+    cfg,
+    allU,
+    familyId,
+    saveCfg,
+    saveUsr,
+    setAllU,
+    notify: notification.notify,
+    getChild,
   });
 
   // --- Initial data load from Firestore ---
-  useEffect(function () {
+  useEffect(() => {
     if (!familyId) return;
-    var dead = false;
-    (async function () {
-      var fc = await fsGetConfig(familyId);
-      var fsChildren = await fsGetChildren(familyId);
-      var fsTasks = await fsGetTasks(familyId);
-      var fsRewards = await fsGetRewards(familyId);
+    let dead = false;
+    (async () => {
+      try {
+      let fc = await fsGetConfig(familyId);
+      const fsChildren = await fsGetChildren(familyId);
+      const fsTasks = await fsGetTasks(familyId);
+      const fsRewards = await fsGetRewards(familyId);
 
-      var needsSeed = !fc && fsChildren.length === 0;
+      const needsSeed = !fc && fsChildren.length === 0;
       if (needsSeed) {
         // Re-read config in case CreatePinPrompt wrote parentPin
         // between our initial read and now
-        var freshCfg = await fsGetConfig(familyId);
-        var defConfig = {
+        const freshCfg = await fsGetConfig(familyId);
+        const defConfig = {
           parentPin: '',
-          tierConfig: JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
+          tierConfig: structuredClone(DEF_TIER_CONFIG),
           approvalThreshold: 300,
           lastWeeklyReset: getWeekStart(),
         };
         // merge: true in fsSaveConfig preserves any existing parentPin
         await fsSaveConfig(familyId, defConfig);
-        fc = freshCfg ? Object.assign({}, defConfig, freshCfg) : defConfig;
+        fc = freshCfg ? { ...defConfig, ...freshCfg } : defConfig;
       } else if (fc) {
         // Config doc exists (e.g. parentPin was saved during signup)
         // but may be missing seed defaults — fill them in without
         // overwriting fields that already have values.
-        var patches: Record<string, any> = {};
-        if (!(fc as any).tierConfig) {
-          patches.tierConfig = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
+        const patches: Record<string, any> = {};
+        if (!(fc as any).tierConfig && !(fc as any).tierPoints) {
+          patches.tierConfig = structuredClone(DEF_TIER_CONFIG);
         }
         if (fc.approvalThreshold == null) {
           patches.approvalThreshold = 300;
@@ -326,31 +312,31 @@ export function AppProvider(props: {
         }
         if (Object.keys(patches).length > 0) {
           await fsSaveConfig(familyId, patches);
-          fc = Object.assign({}, fc, patches);
+          fc = { ...fc, ...patches };
         }
       }
 
       // Migration: tierPoints (numeric) -> tierConfig (letter-based)
       if (fc && !(fc as any).tierConfig && (fc as any).tierPoints) {
-        var oldTp = (fc as any).tierPoints;
-        var numToLetter: Record<string, string> = { '1': 'D', '2': 'C', '3': 'B', '4': 'A' };
-        var migrated: Record<string, { coins: number; xp: number }> = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
-        Object.keys(oldTp).forEach(function (k) {
-          var letter = numToLetter[k];
+        const oldTp = (fc as any).tierPoints;
+        const numToLetter: Record<string, string> = { '1': 'D', '2': 'C', '3': 'B', '4': 'A' };
+        const migrated: Record<string, { coins: number; xp: number }> = structuredClone(DEF_TIER_CONFIG);
+        Object.keys(oldTp).forEach((k) => {
+          const letter = numToLetter[k];
           if (letter && migrated[letter]) {
             migrated[letter].coins = oldTp[k];
           }
         });
         // Migrate task tiers from numeric to letter first
-        var taskMigrations: Promise<void>[] = [];
-        fsTasks.forEach(function (t: any) {
-          var letter = numToLetter[String(t.tier)];
+        const taskMigrations: Promise<void>[] = [];
+        fsTasks.forEach((t: any) => {
+          const letter = numToLetter[String(t.tier)];
           if (letter) {
             t.tier = letter;
             taskMigrations.push(fsSaveTask(familyId, t.id, { tier: letter } as any));
           }
         });
-        var migrationOk = true;
+        let migrationOk = true;
         if (taskMigrations.length > 0) {
           try {
             await Promise.all(taskMigrations);
@@ -368,17 +354,17 @@ export function AppProvider(props: {
       }
 
       if (fc && !(fc as any).familyCode) {
-        var genCode = await import('../services/familyCode.ts');
-        var code = await genCode.generateFamilyCode();
+        const genCode = await import('../services/familyCode.ts');
+        const code = await genCode.generateFamilyCode();
         await genCode.registerFamilyCode(code, familyId);
         (fc as any).familyCode = code;
         // Persist family code on the config doc so deleteFamily can find it
         await fsSaveConfig(familyId, { familyCode: code } as any);
       }
 
-      var tasksMap: Record<string, import('../types.ts').Task[]> = {};
-      fsTasks.forEach(function (t: any) {
-        var cid = t.childId || '';
+      const tasksMap: Record<string, import('../types.ts').Task[]> = {};
+      fsTasks.forEach((t: any) => {
+        const cid = t.childId || '';
         if (!tasksMap[cid]) tasksMap[cid] = [];
         tasksMap[cid].push({
           id: t.id,
@@ -391,7 +377,7 @@ export function AppProvider(props: {
         });
       });
 
-      var c: Config = {
+      const c: Config = {
         children: fsChildren as Child[],
         tasks: tasksMap,
         rewards: fsRewards as Reward[],
@@ -399,7 +385,7 @@ export function AppProvider(props: {
         tierConfig:
           fc && fc.tierConfig
             ? fc.tierConfig
-            : JSON.parse(JSON.stringify(DEF_TIER_CONFIG)),
+            : structuredClone(DEF_TIER_CONFIG),
         approvalThreshold:
           fc != null && fc.approvalThreshold != null
             ? fc.approvalThreshold
@@ -414,14 +400,14 @@ export function AppProvider(props: {
         referralSource: fc && fc.referralSource ? fc.referralSource : undefined,
       };
       if (!c.children) c.children = [];
-      if (!c.tierConfig) c.tierConfig = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
+      if (!c.tierConfig) c.tierConfig = structuredClone(DEF_TIER_CONFIG);
 
-      var users: Record<string, UserData> = {};
-      var ws = getWeekStart(c.weeklyResetDay);
-      var needsReset = c.lastWeeklyReset < ws;
-      for (var i = 0; i < c.children.length; i++) {
-        var ch = c.children[i];
-        var ud =
+      const users: Record<string, UserData> = {};
+      const ws = getWeekStart(c.weeklyResetDay);
+      const needsReset = c.lastWeeklyReset < ws;
+      for (let i = 0; i < c.children.length; i++) {
+        const ch = c.children[i];
+        let ud =
           (await fsGetChildData(familyId, ch.id)) as UserData | null;
         if (!ud) ud = freshUser();
         // Migration: add xp/level fields if missing
@@ -431,10 +417,10 @@ export function AppProvider(props: {
         if (needsReset) {
           ud.missedDaysThisWeek = 0;
           // Delete photos from Storage before clearing the log
-          (function (childId: string) {
-            deleteAllChildPhotos(familyId, childId).catch(function (err) {
-              console.warn('Photo cleanup failed for ' + childId + ':', err);
-              Sentry.captureException(err, { tags: { action: 'weekly-reset-photo-cleanup', childId: childId } });
+          ((childId: string) => {
+            deleteAllChildPhotos(familyId, childId).catch((err) => {
+              console.warn(`Photo cleanup failed for ${childId}:`, err);
+              Sentry.captureException(err, { tags: { action: 'weekly-reset-photo-cleanup', childId } });
             });
           })(ch.id);
           ud.taskLog = {};
@@ -451,53 +437,56 @@ export function AppProvider(props: {
         setAllU(users);
         setLoading(false);
       }
+      } catch (err) {
+        console.error('Initial data load failed:', err);
+        Sentry.captureException(err, { tags: { action: 'initial-load' } });
+        if (!dead) setLoading(false);
+      }
     })();
-    return function () {
+    return () => {
       dead = true;
     };
   }, [familyId]);
 
   // --- Real-time Firestore sync ---
   useFirestoreSync({
-    familyId: familyId,
-    loading: loading,
-    setCfg: setCfg,
-    setAllU: setAllU,
+    familyId,
+    loading,
+    setCfg,
+    setAllU,
   });
 
   // 30-second tick for bedtime cutoff detection (time-based, not data-based)
-  useEffect(function () {
-    var id = setInterval(function () {
-      setTick(function (t) {
-        return t + 1;
-      });
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTick((t) => t + 1);
     }, 30000);
-    return function () {
+    return () => {
       clearInterval(id);
     };
   }, []);
 
   // Bedtime cutoff
-  useEffect(function () {
+  useEffect(() => {
     if (!cfg || loading) return;
-    (async function () {
-      for (var i = 0; i < cfg.children.length; i++) {
-        var ch = cfg.children[i];
-        var ud = allU[ch.id];
+    (async () => {
+      for (let i = 0; i < cfg.children.length; i++) {
+        const ch = cfg.children[i];
+        const ud = allU[ch.id];
         if (!ud) continue;
         if (!isPastBedtime(cfg.bedtime)) continue;
-        var d = getToday();
-        var log = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
+        const d = getToday();
+        const log = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
         if (log._bedtimeApplied) continue;
-        var updated = JSON.parse(JSON.stringify(ud)) as UserData;
+        const updated = structuredClone(ud) as UserData;
         if (!updated.taskLog) updated.taskLog = {};
         if (!updated.taskLog[d]) updated.taskLog[d] = {};
-        var tasks = (cfg.tasks[ch.id] || []).filter(isTaskActiveToday);
-        var changed = false;
-        tasks.forEach(function (t) {
-          var entry = updated.taskLog[d][t.id];
+        const tasks = (cfg.tasks[ch.id] || []).filter(isTaskActiveToday);
+        let changed = false;
+        tasks.forEach((t) => {
+          const entry = updated.taskLog[d][t.id];
           if (!entry || entry.rejected) {
-            var tc = tierCfg(t.tier);
+            const tc = tierCfg(t.tier);
             updated.taskLog[d][t.id] = {
               completedAt: null,
               status: 'missed',
@@ -525,9 +514,9 @@ export function AppProvider(props: {
   });
 
   // Validate restored kid session — promote to dashboard if valid, reset if not
-  useEffect(function () {
+  useEffect(() => {
     if (!loading && cfg && curUser && curUser !== 'parent') {
-      var found = cfg.children.some(function (c) { return c.id === curUser; });
+      const found = cfg.children.some((c) => c.id === curUser);
       if (found) {
         // Valid restored session — go to dashboard
         if (screen === 'login') setScreen('dashboard');
@@ -540,51 +529,51 @@ export function AppProvider(props: {
   }, [loading, cfg, curUser]);
 
   // --- Derived values ---
-  var children = cfg ? cfg.children : [];
-  var currentChild =
+  const children = cfg ? cfg.children : [];
+  const currentChild =
     curUser && curUser !== 'parent' ? getChild(curUser) : null;
-  var currentUserData =
+  const currentUserData =
     curUser && curUser !== 'parent' ? allU[curUser] || null : null;
-  var uTasks =
+  const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
-  var todayTasks = uTasks.filter(isTaskActiveToday);
-  var d = getToday();
-  var tLog =
+  const todayTasks = uTasks.filter(isTaskActiveToday);
+  const d = getToday();
+  const tLog =
     currentUserData && currentUserData.taskLog && currentUserData.taskLog[d]
       ? currentUserData.taskLog[d]
       : {};
-  var bedLock = isPastBedtime(cfg ? cfg.bedtime : undefined);
-  var pendingCount = 0;
-  children.forEach(function (c) {
-    var u = allU[c.id];
+  const bedLock = isPastBedtime(cfg ? cfg.bedtime : undefined);
+  let pendingCount = 0;
+  children.forEach((c) => {
+    const u = allU[c.id];
     if (u && u.pendingRedemptions) pendingCount += u.pendingRedemptions.length;
   });
 
-  var value: AppContextValue = {
-    familyId: familyId,
-    cfg: cfg,
-    allU: allU,
-    curUser: curUser,
-    screen: screen,
-    loading: loading,
-    bedLock: bedLock,
+  const value: AppContextValue = {
+    familyId,
+    cfg,
+    allU,
+    curUser,
+    screen,
+    loading,
+    bedLock,
     notif: notification.notif,
-    viewPhoto: viewPhoto,
+    viewPhoto,
     fileRef: taskActions.fileRef,
-    children: children,
-    currentChild: currentChild,
-    currentUserData: currentUserData,
-    todayTasks: todayTasks,
-    tLog: tLog,
-    pendingCount: pendingCount,
-    setScreen: setScreen,
-    setCurUser: setCurUser,
-    setViewPhoto: setViewPhoto,
+    children,
+    currentChild,
+    currentUserData,
+    todayTasks,
+    tLog,
+    pendingCount,
+    setScreen,
+    setCurUser,
+    setViewPhoto,
     notify: notification.notify,
-    tp: tp,
-    tierCfg: tierCfg,
-    saveCfg: saveCfg,
-    saveUsr: saveUsr,
+    tp,
+    tierCfg,
+    saveCfg,
+    saveUsr,
     startCapture: taskActions.startCapture,
     handlePhoto: taskActions.handlePhoto,
     doComplete: taskActions.doComplete,
@@ -599,7 +588,7 @@ export function AppProvider(props: {
     resetAll: childActions.resetAll,
     doAddChild: childActions.doAddChild,
     doRemoveChild: childActions.doRemoveChild,
-    getChild: getChild,
+    getChild,
     onLogout: props.onLogout || null,
   };
 

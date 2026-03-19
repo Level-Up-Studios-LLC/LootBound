@@ -9,23 +9,23 @@ import EmptyState from '../components/ui/EmptyState.tsx';
 import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
-  var ctx = useAppContext();
-  var ch = ctx.currentChild;
-  var ud = ctx.currentUserData;
-  var todayTasks = ctx.todayTasks;
-  var tLog = ctx.tLog;
-  var bedLock = ctx.bedLock;
-  var startCapture = ctx.startCapture;
-  var setViewPhoto = ctx.setViewPhoto;
-  var tp = ctx.tp;
-  var tierCfgFn = ctx.tierCfg;
+  const ctx = useAppContext();
+  const ch = ctx.currentChild;
+  const ud = ctx.currentUserData;
+  const todayTasks = ctx.todayTasks;
+  const tLog = ctx.tLog;
+  const bedLock = ctx.bedLock;
+  const startCapture = ctx.startCapture;
+  const setViewPhoto = ctx.setViewPhoto;
+  const tp = ctx.tp;
+  const tierCfgFn = ctx.tierCfg;
 
   if (!ch || !ud) return null;
 
-  var sorted = todayTasks.slice().sort(function (a, b) {
-    var al = tLog[a.id],
+  const sorted = todayTasks.slice().sort((a, b) => {
+    const al = tLog[a.id],
       bl = tLog[b.id];
-    var ac = al && !al.rejected && al.status !== 'missed',
+    const ac = al && !al.rejected && al.status !== 'missed',
       bc = bl && !bl.rejected && bl.status !== 'missed';
     if (ac !== bc) return ac ? 1 : -1;
     return timeToMin(a.windowStart) - timeToMin(b.windowStart);
@@ -56,43 +56,43 @@ export default function TasksScreen(): React.ReactElement | null {
             description='Enjoy your free time. Check back tomorrow for new missions!'
           />
         )}
-        {sorted.map(function (t, idx) {
-          var entry = tLog[t.id];
-          var isRej = entry && entry.rejected;
-          var isDone = entry && !entry.rejected && entry.status !== 'missed';
-          var isMissed = entry && entry.status === 'missed' && !entry.rejected;
-          var status = isDone
+        {sorted.map((t, idx) => {
+          const entry = tLog[t.id];
+          const isRej = entry && entry.rejected;
+          const isDone = entry && !entry.rejected && entry.status !== 'missed';
+          const isMissed = entry && entry.status === 'missed' && !entry.rejected;
+          const status = isDone
             ? entry.status
             : isMissed
               ? 'missed'
               : isRej
                 ? 'rejected'
                 : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
-          var sl = SL[status] || {
+          const sl = SL[status] || {
             text: '',
             color: '#64748b',
             bg: 'transparent',
           };
-          var coins = isDone
+          const coins = isDone
             ? entry.points
             : isMissed
               ? entry.points
               : tp(t.tier);
-          var xpVal = isDone
+          const xpVal = isDone
             ? (entry.xp || 0)
             : isMissed
               ? 0
               : tierCfgFn(t.tier).xp;
 
-          var animClass = '';
+          let animClass = '';
           if (isDone) {
             if (status === 'early') animClass = 'animate-confetti';
             else if (status === 'ontime') animClass = 'animate-check';
             else animClass = 'animate-shake';
           }
 
-          var cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
-          var dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
+          const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+          const dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
 
           return (
             <div
@@ -102,7 +102,7 @@ export default function TasksScreen(): React.ReactElement | null {
                 ' rounded-btn p-4 transition-all ' +
                 animClass
               }
-              style={{ borderLeft: '3px solid ' + sl.color }}
+              style={{ borderLeft: `3px solid ${sl.color}` }}
             >
               <div className='flex justify-between items-start'>
                 <div>
@@ -126,7 +126,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   <div className='text-[11px] text-qmuted'>
                     {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
                     {!t.daily && t.dueDay != null
-                      ? ' | ' + DAYS_SHORT[t.dueDay]
+                      ? ` | ${DAYS_SHORT[t.dueDay]}`
                       : ''}
                   </div>
                   {isRej && (
@@ -140,23 +140,23 @@ export default function TasksScreen(): React.ReactElement | null {
                   <div className='text-sm font-bold font-display text-qslate'>
                     {isDone || isMissed
                       ? coins > 0
-                        ? '+' + coins
+                        ? `+${coins}`
                         : coins
                       : tp(t.tier)}{' '}
                     coins
                   </div>
                   <div className='text-[10px] text-qmuted font-semibold'>
                     {isDone
-                      ? '+' + xpVal + ' XP'
+                      ? `+${xpVal} XP`
                       : isMissed
                         ? '0 XP'
-                        : xpVal + ' XP'}
+                        : `${xpVal} XP`}
                   </div>
                 </div>
               </div>
               {isDone && entry.photo && (
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     setViewPhoto(entry.photo);
                   }}
                   className='text-[11px] text-qteal bg-transparent border-none cursor-pointer font-body mt-1 hover:underline'
@@ -166,7 +166,7 @@ export default function TasksScreen(): React.ReactElement | null {
               )}
               {!isDone && !isMissed && status !== 'missed' && (
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     startCapture(t.id);
                   }}
                   className={

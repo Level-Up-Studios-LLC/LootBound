@@ -22,99 +22,57 @@ import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
 
-function getInitials(name: string | undefined, email: string): string {
+const getInitials = (name: string | undefined, email: string): string => {
   if (name && name.trim()) {
-    var parts = name.trim().split(/\s+/);
+    const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return parts[0].substring(0, 2).toUpperCase();
   }
   return email ? email[0].toUpperCase() : '?';
-}
+};
 
 export default function AccountTab(): React.ReactElement | null {
-  var ctx = useAppContext();
-  var auth = useAuthContext();
-  var cfg = ctx.cfg;
-  var currentUid = getCurrentUid();
+  const ctx = useAppContext();
+  const auth = useAuthContext();
+  const cfg = ctx.cfg;
+  const currentUid = getCurrentUid();
 
-  var _myName = useState<string | undefined>(undefined),
-    myName = _myName[0],
-    setMyName = _myName[1];
-  var _myPin = useState(''),
-    myPin = _myPin[0],
-    setMyPin = _myPin[1];
+  const [myName, setMyName] = useState<string | undefined>(undefined);
+  const [myPin, setMyPin] = useState('');
 
-  useEffect(function () {
+  useEffect(() => {
     if (!currentUid) return;
-    return onParentMemberSnapshot(currentUid, function (member) {
+    return onParentMemberSnapshot(currentUid, (member) => {
       setMyName(member && member.parentName ? member.parentName : undefined);
       setMyPin(member && member.parentPin ? member.parentPin : '');
     });
   }, [currentUid]);
 
-  var _editing = useState(false),
-    editing = _editing[0],
-    setEditing = _editing[1];
-  var _nameVal = useState(''),
-    nameVal = _nameVal[0],
-    setNameVal = _nameVal[1];
-  var _emailVal = useState(''),
-    emailVal = _emailVal[0],
-    setEmailVal = _emailVal[1];
-  var _editErr = useState(''),
-    editErr = _editErr[0],
-    setEditErr = _editErr[1];
-  var _editBusy = useState(false),
-    editBusy = _editBusy[0],
-    setEditBusy = _editBusy[1];
-  var _newPin = useState(''),
-    newPin = _newPin[0],
-    setNewPin = _newPin[1];
-  var _curPass = useState(''),
-    curPass = _curPass[0],
-    setCurPass = _curPass[1];
-  var _newPass = useState(''),
-    newPass = _newPass[0],
-    setNewPass = _newPass[1];
-  var _confirmPass = useState(''),
-    confirmPass = _confirmPass[0],
-    setConfirmPass = _confirmPass[1];
-  var _passErr = useState(''),
-    passErr = _passErr[0],
-    setPassErr = _passErr[1];
-  var _passBusy = useState(false),
-    passBusy = _passBusy[0],
-    setPassBusy = _passBusy[1];
-  var _passSuccess = useState(false),
-    passSuccess = _passSuccess[0],
-    setPassSuccess = _passSuccess[1];
-  var _showResetConfirm = useState(false),
-    showResetConfirm = _showResetConfirm[0],
-    setShowResetConfirm = _showResetConfirm[1];
-  var _showDeleteConfirm = useState(false),
-    showDeleteConfirm = _showDeleteConfirm[0],
-    setShowDeleteConfirm = _showDeleteConfirm[1];
-  var _deleteBusy = useState(false),
-    deleteBusy = _deleteBusy[0],
-    setDeleteBusy = _deleteBusy[1];
-  var _deletePass = useState(''),
-    deletePass = _deletePass[0],
-    setDeletePass = _deletePass[1];
-  var _deleteErr = useState(''),
-    deleteErr = _deleteErr[0],
-    setDeleteErr = _deleteErr[1];
-  var _verifyBusy = useState(false),
-    verifyBusy = _verifyBusy[0],
-    setVerifyBusy = _verifyBusy[1];
-  var _verifySent = useState(false),
-    verifySent = _verifySent[0],
-    setVerifySent = _verifySent[1];
+  const [editing, setEditing] = useState(false);
+  const [nameVal, setNameVal] = useState('');
+  const [emailVal, setEmailVal] = useState('');
+  const [editErr, setEditErr] = useState('');
+  const [editBusy, setEditBusy] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [curPass, setCurPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [passErr, setPassErr] = useState('');
+  const [passBusy, setPassBusy] = useState(false);
+  const [passSuccess, setPassSuccess] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deletePass, setDeletePass] = useState('');
+  const [deleteErr, setDeleteErr] = useState('');
+  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [verifySent, setVerifySent] = useState(false);
 
   if (!cfg) return null;
 
-  async function handleChangePassword() {
+  const handleChangePassword = async () => {
     setPassErr('');
     setPassSuccess(false);
     if (!curPass) {
@@ -138,7 +96,7 @@ export default function AccountTab(): React.ReactElement | null {
       setPassSuccess(true);
       ctx.notify('Password updated');
     } catch (err: any) {
-      var code = err.code || err.message || '';
+      const code = err.code || err.message || '';
       if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setPassErr('Current password is incorrect');
       } else if (code === 'auth/weak-password') {
@@ -148,9 +106,9 @@ export default function AccountTab(): React.ReactElement | null {
       }
     }
     setPassBusy(false);
-  }
+  };
 
-  async function handleSetPassword() {
+  const handleSetPassword = async () => {
     setPassErr('');
     setPassSuccess(false);
     if (newPass.length < 6) {
@@ -169,7 +127,7 @@ export default function AccountTab(): React.ReactElement | null {
       setPassSuccess(true);
       ctx.notify('Password set! You can now sign in with email and password.');
     } catch (err: any) {
-      var code = err.code || err.message || '';
+      const code = err.code || err.message || '';
       if (code === 'auth/weak-password') {
         setPassErr('Password is too weak');
       } else if (code === 'auth/requires-recent-login') {
@@ -179,14 +137,14 @@ export default function AccountTab(): React.ReactElement | null {
       }
     }
     setPassBusy(false);
-  }
+  };
 
-  async function handleSaveProfile() {
+  const handleSaveProfile = async () => {
     setEditErr('');
-    var trimmedName = nameVal.trim();
-    var trimmedEmail = emailVal.trim();
-    var currentEmail = auth.authUser ? auth.authUser.email : '';
-    var emailChanged = trimmedEmail && trimmedEmail !== currentEmail;
+    const trimmedName = nameVal.trim();
+    const trimmedEmail = emailVal.trim();
+    const currentEmail = auth.authUser ? auth.authUser.email : '';
+    const emailChanged = trimmedEmail && trimmedEmail !== currentEmail;
 
     if (emailChanged && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       setEditErr('Enter a valid email address');
@@ -194,7 +152,7 @@ export default function AccountTab(): React.ReactElement | null {
     }
 
     setEditBusy(true);
-    var nameChanged = trimmedName !== (myName || '');
+    const nameChanged = trimmedName !== (myName || '');
     try {
       // Save name to per-parent doc (including clearing)
       if (nameChanged && currentUid) {
@@ -205,14 +163,14 @@ export default function AccountTab(): React.ReactElement | null {
       // Update email — sends verification to the new address
       if (emailChanged) {
         await changeEmail(trimmedEmail);
-        ctx.notify('Verification sent to ' + trimmedEmail);
+        ctx.notify(`Verification sent to ${trimmedEmail}`);
       } else if (nameChanged) {
         ctx.notify('Profile updated');
       }
 
       setEditing(false);
     } catch (err: any) {
-      var code = err.code || err.message || '';
+      const code = err.code || err.message || '';
       if (code === 'auth/email-already-in-use') {
         setEditErr('That email is already in use');
       } else if (code === 'auth/invalid-email') {
@@ -222,11 +180,11 @@ export default function AccountTab(): React.ReactElement | null {
       }
     }
     setEditBusy(false);
-  }
+  };
 
-  var isOwner = currentUid === ctx.familyId;
+  const isOwner = currentUid === ctx.familyId;
 
-  async function handleDeleteFamily() {
+  const handleDeleteFamily = async () => {
     setDeleteErr('');
     if (hasPasswordProvider() && !deletePass) {
       setDeleteErr('Enter your password to confirm deletion');
@@ -247,14 +205,14 @@ export default function AccountTab(): React.ReactElement | null {
         ctx.notify('Some photos could not be deleted', 'error');
       }
       // Delete all Firestore data
-      var uid = currentUid;
+      const uid = currentUid;
       if (!uid) throw new Error('Not signed in');
       await deleteFamily(ctx.familyId, uid);
       await deleteAuthAccount(deletePass);
     } catch (err: any) {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
-      var code = err.code || err.message || '';
+      const code = err.code || err.message || '';
       if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setDeleteErr('Incorrect password');
       } else {
@@ -263,9 +221,9 @@ export default function AccountTab(): React.ReactElement | null {
       setDeleteBusy(false);
       return;
     }
-  }
+  };
 
-  async function handleLeaveFamily() {
+  const handleLeaveFamily = async () => {
     setDeleteErr('');
     if (hasPasswordProvider() && !deletePass) {
       setDeleteErr('Enter your password to confirm');
@@ -276,7 +234,7 @@ export default function AccountTab(): React.ReactElement | null {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
-      var uid = currentUid;
+      const uid = currentUid;
       if (!uid) throw new Error('Not signed in');
       // Only remove own parentMembers doc and auth account
       await deleteParentMember(uid);
@@ -284,7 +242,7 @@ export default function AccountTab(): React.ReactElement | null {
     } catch (err: any) {
       console.error('Failed to leave family:', err);
       Sentry.captureException(err, { tags: { action: 'leave-family' } });
-      var code = err.code || err.message || '';
+      const code = err.code || err.message || '';
       if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setDeleteErr('Incorrect password');
       } else {
@@ -293,7 +251,7 @@ export default function AccountTab(): React.ReactElement | null {
       setDeleteBusy(false);
       return;
     }
-  }
+  };
 
   return (
     <div>
@@ -317,7 +275,7 @@ export default function AccountTab(): React.ReactElement | null {
                   type='text'
                   placeholder='Your name'
                   value={nameVal}
-                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setNameVal(e.target.value);
                     setEditErr('');
                   }}
@@ -328,11 +286,11 @@ export default function AccountTab(): React.ReactElement | null {
                   type='email'
                   placeholder='Email address'
                   value={emailVal}
-                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setEmailVal(e.target.value);
                     setEditErr('');
                   }}
-                  onKeyDown={function (e: React.KeyboardEvent) {
+                  onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Enter' && !editBusy) handleSaveProfile();
                   }}
                   className='quest-input py-1.5! px-2.5! text-sm!'
@@ -349,7 +307,7 @@ export default function AccountTab(): React.ReactElement | null {
                     {editBusy ? 'Saving...' : 'Save'}
                   </button>
                   <button
-                    onClick={function () { setEditing(false); setEditErr(''); }}
+                    onClick={() => { setEditing(false); setEditErr(''); }}
                     className='bg-qslate-dim text-qslate rounded-badge px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer font-body'
                   >
                     Cancel
@@ -371,7 +329,7 @@ export default function AccountTab(): React.ReactElement | null {
                     {currentUid === ctx.familyId ? 'Owner' : 'Member'}
                   </span>
                   <button
-                    onClick={function () {
+                    onClick={() => {
                       setNameVal(myName || '');
                       setEmailVal(auth.authUser ? auth.authUser.email : '');
                       setEditErr('');
@@ -396,17 +354,17 @@ export default function AccountTab(): React.ReactElement | null {
         <div className='flex justify-between items-center'>
           <span className='text-[13px] text-qmuted'>Family Code</span>
           <button
-            onClick={function () {
+            onClick={() => {
               if (!cfg || !cfg.familyCode) return;
-              var text = cfg.familyCode;
+              const text = cfg.familyCode;
               if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
+                navigator.clipboard.writeText(text).then(() => {
                   ctx.notify('Copied!');
-                }).catch(function () {
+                }).catch(() => {
                   ctx.notify('Long-press to copy', 'error');
                 });
               } else {
-                var ta = document.createElement('textarea');
+                const ta = document.createElement('textarea');
                 ta.value = text;
                 ta.style.position = 'fixed';
                 ta.style.left = '-9999px';
@@ -448,9 +406,9 @@ export default function AccountTab(): React.ReactElement | null {
           </div>
           <div className='flex gap-2'>
             <button
-              onClick={async function () {
+              onClick={async () => {
                 setVerifyBusy(true);
-                var ok = await auth.doSendVerification();
+                const ok = await auth.doSendVerification();
                 setVerifyBusy(false);
                 if (ok) setVerifySent(true);
               }}
@@ -460,7 +418,7 @@ export default function AccountTab(): React.ReactElement | null {
               {verifySent ? 'Email Sent!' : verifyBusy ? 'Sending...' : 'Resend Verification'}
             </button>
             <button
-              onClick={function () {
+              onClick={() => {
                 auth.doRefreshVerification();
               }}
               className='bg-qslate-dim text-qslate rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body text-[13px]'
@@ -493,15 +451,15 @@ export default function AccountTab(): React.ReactElement | null {
             maxLength={6}
             placeholder={myPin ? 'New PIN' : 'Create PIN'}
             value={newPin}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewPin(e.target.value);
             }}
             className='quest-input w-[120px]! text-center'
           />
           <button
-            onClick={async function () {
+            onClick={async () => {
               if (newPin.length >= 4) {
-                var uid = currentUid;
+                const uid = currentUid;
                 if (uid) {
                   try {
                     await saveParentMember(uid, { parentPin: newPin });
@@ -539,7 +497,7 @@ export default function AccountTab(): React.ReactElement | null {
               type='password'
               placeholder='Current password'
               value={curPass}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setCurPass(e.target.value);
                 setPassErr('');
                 setPassSuccess(false);
@@ -551,7 +509,7 @@ export default function AccountTab(): React.ReactElement | null {
             type='password'
             placeholder={hasPasswordProvider() ? 'New password (6+ characters)' : 'Password (6+ characters)'}
             value={newPass}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewPass(e.target.value);
               setPassErr('');
               setPassSuccess(false);
@@ -562,12 +520,12 @@ export default function AccountTab(): React.ReactElement | null {
             type='password'
             placeholder='Confirm password'
             value={confirmPass}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setConfirmPass(e.target.value);
               setPassErr('');
               setPassSuccess(false);
             }}
-            onKeyDown={function (e: React.KeyboardEvent) {
+            onKeyDown={(e: React.KeyboardEvent) => {
               if (e.key === 'Enter' && !passBusy) {
                 if (hasPasswordProvider()) {
                   handleChangePassword();
@@ -587,7 +545,7 @@ export default function AccountTab(): React.ReactElement | null {
             </div>
           )}
           <button
-            onClick={function () {
+            onClick={() => {
               if (hasPasswordProvider()) {
                 handleChangePassword();
               } else {
@@ -613,7 +571,7 @@ export default function AccountTab(): React.ReactElement | null {
           Tasks, rewards, and children profiles will remain.
         </div>
         <button
-          onClick={function () {
+          onClick={() => {
             setShowResetConfirm(true);
           }}
           className='bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
@@ -630,11 +588,11 @@ export default function AccountTab(): React.ReactElement | null {
           requiredText='RESET'
           confirmLabel='Reset'
           confirmColor='bg-qcoral'
-          onConfirm={function () {
+          onConfirm={() => {
             setShowResetConfirm(false);
             ctx.resetAll();
           }}
-          onCancel={function () {
+          onCancel={() => {
             setShowResetConfirm(false);
           }}
         />
@@ -652,7 +610,7 @@ export default function AccountTab(): React.ReactElement | null {
             : 'Remove yourself from this family. Your login will be deleted. The family and its data will remain for other members.'}
         </div>
         <button
-          onClick={function () {
+          onClick={() => {
             setShowDeleteConfirm(true);
           }}
           className='bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
@@ -669,7 +627,7 @@ export default function AccountTab(): React.ReactElement | null {
           warning={isOwner ? 'THIS ACTION CANNOT BE UNDONE.' : undefined}
           confirmLabel={deleteBusy ? (isOwner ? 'Deleting...' : 'Leaving...') : (isOwner ? 'Delete' : 'Leave')}
           confirmColor='bg-qcoral'
-          onConfirm={function () {
+          onConfirm={() => {
             if (!deleteBusy && (!hasPasswordProvider() || deletePass)) {
               if (isOwner) {
                 handleDeleteFamily();
@@ -678,7 +636,7 @@ export default function AccountTab(): React.ReactElement | null {
               }
             }
           }}
-          onCancel={function () {
+          onCancel={() => {
             if (!deleteBusy) {
               setShowDeleteConfirm(false);
               setDeletePass('');
@@ -696,11 +654,11 @@ export default function AccountTab(): React.ReactElement | null {
               type='password'
               placeholder='Password'
               value={deletePass}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setDeletePass(e.target.value);
                 setDeleteErr('');
               }}
-              onKeyDown={function (e: React.KeyboardEvent) {
+              onKeyDown={(e: React.KeyboardEvent) => {
                 if (e.key === 'Enter' && !deleteBusy) {
                   if (isOwner) {
                     handleDeleteFamily();

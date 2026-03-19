@@ -12,41 +12,25 @@ interface ResetPasswordScreenProps {
 export default function ResetPasswordScreen(
   props: ResetPasswordScreenProps
 ): React.ReactElement {
-  var _email = useState<string | null>(null),
-    email = _email[0],
-    setEmail = _email[1];
-  var _newPass = useState(''),
-    newPass = _newPass[0],
-    setNewPass = _newPass[1];
-  var _confirmPass = useState(''),
-    confirmPass = _confirmPass[0],
-    setConfirmPass = _confirmPass[1];
-  var _error = useState<string | null>(null),
-    error = _error[0],
-    setError = _error[1];
-  var _busy = useState(false),
-    busy = _busy[0],
-    setBusy = _busy[1];
-  var _success = useState(false),
-    success = _success[0],
-    setSuccess = _success[1];
-  var _invalidCode = useState(false),
-    invalidCode = _invalidCode[0],
-    setInvalidCode = _invalidCode[1];
-  var _retryable = useState(false),
-    retryable = _retryable[0],
-    setRetryable = _retryable[1];
+  const [email, setEmail] = useState<string | null>(null);
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [invalidCode, setInvalidCode] = useState(false);
+  const [retryable, setRetryable] = useState(false);
 
-  function verifyCode() {
+  const verifyCode = () => {
     setRetryable(false);
     setInvalidCode(false);
     setEmail(null);
     verifyResetCode(props.oobCode)
-      .then(function (resolvedEmail) {
+      .then((resolvedEmail) => {
         setEmail(resolvedEmail);
       })
-      .catch(function (err: any) {
-        var code = err.code || '';
+      .catch((err: any) => {
+        const code = err.code || '';
         if (
           code === 'auth/expired-action-code' ||
           code === 'auth/invalid-action-code'
@@ -56,13 +40,13 @@ export default function ResetPasswordScreen(
           setRetryable(true);
         }
       });
-  }
+  };
 
-  useEffect(function () {
+  useEffect(() => {
     verifyCode();
   }, [props.oobCode]);
 
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     setError(null);
     if (newPass.length < 6) {
       setError('Password must be at least 6 characters');
@@ -77,7 +61,7 @@ export default function ResetPasswordScreen(
       await completePasswordReset(props.oobCode, newPass);
       setSuccess(true);
     } catch (err: any) {
-      var code = err.code || '';
+      const code = err.code || '';
       if (code === 'auth/expired-action-code') {
         setError('This reset link has expired. Please request a new one.');
       } else if (code === 'auth/weak-password') {
@@ -87,7 +71,7 @@ export default function ResetPasswordScreen(
       }
     }
     setBusy(false);
-  }
+  };
 
   // Invalid or expired code
   if (invalidCode) {
@@ -199,7 +183,7 @@ export default function ResetPasswordScreen(
           type='password'
           placeholder='New password (6+ characters)'
           value={newPass}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setNewPass(e.target.value);
             setError(null);
           }}
@@ -210,11 +194,11 @@ export default function ResetPasswordScreen(
           type='password'
           placeholder='Confirm new password'
           value={confirmPass}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setConfirmPass(e.target.value);
             setError(null);
           }}
-          onKeyDown={function (e: React.KeyboardEvent) {
+          onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Enter' && !busy) handleSubmit();
           }}
           className='quest-input'

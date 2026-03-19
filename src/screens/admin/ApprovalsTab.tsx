@@ -8,14 +8,14 @@ import EmptyState from '../../components/ui/EmptyState.tsx';
 import type { ApprovalItem } from '../../types.ts';
 
 export default function ApprovalsTab(): React.ReactElement {
-  var ctx = useAppContext();
-  var children = ctx.children;
-  var allU = ctx.allU;
+  const ctx = useAppContext();
+  const children = ctx.children;
+  const allU = ctx.allU;
 
-  var items: ApprovalItem[] = [];
-  children.forEach(function (c) {
-    var udata = allU[c.id] || freshUser();
-    (udata.pendingRedemptions || []).forEach(function (p, i) {
+  const items: ApprovalItem[] = [];
+  children.forEach((c) => {
+    const udata = allU[c.id] || freshUser();
+    (udata.pendingRedemptions || []).forEach((p, i) => {
       items.push({ uid: c.id, child: c, pending: p, idx: i });
     });
   });
@@ -34,7 +34,7 @@ export default function ApprovalsTab(): React.ReactElement {
           description='No pending approvals right now. When children redeem loot that requires approval, requests will appear here.'
         />
       )}
-      {items.map(function (item, i) {
+      {items.map((item, i) => {
         return (
           <div key={i} className={altBg(i) + ' rounded-[10px] p-4 mb-4'}>
             <div className='flex justify-between items-center'>
@@ -49,7 +49,7 @@ export default function ApprovalsTab(): React.ReactElement {
               </div>
               <div className='flex gap-1.5'>
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     ctx.approvePending(item.uid, item.idx);
                   }}
                   className='bg-qteal-dim text-qteal rounded-badge px-4 py-2 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1.5'
@@ -58,7 +58,7 @@ export default function ApprovalsTab(): React.ReactElement {
                   Approve
                 </button>
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     ctx.denyPending(item.uid, item.idx);
                   }}
                   className='bg-qcoral-dim text-qcoral rounded-badge px-4 py-2 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1.5'

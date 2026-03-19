@@ -11,26 +11,26 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase.ts';
 
-var CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-var CODE_LEN = 6;
-var STORAGE_KEY = 'qb-family-code';
+const CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const CODE_LEN = 6;
+const STORAGE_KEY = 'qb-family-code';
 
-function randomCode(): string {
-  var code = '';
-  for (var i = 0; i < CODE_LEN; i++) {
+const randomCode = (): string => {
+  let code = '';
+  for (let i = 0; i < CODE_LEN; i++) {
     code += CHARSET.charAt(Math.floor(Math.random() * CHARSET.length));
   }
   return code;
-}
+};
 
 /**
  * Generate a unique family code. Retries on collision.
  */
 export async function generateFamilyCode(): Promise<string> {
-  var attempts = 0;
+  let attempts = 0;
   while (attempts < 10) {
-    var code = randomCode();
-    var snap = await getDoc(doc(db, 'familyCodes', code));
+    const code = randomCode();
+    const snap = await getDoc(doc(db, 'familyCodes', code));
     if (!snap.exists()) return code;
     attempts++;
   }
@@ -45,7 +45,7 @@ export async function registerFamilyCode(
   code: string,
   familyId: string
 ): Promise<void> {
-  await setDoc(doc(db, 'familyCodes', code), { familyId: familyId });
+  await setDoc(doc(db, 'familyCodes', code), { familyId });
   await setDoc(
     doc(db, 'families', familyId),
     { familyCode: code },
@@ -59,9 +59,9 @@ export async function registerFamilyCode(
 export async function lookupFamilyCode(
   code: string
 ): Promise<string | null> {
-  var snap = await getDoc(doc(db, 'familyCodes', code.toUpperCase()));
+  const snap = await getDoc(doc(db, 'familyCodes', code.toUpperCase()));
   if (!snap.exists()) return null;
-  var data = snap.data();
+  const data = snap.data();
   return data.familyId || null;
 }
 

@@ -7,28 +7,22 @@ import { countRedeems } from '../utils.ts';
 import type { Reward } from '../types.ts';
 
 export default function StoreScreen(): React.ReactElement | null {
-  var _confirmR = useState<Reward | null>(null),
-    confirmR = _confirmR[0],
-    setConfirmR = _confirmR[1];
-  var _redeeming = useState(false),
-    redeeming = _redeeming[0],
-    setRedeeming = _redeeming[1];
+  const [confirmR, setConfirmR] = useState<Reward | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
 
-  var ctx = useAppContext();
-  var ch = ctx.currentChild;
-  var ud = ctx.currentUserData;
-  var cfg = ctx.cfg;
-  var curUser = ctx.curUser;
-  var canRedeem = ctx.canRedeem;
-  var needsApproval = ctx.needsApproval;
-  var requestRedemption = ctx.requestRedemption;
+  const ctx = useAppContext();
+  const ch = ctx.currentChild;
+  const ud = ctx.currentUserData;
+  const cfg = ctx.cfg;
+  const curUser = ctx.curUser;
+  const canRedeem = ctx.canRedeem;
+  const needsApproval = ctx.needsApproval;
+  const requestRedemption = ctx.requestRedemption;
 
   if (!ch || !ud) return null;
 
-  var rewards = (cfg!.rewards || []).filter(function (r) {
-    return r.active;
-  });
-  var pendingR = ud.pendingRedemptions || [];
+  const rewards = (cfg!.rewards || []).filter((r) => r.active);
+  const pendingR = ud.pendingRedemptions || [];
 
   return (
     <div className='pb-20'>
@@ -49,10 +43,10 @@ export default function StoreScreen(): React.ReactElement | null {
             <div className='text-sm font-bold text-qslate mb-2'>
               Pending Approval
             </div>
-            {pendingR.map(function (p) {
+            {pendingR.map((p) => {
               return (
                 <div
-                  key={p.rewardId + '-' + p.requestedAt}
+                  key={`${p.rewardId}-${p.requestedAt}`}
                   className='flex justify-between bg-qyellow-dim rounded-badge px-3 py-2 mb-1 text-[13px] animate-fade-in'
                 >
                   <span>
@@ -66,11 +60,11 @@ export default function StoreScreen(): React.ReactElement | null {
           </div>
         )}
         <div className='grid grid-cols-2 gap-3.5'>
-          {rewards.map(function (r, idx) {
-            var check = canRedeem(curUser!, r);
-            var can = check.ok;
-            var na = needsApproval(r);
-            var li = '';
+          {rewards.map((r, idx) => {
+            const check = canRedeem(curUser!, r);
+            const can = check.ok;
+            const na = needsApproval(r);
+            let li = '';
             if (r.limitType && r.limitType !== 'none' && r.limitMax > 0) {
               li =
                 countRedeems(ud!.redemptions, r.id, r.limitType) +
@@ -79,8 +73,8 @@ export default function StoreScreen(): React.ReactElement | null {
                 ' ' +
                 (r.limitType === 'daily' ? 'today' : r.limitType === 'weekly' ? 'wk' : 'total');
             }
-            var cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
-            var dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
+            const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+            const dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
             return (
               <div
                 key={r.id}
@@ -104,7 +98,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 )}
                 <button
                   disabled={!can}
-                  onClick={function () {
+                  onClick={() => {
                     if (can) setConfirmR(r);
                   }}
                   className={
@@ -132,11 +126,11 @@ export default function StoreScreen(): React.ReactElement | null {
             {ud.redemptions
               .slice(-5)
               .reverse()
-              .map(function (r, i) {
-                var recentBg = i % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
+              .map((r, i) => {
+                const recentBg = i % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
                 return (
                   <div
-                    key={r.rewardId + '-' + r.date + '-' + i}
+                    key={`${r.rewardId}-${r.date}-${i}`}
                     className={
                       'flex justify-between rounded-badge px-3 py-2 mb-2 text-[13px] ' +
                       recentBg
@@ -176,7 +170,7 @@ export default function StoreScreen(): React.ReactElement | null {
               </div>
               <div className='flex gap-3 justify-end'>
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     setConfirmR(null);
                   }}
                   className='btn-secondary rounded-badge px-5 py-2 font-semibold border-none cursor-pointer font-body transition-colors'
@@ -185,7 +179,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 </button>
                 <button
                   disabled={redeeming}
-                  onClick={async function () {
+                  onClick={async () => {
                     if (redeeming) return;
                     setRedeeming(true);
                     try {
