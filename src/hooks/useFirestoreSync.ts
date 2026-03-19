@@ -74,7 +74,7 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     const unsubTasks = onTasksSnapshot(familyId, (list) => {
       if (dead) return;
       const tasksMap: Record<string, Task[]> = {};
-      list.forEach((t: any) => {
+      list.forEach((t) => {
         const cid = t.childId || '';
         if (!tasksMap[cid]) tasksMap[cid] = [];
         tasksMap[cid].push({
