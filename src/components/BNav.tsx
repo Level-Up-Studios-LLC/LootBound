@@ -13,10 +13,24 @@ interface BNavProps {
 
 export default function BNav(p: BNavProps) {
   var ctx = useAppContext();
+
+  // Count incomplete + redo missions for the current kid
+  var missionBadge = 0;
+  if (ctx.curUser && ctx.curUser !== 'parent') {
+    var total = ctx.todayTasks.length;
+    var done = 0;
+    ctx.todayTasks.forEach(function (t) {
+      var entry = ctx.tLog[t.id];
+      if (entry && !entry.rejected) done++;
+    });
+    missionBadge = total - done;
+  }
+
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-3 z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
       {p.tabs.map(function (t) {
         var isActive = ctx.screen === t.id;
+        var badge = t.id === 'tasks' ? missionBadge : 0;
         return (
           <button
             key={t.id}
@@ -28,7 +42,14 @@ export default function BNav(p: BNavProps) {
               (isActive ? 'text-qteal' : 'text-qslate hover:text-qteal')
             }
           >
-            <FontAwesomeIcon icon={['fas', t.icon] as any} className="text-xl" />
+            <span className="text-xl relative">
+              <FontAwesomeIcon icon={['fas', t.icon] as any} />
+              {badge > 0 && (
+                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] bg-qcoral text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                  {badge}
+                </span>
+              )}
+            </span>
             <span className="text-xs font-semibold">{t.label}</span>
           </button>
         );
