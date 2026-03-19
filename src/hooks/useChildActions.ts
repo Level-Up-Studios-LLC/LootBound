@@ -90,17 +90,17 @@ export function useChildActions(deps: ChildActionsDeps) {
       console.warn('Photo cleanup failed during reset:', err);
       Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
     });
-    // Use replaceChildData (no merge) so old taskLog entries are fully wiped
+    // Use replaceChildData (no merge) so old taskLog entries are fully wiped.
+    // Build the full reset state first, then apply in one batch.
+    var resetUsers: Record<string, UserData> = {};
     for (var i = 0; i < children.length; i++) {
       var fresh = freshUser();
+      resetUsers[children[i].id] = fresh;
       await replaceChildData(deps.familyId, children[i].id, fresh);
-      deps.setAllU(function (prev) {
-        var next: Record<string, UserData> = {};
-        for (var k in prev) next[k] = prev[k];
-        next[children[i].id] = fresh;
-        return next;
-      });
     }
+    deps.setAllU(function () {
+      return resetUsers;
+    });
     deps.notify('All data reset');
   }
 
