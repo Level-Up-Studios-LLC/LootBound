@@ -309,6 +309,18 @@ export async function saveChildData(
   });
 }
 
+/**
+ * Fully replace child data (no merge). Used by resetAll to ensure
+ * old taskLog entries are wiped cleanly.
+ */
+export async function replaceChildData(
+  familyId: string,
+  childId: string,
+  data: ChildData
+): Promise<void> {
+  await setDoc(doc(db, 'families', familyId, 'childData', childId), data as DocumentData);
+}
+
 export async function deleteChildData(
   familyId: string,
   childId: string

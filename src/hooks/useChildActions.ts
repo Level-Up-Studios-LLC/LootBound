@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react';
 import type { Config, UserData, Child, AddChildFormData } from '../types.ts';
 import { freshUser, slugify } from '../utils.ts';
-import { deleteChildData as fsDeleteChildData } from '../services/firestoreStorage.ts';
+import { deleteChildData as fsDeleteChildData, replaceChildData } from '../services/firestoreStorage.ts';
 import {
   deleteAllChildPhotos,
   deleteAllFamilyPhotos,
@@ -90,8 +90,16 @@ export function useChildActions(deps: ChildActionsDeps) {
       console.warn('Photo cleanup failed during reset:', err);
       Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
     });
+    // Use replaceChildData (no merge) so old taskLog entries are fully wiped
     for (var i = 0; i < children.length; i++) {
-      await deps.saveUsr(children[i].id, freshUser());
+      var fresh = freshUser();
+      await replaceChildData(deps.familyId, children[i].id, fresh);
+      deps.setAllU(function (prev) {
+        var next: Record<string, UserData> = {};
+        for (var k in prev) next[k] = prev[k];
+        next[children[i].id] = fresh;
+        return next;
+      });
     }
     deps.notify('All data reset');
   }

@@ -78,6 +78,7 @@ export var LEVEL_TITLES: { title: string; color: string }[] = [
 ];
 export var BEDTIME = 21 * 60;
 export var COOLDOWN = 60;
+export var MIN_COINS = -300;
 export var AVATARS = [
   '🎮',
   '🌟',
