@@ -18,11 +18,13 @@ export default function ReviewTab(): React.ReactElement {
   const cfg = ctx.cfg;
   const d = getToday();
 
+  if (!cfg) return <div />;
+
   const items: ReviewTaskItem[] = [];
   children.forEach((c) => {
     const udata = allU[c.id] || freshUser();
     const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-    (cfg!.tasks[c.id] || []).forEach((t) => {
+    (cfg.tasks[c.id] || []).forEach((t) => {
       const entry = log[t.id];
       if (entry && !entry.rejected && entry.status !== 'missed')
         items.push({ uid: c.id, child: c, task: t, entry });

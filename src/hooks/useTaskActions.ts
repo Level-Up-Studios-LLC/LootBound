@@ -72,7 +72,13 @@ export function useTaskActions(deps: TaskActionsDeps) {
       doComplete(capturing!, photo).then(() => {
         setCapturing(null);
         if (fileRef.current) fileRef.current.value = '';
+      }).catch((err) => {
+        console.error('doComplete failed:', err);
+        setCapturing(null);
       });
+    }).catch((err) => {
+      console.error('Photo resize failed:', err);
+      setCapturing(null);
     });
   };
 

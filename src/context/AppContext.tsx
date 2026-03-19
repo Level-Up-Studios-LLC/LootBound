@@ -276,6 +276,7 @@ export function AppProvider(props: {
     if (!familyId) return;
     let dead = false;
     (async () => {
+      try {
       let fc = await fsGetConfig(familyId);
       const fsChildren = await fsGetChildren(familyId);
       const fsTasks = await fsGetTasks(familyId);
@@ -435,6 +436,11 @@ export function AppProvider(props: {
         setCfg(c);
         setAllU(users);
         setLoading(false);
+      }
+      } catch (err) {
+        console.error('Initial data load failed:', err);
+        Sentry.captureException(err, { tags: { action: 'initial-load' } });
+        if (!dead) setLoading(false);
       }
     })();
     return () => {

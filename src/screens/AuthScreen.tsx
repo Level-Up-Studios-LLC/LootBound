@@ -74,9 +74,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       return;
     }
     setBusy(true);
-    const ok = await auth.doResetPassword(email.trim());
-    if (ok) setResetSent(true);
-    setBusy(false);
+    try {
+      const ok = await auth.doResetPassword(email.trim());
+      if (ok) setResetSent(true);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleSubmit = async () => {

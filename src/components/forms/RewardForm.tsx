@@ -25,7 +25,7 @@ interface RewardFormProps {
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
   const [f, setF] = useState<Reward>(props.reward);
   const u = (k: string, v: any): void => {
-    setF({ ...f, [k]: v });
+    setF((prev) => Object.assign({}, prev, { [k]: v }));
   };
   return (
     <div className='flex flex-col gap-4'>

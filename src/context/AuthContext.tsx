@@ -57,9 +57,12 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   // redirect credential is resolved, causing a flash of the role selector.
   useEffect(() => {
     let unsub: (() => void) | null = null;
+    let disposed = false;
 
     const startAuthListener = () => {
+      if (disposed) return;
       unsub = onAuthChange((user) => {
+        if (disposed) return;
         setAuthUser(user);
         setAuthLoading(false);
         if (user) {
@@ -84,6 +87,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     });
 
     return () => {
+      disposed = true;
       if (unsub) unsub();
     };
   }, []);

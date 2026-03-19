@@ -82,8 +82,8 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
           children: list as Child[],
         };
       });
-      // Sync per-child data listeners
-      syncChildDataListeners(list.map((c) => c.id));
+      // Sync per-child data listeners (don't skip first for newly added)
+      syncChildDataListeners(list.map((c) => c.id), false);
     });
 
     // --- Tasks listener ---
@@ -130,9 +130,9 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     });
 
     // --- Per-child data listeners ---
-    const attachChildDataListener = (childId: string) => {
+    const attachChildDataListener = (childId: string, skipFirst?: boolean) => {
       if (childUnsubsRef.current[childId]) return; // already listening
-      let firstSnap = true;
+      let firstSnap = skipFirst !== false;
       childUnsubsRef.current[childId] = onChildDataSnapshot(
         familyId,
         childId,
@@ -142,21 +142,23 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
             firstSnap = false;
             return;
           }
-          if (!data) return;
           setAllU((prev) => {
-            const next: Record<string, UserData> = { ...prev };
-            next[childId] = data as UserData;
-            return next;
+            if (!data) {
+              const next = Object.assign({}, prev);
+              delete next[childId];
+              return next;
+            }
+            return Object.assign({}, prev, { [childId]: data as UserData });
           });
         }
       );
     };
 
-    const syncChildDataListeners = (childIds: string[]) => {
+    const syncChildDataListeners = (childIds: string[], skipFirst?: boolean) => {
       const idSet: Record<string, boolean> = {};
       childIds.forEach((id) => {
         idSet[id] = true;
-        attachChildDataListener(id);
+        attachChildDataListener(id, skipFirst);
       });
       // Remove listeners for children that no longer exist
       Object.keys(childUnsubsRef.current).forEach((id) => {

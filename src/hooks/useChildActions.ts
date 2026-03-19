@@ -20,6 +20,7 @@ interface ChildActionsDeps {
 
 export function useChildActions(deps: ChildActionsDeps) {
   const doAddChild = async (form: AddChildFormData) => {
+    if (!deps.cfg) return;
     const id = slugify(form.name);
     const newChild: Child = {
       id,
@@ -29,7 +30,7 @@ export function useChildActions(deps: ChildActionsDeps) {
       color: form.color,
       pin: null,
     };
-    const newCfg = { ...deps.cfg! } as Config;
+    const newCfg = Object.assign({}, deps.cfg) as Config;
     newCfg.children = (newCfg.children || []).concat([newChild]);
     if (!newCfg.tasks) newCfg.tasks = {};
     newCfg.tasks[id] = [];
@@ -39,9 +40,10 @@ export function useChildActions(deps: ChildActionsDeps) {
   };
 
   const doRemoveChild = async (id: string) => {
-    const newCfg = { ...deps.cfg! } as Config;
+    if (!deps.cfg) return;
+    const newCfg = Object.assign({}, deps.cfg) as Config;
     newCfg.children = (newCfg.children || []).filter((c) => c.id !== id);
-    const newTasks = { ...newCfg.tasks };
+    const newTasks = Object.assign({}, newCfg.tasks);
     delete newTasks[id];
     newCfg.tasks = newTasks;
     await deps.saveCfg(newCfg);
@@ -83,10 +85,14 @@ export function useChildActions(deps: ChildActionsDeps) {
       console.warn('Photo cleanup failed during reset:', err);
       Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
     });
-    for (let i = 0; i < children.length; i++) {
-      await deps.saveUsr(children[i].id, freshUser());
+    const promises = children.map((ch) => deps.saveUsr(ch.id, freshUser()));
+    try {
+      await Promise.all(promises);
+      deps.notify('All data reset');
+    } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'reset-all' } });
+      deps.notify('Data reset failed — please try again', 'error');
     }
-    deps.notify('All data reset');
   };
 
   return {

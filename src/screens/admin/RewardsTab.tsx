@@ -67,7 +67,8 @@ export default function RewardsTab(): React.ReactElement {
 
   const ctx = useAppContext();
   const cfg = ctx.cfg;
-  const rewards = cfg!.rewards || [];
+  if (!cfg) return <div />;
+  const rewards = cfg.rewards || [];
 
   return (
     <div>
