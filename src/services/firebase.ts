@@ -13,7 +13,7 @@ import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
@@ -23,14 +23,14 @@ var firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
 };
 
-var app = initializeApp(firebaseConfig);
-var db = getFirestore(app);
-var auth = getAuth(app);
-var storage = getStorage(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app);
 
 // Enable offline persistence — Firestore caches data in IndexedDB
 // so the app works fully offline and syncs when connectivity returns.
-enableIndexedDbPersistence(db).catch(function (err) {
+enableIndexedDbPersistence(db).catch((err) => {
   if (err.code === 'failed-precondition') {
     console.warn(
       'Firestore persistence unavailable: multiple tabs open. Only one tab can use offline persistence at a time.'

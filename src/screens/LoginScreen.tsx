@@ -13,30 +13,18 @@ interface LoginScreenProps {
 export default function LoginScreen(
   props: LoginScreenProps
 ): React.ReactElement {
-  var _kpin = useState<string>(''),
-    kpin = _kpin[0],
-    setKpin = _kpin[1];
-  var _pinErr = useState<string>(''),
-    pinErr = _pinErr[0],
-    setPinErr = _pinErr[1];
-  var _pinTarget = useState<string | null>(null),
-    pinTarget = _pinTarget[0],
-    setPinTarget = _pinTarget[1];
-  var _createPin = useState(false),
-    createPin = _createPin[0],
-    setCreatePin = _createPin[1];
-  var _newPin = useState(''),
-    newPin = _newPin[0],
-    setNewPin = _newPin[1];
-  var _confirmPin = useState(''),
-    confirmPin = _confirmPin[0],
-    setConfirmPin = _confirmPin[1];
+  const [kpin, setKpin] = useState<string>('');
+  const [pinErr, setPinErr] = useState<string>('');
+  const [pinTarget, setPinTarget] = useState<string | null>(null);
+  const [createPin, setCreatePin] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
 
-  var ctx = useAppContext();
-  var children = ctx.children;
+  const ctx = useAppContext();
+  const children = ctx.children;
 
-  function doKidLogin(uid: string): void {
-    var ch = ctx.getChild(uid);
+  const doKidLogin = (uid: string): void => {
+    const ch = ctx.getChild(uid);
     if (!ch) return;
     if (ch.pin) {
       setPinTarget(uid);
@@ -51,11 +39,11 @@ export default function LoginScreen(
       setConfirmPin('');
       setPinErr('');
     }
-  }
+  };
 
-  function submitKidPin(): void {
+  const submitKidPin = (): void => {
     if (!pinTarget) return;
-    var ch = ctx.getChild(pinTarget);
+    const ch = ctx.getChild(pinTarget);
     if (!ch) return;
     if (kpin === ch.pin) {
       ctx.setCurUser(pinTarget);
@@ -66,9 +54,9 @@ export default function LoginScreen(
     } else {
       setPinErr('Wrong PIN');
     }
-  }
+  };
 
-  async function submitCreatePin() {
+  const submitCreatePin = async () => {
     if (newPin.length < 4) {
       setPinErr('PIN must be 4 digits');
       return;
@@ -80,7 +68,7 @@ export default function LoginScreen(
     // Save PIN directly to the child's Firestore doc (kids are anonymous
     // and don't have parent-level write access to the full config)
     if (!pinTarget) return;
-    var ch = ctx.getChild(pinTarget);
+    const ch = ctx.getChild(pinTarget);
     if (!ch || !ctx.familyId) return;
     try {
       await fsSaveChild(ctx.familyId, pinTarget, { pin: newPin });
@@ -98,7 +86,7 @@ export default function LoginScreen(
     setConfirmPin('');
     setPinErr('');
     ctx.notify('PIN created!');
-  }
+  };
 
   return (
     <div className='flex flex-col items-center justify-center min-h-screen p-6'>
@@ -107,12 +95,12 @@ export default function LoginScreen(
       </div>
       <div className='text-base text-qmuted mb-5'>Choose your profile</div>
       <div className='flex gap-5 flex-wrap justify-center mb-10'>
-        {children.map(function (c, idx) {
-          var cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+        {children.map((c, idx) => {
+          const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
           return (
             <button
               key={c.id}
-              onClick={function () {
+              onClick={() => {
                 doKidLogin(c.id);
               }}
               className={
@@ -144,12 +132,12 @@ export default function LoginScreen(
       )}
 
       {/* PIN entry modal for existing PIN */}
-      {pinTarget && !createPin && (function () {
-        var targetChild = ctx.getChild(pinTarget);
+      {pinTarget && !createPin && (() => {
+        const targetChild = ctx.getChild(pinTarget);
         if (!targetChild) return null;
         return (
         <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={'Enter PIN for ' + targetChild.name}>
+          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={`Enter PIN for ${targetChild.name}`}>
             <div className='text-[32px] mb-1'>
               {targetChild.avatar}
             </div>
@@ -161,11 +149,11 @@ export default function LoginScreen(
                 type='password'
                 maxLength={4}
                 value={kpin}
-                onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setKpin(e.target.value.replace(/[^0-9]/g, ''));
                   setPinErr('');
                 }}
-                onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter') submitKidPin();
                 }}
                 className='quest-input w-[100px] text-center'
@@ -181,7 +169,7 @@ export default function LoginScreen(
               </div>
             )}
             <button
-              onClick={function () {
+              onClick={() => {
                 setPinTarget(null);
                 setPinErr('');
               }}
@@ -190,7 +178,7 @@ export default function LoginScreen(
               Cancel
             </button>
             <button
-              onClick={function () {
+              onClick={() => {
                 setPinTarget(null);
                 setPinErr('');
               }}
@@ -204,12 +192,12 @@ export default function LoginScreen(
       })()}
 
       {/* PIN creation modal for first-time kids */}
-      {pinTarget && createPin && (function () {
-        var targetChild = ctx.getChild(pinTarget);
+      {pinTarget && createPin && (() => {
+        const targetChild = ctx.getChild(pinTarget);
         if (!targetChild) return null;
         return (
         <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={'Create PIN for ' + targetChild.name}>
+          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={`Create PIN for ${targetChild.name}`}>
             <div className='text-[32px] mb-1'>
               {targetChild.avatar}
             </div>
@@ -224,7 +212,7 @@ export default function LoginScreen(
               maxLength={4}
               placeholder='New PIN'
               value={newPin}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setNewPin(e.target.value.replace(/[^0-9]/g, ''));
                 setPinErr('');
               }}
@@ -236,11 +224,11 @@ export default function LoginScreen(
               maxLength={4}
               placeholder='Confirm PIN'
               value={confirmPin}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
                 setPinErr('');
               }}
-              onKeyDown={function (e: React.KeyboardEvent<HTMLInputElement>) {
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === 'Enter') submitCreatePin();
               }}
               className='quest-input w-[120px] text-center'
@@ -254,7 +242,7 @@ export default function LoginScreen(
               Set PIN
             </button>
             <button
-              onClick={function () {
+              onClick={() => {
                 setPinTarget(null);
                 setCreatePin(false);
                 setPinErr('');

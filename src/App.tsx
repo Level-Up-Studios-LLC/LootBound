@@ -28,17 +28,17 @@ import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 
-var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
+const DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
-var SESSION_KEY_PARENT = 'qb-parent-session';
-var SESSION_KEY_KID = 'qb-kid-session';
-var SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_KEY_PARENT = 'qb-parent-session';
+const SESSION_KEY_KID = 'qb-kid-session';
+const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-function getSession(key: string): string | null {
+const getSession = (key: string): string | null => {
   try {
-    var raw = sessionStorage.getItem(key);
+    const raw = sessionStorage.getItem(key);
     if (!raw) return null;
-    var data = JSON.parse(raw);
+    const data = JSON.parse(raw);
     if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) {
       sessionStorage.removeItem(key);
       return null;
@@ -52,47 +52,43 @@ function getSession(key: string): string | null {
     try { sessionStorage.removeItem(key); } catch (_e2) { /* ignore */ }
     return null;
   }
-}
+};
 
-function setSession(key: string, val: string): void {
+const setSession = (key: string, val: string): void => {
   try {
-    sessionStorage.setItem(key, JSON.stringify({ val: val, ts: Date.now() }));
+    sessionStorage.setItem(key, JSON.stringify({ val, ts: Date.now() }));
   } catch (_e) { /* ignore */ }
-}
+};
 
-function clearSession(key: string): void {
+const clearSession = (key: string): void => {
   try {
     sessionStorage.removeItem(key);
   } catch (_e) { /* ignore */ }
-}
+};
 
 /**
  * Parse Firebase action URL parameters from the current URL.
  * Firebase sends links like: ?mode=resetPassword&oobCode=ABC123
  */
-function getFirebaseActionParams(): { mode: string; oobCode: string } | null {
-  var params = new URLSearchParams(window.location.search);
-  var mode = params.get('mode');
-  var oobCode = params.get('oobCode');
+const getFirebaseActionParams = (): { mode: string; oobCode: string } | null => {
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('mode');
+  const oobCode = params.get('oobCode');
   if (mode && oobCode) {
-    return { mode: mode, oobCode: oobCode };
+    return { mode, oobCode };
   }
   return null;
-}
+};
 
 function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
-  var _done = useState(false),
-    done = _done[0],
-    setDone = _done[1];
-  var _err = useState<string | null>(null),
-    err = _err[0],
-    setErr = _err[1];
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(function () {
+  useEffect(() => {
     if (!props.oobCode) return;
-    applyVerificationCode(props.oobCode).then(function () {
+    applyVerificationCode(props.oobCode).then(() => {
       setDone(true);
-    }).catch(function (e: any) {
+    }).catch((e: any) => {
       console.error('Email verification failed:', e);
       setErr(e.message || 'Verification failed');
       setDone(true);
@@ -138,12 +134,12 @@ function LoadingScreen() {
 }
 
 function AppInner(props: { onSwitchFamily?: () => void }) {
-  var ctx = useAppContext();
+  const ctx = useAppContext();
   if (ctx.loading) {
     return <LoadingScreen />;
   }
 
-  var showFab = ctx.screen === 'admin';
+  const showFab = ctx.screen === 'admin';
 
   return (
     <div className='page-wrapper relative'>
@@ -159,7 +155,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
       <PhotoViewer
         photo={ctx.viewPhoto}
         canSave={ctx.curUser === 'parent'}
-        onClose={function () {
+        onClose={() => {
           ctx.setViewPhoto(null);
         }}
       />
@@ -175,7 +171,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
                   id: 'logout',
                   icon: 'left-from-bracket',
                   label: 'Logout',
-                  onClick: function () {
+                  onClick: () => {
                     if (ctx.onLogout) {
                       ctx.onLogout();
                     } else {
@@ -224,26 +220,18 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
  * 6. kid-app      → AppProvider → AppInner (kid mode, profile selection)
  */
 function AppRouter() {
-  var auth = useAuthContext();
+  const auth = useAuthContext();
 
-  var _actionParams = useState(getFirebaseActionParams),
-    actionParams = _actionParams[0],
-    setActionParams = _actionParams[1];
-  var _role = useState<'parent' | 'kid' | null>(null),
-    role = _role[0],
-    setRole = _role[1];
-  var _kidFamilyId = useState<string | null>(null),
-    kidFamilyId = _kidFamilyId[0],
-    setKidFamilyId = _kidFamilyId[1];
-  var _parentVerified = useState(false),
-    parentVerified = _parentVerified[0],
-    setParentVerifiedRaw = _parentVerified[1];
+  const [actionParams, setActionParams] = useState(getFirebaseActionParams);
+  const [role, setRole] = useState<'parent' | 'kid' | null>(null);
+  const [kidFamilyId, setKidFamilyId] = useState<string | null>(null);
+  const [parentVerified, setParentVerifiedRaw] = useState(false);
 
   // Restore parent session only if the stored UID matches the current auth user
-  useEffect(function () {
+  useEffect(() => {
     if (auth.authLoading) return;
     if (auth.authUser) {
-      var stored = getSession(SESSION_KEY_PARENT);
+      const stored = getSession(SESSION_KEY_PARENT);
       if (stored === auth.authUser.familyId) {
         setParentVerifiedRaw(true);
       } else if (stored) {
@@ -258,33 +246,27 @@ function AppRouter() {
     }
   }, [auth.authUser, auth.authLoading]);
 
-  function setParentVerified(val: boolean) {
+  const setParentVerified = (val: boolean) => {
     setParentVerifiedRaw(val);
     if (val && auth.authUser) {
       setSession(SESSION_KEY_PARENT, auth.authUser.familyId);
     } else {
       clearSession(SESSION_KEY_PARENT);
     }
-  }
+  };
 
-  var _parentPin = useState<string | null>(null),
-    parentPin = _parentPin[0],
-    setParentPin = _parentPin[1];
-  var _showCreatePin = useState(false),
-    showCreatePin = _showCreatePin[0],
-    setShowCreatePin = _showCreatePin[1];
-  var _initDone = useState(false),
-    initDone = _initDone[0],
-    setInitDone = _initDone[1];
+  const [parentPin, setParentPin] = useState<string | null>(null);
+  const [showCreatePin, setShowCreatePin] = useState(false);
+  const [initDone, setInitDone] = useState(false);
 
   // On mount, check for stored family code (kid device persistence)
   // or persisted Firebase session (parent device persistence)
-  useEffect(function () {
-    var storedCode = getStoredFamilyCode();
+  useEffect(() => {
+    const storedCode = getStoredFamilyCode();
     if (storedCode) {
-      lookupFamilyCode(storedCode).then(function (fid) {
+      lookupFamilyCode(storedCode).then((fid) => {
         if (fid) {
-          signInAnonymousKid().then(function () {
+          signInAnonymousKid().then(() => {
             setRole('kid');
             setKidFamilyId(fid);
             setInitDone(true);
@@ -302,9 +284,9 @@ function AppRouter() {
 
   // Auto-detect persisted parent session
   useEffect(
-    function () {
+    () => {
       if (!auth.authLoading && auth.authUser && !role && initDone) {
-        var storedCode = getStoredFamilyCode();
+        const storedCode = getStoredFamilyCode();
         if (!storedCode) {
           setRole('parent');
         }
@@ -316,14 +298,14 @@ function AppRouter() {
   // When parent authenticates, load their PIN from their own parentMembers doc
   // An empty string means no custom PIN has been set
   useEffect(
-    function () {
+    () => {
       if (auth.authUser && role === 'parent') {
-        var actualUid = getCurrentUid();
+        const actualUid = getCurrentUid();
         if (!actualUid) return;
-        getParentMember(actualUid).then(function (member) {
-          var pin = member ? member.parentPin || '' : '';
+        getParentMember(actualUid).then((member) => {
+          const pin = member ? member.parentPin || '' : '';
           setParentPin(pin);
-        }).catch(function (err) {
+        }).catch((err) => {
           console.error('Failed to load parent PIN:', err);
           Sentry.captureException(err, { tags: { action: 'load-parent-pin' } });
           setParentPin('');
@@ -337,10 +319,10 @@ function AppRouter() {
   // a flash of the PIN screen when no PIN is set.
 
   // Auto-refresh email verification status once per user
-  var verifyRefreshedRef = useRef<string | null>(null);
-  useEffect(function () {
+  const verifyRefreshedRef = useRef<string | null>(null);
+  useEffect(() => {
     if (auth.authUser && !auth.authUser.emailVerified) {
-      var userKey = auth.authUser.email;
+      const userKey = auth.authUser.email;
       if (verifyRefreshedRef.current !== userKey) {
         verifyRefreshedRef.current = userKey;
         auth.doRefreshVerification();
@@ -355,7 +337,7 @@ function AppRouter() {
     return (
       <VerifyEmailScreen
         oobCode={actionParams.oobCode}
-        onDone={function () {
+        onDone={() => {
           auth.doRefreshVerification();
           window.history.replaceState({}, '', window.location.pathname);
           setActionParams(null);
@@ -368,7 +350,7 @@ function AppRouter() {
     return (
       <ResetPasswordScreen
         oobCode={actionParams.oobCode}
-        onDone={function () {
+        onDone={() => {
           window.history.replaceState({}, '', window.location.pathname);
           setActionParams(null);
         }}
@@ -384,7 +366,7 @@ function AppRouter() {
   if (!role) {
     return (
       <RoleSelectScreen
-        onSelectRole={function (r) {
+        onSelectRole={(r) => {
           setRole(r);
         }}
       />
@@ -397,7 +379,7 @@ function AppRouter() {
     if (!auth.authUser) {
       return (
         <AuthScreen
-          onBack={function () {
+          onBack={() => {
             setRole(null);
           }}
         />
@@ -425,20 +407,20 @@ function AppRouter() {
     if (showCreatePin && !parentVerified) {
       return (
         <CreatePinPrompt
-          onCreated={function (newPin) {
-            var pinUid = getCurrentUid();
+          onCreated={(newPin) => {
+            const pinUid = getCurrentUid();
             if (!pinUid) return;
-            saveParentMember(pinUid, { parentPin: newPin }).then(function () {
+            saveParentMember(pinUid, { parentPin: newPin }).then(() => {
               setParentPin(newPin);
               setShowCreatePin(false);
               setParentVerified(true);
               auth.clearJustSignedIn();
-            }).catch(function (err) {
+            }).catch((err) => {
               console.error('Failed to save PIN:', err);
               Sentry.captureException(err, { tags: { action: 'save-parent-pin' } });
             });
           }}
-          onSkip={function () {
+          onSkip={() => {
             setShowCreatePin(false);
             setParentVerified(true);
             auth.clearJustSignedIn();
@@ -456,10 +438,10 @@ function AppRouter() {
             email={auth.authUser.email}
             familyId={auth.authUser.familyId}
             parentPin={parentPin}
-            onSuccess={function () {
+            onSuccess={() => {
               setParentVerified(true);
             }}
-            onSignOut={function () {
+            onSignOut={() => {
               auth.doSignOut();
               setParentVerified(false);
               setParentPin(null);
@@ -480,7 +462,7 @@ function AppRouter() {
         familyId={auth.authUser.familyId}
         initialScreen='admin'
         initialUser='parent'
-        onLogout={function () {
+        onLogout={() => {
           auth.doSignOut();
           setParentVerified(false);
           setParentPin(null);
@@ -499,10 +481,10 @@ function AppRouter() {
     if (!kidFamilyId) {
       return (
         <KidCodeScreen
-          onSuccess={function (fid) {
+          onSuccess={(fid) => {
             setKidFamilyId(fid);
           }}
-          onBack={function () {
+          onBack={() => {
             setRole(null);
           }}
         />
@@ -512,14 +494,14 @@ function AppRouter() {
     // Family code resolved → show app
     // Pass stored kid as initialUser but start at 'login' — AppContext will
     // validate the child ID against cfg.children and promote to 'dashboard'
-    var storedKid = getSession(SESSION_KEY_KID);
+    const storedKid = getSession(SESSION_KEY_KID);
     return (
       <AppProvider
         familyId={kidFamilyId}
         initialUser={storedKid || null}
       >
         <AppInner
-          onSwitchFamily={function () {
+          onSwitchFamily={() => {
             clearStoredFamilyCode();
             clearSession(SESSION_KEY_KID);
             setKidFamilyId(null);
@@ -544,7 +526,7 @@ function ErrorFallback(props: { resetError: () => void }) {
           An unexpected error occurred. Try reloading the app.
         </div>
         <button
-          onClick={function () {
+          onClick={() => {
             props.resetError();
             window.location.reload();
           }}
@@ -560,7 +542,7 @@ function ErrorFallback(props: { resetError: () => void }) {
 export default function App() {
   return (
     <Sentry.ErrorBoundary
-      fallback={function (errorProps) {
+      fallback={(errorProps) => {
         return <ErrorFallback resetError={errorProps.resetError} />;
       }}
     >

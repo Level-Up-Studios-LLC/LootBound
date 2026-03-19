@@ -10,11 +10,11 @@ interface RewardActionsDeps {
 }
 
 export function useRewardActions(deps: RewardActionsDeps) {
-  function canRedeem(
+  const canRedeem = (
     uid: string,
     reward: Reward
-  ): { ok: boolean; reason: string | null } {
-    var ud = deps.allU[uid] || freshUser();
+  ): { ok: boolean; reason: string | null } => {
+    const ud = deps.allU[uid] || freshUser();
     if ((ud.points || 0) < reward.cost)
       return { ok: false, reason: 'Not enough coins' };
     if (
@@ -22,40 +22,33 @@ export function useRewardActions(deps: RewardActionsDeps) {
       reward.limitType !== 'none' &&
       reward.limitMax > 0
     ) {
-      var c = countRedeems(ud.redemptions, reward.id, reward.limitType);
+      const c = countRedeems(ud.redemptions, reward.id, reward.limitType);
       if (c >= reward.limitMax)
         return {
           ok: false,
-          reason:
-            'Limit reached (' +
-            reward.limitMax +
-            '/' +
-            (reward.limitType === 'daily' ? 'day' : 'wk') +
-            ')',
+          reason: `Limit reached (${reward.limitMax}/${reward.limitType === 'daily' ? 'day' : 'wk'})`,
         };
     }
     return { ok: true, reason: null };
-  }
+  };
 
-  function needsApproval(reward: Reward): boolean {
+  const needsApproval = (reward: Reward): boolean => {
     return (
       reward.requireApproval ||
       reward.cost >= (deps.cfg ? deps.cfg.approvalThreshold : 300)
     );
-  }
+  };
 
-  async function requestRedemption(reward: Reward) {
-    var uid = deps.curUser;
+  const requestRedemption = async (reward: Reward) => {
+    const uid = deps.curUser;
     if (!uid || uid === 'parent') return;
-    var check = canRedeem(uid, reward);
+    const check = canRedeem(uid, reward);
     if (!check.ok) {
       deps.notify(check.reason || 'Cannot redeem', 'error');
       return;
     }
     if (needsApproval(reward)) {
-      var ud = JSON.parse(
-        JSON.stringify(deps.allU[uid] || freshUser())
-      ) as UserData;
+      const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
       if (!ud.pendingRedemptions) ud.pendingRedemptions = [];
       ud.pendingRedemptions.push({
         rewardId: reward.id,
@@ -70,12 +63,10 @@ export function useRewardActions(deps: RewardActionsDeps) {
       return;
     }
     await execRedeem(uid, reward);
-  }
+  };
 
-  async function execRedeem(uid: string, reward: Reward) {
-    var ud = JSON.parse(
-      JSON.stringify(deps.allU[uid] || freshUser())
-    ) as UserData;
+  const execRedeem = async (uid: string, reward: Reward) => {
+    const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
     if ((ud.points || 0) < reward.cost) return;
     ud.points -= reward.cost;
     if (!ud.redemptions) ud.redemptions = [];
@@ -86,13 +77,13 @@ export function useRewardActions(deps: RewardActionsDeps) {
       date: getToday(),
     });
     await deps.saveUsr(uid, ud);
-    deps.notify('Redeemed: ' + reward.name);
-  }
+    deps.notify(`Redeemed: ${reward.name}`);
+  };
 
   return {
-    canRedeem: canRedeem,
-    needsApproval: needsApproval,
-    requestRedemption: requestRedemption,
-    execRedeem: execRedeem,
+    canRedeem,
+    needsApproval,
+    requestRedemption,
+    execRedeem,
   };
 }

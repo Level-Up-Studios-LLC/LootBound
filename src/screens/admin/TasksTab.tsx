@@ -14,16 +14,12 @@ interface TasksTabProps {
 }
 
 export default function TasksTab(props: TasksTabProps): React.ReactElement {
-  var _editTask = useState<(Task & { uid: string }) | null>(null),
-    editTask = _editTask[0],
-    setEditTask = _editTask[1];
-  var _addTask = useState<(Task & { uid: string }) | null>(null),
-    addTask = _addTask[0],
-    setAddTask = _addTask[1];
+  const [editTask, setEditTask] = useState<(Task & { uid: string }) | null>(null);
+  const [addTask, setAddTask] = useState<(Task & { uid: string }) | null>(null);
 
-  var ctx = useAppContext();
-  var children = ctx.children;
-  var cfg = ctx.cfg;
+  const ctx = useAppContext();
+  const children = ctx.children;
+  const cfg = ctx.cfg;
 
   if (children.length === 0) {
     return (
@@ -32,7 +28,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
         title='Mission Management'
         description='Create daily and weekly missions for each child. Assign ranks, set time windows, and watch them earn coins for completing their missions.'
         ctaText='Go to Children'
-        onCta={function () {
+        onCta={() => {
           props.onSwitchTab('children');
         }}
       />
@@ -41,8 +37,8 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
 
   return (
     <div>
-      {children.map(function (c) {
-        var tasks = cfg!.tasks[c.id] || [];
+      {children.map((c) => {
+        const tasks = cfg!.tasks[c.id] || [];
         return (
           <div key={c.id} className='pb-4'>
             <div className='flex justify-between items-center mb-3 mt-4'>
@@ -50,7 +46,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                 {c.avatar} {c.name}'s Missions
               </span>
               <button
-                onClick={function () {
+                onClick={() => {
                   setAddTask({
                     uid: c.id,
                     id: '',
@@ -68,7 +64,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                 Add
               </button>
             </div>
-            {tasks.map(function (t, ti) {
+            {tasks.map((t, ti) => {
               return (
                 <div
                   key={t.id}
@@ -84,13 +80,13 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
                       {t.daily
                         ? 'Daily'
-                        : 'Weekly: ' + DAYS_SHORT[t.dueDay!]}
+                        : `Weekly: ${DAYS_SHORT[t.dueDay!]}`}
                     </div>
                   </div>
                   <div className='flex gap-1.5'>
                     <button
-                      onClick={function () {
-                        setEditTask(Object.assign({}, t, { uid: c.id }));
+                      onClick={() => {
+                        setEditTask({ ...t, uid: c.id });
                       }}
                       className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
                     >
@@ -98,15 +94,10 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       Edit
                     </button>
                     <button
-                      onClick={function () {
-                        var nt: Record<string, Task[]> = Object.assign(
-                          {},
-                          cfg!.tasks
-                        );
-                        nt[c.id] = nt[c.id].filter(function (x) {
-                          return x.id !== t.id;
-                        });
-                        ctx.saveCfg(Object.assign({}, cfg!, { tasks: nt }));
+                      onClick={() => {
+                        const nt: Record<string, Task[]> = { ...cfg!.tasks };
+                        nt[c.id] = nt[c.id].filter((x) => x.id !== t.id);
+                        ctx.saveCfg({ ...cfg!, tasks: nt });
                       }}
                       className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
                     >
@@ -125,11 +116,11 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           <TaskForm
             task={(editTask || addTask)!}
             tierConfig={cfg!.tierConfig || DEF_TIER_CONFIG}
-            onSave={function (t) {
-              var uid = t.uid;
-              var nt: Record<string, Task[]> = Object.assign({}, cfg!.tasks);
+            onSave={(t) => {
+              const uid = t.uid;
+              const nt: Record<string, Task[]> = { ...cfg!.tasks };
               if (editTask) {
-                nt[uid] = nt[uid].map(function (x) {
+                nt[uid] = nt[uid].map((x) => {
                   return x.id === t.id
                     ? {
                         id: t.id,
@@ -155,11 +146,11 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                   },
                 ]);
               }
-              ctx.saveCfg(Object.assign({}, cfg!, { tasks: nt }));
+              ctx.saveCfg({ ...cfg!, tasks: nt });
               setEditTask(null);
               setAddTask(null);
             }}
-            onCancel={function () {
+            onCancel={() => {
               setEditTask(null);
               setAddTask(null);
             }}

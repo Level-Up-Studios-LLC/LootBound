@@ -13,14 +13,12 @@ interface OverviewTabProps {
 export default function OverviewTab(
   props: OverviewTabProps
 ): React.ReactElement {
-  var _expanded = useState<Record<string, boolean>>({}),
-    expanded = _expanded[0],
-    setExpanded = _expanded[1];
-  var ctx = useAppContext();
-  var children = ctx.children;
-  var allU = ctx.allU;
-  var cfg = ctx.cfg;
-  var d = getToday();
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const ctx = useAppContext();
+  const children = ctx.children;
+  const allU = ctx.allU;
+  const cfg = ctx.cfg;
+  const d = getToday();
 
   if (children.length === 0) {
     return (
@@ -38,7 +36,7 @@ export default function OverviewTab(
         <div className='text-[13px] mt-4 text-qmuted'>
           Add a child in the{' '}
           <button
-            onClick={function () {
+            onClick={() => {
               props.onSwitchTab('children');
             }}
             className='bg-transparent border-none text-qteal font-bold cursor-pointer font-body text-[13px] p-0'
@@ -53,15 +51,15 @@ export default function OverviewTab(
 
   return (
     <div>
-      {children.map(function (c, ci) {
-        var udata = allU[c.id] || freshUser();
-        var tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
-        var log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-        var done = tasks.filter(function (t) {
-          var l = log[t.id];
+      {children.map((c, ci) => {
+        const udata = allU[c.id] || freshUser();
+        const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
+        const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
+        const done = tasks.filter((t) => {
+          const l = log[t.id];
           return l && !l.rejected && l.status !== 'missed';
         }).length;
-        var lt = getLevelTitle(udata.level || 1);
+        const lt = getLevelTitle(udata.level || 1);
         return (
           <div key={c.id} className={altBg(ci) + ' rounded-btn p-4 mb-4'}>
             <div className='flex justify-between font-bold mb-1.5'>
@@ -85,11 +83,11 @@ export default function OverviewTab(
             </div>
             <div className='flex gap-2 flex-wrap items-center'>
               <span className='text-xs text-qmuted'>Adjust:</span>
-              {[10, 25, 50, -10, -25, -50].map(function (p) {
+              {[10, 25, 50, -10, -25, -50].map((p) => {
                 return (
                   <button
                     key={p}
-                    onClick={function () {
+                    onClick={() => {
                       ctx.addBonus(c.id, p);
                     }}
                     className={
@@ -109,8 +107,8 @@ export default function OverviewTab(
               id={c.id}
               redeems={udata.redemptions || []}
               isOpen={expanded[c.id] || false}
-              onToggle={function (id) {
-                var next = Object.assign({}, expanded);
+              onToggle={(id) => {
+                const next = { ...expanded };
                 next[id] = !next[id];
                 setExpanded(next);
               }}

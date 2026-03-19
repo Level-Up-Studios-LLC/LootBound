@@ -9,24 +9,24 @@ import type { UserData } from '../types.ts';
 
 function countPerfectDays(ud: UserData, tasks: import('../types.ts').Task[], weekStart: string): number {
   if (!ud.taskLog) return 0;
-  var count = 0;
-  var dates = Object.keys(ud.taskLog);
-  for (var i = 0; i < dates.length; i++) {
-    var dt = dates[i];
+  let count = 0;
+  const dates = Object.keys(ud.taskLog);
+  for (let i = 0; i < dates.length; i++) {
+    const dt = dates[i];
     if (dt < weekStart || dt.charAt(0) === '_') continue;
-    var log = ud.taskLog[dt];
+    const log = ud.taskLog[dt];
     if (!log) continue;
     // Filter tasks to only those active on this date
-    var dow = new Date(dt + 'T12:00:00').getDay();
-    var activeTasks = tasks.filter(function (t) {
+    const dow = new Date(dt + 'T12:00:00').getDay();
+    const activeTasks = tasks.filter((t) => {
       if (t.daily) return true;
       if (t.dueDay != null) return t.dueDay === dow;
       return true;
     });
     if (activeTasks.length === 0) continue;
-    var allGood = true;
-    for (var j = 0; j < activeTasks.length; j++) {
-      var entry = log[activeTasks[j].id];
+    let allGood = true;
+    for (let j = 0; j < activeTasks.length; j++) {
+      const entry = log[activeTasks[j].id];
       if (!entry || entry.rejected || entry.status === 'missed') {
         allGood = false;
         break;
@@ -38,29 +38,29 @@ function countPerfectDays(ud: UserData, tasks: import('../types.ts').Task[], wee
 }
 
 export default function ScoresScreen(): React.ReactElement | null {
-  var ctx = useAppContext();
-  var children = ctx.children;
-  var allU = ctx.allU;
-  var cfg = ctx.cfg;
-  var curUser = ctx.curUser;
-  var ch = ctx.currentChild;
-  var ud = ctx.currentUserData;
-  var d = getToday();
-  var ws = getWeekStart(cfg ? cfg.weeklyResetDay : undefined);
+  const ctx = useAppContext();
+  const children = ctx.children;
+  const allU = ctx.allU;
+  const cfg = ctx.cfg;
+  const curUser = ctx.curUser;
+  const ch = ctx.currentChild;
+  const ud = ctx.currentUserData;
+  const d = getToday();
+  const ws = getWeekStart(cfg ? cfg.weeklyResetDay : undefined);
 
   if (!ch || !ud || !cfg) return null;
 
   // Solo kid: show personal stats instead of leaderboard
   if (children.length === 1) {
-    var myTasks = (cfg!.tasks[ch.id] || []).filter(isTaskActiveToday);
-    var myLog = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
-    var myDone = myTasks.filter(function (t) {
-      var l = myLog[t.id];
+    const myTasks = (cfg!.tasks[ch.id] || []).filter(isTaskActiveToday);
+    const myLog = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
+    const myDone = myTasks.filter((t) => {
+      const l = myLog[t.id];
       return l && !l.rejected && l.status !== 'missed';
     }).length;
-    var myPerfect = countPerfectDays(ud, cfg!.tasks[ch.id] || [], ws);
-    var lt = getLevelTitle(ud.level || 1);
-    var sMult = getStreakMultiplier(ud.streak || 0);
+    const myPerfect = countPerfectDays(ud, cfg!.tasks[ch.id] || [], ws);
+    const lt = getLevelTitle(ud.level || 1);
+    const sMult = getStreakMultiplier(ud.streak || 0);
 
     return (
       <div className='p-4 pb-20'>
@@ -128,7 +128,7 @@ export default function ScoresScreen(): React.ReactElement | null {
                 [15, '+150 coins', ud.bestStreak >= 15],
                 [30, '+300 coins', ud.bestStreak >= 30],
               ] as [number, string, boolean][]
-            ).map(function (m) {
+            ).map((m) => {
               return (
                 <div
                   key={m[0]}
@@ -152,13 +152,13 @@ export default function ScoresScreen(): React.ReactElement | null {
 
   // Multi-kid: leaderboard with top adventurer highlight
   // Calculate perfect days per child this week
-  var perfects: Record<string, number> = {};
-  var topPerfect = 0;
-  var topIds: string[] = [];
-  children.forEach(function (c) {
-    var udata = allU[c.id] || freshUser();
-    var cTasks = cfg!.tasks[c.id] || [];
-    var pd = countPerfectDays(udata, cTasks, ws);
+  const perfects: Record<string, number> = {};
+  let topPerfect = 0;
+  let topIds: string[] = [];
+  children.forEach((c) => {
+    const udata = allU[c.id] || freshUser();
+    const cTasks = cfg!.tasks[c.id] || [];
+    const pd = countPerfectDays(udata, cTasks, ws);
     perfects[c.id] = pd;
     if (pd > topPerfect) {
       topPerfect = pd;
@@ -168,9 +168,9 @@ export default function ScoresScreen(): React.ReactElement | null {
     }
   });
 
-  var sorted = children.slice().sort(function (a, b) {
+  const sorted = children.slice().sort((a, b) => {
     // Primary sort: perfect days (desc)
-    var pdDiff = (perfects[b.id] || 0) - (perfects[a.id] || 0);
+    const pdDiff = (perfects[b.id] || 0) - (perfects[a.id] || 0);
     if (pdDiff !== 0) return pdDiff;
     // Secondary: coins (desc)
     return (
@@ -187,18 +187,18 @@ export default function ScoresScreen(): React.ReactElement | null {
         </div>
       </div>
       <div className='px-4 pt-3 flex flex-col gap-4'>
-        {sorted.map(function (c, idx) {
-          var udata = allU[c.id] || freshUser();
-          var tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
-          var log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-          var done = tasks.filter(function (t) {
-            var l = log[t.id];
+        {sorted.map((c, idx) => {
+          const udata = allU[c.id] || freshUser();
+          const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
+          const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
+          const done = tasks.filter((t) => {
+            const l = log[t.id];
             return l && !l.rejected && l.status !== 'missed';
           }).length;
-          var isMe = c.id === curUser;
-          var isTop = topPerfect > 0 && topIds.indexOf(c.id) !== -1;
-          var cardBg = isTop ? 'bg-qyellow' : idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
-          var lt = getLevelTitle(udata.level || 1);
+          const isMe = c.id === curUser;
+          const isTop = topPerfect > 0 && topIds.indexOf(c.id) !== -1;
+          const cardBg = isTop ? 'bg-qyellow' : idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+          const lt = getLevelTitle(udata.level || 1);
           return (
             <div
               key={c.id}
@@ -238,12 +238,12 @@ export default function ScoresScreen(): React.ReactElement | null {
               <div className='grid grid-cols-4 gap-2'>
                 {(
                   [
-                    [done + '/' + tasks.length, 'Today'],
+                    [`${done}/${tasks.length}`, 'Today'],
                     [perfects[c.id] || 0, 'Perfect'],
                     [udata.streak || 0, 'Streak'],
                     [udata.bestStreak || 0, 'Best'],
                   ] as [string | number, string][]
-                ).map(function (s) {
+                ).map((s) => {
                   return (
                     <div
                       key={s[1]}

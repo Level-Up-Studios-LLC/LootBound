@@ -12,17 +12,11 @@ interface CreatePinPromptProps {
 export default function CreatePinPrompt(
   props: CreatePinPromptProps
 ): React.ReactElement {
-  var _pin = useState(''),
-    pin = _pin[0],
-    setPin = _pin[1];
-  var _confirm = useState(''),
-    confirm = _confirm[0],
-    setConfirm = _confirm[1];
-  var _err = useState(''),
-    err = _err[0],
-    setErr = _err[1];
+  const [pin, setPin] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [err, setErr] = useState('');
 
-  function handleSubmit() {
+  const handleSubmit = () => {
     if (pin.length < 4) {
       setErr('PIN must be at least 4 digits');
       return;
@@ -32,7 +26,7 @@ export default function CreatePinPrompt(
       return;
     }
     props.onCreated(pin);
-  }
+  };
 
   return (
     <div className="page-wrapper page-centered">
@@ -54,7 +48,7 @@ export default function CreatePinPrompt(
           maxLength={6}
           placeholder="New PIN (4+ digits)"
           value={pin}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setPin(e.target.value.replace(/[^0-9]/g, ''));
             setErr('');
           }}
@@ -66,11 +60,11 @@ export default function CreatePinPrompt(
           maxLength={6}
           placeholder="Confirm PIN"
           value={confirm}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setConfirm(e.target.value.replace(/[^0-9]/g, ''));
             setErr('');
           }}
-          onKeyDown={function (e: React.KeyboardEvent) {
+          onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Enter') handleSubmit();
           }}
           className="quest-input text-center text-lg"

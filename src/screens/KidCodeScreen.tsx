@@ -15,25 +15,19 @@ interface KidCodeScreenProps {
 export default function KidCodeScreen(
   props: KidCodeScreenProps
 ): React.ReactElement {
-  var _code = useState(''),
-    code = _code[0],
-    setCode = _code[1];
-  var _err = useState<string | null>(null),
-    err = _err[0],
-    setErr = _err[1];
-  var _busy = useState(false),
-    busy = _busy[0],
-    setBusy = _busy[1];
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    var val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (val.length <= 6) {
       setCode(val);
       setErr(null);
     }
-  }
+  };
 
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     if (code.length < 6) {
       setErr('Code must be 6 characters');
       return;
@@ -41,7 +35,7 @@ export default function KidCodeScreen(
     setBusy(true);
     setErr(null);
     try {
-      var familyId = await lookupFamilyCode(code);
+      const familyId = await lookupFamilyCode(code);
       if (!familyId) {
         setErr('Invalid family code. Ask your parent for the code.');
         setBusy(false);
@@ -54,13 +48,13 @@ export default function KidCodeScreen(
       setErr('Something went wrong. Try again.');
       setBusy(false);
     }
-  }
+  };
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !busy) {
       handleSubmit();
     }
-  }
+  };
 
   return (
     <div className='page-wrapper page-centered'>

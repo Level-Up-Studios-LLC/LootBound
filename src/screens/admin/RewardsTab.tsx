@@ -8,7 +8,7 @@ import EmptyState from '../../components/ui/EmptyState.tsx';
 import RewardForm from '../../components/forms/RewardForm.tsx';
 import type { Reward } from '../../types.ts';
 
-var SAMPLE_REWARDS = [
+const SAMPLE_REWARDS = [
   {
     id: 'sample1',
     name: '15 min extra screen time',
@@ -62,16 +62,12 @@ var SAMPLE_REWARDS = [
 ];
 
 export default function RewardsTab(): React.ReactElement {
-  var _addReward = useState<Reward | null>(null),
-    addReward = _addReward[0],
-    setAddReward = _addReward[1];
-  var _editReward = useState<Reward | null>(null),
-    editReward = _editReward[0],
-    setEditReward = _editReward[1];
+  const [addReward, setAddReward] = useState<Reward | null>(null);
+  const [editReward, setEditReward] = useState<Reward | null>(null);
 
-  var ctx = useAppContext();
-  var cfg = ctx.cfg;
-  var rewards = cfg!.rewards || [];
+  const ctx = useAppContext();
+  const cfg = ctx.cfg;
+  const rewards = cfg!.rewards || [];
 
   return (
     <div>
@@ -86,25 +82,24 @@ export default function RewardsTab(): React.ReactElement {
           title='No loot yet'
           description='Add loot items that children can spend their earned coins on, or start with some samples.'
           ctaText='Add 5 Sample Loot Items'
-          onCta={function () {
-            var newRewards = SAMPLE_REWARDS.map(function (r) {
-              return Object.assign({}, r, {
+          onCta={() => {
+            const newRewards = SAMPLE_REWARDS.map((r) => {
+              return {
+                ...r,
                 id:
                   'r' +
                   Date.now() +
                   Math.random().toString(36).substring(2, 5),
-              });
+              };
             });
-            ctx.saveCfg(
-              Object.assign({}, cfg!, { rewards: newRewards })
-            );
+            ctx.saveCfg({ ...cfg!, rewards: newRewards });
           }}
         />
       )}
       <div className='flex justify-between items-center mb-3'>
         <span className='font-bold text-qslate'>Loot Catalog</span>
         <button
-          onClick={function () {
+          onClick={() => {
             setAddReward({
               id: '',
               name: '',
@@ -122,12 +117,12 @@ export default function RewardsTab(): React.ReactElement {
           Add
         </button>
       </div>
-      {rewards.map(function (r, ri) {
-        var ll =
+      {rewards.map((r, ri) => {
+        const ll =
           r.limitType === 'daily'
-            ? r.limitMax + '/day'
+            ? `${r.limitMax}/day`
             : r.limitType === 'weekly'
-              ? r.limitMax + '/wk'
+              ? `${r.limitMax}/wk`
               : 'No limit';
         return (
           <div
@@ -147,16 +142,15 @@ export default function RewardsTab(): React.ReactElement {
             </div>
             <div className='flex gap-1.5'>
               <button
-                onClick={function () {
-                  ctx.saveCfg(
-                    Object.assign({}, cfg!, {
-                      rewards: rewards.map(function (x) {
-                        return x.id === r.id
-                          ? Object.assign({}, x, { active: !x.active })
-                          : x;
-                      }),
-                    })
-                  );
+                onClick={() => {
+                  ctx.saveCfg({
+                    ...cfg!,
+                    rewards: rewards.map((x) => {
+                      return x.id === r.id
+                        ? { ...x, active: !x.active }
+                        : x;
+                    }),
+                  });
                 }}
                 className={
                   'rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body ' +
@@ -168,8 +162,8 @@ export default function RewardsTab(): React.ReactElement {
                 {r.active ? 'On' : 'Off'}
               </button>
               <button
-                onClick={function () {
-                  setEditReward(Object.assign({}, r));
+                onClick={() => {
+                  setEditReward({ ...r });
                 }}
                 className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
               >
@@ -177,14 +171,11 @@ export default function RewardsTab(): React.ReactElement {
                 Edit
               </button>
               <button
-                onClick={function () {
-                  ctx.saveCfg(
-                    Object.assign({}, cfg!, {
-                      rewards: rewards.filter(function (x) {
-                        return x.id !== r.id;
-                      }),
-                    })
-                  );
+                onClick={() => {
+                  ctx.saveCfg({
+                    ...cfg!,
+                    rewards: rewards.filter((x) => x.id !== r.id),
+                  });
                 }}
                 className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
               >
@@ -199,31 +190,30 @@ export default function RewardsTab(): React.ReactElement {
         <Modal title={editReward ? 'Edit Loot' : 'Add Loot'}>
           <RewardForm
             reward={(editReward || addReward)!}
-            onSave={function (r) {
+            onSave={(r) => {
               if (editReward) {
-                ctx.saveCfg(
-                  Object.assign({}, cfg!, {
-                    rewards: (cfg!.rewards || []).map(function (x) {
-                      return x.id === r.id ? r : x;
-                    }),
-                  })
-                );
+                ctx.saveCfg({
+                  ...cfg!,
+                  rewards: (cfg!.rewards || []).map((x) => {
+                    return x.id === r.id ? r : x;
+                  }),
+                });
               } else {
-                ctx.saveCfg(
-                  Object.assign({}, cfg!, {
-                    rewards: (cfg!.rewards || []).concat([
-                      Object.assign({}, r, {
-                        id: 'r' + Date.now(),
-                        active: true,
-                      }),
-                    ]),
-                  })
-                );
+                ctx.saveCfg({
+                  ...cfg!,
+                  rewards: (cfg!.rewards || []).concat([
+                    {
+                      ...r,
+                      id: 'r' + Date.now(),
+                      active: true,
+                    },
+                  ]),
+                });
               }
               setAddReward(null);
               setEditReward(null);
             }}
-            onCancel={function () {
+            onCancel={() => {
               setAddReward(null);
               setEditReward(null);
             }}

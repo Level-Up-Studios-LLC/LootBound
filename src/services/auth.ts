@@ -44,21 +44,21 @@ export interface AuthUser {
   emailVerified: boolean;
 }
 
-function appActionCodeSettings() {
+const appActionCodeSettings = () => {
   return {
     url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
     handleCodeInApp: true,
   };
-}
+};
 
 /**
  * Resolve the familyId for a given auth UID.
  * Checks /parentMembers/{uid} first, falls back to uid.
  */
 async function resolveFamilyId(uid: string): Promise<string> {
-  var snap = await getDoc(doc(db, 'parentMembers', uid));
+  const snap = await getDoc(doc(db, 'parentMembers', uid));
   if (snap.exists()) {
-    var data = snap.data();
+    const data = snap.data();
     if (data.familyId) return data.familyId;
   }
   return uid;
@@ -73,25 +73,25 @@ export async function signUpFamily(
   email: string,
   password: string
 ): Promise<{ user: AuthUser; familyCode: string }> {
-  var cred = await createUserWithEmailAndPassword(auth, email, password);
-  var familyId = cred.user.uid;
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  const familyId = cred.user.uid;
 
   // Register parent member mapping
   await setDoc(doc(db, 'parentMembers', familyId), {
-    familyId: familyId,
+    familyId,
   }, { merge: true });
 
   // Generate and register family code
-  var code = await generateFamilyCode();
+  const code = await generateFamilyCode();
   await registerFamilyCode(code, familyId);
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function (err) {
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch((err) => {
     console.warn('Verification email failed:', err);
   });
 
   return {
-    user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
+    user: { familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -105,23 +105,23 @@ export async function joinFamilyByCode(
   password: string,
   code: string
 ): Promise<{ user: AuthUser; familyCode: string }> {
-  var familyId = await lookupFamilyCode(code);
+  const familyId = await lookupFamilyCode(code);
   if (!familyId) throw { code: 'auth/invalid-family-code' };
 
-  var cred = await createUserWithEmailAndPassword(auth, email, password);
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
 
   // Map this parent to the existing family
   await setDoc(doc(db, 'parentMembers', cred.user.uid), {
-    familyId: familyId,
+    familyId,
   }, { merge: true });
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user, appActionCodeSettings()).catch(function (err) {
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch((err) => {
     console.warn('Verification email failed:', err);
   });
 
   return {
-    user: { familyId: familyId, email: cred.user.email ?? email, emailVerified: false },
+    user: { familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -134,16 +134,16 @@ export async function signInFamily(
   email: string,
   password: string
 ): Promise<AuthUser> {
-  var cred = await signInWithEmailAndPassword(auth, email, password);
-  var familyId = await resolveFamilyId(cred.user.uid);
-  return { familyId: familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  const familyId = await resolveFamilyId(cred.user.uid);
+  return { familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
 }
 
 /**
  * Start Google sign-in via redirect (works on iPads and avoids COOP issues).
  */
 export async function startGoogleSignIn(): Promise<void> {
-  var provider = new GoogleAuthProvider();
+  const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   await signInWithRedirect(auth, provider);
 }
@@ -161,20 +161,20 @@ export async function startGoogleSignIn(): Promise<void> {
  * Returns the family code if a new family was created, null otherwise.
  */
 export async function handleGoogleRedirectResult(): Promise<string | null> {
-  var result = await getRedirectResult(auth);
+  const result = await getRedirectResult(auth);
   if (!result) return null;
 
-  var user = result.user;
-  var uid = user.uid;
+  const user = result.user;
+  const uid = user.uid;
 
   // Check if this user already has a parentMembers mapping
   // (returning user, or email/password account that was auto-linked with Google)
-  var snap = await getDoc(doc(db, 'parentMembers', uid));
+  const snap = await getDoc(doc(db, 'parentMembers', uid));
   if (snap.exists()) return null;
 
   // New user — create family
   await setDoc(doc(db, 'parentMembers', uid), { familyId: uid }, { merge: true });
-  var code = await generateFamilyCode();
+  const code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
   return code;
 }
@@ -195,10 +195,10 @@ export async function signOutFamily(): Promise<void> {
 export function onAuthChange(
   callback: (user: AuthUser | null) => void
 ): () => void {
-  return onAuthStateChanged(auth, function (user) {
+  return onAuthStateChanged(auth, (user) => {
     if (user && !user.isAnonymous) {
-      resolveFamilyId(user.uid).then(function (familyId) {
-        callback({ familyId: familyId, email: user.email ?? '', emailVerified: user.emailVerified });
+      resolveFamilyId(user.uid).then((familyId) => {
+        callback({ familyId, email: user.email ?? '', emailVerified: user.emailVerified });
       });
     } else {
       callback(null);
@@ -236,7 +236,7 @@ export async function completePasswordReset(
  * Send a verification email to the current user.
  */
 export async function sendVerification(): Promise<void> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
   await sendEmailVerification(user, appActionCodeSettings());
 }
@@ -258,7 +258,7 @@ export async function applyVerificationCode(oobCode: string): Promise<void> {
  * Returns the updated verified status.
  */
 export async function refreshEmailVerified(): Promise<boolean> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user) return false;
   await user.reload();
   return user.emailVerified;
@@ -271,9 +271,9 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<void> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user || !user.email) throw new Error('Not signed in');
-  var cred = EmailAuthProvider.credential(user.email, currentPassword);
+  const cred = EmailAuthProvider.credential(user.email, currentPassword);
   await reauthenticateWithCredential(user, cred);
   await updatePassword(user, newPassword);
 }
@@ -284,10 +284,10 @@ export async function changePassword(
  * updatePassword if already linked.
  */
 export async function setPassword(newPassword: string): Promise<void> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user || !user.email) throw new Error('Not signed in');
   if (!hasPasswordProvider()) {
-    var cred = EmailAuthProvider.credential(user.email, newPassword);
+    const cred = EmailAuthProvider.credential(user.email, newPassword);
     await linkWithCredential(user, cred);
   } else {
     await updatePassword(user, newPassword);
@@ -299,7 +299,7 @@ export async function setPassword(newPassword: string): Promise<void> {
  * address — the email only changes after the user clicks the link.
  */
 export async function changeEmail(newEmail: string): Promise<void> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
   await verifyBeforeUpdateEmail(user, newEmail, appActionCodeSettings());
 }
@@ -309,9 +309,9 @@ export async function changeEmail(newEmail: string): Promise<void> {
  * Call before destructive operations to ensure the session is fresh.
  */
 export async function reauthenticate(password: string): Promise<void> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user || !user.email) throw new Error('Not signed in');
-  var cred = EmailAuthProvider.credential(user.email, password);
+  const cred = EmailAuthProvider.credential(user.email, password);
   await reauthenticateWithCredential(user, cred);
 }
 
@@ -321,14 +321,14 @@ export async function reauthenticate(password: string): Promise<void> {
  * and retries the deletion.
  */
 export async function deleteAuthAccount(password?: string): Promise<void> {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
   try {
     await user.delete();
   } catch (err: any) {
     if (err.code === 'auth/requires-recent-login') {
       if (!password || !user.email) throw err;
-      var cred = EmailAuthProvider.credential(user.email, password);
+      const cred = EmailAuthProvider.credential(user.email, password);
       await reauthenticateWithCredential(user, cred);
       await user.delete();
     } else {
@@ -343,7 +343,7 @@ export async function deleteAuthAccount(password?: string): Promise<void> {
  * the familyId is resolved via /parentMembers/{uid} (see resolveFamilyId).
  */
 export function getCurrentUid(): string | null {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   return user ? user.uid : null;
 }
 
@@ -352,15 +352,13 @@ export function getCurrentUid(): string | null {
  * Google-only users won't have this until they set a password.
  */
 export function hasPasswordProvider(): boolean {
-  var user = auth.currentUser;
+  const user = auth.currentUser;
   if (!user) return false;
-  return user.providerData.some(function (p) {
-    return p.providerId === 'password';
-  });
+  return user.providerData.some((p) => p.providerId === 'password');
 }
 
 /** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */
-export var getCurrentFamilyId = getCurrentUid;
+export const getCurrentFamilyId = getCurrentUid;
 
 /**
  * Sign in anonymously for kid sessions.

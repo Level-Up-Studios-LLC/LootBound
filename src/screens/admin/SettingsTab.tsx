@@ -12,22 +12,20 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { DEF_TIER_CONFIG, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
 import type { Config, TierConfig } from '../../types.ts';
-var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
+const DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
-var SAVE_DELAY = 1500;
+const SAVE_DELAY = 1500;
 
 export default function SettingsTab(): React.ReactElement {
-  var ctx = useAppContext();
-  var _local = useState<Config | null>(ctx.cfg),
-    local = _local[0],
-    setLocal = _local[1];
-  var timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  var localRef = useRef(local);
+  const ctx = useAppContext();
+  const [local, setLocal] = useState<Config | null>(ctx.cfg);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localRef = useRef(local);
   localRef.current = local;
 
   // Sync from context when cfg changes externally (e.g. real-time listener)
-  var ctxCfgRef = useRef(ctx.cfg);
-  useEffect(function () {
+  const ctxCfgRef = useRef(ctx.cfg);
+  useEffect(() => {
     if (ctx.cfg !== ctxCfgRef.current) {
       ctxCfgRef.current = ctx.cfg;
       if (!timerRef.current) {
@@ -37,12 +35,12 @@ export default function SettingsTab(): React.ReactElement {
   }, [ctx.cfg]);
 
   // Flush pending save on unmount
-  useEffect(function () {
-    return function () {
+  useEffect(() => {
+    return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         if (localRef.current) {
-          ctx.saveCfg(localRef.current).catch(function (err: unknown) {
+          ctx.saveCfg(localRef.current).catch((err: unknown) => {
             console.error('Settings save failed on unmount:', err);
           });
         }
@@ -50,27 +48,27 @@ export default function SettingsTab(): React.ReactElement {
     };
   }, []);
 
-  function update(next: Config) {
+  const update = (next: Config) => {
     setLocal(next);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(function () {
+    timerRef.current = setTimeout(() => {
       timerRef.current = null;
       ctx.saveCfg(next)
-        .then(function () {
+        .then(() => {
           ctx.notify('Saved!');
         })
-        .catch(function (err: unknown) {
+        .catch((err: unknown) => {
           console.error('Settings save failed:', err);
           ctx.notify('Save failed. Please try again.');
         });
     }, SAVE_DELAY);
-  }
+  };
 
   if (!local) {
     return <div className='text-qmuted'>Loading settings...</div>;
   }
 
-  var cfg = local;
+  const cfg = local;
 
   return (
     <div>
@@ -80,8 +78,8 @@ export default function SettingsTab(): React.ReactElement {
           Tier Coin & XP Values
         </div>
         <div className='flex flex-col gap-3'>
-          {TIER_ORDER.map(function (tier) {
-            var tc = (cfg.tierConfig || DEF_TIER_CONFIG)[tier] || { coins: 0, xp: 0 };
+          {TIER_ORDER.map((tier) => {
+            const tc = (cfg.tierConfig || DEF_TIER_CONFIG)[tier] || { coins: 0, xp: 0 };
             return (
               <div key={tier} className='flex items-center gap-2'>
                 <span
@@ -93,18 +91,14 @@ export default function SettingsTab(): React.ReactElement {
                 <input
                   type='number'
                   min={0}
-                  aria-label={tier + ' coins'}
+                  aria-label={`${tier} coins`}
                   value={tc.coins}
-                  onChange={function (
-                    e: React.ChangeEvent<HTMLInputElement>
-                  ) {
-                    var n: Record<string, TierConfig> = JSON.parse(
-                      JSON.stringify(cfg.tierConfig || DEF_TIER_CONFIG)
-                    );
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const n: Record<string, TierConfig> = structuredClone(cfg.tierConfig || DEF_TIER_CONFIG);
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    var v = Number(e.target.value);
+                    const v = Number(e.target.value);
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    update(Object.assign({}, cfg, { tierConfig: n }));
+                    update({ ...cfg, tierConfig: n });
                   }}
                   className='quest-input w-[60px]! text-center'
                 />
@@ -112,18 +106,14 @@ export default function SettingsTab(): React.ReactElement {
                 <input
                   type='number'
                   min={0}
-                  aria-label={tier + ' XP'}
+                  aria-label={`${tier} XP`}
                   value={tc.xp}
-                  onChange={function (
-                    e: React.ChangeEvent<HTMLInputElement>
-                  ) {
-                    var n: Record<string, TierConfig> = JSON.parse(
-                      JSON.stringify(cfg.tierConfig || DEF_TIER_CONFIG)
-                    );
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const n: Record<string, TierConfig> = structuredClone(cfg.tierConfig || DEF_TIER_CONFIG);
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    var v = Number(e.target.value);
+                    const v = Number(e.target.value);
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    update(Object.assign({}, cfg, { tierConfig: n }));
+                    update({ ...cfg, tierConfig: n });
                   }}
                   className='quest-input w-[60px]! text-center'
                 />
@@ -147,13 +137,12 @@ export default function SettingsTab(): React.ReactElement {
             min={0}
             aria-label='Approval threshold coins'
             value={cfg.approvalThreshold ?? 300}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              var v = Number(e.target.value);
-              update(
-                Object.assign({}, cfg, {
-                  approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
-                })
-              );
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const v = Number(e.target.value);
+              update({
+                ...cfg,
+                approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
+              });
             }}
             className='quest-input w-[100px]! text-center'
           />
@@ -173,20 +162,18 @@ export default function SettingsTab(): React.ReactElement {
           <input
             type='time'
             aria-label='Bedtime cutoff'
-            value={(function () {
-              var bt = cfg.bedtime != null ? cfg.bedtime : 21 * 60;
-              var h = Math.floor(bt / 60);
-              var m = bt % 60;
-              return (
-                String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0')
-              );
+            value={(() => {
+              const bt = cfg.bedtime != null ? cfg.bedtime : 21 * 60;
+              const h = Math.floor(bt / 60);
+              const m = bt % 60;
+              return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             })()}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               if (!e.target.value) return;
-              var parts = e.target.value.split(':').map(Number);
+              const parts = e.target.value.split(':').map(Number);
               if (parts.length < 2 || !Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) return;
-              var mins = parts[0] * 60 + parts[1];
-              update(Object.assign({}, cfg, { bedtime: mins }));
+              const mins = parts[0] * 60 + parts[1];
+              update({ ...cfg, bedtime: mins });
             }}
             className='quest-input w-[140px]!'
           />
@@ -204,16 +191,15 @@ export default function SettingsTab(): React.ReactElement {
           <select
             aria-label='Weekly reset day'
             value={cfg.weeklyResetDay != null ? cfg.weeklyResetDay : 0}
-            onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
-              update(
-                Object.assign({}, cfg, {
-                  weeklyResetDay: Number(e.target.value),
-                })
-              );
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              update({
+                ...cfg,
+                weeklyResetDay: Number(e.target.value),
+              });
             }}
             className='quest-input w-[140px]!'
           >
-            {DAYS.map(function (dayName, i) {
+            {DAYS.map((dayName, i) => {
               return (
                 <option key={i} value={i}>
                   {dayName}
@@ -237,13 +223,12 @@ export default function SettingsTab(): React.ReactElement {
             min={0}
             aria-label='Mission cooldown seconds'
             value={cfg.cooldown != null ? cfg.cooldown : 60}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
-              var v = Number(e.target.value);
-              update(
-                Object.assign({}, cfg, {
-                  cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,
-                })
-              );
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const v = Number(e.target.value);
+              update({
+                ...cfg,
+                cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,
+              });
             }}
             className='quest-input w-[100px]! text-center'
           />

@@ -8,22 +8,22 @@ import BNav from '../components/BNav.tsx';
 import { getTaskStatus, fmtTime, timeToMin, getLevelTitle, getXpProgress, getStreakMultiplier } from '../utils.ts';
 
 export default function DashboardScreen(): React.ReactElement | null {
-  var ctx = useAppContext();
-  var ch = ctx.currentChild;
-  var ud = ctx.currentUserData;
-  var todayTasks = ctx.todayTasks;
-  var tLog = ctx.tLog;
-  var bedLock = ctx.bedLock;
-  var startCapture = ctx.startCapture;
+  const ctx = useAppContext();
+  const ch = ctx.currentChild;
+  const ud = ctx.currentUserData;
+  const todayTasks = ctx.todayTasks;
+  const tLog = ctx.tLog;
+  const bedLock = ctx.bedLock;
+  const startCapture = ctx.startCapture;
 
   if (!ch || !ud) return null;
 
-  var done = todayTasks.filter(function (t) {
-    var l = tLog[t.id];
+  const done = todayTasks.filter((t) => {
+    const l = tLog[t.id];
     return l && !l.rejected && l.status !== 'missed';
   }).length;
-  var total = todayTasks.length;
-  var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const total = todayTasks.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
     <div className='pb-20'>
@@ -59,23 +59,23 @@ export default function DashboardScreen(): React.ReactElement | null {
               style={FA_ICON_STYLE}
               className='mr-1.5'
             />
-            Past {(function () {
-              var bt = ctx.cfg && ctx.cfg.bedtime != null ? ctx.cfg.bedtime : 21 * 60;
-              var h = Math.floor(bt / 60);
-              var m = bt % 60;
-              var ampm = h >= 12 ? 'PM' : 'AM';
-              var h12 = h % 12 || 12;
-              return m > 0 ? h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm : h12 + ' ' + ampm;
+            Past {(() => {
+              const bt = ctx.cfg && ctx.cfg.bedtime != null ? ctx.cfg.bedtime : 21 * 60;
+              const h = Math.floor(bt / 60);
+              const m = bt % 60;
+              const ampm = h >= 12 ? 'PM' : 'AM';
+              const h12 = h % 12 || 12;
+              return m > 0 ? `${h12}:${String(m).padStart(2, '0')} ${ampm}` : `${h12} ${ampm}`;
             })()} bedtime. Missions are locked for today.
           </div>
         )}
       </div>
       <div className='px-4 pt-4'>
-      {(function () {
-        var lvl = ud.level || 1;
-        var lt = getLevelTitle(lvl);
-        var xpProg = getXpProgress(ud.xp || 0, lvl);
-        var sMult = getStreakMultiplier(ud.streak || 0);
+      {(() => {
+        const lvl = ud.level || 1;
+        const lt = getLevelTitle(lvl);
+        const xpProg = getXpProgress(ud.xp || 0, lvl);
+        const sMult = getStreakMultiplier(ud.streak || 0);
         return (
           <div className='bg-qmint rounded-btn p-4 mb-5'>
             <div className='flex justify-between items-center mb-2'>
@@ -83,14 +83,14 @@ export default function DashboardScreen(): React.ReactElement | null {
                 Lv.{lvl} {lt.title}
               </div>
               <div className='text-[11px] text-qmuted font-bold'>
-                {lvl >= 20 ? 'MAX' : xpProg.current + ' / ' + xpProg.needed + ' XP'}
+                {lvl >= 20 ? 'MAX' : `${xpProg.current} / ${xpProg.needed} XP`}
               </div>
             </div>
             <div className='h-2.5 bg-qmint-dim rounded-sm'>
               <div
                 className='h-full rounded-sm transition-all duration-500'
                 style={{
-                  width: xpProg.pct + '%',
+                  width: `${xpProg.pct}%`,
                   background: ch.color,
                 }}
               />
@@ -114,7 +114,7 @@ export default function DashboardScreen(): React.ReactElement | null {
             <div
               className='h-full rounded-sm transition-all duration-500'
               style={{
-                width: pct + '%',
+                width: `${pct}%`,
                 background: ch.color,
               }}
             />
@@ -146,21 +146,21 @@ export default function DashboardScreen(): React.ReactElement | null {
       </div>
       <div className='flex flex-col gap-3'>
         {todayTasks
-          .filter(function (t) {
-            var l = tLog[t.id];
+          .filter((t) => {
+            const l = tLog[t.id];
             return !l || l.rejected;
           })
-          .sort(function (a, b) {
+          .sort((a, b) => {
             return timeToMin(a.windowStart) - timeToMin(b.windowStart);
           })
           .slice(0, 4)
-          .map(function (t, idx) {
-            var entry = tLog[t.id];
-            var isRej = entry && entry.rejected;
-            var status = isRej
+          .map((t, idx) => {
+            const entry = tLog[t.id];
+            const isRej = entry && entry.rejected;
+            const status = isRej
               ? 'rejected'
               : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
-            var cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+            const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
             return (
               <div
                 key={t.id}
@@ -185,7 +185,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                 <Badge status={status} />
                 {status !== 'missed' && (
                   <button
-                    onClick={function () {
+                    onClick={() => {
                       startCapture(t.id);
                     }}
                     className={
@@ -206,8 +206,8 @@ export default function DashboardScreen(): React.ReactElement | null {
               </div>
             );
           })}
-        {todayTasks.filter(function (t) {
-          var l = tLog[t.id];
+        {todayTasks.filter((t) => {
+          const l = tLog[t.id];
           return !l || l.rejected;
         }).length === 0 && (
           <div className='text-center p-5 text-qteal font-semibold text-lg animate-confetti'>

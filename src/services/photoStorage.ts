@@ -23,17 +23,8 @@ export async function uploadTaskPhoto(
   taskId: string,
   base64Data: string
 ): Promise<string> {
-  var path =
-    'families/' +
-    familyId +
-    '/photos/' +
-    childId +
-    '/' +
-    date +
-    '/' +
-    taskId +
-    '.jpg';
-  var storageRef = ref(storage, path);
+  const path = `families/${familyId}/photos/${childId}/${date}/${taskId}.jpg`;
+  const storageRef = ref(storage, path);
   await uploadString(storageRef, base64Data, 'data_url');
   return getDownloadURL(storageRef);
 }
@@ -46,33 +37,33 @@ export async function deleteAllChildPhotos(
   familyId: string,
   childId: string
 ): Promise<void> {
-  var folderRef = ref(
+  const folderRef = ref(
     storage,
-    'families/' + familyId + '/photos/' + childId
+    `families/${familyId}/photos/${childId}`
   );
   try {
-    var result = await listAll(folderRef);
+    const result = await listAll(folderRef);
     // List date subfolders
-    var promises: Promise<void>[] = [];
-    result.prefixes.forEach(function (dateFolder) {
+    const promises: Promise<void>[] = [];
+    result.prefixes.forEach((dateFolder) => {
       promises.push(
-        listAll(dateFolder).then(function (dateResult) {
-          var deletes: Promise<void>[] = [];
-          dateResult.items.forEach(function (item) {
+        listAll(dateFolder).then((dateResult) => {
+          const deletes: Promise<void>[] = [];
+          dateResult.items.forEach((item) => {
             deletes.push(
-              deleteObject(item).catch(function () {
+              deleteObject(item).catch(() => {
                 /* ignore missing */
               })
             );
           });
-          return Promise.all(deletes).then(function () {});
+          return Promise.all(deletes).then(() => {});
         })
       );
     });
     // Also delete any files directly in the child folder
-    result.items.forEach(function (item) {
+    result.items.forEach((item) => {
       promises.push(
-        deleteObject(item).catch(function () {
+        deleteObject(item).catch(() => {
           /* ignore missing */
         })
       );
@@ -95,39 +86,39 @@ export async function deleteAllChildPhotos(
 export async function deleteAllFamilyPhotos(
   familyId: string
 ): Promise<void> {
-  var folderRef = ref(storage, 'families/' + familyId + '/photos');
+  const folderRef = ref(storage, `families/${familyId}/photos`);
   try {
-    var result = await listAll(folderRef);
-    var promises: Promise<void>[] = [];
-    result.prefixes.forEach(function (childFolder) {
+    const result = await listAll(folderRef);
+    const promises: Promise<void>[] = [];
+    result.prefixes.forEach((childFolder) => {
       promises.push(
-        listAll(childFolder).then(function (childResult) {
-          var subPromises: Promise<void>[] = [];
+        listAll(childFolder).then((childResult) => {
+          const subPromises: Promise<void>[] = [];
           // Date subfolders
-          childResult.prefixes.forEach(function (dateFolder) {
+          childResult.prefixes.forEach((dateFolder) => {
             subPromises.push(
-              listAll(dateFolder).then(function (dateResult) {
-                var deletes: Promise<void>[] = [];
-                dateResult.items.forEach(function (item) {
+              listAll(dateFolder).then((dateResult) => {
+                const deletes: Promise<void>[] = [];
+                dateResult.items.forEach((item) => {
                   deletes.push(
-                    deleteObject(item).catch(function () {
+                    deleteObject(item).catch(() => {
                       /* ignore */
                     })
                   );
                 });
-                return Promise.all(deletes).then(function () {});
+                return Promise.all(deletes).then(() => {});
               })
             );
           });
           // Direct files
-          childResult.items.forEach(function (item) {
+          childResult.items.forEach((item) => {
             subPromises.push(
-              deleteObject(item).catch(function () {
+              deleteObject(item).catch(() => {
                 /* ignore */
               })
             );
           });
-          return Promise.all(subPromises).then(function () {});
+          return Promise.all(subPromises).then(() => {});
         })
       );
     });
@@ -148,17 +139,8 @@ export async function deleteTaskPhoto(
   date: string,
   taskId: string
 ): Promise<void> {
-  var path =
-    'families/' +
-    familyId +
-    '/photos/' +
-    childId +
-    '/' +
-    date +
-    '/' +
-    taskId +
-    '.jpg';
-  var storageRef = ref(storage, path);
+  const path = `families/${familyId}/photos/${childId}/${date}/${taskId}.jpg`;
+  const storageRef = ref(storage, path);
   try {
     await deleteObject(storageRef);
   } catch (e: unknown) {
