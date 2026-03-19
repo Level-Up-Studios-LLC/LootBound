@@ -263,16 +263,11 @@ When AppContext loads config, it checks for the old numeric `tierPoints` format 
 
 ## Conventions
 
-- **`var` declarations only** — no `let` or `const` in component bodies
-- **`Object.assign` over spread** — `Object.assign({}, obj, { key: val })` not `{ ...obj, key: val }`
-- **`function` declarations** — no arrow functions in component bodies
-- **Deep clone before mutation** — `JSON.parse(JSON.stringify(data))`
-- **useState pattern** — `var _s = useState(x), val = _s[0], setVal = _s[1]`
 - **FontAwesome icons** — must be imported in `src/fa.ts` and added to `library.add()`
-- **Firestore writes** — always use `{ merge: true }` via `fsSaveConfig`/`fsSaveChild` etc.
 - **No Co-Authored-By** — do not add "Co-Authored-By: Claude" to commit messages
 - **TypeScript only** — all source files must be `.ts`/`.tsx`. Never create `.js`/`.jsx` files in `src/`.
 - **Post-feature cleanup** — after completing a major change or feature, scan for and remove dead code, unused imports, orphaned files, and leftover artifacts before committing.
+- **Firestore writes** — always use `{ merge: true }` via `fsSaveConfig`/`fsSaveChild` etc.
 
 ### Branch Workflow
 
