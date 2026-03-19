@@ -330,7 +330,7 @@ export function AppProvider(props: {
         // but may be missing seed defaults — fill them in without
         // overwriting fields that already have values.
         var patches: Record<string, any> = {};
-        if (!(fc as any).tierConfig && !(fc as any).tierPoints) {
+        if (!(fc as any).tierConfig) {
           patches.tierConfig = JSON.parse(JSON.stringify(DEF_TIER_CONFIG));
         }
         if (fc.approvalThreshold == null) {

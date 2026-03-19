@@ -28,6 +28,14 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
 
   // Track child IDs so we can add/remove per-child listeners dynamically
   var childUnsubsRef = useRef<Record<string, () => void>>({});
+  // Track whether we've received the first snapshot for each collection
+  // to skip the initial echo (we already loaded that data)
+  var initialSkipRef = useRef({
+    config: true,
+    children: true,
+    tasks: true,
+    rewards: true,
+  });
 
   useEffect(function () {
     if (!familyId || loading) return;
@@ -37,6 +45,10 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     // --- Config listener ---
     var unsubConfig = onConfigSnapshot(familyId, function (fc) {
       if (dead) return;
+      if (initialSkipRef.current.config) {
+        initialSkipRef.current.config = false;
+        return;
+      }
       setCfg(function (prev) {
         if (!prev || !fc) return prev;
         return Object.assign({}, prev, {
@@ -62,6 +74,10 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     // --- Children listener ---
     var unsubChildren = onChildrenSnapshot(familyId, function (list) {
       if (dead) return;
+      if (initialSkipRef.current.children) {
+        initialSkipRef.current.children = false;
+        return;
+      }
       setCfg(function (prev) {
         if (!prev) return prev;
         return Object.assign({}, prev, {
@@ -75,6 +91,10 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     // --- Tasks listener ---
     var unsubTasks = onTasksSnapshot(familyId, function (list) {
       if (dead) return;
+      if (initialSkipRef.current.tasks) {
+        initialSkipRef.current.tasks = false;
+        return;
+      }
       var tasksMap: Record<string, Task[]> = {};
       list.forEach(function (t: any) {
         var cid = t.childId || '';
@@ -98,6 +118,10 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     // --- Rewards listener ---
     var unsubRewards = onRewardsSnapshot(familyId, function (list) {
       if (dead) return;
+      if (initialSkipRef.current.rewards) {
+        initialSkipRef.current.rewards = false;
+        return;
+      }
       setCfg(function (prev) {
         if (!prev) return prev;
         return Object.assign({}, prev, {
@@ -109,18 +133,22 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     // --- Per-child data listeners ---
     function attachChildDataListener(childId: string) {
       if (childUnsubsRef.current[childId]) return; // already listening
+      var firstSnap = true;
       childUnsubsRef.current[childId] = onChildDataSnapshot(
         familyId,
         childId,
         function (data) {
           if (dead) return;
+          if (firstSnap) {
+            firstSnap = false;
+            return;
+          }
+          if (!data) return;
           setAllU(function (prev) {
-            if (!data) {
-              var next = Object.assign({}, prev);
-              delete next[childId];
-              return next;
-            }
-            return Object.assign({}, prev, { [childId]: data as UserData });
+            var next: Record<string, UserData> = {};
+            for (var k in prev) next[k] = prev[k];
+            next[childId] = data as UserData;
+            return next;
           });
         }
       );
@@ -132,16 +160,11 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
         idSet[id] = true;
         attachChildDataListener(id);
       });
-      // Remove listeners and stale data for children that no longer exist
+      // Remove listeners for children that no longer exist
       Object.keys(childUnsubsRef.current).forEach(function (id) {
         if (!idSet[id]) {
           childUnsubsRef.current[id]();
           delete childUnsubsRef.current[id];
-          setAllU(function (prev) {
-            var next = Object.assign({}, prev);
-            delete next[id];
-            return next;
-          });
         }
       });
     }
@@ -167,6 +190,13 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
         childUnsubsRef.current[id]();
       });
       childUnsubsRef.current = {};
+      // Reset skip flags for potential re-mount
+      initialSkipRef.current = {
+        config: true,
+        children: true,
+        tasks: true,
+        rewards: true,
+      };
     };
   }, [familyId, loading]);
 }
