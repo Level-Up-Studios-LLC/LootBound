@@ -18,9 +18,7 @@ export default function HamburgerMenu(p: HamburgerMenuProps): React.ReactElement
   return (
     <div className="relative">
       <button
-        onClick={() => {
-          setOpen(!open);
-        }}
+        onClick={() => setOpen(!open)}
         className="flex flex-col items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer p-0"
         aria-label="Menu"
       >
@@ -30,9 +28,7 @@ export default function HamburgerMenu(p: HamburgerMenuProps): React.ReactElement
         <>
           <div
             className="fixed inset-0 z-[200]"
-            onClick={() => {
-              setOpen(false);
-            }}
+            onClick={() => setOpen(false)}
           />
           <div className="absolute right-0 top-full mt-1 bg-white rounded-card shadow-lg z-[201] min-w-[180px] py-2 animate-fade-in">
             {p.items.map((item) => {

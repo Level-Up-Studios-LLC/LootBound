@@ -232,7 +232,7 @@ function AppRouter() {
     if (auth.authLoading) return;
     if (auth.authUser) {
       const stored = getSession(SESSION_KEY_PARENT);
-      if (stored === auth.authUser.familyId) {
+      if (stored === auth.authUser.uid) {
         setParentVerifiedRaw(true);
       } else if (stored) {
         // Stored session belongs to a different user — clear it
@@ -249,7 +249,7 @@ function AppRouter() {
   const setParentVerified = (val: boolean) => {
     setParentVerifiedRaw(val);
     if (val && auth.authUser) {
-      setSession(SESSION_KEY_PARENT, auth.authUser.familyId);
+      setSession(SESSION_KEY_PARENT, auth.authUser.uid);
     } else {
       clearSession(SESSION_KEY_PARENT);
     }
@@ -269,6 +269,9 @@ function AppRouter() {
           signInAnonymousKid().then(() => {
             setRole('kid');
             setKidFamilyId(fid);
+          }).catch((err) => {
+            console.error('Kid sign-in failed:', err);
+          }).finally(() => {
             setInitDone(true);
           });
         } else {
@@ -276,6 +279,9 @@ function AppRouter() {
           clearStoredFamilyCode();
           setInitDone(true);
         }
+      }).catch((err) => {
+        console.error('Family code lookup failed:', err);
+        setInitDone(true);
       });
     } else {
       setInitDone(true);

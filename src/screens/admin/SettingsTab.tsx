@@ -16,6 +16,12 @@ const DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discu
 
 const SAVE_DELAY = 1500;
 
+function formatMinutesToTime(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
 export default function SettingsTab(): React.ReactElement {
   const ctx = useAppContext();
   const [local, setLocal] = useState<Config | null>(ctx.cfg);
@@ -162,12 +168,7 @@ export default function SettingsTab(): React.ReactElement {
           <input
             type='time'
             aria-label='Bedtime cutoff'
-            value={(() => {
-              const bt = cfg.bedtime != null ? cfg.bedtime : 21 * 60;
-              const h = Math.floor(bt / 60);
-              const m = bt % 60;
-              return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-            })()}
+            value={formatMinutesToTime(cfg.bedtime ?? 21 * 60)}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               if (!e.target.value) return;
               const parts = e.target.value.split(':').map(Number);

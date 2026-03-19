@@ -13,8 +13,9 @@ interface TaskFormProps {
 export default function TaskForm(props: TaskFormProps): React.ReactElement {
   const [f, setF] = useState<Task & { uid: string }>(props.task);
   const tc = props.tierConfig;
-  const u = (k: string, v: any): void => {
-    setF({ ...f, [k]: v });
+  type FormState = Task & { uid: string };
+  const u = <K extends keyof FormState>(k: K, v: FormState[K]): void => {
+    setF((prev) => ({ ...prev, [k]: v }));
   };
   return (
     <div className='flex flex-col gap-4'>

@@ -39,6 +39,7 @@ import {
 } from './familyCode.ts';
 
 export interface AuthUser {
+  uid: string;
   familyId: string;
   email: string;
   emailVerified: boolean;
@@ -91,7 +92,7 @@ export async function signUpFamily(
   });
 
   return {
-    user: { familyId, email: cred.user.email ?? email, emailVerified: false },
+    user: { uid: cred.user.uid, familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -121,7 +122,7 @@ export async function joinFamilyByCode(
   });
 
   return {
-    user: { familyId, email: cred.user.email ?? email, emailVerified: false },
+    user: { uid: cred.user.uid, familyId, email: cred.user.email ?? email, emailVerified: false },
     familyCode: code,
   };
 }
@@ -136,7 +137,7 @@ export async function signInFamily(
 ): Promise<AuthUser> {
   const cred = await signInWithEmailAndPassword(auth, email, password);
   const familyId = await resolveFamilyId(cred.user.uid);
-  return { familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
+  return { uid: cred.user.uid, familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
 }
 
 /**
@@ -195,15 +196,26 @@ export async function signOutFamily(): Promise<void> {
 export function onAuthChange(
   callback: (user: AuthUser | null) => void
 ): () => void {
-  return onAuthStateChanged(auth, (user) => {
+  var seq = 0;
+  var unsub = onAuthStateChanged(auth, (user) => {
+    var token = ++seq;
     if (user && !user.isAnonymous) {
       resolveFamilyId(user.uid).then((familyId) => {
-        callback({ familyId, email: user.email ?? '', emailVerified: user.emailVerified });
+        if (token !== seq) return;
+        callback({ uid: user.uid, familyId, email: user.email ?? '', emailVerified: user.emailVerified });
+      }).catch((err) => {
+        if (token !== seq) return;
+        console.error('resolveFamilyId failed:', err);
+        callback(null);
       });
     } else {
       callback(null);
     }
   });
+  return () => {
+    seq++;
+    unsub();
+  };
 }
 
 /**
