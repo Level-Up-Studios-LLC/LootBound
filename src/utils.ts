@@ -17,12 +17,15 @@ export function freshUser(): UserData {
   };
 }
 
-export function getToday(): string {
-  var d = new Date();
+function formatYMD(d: Date): string {
   var y = d.getFullYear();
   var m = d.getMonth() + 1;
   var day = d.getDate();
   return y + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+}
+
+export function getToday(): string {
+  return formatYMD(new Date());
 }
 
 export function getWeekStart(resetDay?: number): string {
@@ -32,10 +35,7 @@ export function getWeekStart(resetDay?: number): string {
   var diff = dow >= day ? dow - day : dow + 7 - day;
   var s = new Date(d);
   s.setDate(d.getDate() - diff);
-  var sy = s.getFullYear();
-  var sm = s.getMonth() + 1;
-  var sd = s.getDate();
-  return sy + '-' + (sm < 10 ? '0' + sm : sm) + '-' + (sd < 10 ? '0' + sd : sd);
+  return formatYMD(s);
 }
 
 export function todayDow(): number {
@@ -70,10 +70,7 @@ export function fmtTime(t: string): string {
 export function prevDate(d: string): string {
   var dt = new Date(d + 'T12:00:00');
   dt.setDate(dt.getDate() - 1);
-  var py = dt.getFullYear();
-  var pm = dt.getMonth() + 1;
-  var pd = dt.getDate();
-  return py + '-' + (pm < 10 ? '0' + pm : pm) + '-' + (pd < 10 ? '0' + pd : pd);
+  return formatYMD(dt);
 }
 
 export function isPastBedtime(bedtime?: number): boolean {
