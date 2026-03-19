@@ -279,22 +279,24 @@ function AppRouter() {
   // or persisted Firebase session (parent device persistence)
   useEffect(function () {
     (async function () {
-      var kidSession = await getSessionAsync(SESSION_KEY_KID);
-      setStoredKid(kidSession);
-      var storedCode = await getStoredFamilyCodeAsync();
-      if (storedCode) {
-        var fid = await lookupFamilyCode(storedCode);
-        if (fid) {
-          await signInAnonymousKid();
-          setRole('kid');
-          setKidFamilyId(fid);
-          setInitDone(true);
-        } else {
-          // Stored code is no longer valid
-          await clearStoredFamilyCode();
-          setInitDone(true);
+      try {
+        var kidSession = await getSessionAsync(SESSION_KEY_KID);
+        setStoredKid(kidSession);
+        var storedCode = await getStoredFamilyCodeAsync();
+        if (storedCode) {
+          var fid = await lookupFamilyCode(storedCode);
+          if (fid) {
+            await signInAnonymousKid();
+            setRole('kid');
+            setKidFamilyId(fid);
+          } else {
+            // Stored code is no longer valid
+            await clearStoredFamilyCode();
+          }
         }
-      } else {
+      } catch (err) {
+        console.error('Init failed:', err);
+      } finally {
         setInitDone(true);
       }
     })();

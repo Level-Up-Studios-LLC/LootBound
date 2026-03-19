@@ -586,7 +586,9 @@ export async function cleanupOldNotifications(familyId: string): Promise<void> {
   var refs: import('firebase/firestore').DocumentReference[] = [];
   snap.forEach(function (d) {
     var data = d.data();
-    if (data.createdAt && data.createdAt < cutoff) {
+    var ts = data.createdAt;
+    var ms = typeof ts === 'number' ? ts : (ts && typeof ts.toMillis === 'function' ? ts.toMillis() : 0);
+    if (ms > 0 && ms < cutoff) {
       refs.push(d.ref);
     }
   });
