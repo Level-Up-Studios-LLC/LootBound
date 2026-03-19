@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
 import type { Config, UserData, Child, AddChildFormData } from '../types.ts';
+import type { ChildData } from '../services/firestoreStorage.ts';
 import { freshUser, slugify } from '../utils.ts';
 import { deleteChildData as fsDeleteChildData, replaceChildData } from '../services/firestoreStorage.ts';
 import {
@@ -93,15 +94,25 @@ export function useChildActions(deps: ChildActionsDeps) {
     // Use replaceChildData (no merge) so old taskLog entries are fully wiped.
     // Build the full reset state first, then apply in one batch.
     var resetUsers: Record<string, UserData> = {};
+    var errors: Error[] = [];
     for (var i = 0; i < children.length; i++) {
       var fresh = freshUser();
       resetUsers[children[i].id] = fresh;
-      await replaceChildData(deps.familyId, children[i].id, fresh);
+      try {
+        await replaceChildData(deps.familyId, children[i].id, fresh as unknown as ChildData);
+      } catch (err) {
+        errors.push(err as Error);
+        Sentry.captureException(err, { tags: { action: 'reset-child-data', childId: children[i].id } });
+      }
     }
-    deps.setAllU(function () {
-      return resetUsers;
-    });
-    deps.notify('All data reset');
+    if (errors.length > 0) {
+      deps.notify('Data reset completed with ' + errors.length + ' error(s)', 'error');
+    } else {
+      deps.setAllU(function () {
+        return resetUsers;
+      });
+      deps.notify('All data reset');
+    }
   }
 
   return {
