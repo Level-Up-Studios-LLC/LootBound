@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInFamily, getCurrentUid } from '../services/auth.ts';
 import { saveParentMember } from '../services/firestoreStorage.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
+import { isBiometricAvailable, authenticateWithBiometric, isNative } from '../services/platform.ts';
 
 interface ParentPinScreenProps {
   email: string;
@@ -34,6 +35,32 @@ export default function ParentPinScreen(
   var _busy = useState(false),
     busy = _busy[0],
     setBusy = _busy[1];
+  var _bioAvailable = useState(false),
+    bioAvailable = _bioAvailable[0],
+    setBioAvailable = _bioAvailable[1];
+
+  useEffect(function () {
+    if (isNative() && hasPin) {
+      isBiometricAvailable().then(function (available) {
+        setBioAvailable(available);
+        if (available) {
+          authenticateWithBiometric().then(function (ok) {
+            if (ok) props.onSuccess();
+          });
+        }
+      });
+    }
+  }, []);
+
+  function handleBiometric() {
+    authenticateWithBiometric().then(function (ok) {
+      if (ok) {
+        props.onSuccess();
+      } else {
+        setErr('Biometric authentication failed');
+      }
+    });
+  }
 
   function handlePinSubmit() {
     if (pin === props.parentPin) {
@@ -123,6 +150,14 @@ export default function ParentPinScreen(
           </div>
           {err && (
             <div className="text-qcoral text-[13px]">{err}</div>
+          )}
+          {bioAvailable && (
+            <button
+              onClick={handleBiometric}
+              className="btn-primary w-full"
+            >
+              Use Face ID / Touch ID
+            </button>
           )}
           <button
             onClick={function () {

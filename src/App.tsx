@@ -12,6 +12,7 @@ import {
   lookupFamilyCode,
 } from './services/familyCode.ts';
 import { signInAnonymousKid, getCurrentUid, applyVerificationCode } from './services/auth.ts';
+import { getStorage, setStorage, removeStorage } from './services/platform.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
@@ -34,36 +35,40 @@ var SESSION_KEY_PARENT = 'qb-parent-session';
 var SESSION_KEY_KID = 'qb-kid-session';
 var SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-function getSession(key: string): string | null {
+function parseSessionValue(raw: string | null): string | null {
+  if (!raw) return null;
   try {
-    var raw = sessionStorage.getItem(key);
-    if (!raw) return null;
     var data = JSON.parse(raw);
-    if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) {
-      sessionStorage.removeItem(key);
-      return null;
-    }
-    if (Date.now() - data.ts > SESSION_TTL) {
-      sessionStorage.removeItem(key);
-      return null;
-    }
+    if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) return null;
+    if (Date.now() - data.ts > SESSION_TTL) return null;
     return data.val;
   } catch (_e) {
-    try { sessionStorage.removeItem(key); } catch (_e2) { /* ignore */ }
+    return null;
+  }
+}
+
+async function getSessionAsync(key: string): Promise<string | null> {
+  var raw = await getStorage(key);
+  var val = parseSessionValue(raw);
+  if (raw && !val) await removeStorage(key);
+  return val;
+}
+
+function getSessionSync(key: string): string | null {
+  try {
+    var raw = sessionStorage.getItem(key);
+    return parseSessionValue(raw);
+  } catch (_e) {
     return null;
   }
 }
 
 function setSession(key: string, val: string): void {
-  try {
-    sessionStorage.setItem(key, JSON.stringify({ val: val, ts: Date.now() }));
-  } catch (_e) { /* ignore */ }
+  setStorage(key, JSON.stringify({ val: val, ts: Date.now() }));
 }
 
 function clearSession(key: string): void {
-  try {
-    sessionStorage.removeItem(key);
-  } catch (_e) { /* ignore */ }
+  removeStorage(key);
 }
 
 /**
@@ -243,16 +248,15 @@ function AppRouter() {
   useEffect(function () {
     if (auth.authLoading) return;
     if (auth.authUser) {
-      var stored = getSession(SESSION_KEY_PARENT);
-      if (stored === auth.authUser.familyId) {
-        setParentVerifiedRaw(true);
-      } else if (stored) {
-        // Stored session belongs to a different user — clear it
-        clearSession(SESSION_KEY_PARENT);
-        setParentVerifiedRaw(false);
-      }
+      getSessionAsync(SESSION_KEY_PARENT).then(function (stored) {
+        if (stored === auth.authUser!.familyId) {
+          setParentVerifiedRaw(true);
+        } else if (stored) {
+          clearSession(SESSION_KEY_PARENT);
+          setParentVerifiedRaw(false);
+        }
+      });
     } else {
-      // No user — clear any stale session from memory and storage
       clearSession(SESSION_KEY_PARENT);
       setParentVerifiedRaw(false);
     }
@@ -512,7 +516,7 @@ function AppRouter() {
     // Family code resolved → show app
     // Pass stored kid as initialUser but start at 'login' — AppContext will
     // validate the child ID against cfg.children and promote to 'dashboard'
-    var storedKid = getSession(SESSION_KEY_KID);
+    var storedKid = getSessionSync(SESSION_KEY_KID);
     return (
       <AppProvider
         familyId={kidFamilyId}

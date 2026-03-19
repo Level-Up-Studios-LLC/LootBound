@@ -15,6 +15,7 @@ import type {
   Notification,
 } from '../types.ts';
 import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS } from '../constants.ts';
+import { setStorage, removeStorage } from '../services/platform.ts';
 import {
   freshUser,
   getToday,
@@ -121,14 +122,12 @@ export function AppProvider(props: {
 
   function setCurUser(uid: string | null) {
     setCurUserRaw(uid);
-    try {
-      if (uid && uid !== 'parent') {
-        sessionStorage.setItem('qb-kid-session', JSON.stringify({ val: uid, ts: Date.now() }));
-      } else if (!uid) {
-        sessionStorage.removeItem('qb-kid-session');
-        if (props.onLogout) props.onLogout();
-      }
-    } catch (_e) { /* ignore */ }
+    if (uid && uid !== 'parent') {
+      setStorage('qb-kid-session', JSON.stringify({ val: uid, ts: Date.now() }));
+    } else if (!uid) {
+      removeStorage('qb-kid-session');
+      if (props.onLogout) props.onLogout();
+    }
   }
   var _cfg = useState<Config | null>(null),
     cfg = _cfg[0],

@@ -10,6 +10,11 @@
 
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase.ts';
+import {
+  getPersistentStorage,
+  setPersistentStorage,
+  removePersistentStorage,
+} from './platform.ts';
 
 var CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 var CODE_LEN = 6;
@@ -76,24 +81,14 @@ export function getStoredFamilyCode(): string | null {
   }
 }
 
-/**
- * Store family code in localStorage for kid device persistence.
- */
-export function setStoredFamilyCode(code: string): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, code.toUpperCase());
-  } catch (_e) {
-    /* ignore */
-  }
+export async function getStoredFamilyCodeAsync(): Promise<string | null> {
+  return getPersistentStorage(STORAGE_KEY);
 }
 
-/**
- * Clear stored family code from localStorage.
- */
+export function setStoredFamilyCode(code: string): void {
+  setPersistentStorage(STORAGE_KEY, code.toUpperCase());
+}
+
 export function clearStoredFamilyCode(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch (_e) {
-    /* ignore */
-  }
+  removePersistentStorage(STORAGE_KEY);
 }

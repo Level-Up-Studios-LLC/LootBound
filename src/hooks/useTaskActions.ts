@@ -23,6 +23,7 @@ import {
   deleteTaskPhoto,
 } from '../services/photoStorage.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
+import { capturePhoto as nativeCapturePhoto, triggerHaptic, isNative } from '../services/platform.ts';
 import { playSound } from '../services/notificationSound.ts';
 
 interface TaskActionsDeps {
@@ -61,9 +62,21 @@ export function useTaskActions(deps: TaskActionsDeps) {
       return;
     }
     setCapturing(taskId);
-    if (fileRef.current) {
-      fileRef.current.value = '';
-      fileRef.current.click();
+    if (isNative()) {
+      nativeCapturePhoto().then(function (photo) {
+        if (photo) {
+          doComplete(taskId, photo).then(function () {
+            setCapturing(null);
+          });
+        } else {
+          setCapturing(null);
+        }
+      });
+    } else {
+      if (fileRef.current) {
+        fileRef.current.value = '';
+        fileRef.current.click();
+      }
     }
   }
 
@@ -185,6 +198,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     await deps.saveUsr(uid, ud);
     // Haptic feedback + sound on task completion
 
+    triggerHaptic('success');
     playSound('success');
     // Notify with coins + XP, and level-up if applicable
     var sl = SL[status] || {};
@@ -205,6 +219,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       var title = getLevelTitle(ud.level);
       deps.notify('LEVEL UP! Lv.' + ud.level + ' ' + title.title + '!', 'levelup');
   
+      triggerHaptic('medium');
       playSound('levelup');
       writeNotification(deps.familyId, {
         type: 'level_up',
@@ -252,6 +267,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     entry.photo = null;
     await deps.saveUsr(uid, ud);
 
+    triggerHaptic('error');
     playSound('error');
     // Write in-app notification for kid
     var childName = deps.getChildName ? deps.getChildName(uid) : uid;
