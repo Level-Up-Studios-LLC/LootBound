@@ -36,11 +36,13 @@ export var TIER_COLORS: Record<string, string> = {
   F: '#6b7280',
 };
 
+// Cumulative XP thresholds for levels 2-20.
+// Formula: 50 * level^1.5 per level, accumulated.
 export var LEVEL_XP: number[] = [
-  120, 200, 290, 395, 510,
-  640, 785, 940, 1115, 1305,
-  1510, 1730, 1965, 2220, 2495,
-  2785, 3095, 3425, 3775, 4150,
+  50, 191, 450, 850, 1409,
+  2143, 3069, 4200, 5550, 7131,
+  8955, 11033, 13376, 15995, 18899,
+  22099, 25603, 29421, 33561, 38033,
 ];
 
 export var LEVEL_TITLES: { title: string; color: string }[] = [

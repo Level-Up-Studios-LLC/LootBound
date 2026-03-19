@@ -15,6 +15,7 @@ import {
   listAll,
 } from 'firebase/storage';
 import { storage } from './firebase.ts';
+import { signInAnonymousKid } from './auth.ts';
 
 export async function uploadTaskPhoto(
   familyId: string,
@@ -23,6 +24,8 @@ export async function uploadTaskPhoto(
   taskId: string,
   base64Data: string
 ): Promise<string> {
+  // Ensure anonymous auth is active before uploading
+  await signInAnonymousKid();
   var path =
     'families/' +
     familyId +

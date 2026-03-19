@@ -17,8 +17,15 @@ export function freshUser(): UserData {
   };
 }
 
+function localDateStr(d: Date): string {
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
 export function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return localDateStr(new Date());
 }
 
 export function getWeekStart(resetDay?: number): string {
@@ -28,7 +35,7 @@ export function getWeekStart(resetDay?: number): string {
   var diff = dow >= day ? dow - day : dow + 7 - day;
   var s = new Date(d);
   s.setDate(d.getDate() - diff);
-  return s.toISOString().split('T')[0];
+  return localDateStr(s);
 }
 
 export function todayDow(): number {
@@ -63,7 +70,7 @@ export function fmtTime(t: string): string {
 export function prevDate(d: string): string {
   var dt = new Date(d + 'T12:00:00');
   dt.setDate(dt.getDate() - 1);
-  return dt.toISOString().split('T')[0];
+  return localDateStr(dt);
 }
 
 export function isPastBedtime(bedtime?: number): boolean {
