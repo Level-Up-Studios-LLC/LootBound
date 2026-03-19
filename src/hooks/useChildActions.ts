@@ -59,8 +59,8 @@ export function useChildActions(deps: ChildActionsDeps) {
       Sentry.captureException(err, { tags: { action: 'delete-child-photos', childId: id } });
     });
     deps.setAllU(function (p) {
-      var o: Record<string, UserData> = {};
-      for (var k in p) if (k !== id) o[k] = p[k];
+      var o: Record<string, UserData> = Object.assign({}, p);
+      delete o[id];
       return o;
     });
     if (childDataDeleted) {
@@ -92,26 +92,25 @@ export function useChildActions(deps: ChildActionsDeps) {
       Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
     });
     // Use replaceChildData (no merge) so old taskLog entries are fully wiped.
-    // Build the full reset state first, then apply in one batch.
+    // Build reset state and fire Firestore writes in parallel.
     var resetUsers: Record<string, UserData> = {};
-    var errors: Error[] = [];
+    var promises: Promise<void>[] = [];
     for (var i = 0; i < children.length; i++) {
       var fresh = freshUser();
       resetUsers[children[i].id] = fresh;
-      try {
-        await replaceChildData(deps.familyId, children[i].id, fresh as unknown as ChildData);
-      } catch (err) {
-        errors.push(err as Error);
-        Sentry.captureException(err, { tags: { action: 'reset-child-data', childId: children[i].id } });
-      }
+      promises.push(
+        replaceChildData(deps.familyId, children[i].id, fresh as unknown as ChildData)
+      );
     }
-    if (errors.length > 0) {
-      deps.notify('Data reset completed with ' + errors.length + ' error(s)', 'error');
-    } else {
+    try {
+      await Promise.all(promises);
       deps.setAllU(function () {
         return resetUsers;
       });
       deps.notify('All data reset');
+    } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'reset-child-data' } });
+      deps.notify('Data reset failed — please try again', 'error');
     }
   }
 
