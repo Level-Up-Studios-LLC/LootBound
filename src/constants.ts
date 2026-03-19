@@ -1,4 +1,4 @@
-import type { StatusLabel, TierConfig } from './types.ts';
+import type { StatusLabel, TierConfig, NotificationPrefs } from './types.ts';
 
 export var CFG_KEY = 'qb-cfg-v5';
 export function childKey(id: string): string {
@@ -36,11 +36,13 @@ export var TIER_COLORS: Record<string, string> = {
   F: '#6b7280',
 };
 
+// Cumulative XP thresholds for levels 2-20.
+// Formula: 50 * level^1.5 per level, accumulated.
 export var LEVEL_XP: number[] = [
-  120, 200, 290, 395, 510,
-  640, 785, 940, 1115, 1305,
-  1510, 1730, 1965, 2220, 2495,
-  2785, 3095, 3425, 3775, 4150,
+  50, 191, 450, 850, 1409,
+  2143, 3069, 4200, 5550, 7131,
+  8955, 11033, 13376, 15995, 18899,
+  22099, 25603, 29421, 33561, 38033,
 ];
 
 export var LEVEL_TITLES: { title: string; color: string }[] = [
@@ -116,6 +118,17 @@ export var FA_ICON_STYLE = {
 export function altBg(index: number): string {
   return index % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
 }
+
+export var DEF_NOTIFICATION_PREFS: NotificationPrefs = {
+  soundEnabled: true,
+  missionComplete: true,
+  missionRejected: true,
+  lootRequest: true,
+  lootApproved: true,
+  lootDenied: true,
+  levelUp: true,
+  streak: true,
+};
 
 export var KID_NAV = [
   { id: 'dashboard', icon: 'house-chimney', label: 'HQ' },

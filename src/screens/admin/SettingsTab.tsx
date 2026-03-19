@@ -8,10 +8,12 @@ import {
   faShieldHalved,
   faCommentDots,
   faArrowUpRightFromSquare,
+  faBell,
+  faVolumeHigh,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { DEF_TIER_CONFIG, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
-import type { Config, TierConfig } from '../../types.ts';
+import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
+import type { Config, TierConfig, NotificationPrefs } from '../../types.ts';
 var DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 var SAVE_DELAY = 1500;
@@ -248,6 +250,58 @@ export default function SettingsTab(): React.ReactElement {
             className='quest-input w-[100px]! text-center'
           />
           <span className='text-[13px] text-qmuted'>seconds</span>
+        </div>
+      </div>
+      <div className='bg-qmint rounded-card p-4 mb-4'>
+        <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
+          <FontAwesomeIcon icon={faBell} style={FA_ICON_STYLE} />
+          Notifications
+        </div>
+        <div className='text-[13px] text-qmuted mb-3'>
+          Control which notifications play sounds.
+        </div>
+        <div className='flex flex-col gap-2'>
+          {(function () {
+            var prefs: NotificationPrefs = cfg.notificationPrefs || DEF_NOTIFICATION_PREFS;
+            function togglePref(key: keyof NotificationPrefs) {
+              var next = JSON.parse(JSON.stringify(prefs)) as NotificationPrefs;
+              (next as any)[key] = !(next as any)[key];
+              update(Object.assign({}, cfg, { notificationPrefs: next }));
+            }
+            var items: [keyof NotificationPrefs, string][] = [
+              ['soundEnabled', 'Sound Effects'],
+              ['missionComplete', 'Mission Complete'],
+              ['missionRejected', 'Mission Rejected'],
+              ['lootRequest', 'Loot Requests'],
+              ['lootApproved', 'Loot Approved'],
+              ['lootDenied', 'Loot Denied'],
+              ['levelUp', 'Level Up'],
+              ['streak', 'Streak Milestones'],
+            ];
+            return items.map(function (item) {
+              var key = item[0];
+              var label = item[1];
+              var isMain = key === 'soundEnabled';
+              return (
+                <label
+                  key={key}
+                  className={'flex items-center justify-between py-1.5' + (isMain ? ' border-b border-qborder pb-2.5 mb-1' : '')}
+                >
+                  <span className={'text-[13px]' + (isMain ? ' font-bold text-qslate flex items-center gap-1.5' : ' text-qmuted pl-1')}>
+                    {isMain && <FontAwesomeIcon icon={faVolumeHigh} style={FA_ICON_STYLE} className='text-xs' />}
+                    {label}
+                  </span>
+                  <input
+                    type='checkbox'
+                    checked={!!prefs[key]}
+                    onChange={function () { togglePref(key); }}
+                    disabled={!isMain && !prefs.soundEnabled}
+                    className='w-[18px] h-[18px] accent-qteal cursor-pointer'
+                  />
+                </label>
+              );
+            });
+          })()}
         </div>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>

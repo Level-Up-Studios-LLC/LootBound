@@ -1,12 +1,16 @@
 import type { Config, UserData, Reward } from '../types.ts';
 import { freshUser, getToday, countRedeems } from '../utils.ts';
+import { writeNotification } from '../services/firestoreStorage.ts';
+import { playSound } from '../services/notificationSound.ts';
 
 interface RewardActionsDeps {
   cfg: Config | null;
   allU: Record<string, UserData>;
   curUser: string | null;
+  familyId: string;
   saveUsr: (uid: string, data: UserData) => Promise<void>;
   notify: (msg: string, type?: string) => void;
+  getChildName?: (id: string) => string;
 }
 
 export function useRewardActions(deps: RewardActionsDeps) {
@@ -67,6 +71,18 @@ export function useRewardActions(deps: RewardActionsDeps) {
       });
       await deps.saveUsr(uid, ud);
       deps.notify('Sent for approval');
+
+      playSound('approval');
+      // Write in-app notification for parent
+      var childName = deps.getChildName ? deps.getChildName(uid) : uid;
+      writeNotification(deps.familyId, {
+        type: 'loot_request',
+        title: 'Loot Request',
+        body: childName + ' requested ' + reward.name + ' (' + reward.cost + ' coins)',
+        childId: uid,
+        childName: childName,
+        targetRole: 'parent',
+      }).catch(function () { /* ignore */ });
       return;
     }
     await execRedeem(uid, reward);
@@ -87,6 +103,8 @@ export function useRewardActions(deps: RewardActionsDeps) {
     });
     await deps.saveUsr(uid, ud);
     deps.notify('Redeemed: ' + reward.name);
+
+    playSound('success');
   }
 
   return {

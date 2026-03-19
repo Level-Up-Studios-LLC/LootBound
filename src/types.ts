@@ -93,6 +93,7 @@ export interface Config {
   cooldown?: number;
   parentName?: string;
   referralSource?: string;
+  notificationPrefs?: NotificationPrefs;
 }
 
 export interface Notification {
@@ -124,4 +125,27 @@ export interface ApprovalItem {
   child: Child;
   pending: PendingRedemption;
   idx: number;
+}
+
+export interface InAppNotification {
+  id: string;
+  type: 'mission_complete' | 'mission_rejected' | 'loot_request' | 'loot_approved' | 'loot_denied' | 'level_up' | 'streak';
+  title: string;
+  body: string;
+  childId?: string;
+  childName?: string;
+  targetRole: 'parent' | 'kid';
+  read: boolean;
+  createdAt: number;
+}
+
+export interface NotificationPrefs {
+  soundEnabled: boolean;
+  missionComplete: boolean;
+  missionRejected: boolean;
+  lootRequest: boolean;
+  lootApproved: boolean;
+  lootDenied: boolean;
+  levelUp: boolean;
+  streak: boolean;
 }

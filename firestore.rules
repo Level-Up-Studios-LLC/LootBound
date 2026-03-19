@@ -50,6 +50,16 @@ service cloud.firestore {
           allow read, write: if isAuthenticated();
         }
       }
+
+      match /notifications/{notifId} {
+        // Any authenticated user can read and create notifications
+        allow read, create: if isAuthenticated();
+        // Only allow updating the 'read' field
+        allow update: if isAuthenticated() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        // Parents can delete notifications
+        allow delete: if isParent(familyId);
+      }
     }
 
     // Feedback — any authenticated user can submit

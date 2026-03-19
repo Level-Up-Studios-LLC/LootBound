@@ -7,8 +7,9 @@ interface NotificationToastProps {
 export default function NotificationToast(p: NotificationToastProps) {
   if (!p.notif) return null;
   var isLevelUp = p.notif.type === 'levelup';
-  var isSuccess = p.notif.type === 'success' || isLevelUp;
-  var bg = isLevelUp ? 'bg-qpurple' : isSuccess ? 'bg-qteal' : 'bg-qcoral';
+  var isStreak = p.notif.type === 'streak';
+  var isSuccess = p.notif.type === 'success' || isLevelUp || isStreak;
+  var bg = isLevelUp ? 'bg-qpurple' : isStreak ? 'bg-gradient-to-r from-qcoral to-qpurple' : isSuccess ? 'bg-qteal' : 'bg-qcoral';
   return (
     <div
       className={
@@ -16,7 +17,7 @@ export default function NotificationToast(p: NotificationToastProps) {
         bg + (isLevelUp ? ' animate-confetti' : '')
       }
     >
-      {isLevelUp ? '🎉 ' : ''}{p.notif.msg}
+      {isLevelUp ? '🎉 ' : isStreak ? '🔥 ' : ''}{p.notif.msg}
     </div>
   );
 }

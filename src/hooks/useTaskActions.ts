@@ -22,6 +22,8 @@ import {
   uploadTaskPhoto,
   deleteTaskPhoto,
 } from '../services/photoStorage.ts';
+import { writeNotification } from '../services/firestoreStorage.ts';
+import { playSound } from '../services/notificationSound.ts';
 
 interface TaskActionsDeps {
   cfg: Config | null;
@@ -32,6 +34,7 @@ interface TaskActionsDeps {
   notify: (msg: string, type?: string) => void;
   tp: (tier: string) => number;
   tierCfg: (tier: string) => TierConfig;
+  getChildName?: (id: string) => string;
 }
 
 export function useTaskActions(deps: TaskActionsDeps) {
@@ -163,27 +166,65 @@ export function useTaskActions(deps: TaskActionsDeps) {
       if (ud.streak > (ud.bestStreak || 0)) ud.bestStreak = ud.streak;
       if (ud.streak === 3) {
         ud.points += 20;
-        deps.notify('+20: 3-day streak!');
+        deps.notify('+20: 3-day streak!', 'streak');
+        playSound('streak');
       } else if (ud.streak === 7) {
         ud.points += 75;
-        deps.notify('+75: 7-day streak!');
+        deps.notify('+75: 7-day streak!', 'streak');
+        playSound('streak');
       } else if (ud.streak === 15) {
         ud.points += 150;
-        deps.notify('+150: 15-day streak!');
+        deps.notify('+150: 15-day streak!', 'streak');
+        playSound('streak');
       } else if (ud.streak === 30) {
         ud.points += 300;
-        deps.notify('+300: 30-day streak!');
+        deps.notify('+300: 30-day streak!', 'streak');
+        playSound('streak');
       }
     }
     await deps.saveUsr(uid, ud);
+    // Haptic feedback + sound on task completion
+
+    playSound('success');
     // Notify with coins + XP, and level-up if applicable
     var sl = SL[status] || {};
     var msg = (sl.text || '') + ': ' + (coins > 0 ? '+' : '') + coins + ' coins, +' + xp + ' XP';
     if (streakMult > 1) msg += ' (' + streakMult + 'x)';
     deps.notify(msg);
+    // Write in-app notification for parent
+    var childName = deps.getChildName ? deps.getChildName(uid) : uid;
+    writeNotification(deps.familyId, {
+      type: 'mission_complete',
+      title: 'Mission Complete',
+      body: childName + ' completed ' + task.name + ' (' + (sl.text || status) + ')',
+      childId: uid,
+      childName: childName,
+      targetRole: 'parent',
+    }).catch(function () { /* ignore */ });
     if (ud.level > oldLevel) {
       var title = getLevelTitle(ud.level);
       deps.notify('LEVEL UP! Lv.' + ud.level + ' ' + title.title + '!', 'levelup');
+  
+      playSound('levelup');
+      writeNotification(deps.familyId, {
+        type: 'level_up',
+        title: 'Level Up!',
+        body: childName + ' reached Lv.' + ud.level + ' ' + title.title + '!',
+        childId: uid,
+        childName: childName,
+        targetRole: 'parent',
+      }).catch(function () { /* ignore */ });
+    }
+    // Streak notifications
+    if (allDone && noneMissed && (ud.streak === 3 || ud.streak === 7 || ud.streak === 15 || ud.streak === 30)) {
+      writeNotification(deps.familyId, {
+        type: 'streak',
+        title: 'Streak Milestone!',
+        body: childName + ' hit a ' + ud.streak + '-day streak!',
+        childId: uid,
+        childName: childName,
+        targetRole: 'parent',
+      }).catch(function () { /* ignore */ });
     }
   }
 
@@ -210,6 +251,24 @@ export function useTaskActions(deps: TaskActionsDeps) {
     entry.rejected = true;
     entry.photo = null;
     await deps.saveUsr(uid, ud);
+
+    playSound('error');
+    // Write in-app notification for kid
+    var childName = deps.getChildName ? deps.getChildName(uid) : uid;
+    var taskName = '';
+    if (deps.cfg) {
+      var tasks = deps.cfg.tasks[uid] || [];
+      var found = tasks.find(function (t) { return t.id === taskId; });
+      if (found) taskName = found.name;
+    }
+    writeNotification(deps.familyId, {
+      type: 'mission_rejected',
+      title: 'Mission Rejected',
+      body: (taskName || 'A mission') + ' was rejected. Try again!',
+      childId: uid,
+      childName: childName,
+      targetRole: 'kid',
+    }).catch(function () { /* ignore */ });
   }
 
   return {

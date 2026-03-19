@@ -24,7 +24,11 @@ import {
   where,
   writeBatch,
   onSnapshot,
+  orderBy,
+  limit,
   DocumentData,
+  addDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebase.ts';
 
@@ -75,6 +79,7 @@ export interface FamilyConfig {
   bedtime?: number;
   weeklyResetDay?: number;
   cooldown?: number;
+  notificationPrefs?: import('../types.ts').NotificationPrefs;
 }
 
 export interface TaskLogEntry {
@@ -342,7 +347,7 @@ export async function deleteFamily(familyId: string, _currentUid: string): Promi
   var refs: import('firebase/firestore').DocumentReference[] = [];
 
   // Subcollection docs
-  var subs = ['children', 'tasks', 'rewards', 'childData'];
+  var subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
   for (var i = 0; i < subs.length; i++) {
     var snap = await getDocs(collection(db, 'families', familyId, subs[i]));
     snap.forEach(function (d) {
@@ -509,4 +514,73 @@ export function onChildDataSnapshot(
       callback(snap.exists() ? (snap.data() as ChildData) : null);
     }
   );
+}
+
+// ---------------------------------------------------------------------------
+// In-app notifications
+// ---------------------------------------------------------------------------
+
+export interface InAppNotificationDoc {
+  type: string;
+  title: string;
+  body: string;
+  childId?: string;
+  childName?: string;
+  targetRole: string;
+  read: boolean;
+  createdAt: number;
+}
+
+export async function writeNotification(
+  familyId: string,
+  data: Omit<InAppNotificationDoc, 'read' | 'createdAt'>
+): Promise<string> {
+  var ref = await addDoc(
+    collection(db, 'families', familyId, 'notifications'),
+    Object.assign({}, data, { read: false, createdAt: Date.now() })
+  );
+  return ref.id;
+}
+
+export async function markNotificationRead(
+  familyId: string,
+  notifId: string
+): Promise<void> {
+  await updateDoc(
+    doc(db, 'families', familyId, 'notifications', notifId),
+    { read: true }
+  );
+}
+
+export function onNotificationsSnapshot(
+  familyId: string,
+  callback: (list: (InAppNotificationDoc & { id: string })[]) => void
+): () => void {
+  var q = query(
+    collection(db, 'families', familyId, 'notifications'),
+    orderBy('createdAt', 'desc'),
+    limit(50)
+  );
+  return onSnapshot(q, function (snap) {
+    var list: (InAppNotificationDoc & { id: string })[] = [];
+    snap.forEach(function (d) {
+      list.push(Object.assign({ id: d.id }, d.data()) as InAppNotificationDoc & { id: string });
+    });
+    callback(list);
+  });
+}
+
+export async function cleanupOldNotifications(familyId: string): Promise<void> {
+  var cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  var snap = await getDocs(collection(db, 'families', familyId, 'notifications'));
+  var batch = writeBatch(db);
+  var count = 0;
+  snap.forEach(function (d) {
+    var data = d.data();
+    if (data.createdAt && data.createdAt < cutoff) {
+      batch.delete(d.ref);
+      count++;
+    }
+  });
+  if (count > 0) await batch.commit();
 }
