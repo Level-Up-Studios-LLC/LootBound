@@ -1,6 +1,7 @@
 import React, {
   useState,
   useEffect,
+  useMemo,
   createContext,
   useContext,
 } from 'react';
@@ -483,7 +484,8 @@ export function AppProvider(props: {
   // --- In-app notification listener ---
   var notifRole: 'parent' | 'kid' = curUser === 'parent' ? 'parent' : 'kid';
   var notifChildId = curUser && curUser !== 'parent' ? curUser : null;
-  var notifPrefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+  var rawPrefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+  var notifPrefs = useMemo(function () { return rawPrefs; }, [JSON.stringify(rawPrefs)]);
 
   useNotificationListener({
     familyId: familyId,
@@ -512,11 +514,13 @@ export function AppProvider(props: {
     };
   }, []);
 
-  // --- Cleanup old notifications on load ---
+  // --- Cleanup old notifications on load (parents only) ---
   useEffect(function () {
-    if (!familyId || loading) return;
-    cleanupOldNotifications(familyId).catch(function () { /* ignore */ });
-  }, [familyId, loading]);
+    if (!familyId || loading || curUser !== 'parent') return;
+    cleanupOldNotifications(familyId).catch(function (err) {
+      console.warn('Notification cleanup failed:', err);
+    });
+  }, [familyId, loading, curUser]);
 
   // 30-second tick for bedtime cutoff detection (time-based, not data-based)
   useEffect(function () {

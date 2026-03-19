@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>LootBound needs camera access to take photos as proof of completed missions.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>LootBound needs photo library access to save mission proof photos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>LootBound needs permission to save mission proof photos to your library.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>LootBound uses Face ID to unlock the parent dashboard.</string>
 </dict>
 </plist>

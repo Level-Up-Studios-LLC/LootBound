@@ -7,7 +7,7 @@ import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
 import { getParentMember, saveParentMember } from './services/firestoreStorage.ts';
 import {
-  getStoredFamilyCode,
+  getStoredFamilyCodeAsync,
   clearStoredFamilyCode,
   lookupFamilyCode,
 } from './services/familyCode.ts';
@@ -52,15 +52,6 @@ async function getSessionAsync(key: string): Promise<string | null> {
   var val = parseSessionValue(raw);
   if (raw && !val) await removeStorage(key);
   return val;
-}
-
-function getSessionSync(key: string): string | null {
-  try {
-    var raw = sessionStorage.getItem(key);
-    return parseSessionValue(raw);
-  } catch (_e) {
-    return null;
-  }
 }
 
 function setSession(key: string, val: string): void {
@@ -280,38 +271,44 @@ function AppRouter() {
   var _initDone = useState(false),
     initDone = _initDone[0],
     setInitDone = _initDone[1];
+  var _storedKid = useState<string | null | undefined>(undefined),
+    storedKid = _storedKid[0],
+    setStoredKid = _storedKid[1];
 
   // On mount, check for stored family code (kid device persistence)
   // or persisted Firebase session (parent device persistence)
   useEffect(function () {
-    var storedCode = getStoredFamilyCode();
-    if (storedCode) {
-      lookupFamilyCode(storedCode).then(function (fid) {
+    (async function () {
+      var kidSession = await getSessionAsync(SESSION_KEY_KID);
+      setStoredKid(kidSession);
+      var storedCode = await getStoredFamilyCodeAsync();
+      if (storedCode) {
+        var fid = await lookupFamilyCode(storedCode);
         if (fid) {
-          signInAnonymousKid().then(function () {
-            setRole('kid');
-            setKidFamilyId(fid);
-            setInitDone(true);
-          });
+          await signInAnonymousKid();
+          setRole('kid');
+          setKidFamilyId(fid);
+          setInitDone(true);
         } else {
           // Stored code is no longer valid
-          clearStoredFamilyCode();
+          await clearStoredFamilyCode();
           setInitDone(true);
         }
-      });
-    } else {
-      setInitDone(true);
-    }
+      } else {
+        setInitDone(true);
+      }
+    })();
   }, []);
 
   // Auto-detect persisted parent session
   useEffect(
     function () {
       if (!auth.authLoading && auth.authUser && !role && initDone) {
-        var storedCode = getStoredFamilyCode();
-        if (!storedCode) {
-          setRole('parent');
-        }
+        getStoredFamilyCodeAsync().then(function (storedCode) {
+          if (!storedCode) {
+            setRole('parent');
+          }
+        });
       }
     },
     [auth.authLoading, auth.authUser, role, initDone]
@@ -516,7 +513,6 @@ function AppRouter() {
     // Family code resolved → show app
     // Pass stored kid as initialUser but start at 'login' — AppContext will
     // validate the child ID against cfg.children and promote to 'dashboard'
-    var storedKid = getSessionSync(SESSION_KEY_KID);
     return (
       <AppProvider
         familyId={kidFamilyId}
@@ -524,7 +520,7 @@ function AppRouter() {
       >
         <AppInner
           onSwitchFamily={function () {
-            clearStoredFamilyCode();
+            clearStoredFamilyCode().catch(function () { /* ignore */ });
             clearSession(SESSION_KEY_KID);
             setKidFamilyId(null);
             setRole(null);

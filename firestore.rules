@@ -17,6 +17,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Helper: family member — parent (via parentMembers) or anonymous kid
+    // (went through family code flow; can't verify which family in rules).
+    function isFamilyMember(familyId) {
+      return isParent(familyId) ||
+        (request.auth != null && request.auth.token.firebase.sign_in_provider == 'anonymous');
+    }
+
     match /families/{familyId} {
       // Parents can read and write family config.
       // Kids (anonymous) can read so they see children, tasks, rewards, settings.
@@ -52,10 +59,10 @@ service cloud.firestore {
       }
 
       match /notifications/{notifId} {
-        // Any authenticated user can read and create notifications
-        allow read, create: if isAuthenticated();
-        // Only allow updating the 'read' field
-        allow update: if isAuthenticated() &&
+        // Family members can read and create notifications
+        allow read, create: if isFamilyMember(familyId);
+        // Family members can mark notifications as read (only the 'read' field)
+        allow update: if isFamilyMember(familyId) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
         // Parents can delete notifications
         allow delete: if isParent(familyId);

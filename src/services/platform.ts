@@ -21,8 +21,12 @@ export function isNative(): boolean {
 
 export async function getStorage(key: string): Promise<string | null> {
   if (isNative()) {
-    var result = await Preferences.get({ key: key });
-    return result.value;
+    try {
+      var result = await Preferences.get({ key: key });
+      return result.value;
+    } catch (_e) {
+      return null;
+    }
   }
   try {
     return sessionStorage.getItem(key);
@@ -33,7 +37,9 @@ export async function getStorage(key: string): Promise<string | null> {
 
 export async function setStorage(key: string, val: string): Promise<void> {
   if (isNative()) {
-    await Preferences.set({ key: key, value: val });
+    try {
+      await Preferences.set({ key: key, value: val });
+    } catch (_e) { /* ignore */ }
     return;
   }
   try {
@@ -43,7 +49,9 @@ export async function setStorage(key: string, val: string): Promise<void> {
 
 export async function removeStorage(key: string): Promise<void> {
   if (isNative()) {
-    await Preferences.remove({ key: key });
+    try {
+      await Preferences.remove({ key: key });
+    } catch (_e) { /* ignore */ }
     return;
   }
   try {
@@ -93,8 +101,12 @@ export async function removePersistentStorage(key: string): Promise<void> {
 
 export async function copyToClipboard(text: string): Promise<boolean> {
   if (isNative()) {
-    await Clipboard.write({ string: text });
-    return true;
+    try {
+      await Clipboard.write({ string: text });
+      return true;
+    } catch (_e) {
+      return false;
+    }
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {

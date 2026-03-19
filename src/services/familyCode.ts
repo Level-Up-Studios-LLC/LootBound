@@ -85,10 +85,10 @@ export async function getStoredFamilyCodeAsync(): Promise<string | null> {
   return getPersistentStorage(STORAGE_KEY);
 }
 
-export function setStoredFamilyCode(code: string): void {
-  setPersistentStorage(STORAGE_KEY, code.toUpperCase());
+export async function setStoredFamilyCode(code: string): Promise<void> {
+  await setPersistentStorage(STORAGE_KEY, code.toUpperCase());
 }
 
-export function clearStoredFamilyCode(): void {
-  removePersistentStorage(STORAGE_KEY);
+export async function clearStoredFamilyCode(): Promise<void> {
+  await removePersistentStorage(STORAGE_KEY);
 }

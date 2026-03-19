@@ -65,5 +65,5 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
     return function () {
       unsub();
     };
-  }, [deps.familyId, deps.role, deps.childId, deps.loading]);
+  }, [deps.familyId, deps.role, deps.childId, deps.loading, deps.prefs]);
 }

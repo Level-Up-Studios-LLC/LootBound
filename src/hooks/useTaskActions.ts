@@ -67,10 +67,16 @@ export function useTaskActions(deps: TaskActionsDeps) {
         if (photo) {
           doComplete(taskId, photo).then(function () {
             setCapturing(null);
+          }).catch(function (err) {
+            console.error('doComplete failed:', err);
+            setCapturing(null);
           });
         } else {
           setCapturing(null);
         }
+      }).catch(function (err) {
+        console.error('nativeCapturePhoto failed:', err);
+        setCapturing(null);
       });
     } else {
       if (fileRef.current) {

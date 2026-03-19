@@ -41,16 +41,19 @@ export default function ParentPinScreen(
 
   useEffect(function () {
     if (isNative() && hasPin) {
+      var cancelled = false;
       isBiometricAvailable().then(function (available) {
+        if (cancelled) return;
         setBioAvailable(available);
         if (available) {
           authenticateWithBiometric().then(function (ok) {
-            if (ok) props.onSuccess();
+            if (!cancelled && ok) props.onSuccess();
           });
         }
       });
+      return function () { cancelled = true; };
     }
-  }, []);
+  }, [hasPin, props.onSuccess]);
 
   function handleBiometric() {
     authenticateWithBiometric().then(function (ok) {
