@@ -1,7 +1,7 @@
 import type { UserData } from '../types.ts';
 import { freshUser, getToday } from '../utils.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
-import { playSound } from '../services/notificationSound.ts';
+import type { SoundKey } from '../services/notificationSound.ts';
 
 interface ApprovalActionsDeps {
   allU: Record<string, UserData>;
@@ -9,6 +9,7 @@ interface ApprovalActionsDeps {
   saveUsr: (uid: string, data: UserData) => Promise<void>;
   notify: (msg: string, type?: string) => void;
   getChildName?: (id: string) => string;
+  playSound: (key: SoundKey) => void;
 }
 
 export function useApprovalActions(deps: ApprovalActionsDeps) {
@@ -34,7 +35,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     await deps.saveUsr(uid, ud);
     deps.notify('Approved: ' + p.name);
 
-    playSound('approval');
+    deps.playSound('approval');
     // Write in-app notification for kid
     var childName = deps.getChildName ? deps.getChildName(uid) : uid;
     writeNotification(deps.familyId, {
@@ -58,7 +59,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     await deps.saveUsr(uid, ud);
     deps.notify('Denied');
 
-    playSound('error');
+    deps.playSound('error');
     // Write in-app notification for kid
     var childName = deps.getChildName ? deps.getChildName(uid) : uid;
     writeNotification(deps.familyId, {

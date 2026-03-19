@@ -29,6 +29,7 @@ import {
   DocumentData,
   addDoc,
   updateDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase.ts';
 
@@ -537,7 +538,7 @@ export async function writeNotification(
 ): Promise<string> {
   var ref = await addDoc(
     collection(db, 'families', familyId, 'notifications'),
-    Object.assign({}, data, { read: false, createdAt: Date.now() })
+    Object.assign({}, data, { read: false, createdAt: serverTimestamp() })
   );
   return ref.id;
 }

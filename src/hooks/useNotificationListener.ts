@@ -24,7 +24,7 @@ function isEligible(
 ): boolean {
   if (n.read) return false;
   if (n.targetRole !== role) return false;
-  if (n.targetRole === 'kid' && n.childId && childId && n.childId !== childId) return false;
+  if (n.targetRole === 'kid' && n.childId && (!childId || n.childId !== childId)) return false;
   var typeKey = n.type.replace(/_([a-z])/g, function (_: string, c: string) {
     return c.toUpperCase();
   }) as keyof NotificationPrefs;
@@ -59,8 +59,8 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
               playSound(notifTypeToSound(n.type));
             }
             markNotificationRead(deps.familyId, n.id).catch(function () { /* ignore */ });
+            seenRef.current.add(n.id);
           }
-          seenRef.current.add(n.id);
         });
         return;
       }

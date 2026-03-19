@@ -33,7 +33,7 @@ export function unlockAudio(): void {
   } catch (_e) { /* ignore */ }
 }
 
-export async function preloadSounds(): Promise<void> {
+export function preloadSounds(): void {
   var keys = SOUND_KEYS.slice();
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
