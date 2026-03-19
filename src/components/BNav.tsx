@@ -1,5 +1,5 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAppContext } from '../context/AppContext.tsx';
+import IconBadge from './IconBadge.tsx';
 
 interface NavTab {
   id: string;
@@ -42,14 +42,7 @@ export default function BNav(p: BNavProps) {
               (isActive ? 'text-qteal' : 'text-qslate hover:text-qteal')
             }
           >
-            <span className="text-xl relative">
-              <FontAwesomeIcon icon={['fas', t.icon] as any} />
-              {badge > 0 && (
-                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] bg-qcoral text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
-                  {badge}
-                </span>
-              )}
-            </span>
+            <IconBadge icon={t.icon} badge={badge} />
             <span className="text-xs font-semibold">{t.label}</span>
           </button>
         );

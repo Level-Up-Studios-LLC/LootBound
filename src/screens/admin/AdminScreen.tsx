@@ -6,6 +6,7 @@ import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
 import HamburgerMenu from '../../components/HamburgerMenu.tsx';
+import IconBadge from '../../components/IconBadge.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';
 import ReviewTab from './ReviewTab.tsx';
@@ -210,14 +211,7 @@ export default function AdminScreen(): React.ReactElement {
                 (atab === t[0] ? 'text-qteal' : 'text-qslate')
               }
             >
-              <span className='text-xl relative'>
-                <FontAwesomeIcon icon={['fas', t[1]] as any} />
-                {badge > 0 && (
-                  <span className='absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] bg-qcoral text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 leading-none'>
-                    {badge}
-                  </span>
-                )}
-              </span>
+              <IconBadge icon={t[1]} badge={badge} />
               <span className='text-xs font-semibold'>{t[2]}</span>
             </button>
           );
