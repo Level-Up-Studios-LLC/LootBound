@@ -6,21 +6,21 @@ At the end of each conversation (or when significant work is completed), review 
 
 ## Project Overview
 
-LootBound is a gamified chore/task reward system for children, built as a React web app. It was designed for the Johnson family (Marc and Pheline) to help their kids develop responsibility and good habits through a video-game-inspired coin + XP system.
+LootBound is a gamified chore/task reward system for children, built as a React web app. It was designed for the Joseph family (Marc and Pheline) to help their kids develop responsibility and good habits through a video-game-inspired coin + XP system.
 
-The app runs on iPads and mobile devices, uses Firebase (Firestore + Storage + Auth) for persistence and multi-device sync, and is deployed via Firebase Hosting.
+The app runs on all devices, uses Firebase (Firestore + Storage + Auth) for persistence and multi-device sync, and is deployed via Firebase Hosting.
 
 ## Tech Stack
 
-- **Framework:** React 18 (functional components, hooks only)
-- **Build Tool:** Vite 7
+- **Framework:** React 19
+- **Build Tool:** Vite 8
 - **Language:** TypeScript (strict mode)
 - **Auth:** Firebase Authentication (email/password for parents, anonymous for kids)
 - **Database:** Cloud Firestore (real-time sync via onSnapshot listeners)
 - **File Storage:** Firebase Storage (photo proof uploads)
 - **Hosting:** Firebase Hosting
 - **Styling:** Tailwind CSS v4
-- **Icons:** FontAwesome Pro 6 (duotone + classic solid, registered in `src/fa.ts`)
+- **Icons:** FontAwesome Pro 7 (duotone + classic solid + brands, registered in `src/fa.ts`)
 - **Error Tracking:** Sentry
 - **Fonts:** Google Fonts — Fredoka (display), Nunito (body)
 - **Deployment Target:** iPad Safari (mobile-first 480px max-width app)
@@ -48,14 +48,14 @@ Copy `.env.example` to `.env` and fill in Firebase config values.
 
 Missions are assigned a tier from S (hardest) to F (easiest). Each tier has configurable coin and XP values stored in `Config.tierConfig`:
 
-| Tier | Coins | XP  | Description                     |
-| ---- | ----- | --- | ------------------------------- |
-| S    | 50    | 40  | Epic — rare, high-effort        |
-| A    | 30    | 25  | Hard — real effort required     |
-| B    | 20    | 18  | Medium — core daily chores      |
-| C    | 12    | 12  | Light — quick responsibilities  |
-| D    | 7     | 7   | Easy — simple habits            |
-| F    | 3     | 3   | Trivial — participation-level   |
+| Tier | Coins | XP  | Description                    |
+| ---- | ----- | --- | ------------------------------ |
+| S    | 50    | 40  | Epic — rare, high-effort       |
+| A    | 30    | 25  | Hard — real effort required    |
+| B    | 20    | 18  | Medium — core daily chores     |
+| C    | 12    | 12  | Light — quick responsibilities |
+| D    | 7     | 7   | Easy — simple habits           |
+| F    | 3     | 3   | Trivial — participation-level  |
 
 Parents can change tier coin/XP values in Settings.
 
@@ -63,12 +63,12 @@ Parents can change tier coin/XP values in Settings.
 
 Coins and XP scale based on when a mission is completed relative to its time window:
 
-| Timing  | Multiplier | Description                       |
-| ------- | ---------- | --------------------------------- |
-| Early   | x1.25      | Completed before the window opens |
-| On Time | x1.0       | Completed within the window       |
-| Late    | x0.5       | Completed after the window closes |
-| Missed  | -Coins, 0 XP | Not completed by bedtime       |
+| Timing  | Multiplier   | Description                       |
+| ------- | ------------ | --------------------------------- |
+| Early   | x1.25        | Completed before the window opens |
+| On Time | x1.0         | Completed within the window       |
+| Late    | x0.5         | Completed after the window closes |
+| Missed  | -Coins, 0 XP | Not completed by bedtime          |
 
 **Key rule: XP never goes negative.** Missed tasks deduct coins but award 0 XP. Rejected tasks deduct both coins and XP (clamped to 0).
 
@@ -155,17 +155,17 @@ Configurable reset day (default Sunday). On reset:
 
 ### Abuse Prevention
 
-| Guard                     | What it prevents                                |
-| ------------------------- | ----------------------------------------------- |
-| Configurable cooldown     | Rapid-fire spam completing tasks                |
-| Camera-only photo capture | Uploading old/fake photos from gallery          |
-| Per-reward limits         | Burning coins on the same reward repeatedly     |
-| Parent approval queue     | High-value redemptions without oversight        |
-| Configurable threshold    | Auto-flags rewards above X coins                |
-| Kid PINs                  | Sibling tampering / cross-account access        |
-| Bedtime lockout           | Late-night task manipulation                    |
-| Full audit log            | All redemptions logged with timestamps          |
-| XP multiplier cap (2.0x)  | Prevents streak abuse of XP system              |
+| Guard                     | What it prevents                            |
+| ------------------------- | ------------------------------------------- |
+| Configurable cooldown     | Rapid-fire spam completing tasks            |
+| Camera-only photo capture | Uploading old/fake photos from gallery      |
+| Per-reward limits         | Burning coins on the same reward repeatedly |
+| Parent approval queue     | High-value redemptions without oversight    |
+| Configurable threshold    | Auto-flags rewards above X coins            |
+| Kid PINs                  | Sibling tampering / cross-account access    |
+| Bedtime lockout           | Late-night task manipulation                |
+| Full audit log            | All redemptions logged with timestamps      |
+| XP multiplier cap (2.0x)  | Prevents streak abuse of XP system          |
 
 ---
 
@@ -273,15 +273,16 @@ When AppContext loads config, it checks for the old numeric `tierPoints` format 
 
 Always checkout the correct branch before making changes:
 
-| Branch           | Purpose                           |
-| ---------------- | --------------------------------- |
-| `feature`        | New features                      |
-| `bugfix`         | Non-critical bug fixes            |
-| `hotfix`         | Critical fixes from main          |
-| `release`        | Preparing production releases     |
-| `docs`           | Documentation                     |
-| `refactor`       | Code restructuring                |
-| `ui-adjustments` | UI polish and tweaks              |
+| Branch           | Purpose                       |
+| ---------------- | ----------------------------- |
+| `feature`        | New features                  |
+| `bugfix`         | Non-critical bug fixes        |
+| `hotfix`         | Critical fixes from main      |
+| `release`        | Preparing production releases |
+| `docs`           | Documentation                 |
+| `refactor`       | Code restructuring            |
+| `ui-adjustments` | UI polish and tweaks          |
+| `capacitor`      | iOs/Android native features   |
 
 GitHub repo: https://github.com/Level-Up-Studios-LLC/LootBound.git
 
