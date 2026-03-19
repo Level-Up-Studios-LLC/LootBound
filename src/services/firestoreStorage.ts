@@ -571,16 +571,22 @@ export function onNotificationsSnapshot(
 }
 
 export async function cleanupOldNotifications(familyId: string): Promise<void> {
+  var BATCH_LIMIT = 500;
   var cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   var snap = await getDocs(collection(db, 'families', familyId, 'notifications'));
-  var batch = writeBatch(db);
-  var count = 0;
+  var refs: import('firebase/firestore').DocumentReference[] = [];
   snap.forEach(function (d) {
     var data = d.data();
     if (data.createdAt && data.createdAt < cutoff) {
-      batch.delete(d.ref);
-      count++;
+      refs.push(d.ref);
     }
   });
-  if (count > 0) await batch.commit();
+  for (var start = 0; start < refs.length; start += BATCH_LIMIT) {
+    var chunk = refs.slice(start, start + BATCH_LIMIT);
+    var batch = writeBatch(db);
+    for (var j = 0; j < chunk.length; j++) {
+      batch.delete(chunk[j]);
+    }
+    await batch.commit();
+  }
 }
