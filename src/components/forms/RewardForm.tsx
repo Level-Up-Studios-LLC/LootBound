@@ -26,7 +26,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
   var _s = useState<Reward>(props.reward),
     f = _s[0],
     setF = _s[1];
-  function u(k: string, v: any): void {
+  function u<K extends keyof Reward>(k: K, v: Reward[K]): void {
     setF(Object.assign({}, f, { [k]: v }));
   }
   return (
