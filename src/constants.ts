@@ -42,7 +42,11 @@ export const TIER_COLORS: Record<string, string> = {
 //   level 1 contributes Math.floor(50 * 1^1.5) = 50
 //   level 2 contributes Math.floor(50 * 2^1.5) = 141
 //   ...and so on, each level requiring more XP than the last.
-function generateLevelXp(maxLevel: number, scale: number, exponent: number): number[] {
+function generateLevelXp(
+  maxLevel: number,
+  scale: number,
+  exponent: number
+): number[] {
   const thresholds: number[] = [];
   let cumulative = 0;
   for (let i = 1; i <= maxLevel; i++) {

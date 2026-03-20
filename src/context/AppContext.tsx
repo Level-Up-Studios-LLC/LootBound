@@ -15,7 +15,11 @@ import type {
   AddChildFormData,
   Notification,
 } from '../types.ts';
-import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, MIN_COINS } from '../constants.ts';
+import {
+  DEF_TIER_CONFIG,
+  DEF_NOTIFICATION_PREFS,
+  MIN_COINS,
+} from '../constants.ts';
 import { setStorage, removeStorage } from '../services/platform.ts';
 import {
   freshUser,
@@ -47,7 +51,11 @@ import { useApprovalActions } from '../hooks/useApprovalActions.ts';
 import { useChildActions } from '../hooks/useChildActions.ts';
 import { useFirestoreSync } from '../hooks/useFirestoreSync.ts';
 import { useNotificationListener } from '../hooks/useNotificationListener.ts';
-import { unlockAudio, preloadSounds, playSound } from '../services/notificationSound.ts';
+import {
+  unlockAudio,
+  preloadSounds,
+  playSound,
+} from '../services/notificationSound.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
 import { cleanupOldNotifications } from '../services/firestoreStorage.ts';
 
@@ -116,12 +124,17 @@ export function AppProvider(props: {
   onLogout?: () => void;
 }) {
   const [screen, setScreen] = useState(props.initialScreen || 'login');
-  const [curUser, setCurUserRaw] = useState<string | null>(props.initialUser || null);
+  const [curUser, setCurUserRaw] = useState<string | null>(
+    props.initialUser || null
+  );
 
   const setCurUser = (uid: string | null) => {
     setCurUserRaw(uid);
     if (uid && uid !== 'parent') {
-      setStorage('qb-kid-session', JSON.stringify({ val: uid, ts: Date.now() }));
+      setStorage(
+        'qb-kid-session',
+        JSON.stringify({ val: uid, ts: Date.now() })
+      );
     } else if (!uid) {
       removeStorage('qb-kid-session');
       if (props.onLogout) props.onLogout();
@@ -141,9 +154,7 @@ export function AppProvider(props: {
   // --- Helper functions ---
   const getChild = (id: string): Child | null => {
     if (!cfg || !cfg.children) return null;
-    return (
-      cfg.children.find((c) => c.id === id) || null
-    );
+    return cfg.children.find(c => c.id === id) || null;
   };
 
   const tierCfg = (tier: string): TierConfig => {
@@ -159,7 +170,7 @@ export function AppProvider(props: {
 
   // --- Persistence ---
   const saveUsr = async (uid: string, data: UserData) => {
-    setAllU((p) => {
+    setAllU(p => {
       const o: Record<string, UserData> = {};
       for (const k in p) o[k] = p[k];
       o[uid] = data;
@@ -174,10 +185,7 @@ export function AppProvider(props: {
     await syncCfgToFirestore(oldCfg, newCfg);
   };
 
-  const syncCfgToFirestore = async (
-    oldCfg: Config | null,
-    newCfg: Config
-  ) => {
+  const syncCfgToFirestore = async (oldCfg: Config | null, newCfg: Config) => {
     const promises: Promise<void>[] = [];
 
     const cfgFields: Record<string, any> = {
@@ -189,50 +197,46 @@ export function AppProvider(props: {
     if (newCfg.weeklyResetDay != null)
       cfgFields.weeklyResetDay = newCfg.weeklyResetDay;
     if (newCfg.cooldown != null) cfgFields.cooldown = newCfg.cooldown;
-    if (newCfg.notificationPrefs) cfgFields.notificationPrefs = newCfg.notificationPrefs;
+    if (newCfg.notificationPrefs)
+      cfgFields.notificationPrefs = newCfg.notificationPrefs;
     promises.push(fsSaveConfig(familyId, cfgFields));
 
-    (newCfg.children || []).forEach((ch) => {
+    (newCfg.children || []).forEach(ch => {
       promises.push(fsSaveChild(familyId, ch.id, ch));
     });
     if (oldCfg) {
       const newChildIds: Record<string, boolean> = {};
-      (newCfg.children || []).forEach((ch) => {
+      (newCfg.children || []).forEach(ch => {
         newChildIds[ch.id] = true;
       });
-      (oldCfg.children || []).forEach((ch) => {
-        if (!newChildIds[ch.id])
-          promises.push(fsDeleteChild(familyId, ch.id));
+      (oldCfg.children || []).forEach(ch => {
+        if (!newChildIds[ch.id]) promises.push(fsDeleteChild(familyId, ch.id));
       });
     }
 
     const newTaskIds: Record<string, boolean> = {};
-    Object.keys(newCfg.tasks || {}).forEach((cid) => {
-      (newCfg.tasks[cid] || []).forEach((t) => {
+    Object.keys(newCfg.tasks || {}).forEach(cid => {
+      (newCfg.tasks[cid] || []).forEach(t => {
         newTaskIds[t.id] = true;
-        promises.push(
-          fsSaveTask(familyId, t.id, { childId: cid, ...t })
-        );
+        promises.push(fsSaveTask(familyId, t.id, { childId: cid, ...t }));
       });
     });
     if (oldCfg) {
-      Object.keys(oldCfg.tasks || {}).forEach((cid) => {
-        (oldCfg!.tasks[cid] || []).forEach((t) => {
-          if (!newTaskIds[t.id])
-            promises.push(fsDeleteTask(familyId, t.id));
+      Object.keys(oldCfg.tasks || {}).forEach(cid => {
+        (oldCfg!.tasks[cid] || []).forEach(t => {
+          if (!newTaskIds[t.id]) promises.push(fsDeleteTask(familyId, t.id));
         });
       });
     }
 
     const newRewardIds: Record<string, boolean> = {};
-    (newCfg.rewards || []).forEach((r) => {
+    (newCfg.rewards || []).forEach(r => {
       newRewardIds[r.id] = true;
       promises.push(fsSaveReward(familyId, r.id, r));
     });
     if (oldCfg) {
-      (oldCfg.rewards || []).forEach((r) => {
-        if (!newRewardIds[r.id])
-          promises.push(fsDeleteReward(familyId, r.id));
+      (oldCfg.rewards || []).forEach(r => {
+        if (!newRewardIds[r.id]) promises.push(fsDeleteReward(familyId, r.id));
       });
     }
 
@@ -247,7 +251,9 @@ export function AppProvider(props: {
 
   // --- Pref-aware sound helper ---
   const playSoundIfAllowed = (key: SoundKey): void => {
-    const prefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+    const prefs = cfg
+      ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS
+      : DEF_NOTIFICATION_PREFS;
     if (prefs.soundEnabled) {
       playSound(key);
     }
@@ -304,167 +310,183 @@ export function AppProvider(props: {
     let dead = false;
     (async () => {
       try {
-      let fc = await fsGetConfig(familyId);
-      const fsChildren = await fsGetChildren(familyId);
-      const fsTasks = await fsGetTasks(familyId);
-      const fsRewards = await fsGetRewards(familyId);
+        let fc = await fsGetConfig(familyId);
+        const fsChildren = await fsGetChildren(familyId);
+        const fsTasks = await fsGetTasks(familyId);
+        const fsRewards = await fsGetRewards(familyId);
 
-      const needsSeed = !fc && fsChildren.length === 0;
-      if (needsSeed) {
-        // Re-read config in case CreatePinPrompt wrote parentPin
-        // between our initial read and now
-        const freshCfg = await fsGetConfig(familyId);
-        const defConfig = {
-          parentPin: '',
-          tierConfig: structuredClone(DEF_TIER_CONFIG),
-          approvalThreshold: 300,
-          lastWeeklyReset: getWeekStart(),
-        };
-        // merge: true in fsSaveConfig preserves any existing parentPin
-        await fsSaveConfig(familyId, defConfig);
-        fc = freshCfg ? { ...defConfig, ...freshCfg } : defConfig;
-      } else if (fc) {
-        // Config doc exists (e.g. parentPin was saved during signup)
-        // but may be missing seed defaults — fill them in without
-        // overwriting fields that already have values.
-        const patches: Record<string, any> = {};
-        if (!(fc as any).tierConfig && !(fc as any).tierPoints) {
-          patches.tierConfig = structuredClone(DEF_TIER_CONFIG);
-        }
-        if (fc.approvalThreshold == null) {
-          patches.approvalThreshold = 300;
-        }
-        if (!fc.lastWeeklyReset) {
-          patches.lastWeeklyReset = getWeekStart();
-        }
-        if (Object.keys(patches).length > 0) {
-          await fsSaveConfig(familyId, patches);
-          fc = { ...fc, ...patches };
-        }
-      }
-
-      // Migration: tierPoints (numeric) -> tierConfig (letter-based)
-      if (fc && !(fc as any).tierConfig && (fc as any).tierPoints) {
-        const oldTp = (fc as any).tierPoints;
-        const numToLetter: Record<string, string> = { '1': 'D', '2': 'C', '3': 'B', '4': 'A' };
-        const migrated: Record<string, { coins: number; xp: number }> = structuredClone(DEF_TIER_CONFIG);
-        Object.keys(oldTp).forEach((k) => {
-          const letter = numToLetter[k];
-          if (letter && migrated[letter]) {
-            migrated[letter].coins = oldTp[k];
+        const needsSeed = !fc && fsChildren.length === 0;
+        if (needsSeed) {
+          // Re-read config in case CreatePinPrompt wrote parentPin
+          // between our initial read and now
+          const freshCfg = await fsGetConfig(familyId);
+          const defConfig = {
+            parentPin: '',
+            tierConfig: structuredClone(DEF_TIER_CONFIG),
+            approvalThreshold: 300,
+            lastWeeklyReset: getWeekStart(),
+          };
+          // merge: true in fsSaveConfig preserves any existing parentPin
+          await fsSaveConfig(familyId, defConfig);
+          fc = freshCfg ? { ...defConfig, ...freshCfg } : defConfig;
+        } else if (fc) {
+          // Config doc exists (e.g. parentPin was saved during signup)
+          // but may be missing seed defaults — fill them in without
+          // overwriting fields that already have values.
+          const patches: Record<string, any> = {};
+          if (!(fc as any).tierConfig && !(fc as any).tierPoints) {
+            patches.tierConfig = structuredClone(DEF_TIER_CONFIG);
           }
-        });
-        // Migrate task tiers from numeric to letter first
-        const taskMigrations: Promise<void>[] = [];
+          if (fc.approvalThreshold == null) {
+            patches.approvalThreshold = 300;
+          }
+          if (!fc.lastWeeklyReset) {
+            patches.lastWeeklyReset = getWeekStart();
+          }
+          if (Object.keys(patches).length > 0) {
+            await fsSaveConfig(familyId, patches);
+            fc = { ...fc, ...patches };
+          }
+        }
+
+        // Migration: tierPoints (numeric) -> tierConfig (letter-based)
+        if (fc && !(fc as any).tierConfig && (fc as any).tierPoints) {
+          const oldTp = (fc as any).tierPoints;
+          const numToLetter: Record<string, string> = {
+            '1': 'D',
+            '2': 'C',
+            '3': 'B',
+            '4': 'A',
+          };
+          const migrated: Record<string, { coins: number; xp: number }> =
+            structuredClone(DEF_TIER_CONFIG);
+          Object.keys(oldTp).forEach(k => {
+            const letter = numToLetter[k];
+            if (letter && migrated[letter]) {
+              migrated[letter].coins = oldTp[k];
+            }
+          });
+          // Migrate task tiers from numeric to letter first
+          const taskMigrations: Promise<void>[] = [];
+          fsTasks.forEach((t: any) => {
+            const letter = numToLetter[String(t.tier)];
+            if (letter) {
+              t.tier = letter;
+              taskMigrations.push(
+                fsSaveTask(familyId, t.id, { tier: letter } as any)
+              );
+            }
+          });
+          let migrationOk = true;
+          if (taskMigrations.length > 0) {
+            try {
+              await Promise.all(taskMigrations);
+            } catch (err) {
+              console.error(
+                'Task tier migration failed, will retry on next load:',
+                err
+              );
+              Sentry.captureException(err, {
+                tags: { action: 'tier-migration' },
+              });
+              migrationOk = false;
+            }
+          }
+          // Save config only after all tasks are migrated successfully
+          if (migrationOk) {
+            (fc as any).tierConfig = migrated;
+            await fsSaveConfig(familyId, { tierConfig: migrated } as any);
+          }
+        }
+
+        if (fc && !(fc as any).familyCode) {
+          const genCode = await import('../services/familyCode.ts');
+          const code = await genCode.generateFamilyCode();
+          await genCode.registerFamilyCode(code, familyId);
+          (fc as any).familyCode = code;
+          // Persist family code on the config doc so deleteFamily can find it
+          await fsSaveConfig(familyId, { familyCode: code } as any);
+        }
+
+        const tasksMap: Record<string, import('../types.ts').Task[]> = {};
         fsTasks.forEach((t: any) => {
-          const letter = numToLetter[String(t.tier)];
-          if (letter) {
-            t.tier = letter;
-            taskMigrations.push(fsSaveTask(familyId, t.id, { tier: letter } as any));
-          }
+          const cid = t.childId || '';
+          if (!tasksMap[cid]) tasksMap[cid] = [];
+          tasksMap[cid].push({
+            id: t.id,
+            name: t.name,
+            tier: t.tier,
+            windowStart: t.windowStart,
+            windowEnd: t.windowEnd,
+            daily: t.daily,
+            dueDay: t.dueDay,
+          });
         });
-        let migrationOk = true;
-        if (taskMigrations.length > 0) {
-          try {
-            await Promise.all(taskMigrations);
-          } catch (err) {
-            console.error('Task tier migration failed, will retry on next load:', err);
-            Sentry.captureException(err, { tags: { action: 'tier-migration' } });
-            migrationOk = false;
+
+        const c: Config = {
+          children: fsChildren as Child[],
+          tasks: tasksMap,
+          rewards: fsRewards as Reward[],
+          parentPin: fc && fc.parentPin ? fc.parentPin : '',
+          tierConfig:
+            fc && fc.tierConfig
+              ? fc.tierConfig
+              : structuredClone(DEF_TIER_CONFIG),
+          approvalThreshold:
+            fc != null && fc.approvalThreshold != null
+              ? fc.approvalThreshold
+              : 300,
+          lastWeeklyReset: fc ? fc.lastWeeklyReset || '' : '',
+          familyCode: fc ? fc.familyCode || '' : '',
+          bedtime: fc && fc.bedtime != null ? fc.bedtime : undefined,
+          weeklyResetDay:
+            fc && fc.weeklyResetDay != null ? fc.weeklyResetDay : undefined,
+          cooldown: fc && fc.cooldown != null ? fc.cooldown : undefined,
+          parentName: fc && fc.parentName ? fc.parentName : undefined,
+          referralSource:
+            fc && fc.referralSource ? fc.referralSource : undefined,
+          notificationPrefs:
+            fc && fc.notificationPrefs ? fc.notificationPrefs : undefined,
+        };
+        if (!c.children) c.children = [];
+        if (!c.tierConfig) c.tierConfig = structuredClone(DEF_TIER_CONFIG);
+
+        const users: Record<string, UserData> = {};
+        const ws = getWeekStart(c.weeklyResetDay);
+        const needsReset = c.lastWeeklyReset < ws;
+        for (let i = 0; i < c.children.length; i++) {
+          const ch = c.children[i];
+          let ud = (await fsGetChildData(familyId, ch.id)) as UserData | null;
+          if (!ud) ud = freshUser();
+          // Migration: add xp/level fields if missing
+          if (ud.xp == null) ud.xp = 0;
+          if (ud.level == null) ud.level = 1;
+          if (ud.missedDaysThisWeek == null) ud.missedDaysThisWeek = 0;
+          if (needsReset) {
+            ud.missedDaysThisWeek = 0;
+            // Delete photos from Storage before clearing the log
+            ((childId: string) => {
+              deleteAllChildPhotos(familyId, childId).catch(err => {
+                console.warn(`Photo cleanup failed for ${childId}:`, err);
+                Sentry.captureException(err, {
+                  tags: { action: 'weekly-reset-photo-cleanup', childId },
+                });
+              });
+            })(ch.id);
+            ud.taskLog = {};
+            await fsSaveChildData(familyId, ch.id, ud);
           }
+          users[ch.id] = ud;
         }
-        // Save config only after all tasks are migrated successfully
-        if (migrationOk) {
-          (fc as any).tierConfig = migrated;
-          await fsSaveConfig(familyId, { tierConfig: migrated } as any);
-        }
-      }
-
-      if (fc && !(fc as any).familyCode) {
-        const genCode = await import('../services/familyCode.ts');
-        const code = await genCode.generateFamilyCode();
-        await genCode.registerFamilyCode(code, familyId);
-        (fc as any).familyCode = code;
-        // Persist family code on the config doc so deleteFamily can find it
-        await fsSaveConfig(familyId, { familyCode: code } as any);
-      }
-
-      const tasksMap: Record<string, import('../types.ts').Task[]> = {};
-      fsTasks.forEach((t: any) => {
-        const cid = t.childId || '';
-        if (!tasksMap[cid]) tasksMap[cid] = [];
-        tasksMap[cid].push({
-          id: t.id,
-          name: t.name,
-          tier: t.tier,
-          windowStart: t.windowStart,
-          windowEnd: t.windowEnd,
-          daily: t.daily,
-          dueDay: t.dueDay,
-        });
-      });
-
-      const c: Config = {
-        children: fsChildren as Child[],
-        tasks: tasksMap,
-        rewards: fsRewards as Reward[],
-        parentPin: fc && fc.parentPin ? fc.parentPin : '',
-        tierConfig:
-          fc && fc.tierConfig
-            ? fc.tierConfig
-            : structuredClone(DEF_TIER_CONFIG),
-        approvalThreshold:
-          fc != null && fc.approvalThreshold != null
-            ? fc.approvalThreshold
-            : 300,
-        lastWeeklyReset: fc ? fc.lastWeeklyReset || '' : '',
-        familyCode: fc ? fc.familyCode || '' : '',
-        bedtime: fc && fc.bedtime != null ? fc.bedtime : undefined,
-        weeklyResetDay:
-          fc && fc.weeklyResetDay != null ? fc.weeklyResetDay : undefined,
-        cooldown: fc && fc.cooldown != null ? fc.cooldown : undefined,
-        parentName: fc && fc.parentName ? fc.parentName : undefined,
-        referralSource: fc && fc.referralSource ? fc.referralSource : undefined,
-        notificationPrefs: fc && fc.notificationPrefs ? fc.notificationPrefs : undefined,
-      };
-      if (!c.children) c.children = [];
-      if (!c.tierConfig) c.tierConfig = structuredClone(DEF_TIER_CONFIG);
-
-      const users: Record<string, UserData> = {};
-      const ws = getWeekStart(c.weeklyResetDay);
-      const needsReset = c.lastWeeklyReset < ws;
-      for (let i = 0; i < c.children.length; i++) {
-        const ch = c.children[i];
-        let ud =
-          (await fsGetChildData(familyId, ch.id)) as UserData | null;
-        if (!ud) ud = freshUser();
-        // Migration: add xp/level fields if missing
-        if (ud.xp == null) ud.xp = 0;
-        if (ud.level == null) ud.level = 1;
-        if (ud.missedDaysThisWeek == null) ud.missedDaysThisWeek = 0;
         if (needsReset) {
-          ud.missedDaysThisWeek = 0;
-          // Delete photos from Storage before clearing the log
-          ((childId: string) => {
-            deleteAllChildPhotos(familyId, childId).catch((err) => {
-              console.warn(`Photo cleanup failed for ${childId}:`, err);
-              Sentry.captureException(err, { tags: { action: 'weekly-reset-photo-cleanup', childId } });
-            });
-          })(ch.id);
-          ud.taskLog = {};
-          await fsSaveChildData(familyId, ch.id, ud);
+          c.lastWeeklyReset = ws;
+          await fsSaveConfig(familyId, { lastWeeklyReset: ws });
         }
-        users[ch.id] = ud;
-      }
-      if (needsReset) {
-        c.lastWeeklyReset = ws;
-        await fsSaveConfig(familyId, { lastWeeklyReset: ws });
-      }
-      if (!dead) {
-        setCfg(c);
-        setAllU(users);
-        setLoading(false);
-      }
+        if (!dead) {
+          setCfg(c);
+          setAllU(users);
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Initial data load failed:', err);
         Sentry.captureException(err, { tags: { action: 'initial-load' } });
@@ -487,7 +509,9 @@ export function AppProvider(props: {
   // --- In-app notification listener ---
   const notifRole: 'parent' | 'kid' = curUser === 'parent' ? 'parent' : 'kid';
   const notifChildId = curUser && curUser !== 'parent' ? curUser : null;
-  const rawPrefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+  const rawPrefs = cfg
+    ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS
+    : DEF_NOTIFICATION_PREFS;
   const notifPrefs = useMemo(() => rawPrefs, [JSON.stringify(rawPrefs)]);
 
   useNotificationListener({
@@ -520,7 +544,7 @@ export function AppProvider(props: {
   // --- Cleanup old notifications on load (parents only) ---
   useEffect(() => {
     if (!familyId || loading || curUser !== 'parent') return;
-    cleanupOldNotifications(familyId).catch((err) => {
+    cleanupOldNotifications(familyId).catch(err => {
       console.warn('Notification cleanup failed:', err);
     });
   }, [familyId, loading, curUser]);
@@ -528,7 +552,7 @@ export function AppProvider(props: {
   // 30-second tick for bedtime cutoff detection (time-based, not data-based)
   useEffect(() => {
     const id = setInterval(() => {
-      setTick((t) => t + 1);
+      setTick(t => t + 1);
     }, 30000);
     return () => {
       clearInterval(id);
@@ -552,7 +576,7 @@ export function AppProvider(props: {
         if (!updated.taskLog[d]) updated.taskLog[d] = {};
         const tasks = (cfg.tasks[ch.id] || []).filter(isTaskActiveToday);
         let changed = false;
-        tasks.forEach((t) => {
+        tasks.forEach(t => {
           const entry = updated.taskLog[d][t.id];
           if (!entry || entry.rejected) {
             const tc = tierCfg(t.tier);
@@ -565,7 +589,10 @@ export function AppProvider(props: {
               rejected: false,
               autoCutoff: true,
             };
-            updated.points = Math.max(MIN_COINS, (updated.points || 0) - tc.coins);
+            updated.points = Math.max(
+              MIN_COINS,
+              (updated.points || 0) - tc.coins
+            );
             changed = true;
           }
         });
@@ -585,7 +612,7 @@ export function AppProvider(props: {
   // Validate restored kid session — promote to dashboard if valid, reset if not
   useEffect(() => {
     if (!loading && cfg && curUser && curUser !== 'parent') {
-      const found = cfg.children.some((c) => c.id === curUser);
+      const found = cfg.children.some(c => c.id === curUser);
       if (found) {
         // Valid restored session — go to dashboard
         if (screen === 'login') setScreen('dashboard');
@@ -613,7 +640,7 @@ export function AppProvider(props: {
       : {};
   const bedLock = isPastBedtime(cfg ? cfg.bedtime : undefined);
   let pendingCount = 0;
-  children.forEach((c) => {
+  children.forEach(c => {
     const u = allU[c.id];
     if (u && u.pendingRedemptions) pendingCount += u.pendingRedemptions.length;
   });

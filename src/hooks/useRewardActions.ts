@@ -78,7 +78,9 @@ export function useRewardActions(deps: RewardActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch(() => { /* ignore */ });
+      }).catch(() => {
+        /* ignore */
+      });
       return;
     }
     await execRedeem(uid, reward);

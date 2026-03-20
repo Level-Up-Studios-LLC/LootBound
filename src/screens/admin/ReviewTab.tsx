@@ -21,10 +21,10 @@ export default function ReviewTab(): React.ReactElement {
   if (!cfg) return <div />;
 
   const items: ReviewTaskItem[] = [];
-  children.forEach((c) => {
+  children.forEach(c => {
     const udata = allU[c.id] || freshUser();
     const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-    (cfg.tasks[c.id] || []).forEach((t) => {
+    (cfg.tasks[c.id] || []).forEach(t => {
       const entry = log[t.id];
       if (entry && !entry.rejected && entry.status !== 'missed')
         items.push({ uid: c.id, child: c, task: t, entry });
@@ -34,9 +34,9 @@ export default function ReviewTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        Review completed missions and photo proof from today. If a mission wasn't
-        done properly, reject it to deduct the coins and send it back for the
-        child to redo.
+        Review completed missions and photo proof from today. If a mission
+        wasn't done properly, reject it to deduct the coins and send it back for
+        the child to redo.
       </div>
       {items.length === 0 && (
         <EmptyState

@@ -84,13 +84,11 @@ export default function RewardsTab(): React.ReactElement {
           description='Add loot items that children can spend their earned coins on, or start with some samples.'
           ctaText='Add 5 Sample Loot Items'
           onCta={() => {
-            const newRewards = SAMPLE_REWARDS.map((r) => {
+            const newRewards = SAMPLE_REWARDS.map(r => {
               return {
                 ...r,
                 id:
-                  'r' +
-                  Date.now() +
-                  Math.random().toString(36).substring(2, 5),
+                  'r' + Date.now() + Math.random().toString(36).substring(2, 5),
               };
             });
             ctx.saveCfg({ ...cfg!, rewards: newRewards });
@@ -146,18 +144,14 @@ export default function RewardsTab(): React.ReactElement {
                 onClick={() => {
                   ctx.saveCfg({
                     ...cfg!,
-                    rewards: rewards.map((x) => {
-                      return x.id === r.id
-                        ? { ...x, active: !x.active }
-                        : x;
+                    rewards: rewards.map(x => {
+                      return x.id === r.id ? { ...x, active: !x.active } : x;
                     }),
                   });
                 }}
                 className={
                   'rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body ' +
-                  (r.active
-                    ? 'bg-qteal text-white'
-                    : 'bg-qcoral text-white')
+                  (r.active ? 'bg-qteal text-white' : 'bg-qcoral text-white')
                 }
               >
                 {r.active ? 'On' : 'Off'}
@@ -175,7 +169,7 @@ export default function RewardsTab(): React.ReactElement {
                 onClick={() => {
                   ctx.saveCfg({
                     ...cfg!,
-                    rewards: rewards.filter((x) => x.id !== r.id),
+                    rewards: rewards.filter(x => x.id !== r.id),
                   });
                 }}
                 className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
@@ -191,11 +185,11 @@ export default function RewardsTab(): React.ReactElement {
         <Modal title={editReward ? 'Edit Loot' : 'Add Loot'}>
           <RewardForm
             reward={(editReward || addReward)!}
-            onSave={(r) => {
+            onSave={r => {
               if (editReward) {
                 ctx.saveCfg({
                   ...cfg!,
-                  rewards: (cfg!.rewards || []).map((x) => {
+                  rewards: (cfg!.rewards || []).map(x => {
                     return x.id === r.id ? r : x;
                   }),
                 });

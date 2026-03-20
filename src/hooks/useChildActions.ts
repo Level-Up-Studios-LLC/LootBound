@@ -1,7 +1,10 @@
 import * as Sentry from '@sentry/react';
 import type { Config, UserData, Child, AddChildFormData } from '../types.ts';
 import { freshUser, slugify } from '../utils.ts';
-import { deleteChildData as fsDeleteChildData, replaceChildData } from '../services/firestoreStorage.ts';
+import {
+  deleteChildData as fsDeleteChildData,
+  replaceChildData,
+} from '../services/firestoreStorage.ts';
 import {
   deleteAllChildPhotos,
   deleteAllFamilyPhotos,
@@ -13,7 +16,9 @@ interface ChildActionsDeps {
   familyId: string;
   saveCfg: (c: Config) => Promise<void>;
   saveUsr: (uid: string, data: UserData) => Promise<void>;
-  setAllU: (fn: (p: Record<string, UserData>) => Record<string, UserData>) => void;
+  setAllU: (
+    fn: (p: Record<string, UserData>) => Record<string, UserData>
+  ) => void;
   notify: (msg: string, type?: string) => void;
   getChild: (id: string) => Child | null;
 }
@@ -42,7 +47,7 @@ export function useChildActions(deps: ChildActionsDeps) {
   const doRemoveChild = async (id: string) => {
     if (!deps.cfg) return;
     const newCfg = Object.assign({}, deps.cfg) as Config;
-    newCfg.children = (newCfg.children || []).filter((c) => c.id !== id);
+    newCfg.children = (newCfg.children || []).filter(c => c.id !== id);
     const newTasks = Object.assign({}, newCfg.tasks);
     delete newTasks[id];
     newCfg.tasks = newTasks;
@@ -51,13 +56,17 @@ export function useChildActions(deps: ChildActionsDeps) {
     try {
       await fsDeleteChildData(deps.familyId, id);
     } catch (err) {
-      Sentry.captureException(err, { tags: { action: 'delete-child-data', childId: id } });
+      Sentry.captureException(err, {
+        tags: { action: 'delete-child-data', childId: id },
+      });
       childDataDeleted = false;
     }
-    deleteAllChildPhotos(deps.familyId, id).catch((err) => {
-      Sentry.captureException(err, { tags: { action: 'delete-child-photos', childId: id } });
+    deleteAllChildPhotos(deps.familyId, id).catch(err => {
+      Sentry.captureException(err, {
+        tags: { action: 'delete-child-photos', childId: id },
+      });
     });
-    deps.setAllU((p) => {
+    deps.setAllU(p => {
       const o: Record<string, UserData> = { ...p };
       delete o[id];
       return o;
@@ -81,9 +90,11 @@ export function useChildActions(deps: ChildActionsDeps) {
   const resetAll = async () => {
     const children = deps.cfg ? deps.cfg.children : [];
     // Delete all photos from Storage
-    deleteAllFamilyPhotos(deps.familyId).catch((err) => {
+    deleteAllFamilyPhotos(deps.familyId).catch(err => {
       console.warn('Photo cleanup failed during reset:', err);
-      Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
+      Sentry.captureException(err, {
+        tags: { action: 'reset-all-photo-cleanup' },
+      });
     });
     // Use replaceChildData (no merge) so old taskLog entries are fully wiped.
     // Build reset state and fire Firestore writes in parallel.
@@ -92,9 +103,7 @@ export function useChildActions(deps: ChildActionsDeps) {
     for (let i = 0; i < children.length; i++) {
       const fresh = freshUser();
       resetUsers[children[i].id] = fresh;
-      promises.push(
-        replaceChildData(deps.familyId, children[i].id, fresh)
-      );
+      promises.push(replaceChildData(deps.familyId, children[i].id, fresh));
     }
     try {
       await Promise.all(promises);

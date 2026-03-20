@@ -134,7 +134,9 @@ export interface ParentMember {
   parentName?: string;
 }
 
-export async function getParentMember(uid: string): Promise<ParentMember | null> {
+export async function getParentMember(
+  uid: string
+): Promise<ParentMember | null> {
   const snap = await getDoc(doc(db, 'parentMembers', uid));
   return snap.exists() ? (snap.data() as ParentMember) : null;
 }
@@ -159,7 +161,7 @@ export function onParentMemberSnapshot(
   uid: string,
   callback: (data: ParentMember | null) => void
 ): () => void {
-  return onSnapshot(doc(db, 'parentMembers', uid), (snap) => {
+  return onSnapshot(doc(db, 'parentMembers', uid), snap => {
     callback(snap.exists() ? (snap.data() as ParentMember) : null);
   });
 }
@@ -189,7 +191,7 @@ export async function saveConfig(
 export async function getChildren(familyId: string): Promise<ChildProfile[]> {
   const snap = await getDocs(collection(db, 'families', familyId, 'children'));
   const list: ChildProfile[] = [];
-  snap.forEach((d) => {
+  snap.forEach(d => {
     list.push({ id: d.id, ...d.data() } as ChildProfile);
   });
   return list;
@@ -221,7 +223,7 @@ export async function deleteChild(
 export async function getTasks(familyId: string): Promise<TaskDef[]> {
   const snap = await getDocs(collection(db, 'families', familyId, 'tasks'));
   const list: TaskDef[] = [];
-  snap.forEach((d) => {
+  snap.forEach(d => {
     list.push({ id: d.id, ...d.data() } as TaskDef);
   });
   return list;
@@ -237,7 +239,7 @@ export async function getTasksForChild(
   );
   const snap = await getDocs(q);
   const list: TaskDef[] = [];
-  snap.forEach((d) => {
+  snap.forEach(d => {
     list.push({ id: d.id, ...d.data() } as TaskDef);
   });
   return list;
@@ -269,7 +271,7 @@ export async function deleteTask(
 export async function getRewards(familyId: string): Promise<RewardDef[]> {
   const snap = await getDocs(collection(db, 'families', familyId, 'rewards'));
   const list: RewardDef[] = [];
-  snap.forEach((d) => {
+  snap.forEach(d => {
     list.push({ id: d.id, ...d.data() } as RewardDef);
   });
   return list;
@@ -302,7 +304,9 @@ export async function getChildData(
   familyId: string,
   childId: string
 ): Promise<ChildData | null> {
-  const snap = await getDoc(doc(db, 'families', familyId, 'childData', childId));
+  const snap = await getDoc(
+    doc(db, 'families', familyId, 'childData', childId)
+  );
   return snap.exists() ? (snap.data() as ChildData) : null;
 }
 
@@ -325,7 +329,10 @@ export async function replaceChildData(
   childId: string,
   data: ChildData | UserData
 ): Promise<void> {
-  await setDoc(doc(db, 'families', familyId, 'childData', childId), data as DocumentData);
+  await setDoc(
+    doc(db, 'families', familyId, 'childData', childId),
+    data as DocumentData
+  );
 }
 
 export async function deleteChildData(
@@ -339,12 +346,16 @@ export async function deleteChildData(
 // Delete entire family — all subcollections and related docs
 // ---------------------------------------------------------------------------
 
-export async function deleteFamily(familyId: string, _currentUid: string): Promise<void> {
+export async function deleteFamily(
+  familyId: string,
+  _currentUid: string
+): Promise<void> {
   // Read family code — check config doc first, then query familyCodes collection
   const configSnap = await getDoc(doc(db, 'families', familyId));
-  let familyCode = configSnap.exists() && configSnap.data().familyCode
-    ? configSnap.data().familyCode
-    : null;
+  let familyCode =
+    configSnap.exists() && configSnap.data().familyCode
+      ? configSnap.data().familyCode
+      : null;
 
   if (!familyCode) {
     const codeQuery = query(
@@ -364,7 +375,7 @@ export async function deleteFamily(familyId: string, _currentUid: string): Promi
   const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
   for (let i = 0; i < subs.length; i++) {
     const snap = await getDocs(collection(db, 'families', familyId, subs[i]));
-    snap.forEach((d) => {
+    snap.forEach(d => {
       refs.push(d.ref);
     });
   }
@@ -380,11 +391,11 @@ export async function deleteFamily(familyId: string, _currentUid: string): Promi
     where('familyId', '==', familyId)
   );
   const memberSnap = await getDocs(memberQuery);
-  memberSnap.forEach((d) => {
+  memberSnap.forEach(d => {
     refs.push(d.ref);
   });
   // Also include the current user's doc in case the query missed it
-  if (_currentUid && !memberSnap.docs.some((d) => d.id === _currentUid)) {
+  if (_currentUid && !memberSnap.docs.some(d => d.id === _currentUid)) {
     refs.push(doc(db, 'parentMembers', _currentUid));
   }
 
@@ -421,15 +432,15 @@ export async function batchSeedFamily(
 
   batch.set(doc(db, 'families', familyId), config);
 
-  children.forEach((child) => {
+  children.forEach(child => {
     const clean: DocumentData = { ...child };
     const cid = child.id;
     delete clean.id;
     batch.set(doc(db, 'families', familyId, 'children', cid), clean);
   });
 
-  Object.keys(tasks).forEach((childId) => {
-    tasks[childId].forEach((task) => {
+  Object.keys(tasks).forEach(childId => {
+    tasks[childId].forEach(task => {
       const clean: DocumentData = { childId, ...task };
       const tid = task.id;
       delete clean.id;
@@ -437,7 +448,7 @@ export async function batchSeedFamily(
     });
   });
 
-  rewards.forEach((reward) => {
+  rewards.forEach(reward => {
     const clean: DocumentData = { ...reward };
     const rid = reward.id;
     delete clean.id;
@@ -445,7 +456,7 @@ export async function batchSeedFamily(
   });
 
   if (childDataMap) {
-    Object.keys(childDataMap).forEach((childId) => {
+    Object.keys(childDataMap).forEach(childId => {
       batch.set(
         doc(db, 'families', familyId, 'childData', childId),
         childDataMap[childId] as DocumentData
@@ -464,7 +475,7 @@ export function onConfigSnapshot(
   familyId: string,
   callback: (data: FamilyConfig | null) => void
 ): () => void {
-  return onSnapshot(doc(db, 'families', familyId), (snap) => {
+  return onSnapshot(doc(db, 'families', familyId), snap => {
     callback(snap.exists() ? (snap.data() as FamilyConfig) : null);
   });
 }
@@ -473,48 +484,39 @@ export function onChildrenSnapshot(
   familyId: string,
   callback: (list: ChildProfile[]) => void
 ): () => void {
-  return onSnapshot(
-    collection(db, 'families', familyId, 'children'),
-    (snap) => {
-      const list: ChildProfile[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as ChildProfile);
-      });
-      callback(list);
-    }
-  );
+  return onSnapshot(collection(db, 'families', familyId, 'children'), snap => {
+    const list: ChildProfile[] = [];
+    snap.forEach(d => {
+      list.push({ id: d.id, ...d.data() } as ChildProfile);
+    });
+    callback(list);
+  });
 }
 
 export function onTasksSnapshot(
   familyId: string,
   callback: (list: TaskDef[]) => void
 ): () => void {
-  return onSnapshot(
-    collection(db, 'families', familyId, 'tasks'),
-    (snap) => {
-      const list: TaskDef[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as TaskDef);
-      });
-      callback(list);
-    }
-  );
+  return onSnapshot(collection(db, 'families', familyId, 'tasks'), snap => {
+    const list: TaskDef[] = [];
+    snap.forEach(d => {
+      list.push({ id: d.id, ...d.data() } as TaskDef);
+    });
+    callback(list);
+  });
 }
 
 export function onRewardsSnapshot(
   familyId: string,
   callback: (list: RewardDef[]) => void
 ): () => void {
-  return onSnapshot(
-    collection(db, 'families', familyId, 'rewards'),
-    (snap) => {
-      const list: RewardDef[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as RewardDef);
-      });
-      callback(list);
-    }
-  );
+  return onSnapshot(collection(db, 'families', familyId, 'rewards'), snap => {
+    const list: RewardDef[] = [];
+    snap.forEach(d => {
+      list.push({ id: d.id, ...d.data() } as RewardDef);
+    });
+    callback(list);
+  });
 }
 
 export function onChildDataSnapshot(
@@ -524,7 +526,7 @@ export function onChildDataSnapshot(
 ): () => void {
   return onSnapshot(
     doc(db, 'families', familyId, 'childData', childId),
-    (snap) => {
+    snap => {
       callback(snap.exists() ? (snap.data() as ChildData) : null);
     }
   );
@@ -550,11 +552,9 @@ export async function saveNotification(
   notifId: string,
   data: Record<string, any>
 ): Promise<void> {
-  await setDoc(
-    doc(db, 'families', familyId, 'notifications', notifId),
-    data,
-    { merge: true }
-  );
+  await setDoc(doc(db, 'families', familyId, 'notifications', notifId), data, {
+    merge: true,
+  });
 }
 
 export async function writeNotification(
@@ -584,11 +584,13 @@ export function onNotificationsSnapshot(
     orderBy('createdAt', 'desc'),
     limit(50)
   );
-  return onSnapshot(q, (snap) => {
+  return onSnapshot(q, snap => {
     const list: (InAppNotificationDoc & { id: string })[] = [];
-    snap.forEach((d) => {
+    snap.forEach(d => {
       if (d.data().createdAt == null) return;
-      list.push({ id: d.id, ...d.data() } as InAppNotificationDoc & { id: string });
+      list.push({ id: d.id, ...d.data() } as InAppNotificationDoc & {
+        id: string;
+      });
     });
     callback(list);
   });
@@ -603,7 +605,7 @@ export async function cleanupOldNotifications(familyId: string): Promise<void> {
   );
   const snap = await getDocs(q);
   const refs: import('firebase/firestore').DocumentReference[] = [];
-  snap.forEach((d) => {
+  snap.forEach(d => {
     refs.push(d.ref);
   });
   for (let start = 0; start < refs.length; start += BATCH_LIMIT) {

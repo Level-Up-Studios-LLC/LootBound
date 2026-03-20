@@ -5,13 +5,20 @@ import { faCommentDots, faCircleCheck } from './fa.ts';
 import { FA_ICON_STYLE } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-import { getParentMember, saveParentMember } from './services/firestoreStorage.ts';
+import {
+  getParentMember,
+  saveParentMember,
+} from './services/firestoreStorage.ts';
 import {
   getStoredFamilyCodeAsync,
   clearStoredFamilyCode,
   lookupFamilyCode,
 } from './services/familyCode.ts';
-import { signInAnonymousKid, getCurrentUid, applyVerificationCode } from './services/auth.ts';
+import {
+  signInAnonymousKid,
+  getCurrentUid,
+  applyVerificationCode,
+} from './services/auth.ts';
 import { getStorage, setStorage, removeStorage } from './services/platform.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
@@ -29,7 +36,8 @@ import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 
-const DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
+const DISCUSSIONS_URL =
+  'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 const SESSION_KEY_PARENT = 'qb-parent-session';
 const SESSION_KEY_KID = 'qb-kid-session';
@@ -66,7 +74,10 @@ const clearSession = (key: string): void => {
  * Parse Firebase action URL parameters from the current URL.
  * Firebase sends links like: ?mode=resetPassword&oobCode=ABC123
  */
-const getFirebaseActionParams = (): { mode: string; oobCode: string } | null => {
+const getFirebaseActionParams = (): {
+  mode: string;
+  oobCode: string;
+} | null => {
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode');
   const oobCode = params.get('oobCode');
@@ -82,13 +93,15 @@ function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
 
   useEffect(() => {
     if (!props.oobCode) return;
-    applyVerificationCode(props.oobCode).then(() => {
-      setDone(true);
-    }).catch((e: any) => {
-      console.error('Email verification failed:', e);
-      setErr(e.message || 'Verification failed');
-      setDone(true);
-    });
+    applyVerificationCode(props.oobCode)
+      .then(() => {
+        setDone(true);
+      })
+      .catch((e: any) => {
+        console.error('Email verification failed:', e);
+        setErr(e.message || 'Verification failed');
+        setDone(true);
+      });
   }, [props.oobCode]);
 
   if (!done) {
@@ -110,7 +123,7 @@ function VerifyEmailScreen(props: { oobCode: string; onDone: () => void }) {
         {err ? 'Verification Failed' : 'Email Verified!'}
       </div>
       <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
-        {err || 'Your email has been verified. You\'re all set.'}
+        {err || "Your email has been verified. You're all set."}
       </div>
       <button onClick={props.onDone} className='btn-primary'>
         Continue
@@ -227,7 +240,7 @@ function AppRouter() {
   useEffect(() => {
     if (auth.authLoading) return;
     if (auth.authUser) {
-      getSessionAsync(SESSION_KEY_PARENT).then((stored) => {
+      getSessionAsync(SESSION_KEY_PARENT).then(stored => {
         if (stored === auth.authUser!.familyId) {
           setParentVerifiedRaw(true);
         } else {
@@ -253,7 +266,9 @@ function AppRouter() {
   const [parentPin, setParentPin] = useState<string | null>(null);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
-  const [storedKid, setStoredKid] = useState<string | null | undefined>(undefined);
+  const [storedKid, setStoredKid] = useState<string | null | undefined>(
+    undefined
+  );
 
   // On mount, check for stored family code (kid device persistence)
   // or persisted Firebase session (parent device persistence)
@@ -286,38 +301,39 @@ function AppRouter() {
   // Auto-detect persisted parent session
   var roleRef = useRef(role);
   roleRef.current = role;
-  useEffect(
-    () => {
-      if (!auth.authLoading && auth.authUser && !role && initDone) {
-        getStoredFamilyCodeAsync().then((storedCode) => {
-          if (!storedCode && !roleRef.current) {
-            setRole('parent');
-          }
-        });
-      }
-    },
-    [auth.authLoading, auth.authUser, role, initDone]
-  );
+  useEffect(() => {
+    if (!auth.authLoading && auth.authUser && !role && initDone) {
+      getStoredFamilyCodeAsync().then(storedCode => {
+        if (!storedCode && !roleRef.current) {
+          setRole('parent');
+        }
+      });
+    }
+  }, [auth.authLoading, auth.authUser, role, initDone]);
 
   // When parent authenticates, load their PIN from their own parentMembers doc
   // An empty string means no custom PIN has been set
-  useEffect(
-    () => {
-      if (auth.authUser && role === 'parent') {
-        const actualUid = getCurrentUid();
-        if (!actualUid) return;
-        getParentMember(actualUid).then((member) => {
+  useEffect(() => {
+    if (auth.authUser && role === 'parent') {
+      const actualUid = getCurrentUid();
+      if (!actualUid) return;
+      getParentMember(actualUid)
+        .then(member => {
           const pin = member ? member.parentPin || '' : '';
           setParentPin(pin);
-        }).catch((err) => {
-          console.error('Failed to load parent PIN:', err);
-          Sentry.captureException(err, { tags: { action: 'load-parent-pin' } });
+        })
+        .catch(err => {
+          // permission-denied is expected during account deletion — don't report
+          if (err?.code !== 'permission-denied') {
+            console.error('Failed to load parent PIN:', err);
+            Sentry.captureException(err, {
+              tags: { action: 'load-parent-pin' },
+            });
+          }
           setParentPin('');
         });
-      }
-    },
-    [auth.authUser, role]
-  );
+    }
+  }, [auth.authUser, role]);
 
   // Auto-verify is handled inline in the render flow below to avoid
   // a flash of the PIN screen when no PIN is set.
@@ -370,7 +386,7 @@ function AppRouter() {
   if (!role) {
     return (
       <RoleSelectScreen
-        onSelectRole={(r) => {
+        onSelectRole={r => {
           setRole(r);
         }}
       />
@@ -411,18 +427,22 @@ function AppRouter() {
     if (showCreatePin && !parentVerified) {
       return (
         <CreatePinPrompt
-          onCreated={(newPin) => {
+          onCreated={newPin => {
             const pinUid = getCurrentUid();
             if (!pinUid) return;
-            saveParentMember(pinUid, { parentPin: newPin }).then(() => {
-              setParentPin(newPin);
-              setShowCreatePin(false);
-              setParentVerified(true);
-              auth.clearJustSignedIn();
-            }).catch((err) => {
-              console.error('Failed to save PIN:', err);
-              Sentry.captureException(err, { tags: { action: 'save-parent-pin' } });
-            });
+            saveParentMember(pinUid, { parentPin: newPin })
+              .then(() => {
+                setParentPin(newPin);
+                setShowCreatePin(false);
+                setParentVerified(true);
+                auth.clearJustSignedIn();
+              })
+              .catch(err => {
+                console.error('Failed to save PIN:', err);
+                Sentry.captureException(err, {
+                  tags: { action: 'save-parent-pin' },
+                });
+              });
           }}
           onSkip={() => {
             setShowCreatePin(false);
@@ -485,7 +505,7 @@ function AppRouter() {
     if (!kidFamilyId) {
       return (
         <KidCodeScreen
-          onSuccess={(fid) => {
+          onSuccess={fid => {
             setKidFamilyId(fid);
           }}
           onBack={() => {
@@ -499,13 +519,12 @@ function AppRouter() {
     // Pass stored kid as initialUser but start at 'login' — AppContext will
     // validate the child ID against cfg.children and promote to 'dashboard'
     return (
-      <AppProvider
-        familyId={kidFamilyId}
-        initialUser={storedKid || null}
-      >
+      <AppProvider familyId={kidFamilyId} initialUser={storedKid || null}>
         <AppInner
           onSwitchFamily={() => {
-            clearStoredFamilyCode().catch(() => { /* ignore */ });
+            clearStoredFamilyCode().catch(() => {
+              /* ignore */
+            });
             clearSession(SESSION_KEY_KID);
             setStoredKid(null);
             setKidFamilyId(null);
@@ -546,7 +565,7 @@ function ErrorFallback(props: { resetError: () => void }) {
 export default function App() {
   return (
     <Sentry.ErrorBoundary
-      fallback={(errorProps) => {
+      fallback={errorProps => {
         return <ErrorFallback resetError={errorProps.resetError} />;
       }}
     >

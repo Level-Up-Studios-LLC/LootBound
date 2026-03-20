@@ -25,7 +25,7 @@ export default function AdminScreen(): React.ReactElement {
   useEffect(() => {
     const uid = getCurrentUid();
     if (!uid) return;
-    return onParentMemberSnapshot(uid, (member) => {
+    return onParentMemberSnapshot(uid, member => {
       setMyName(member && member.parentName ? member.parentName : undefined);
     });
   }, []);
@@ -38,13 +38,14 @@ export default function AdminScreen(): React.ReactElement {
   let reviewCount = 0;
   if (cfg) {
     const d = getToday();
-    ctx.children.forEach((c) => {
+    ctx.children.forEach(c => {
       const udata = ctx.allU[c.id];
       if (!udata) return;
       const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-      (cfg.tasks[c.id] || []).forEach((t) => {
+      (cfg.tasks[c.id] || []).forEach(t => {
         const entry = log[t.id];
-        if (entry && !entry.rejected && entry.status !== 'missed') reviewCount++;
+        if (entry && !entry.rejected && entry.status !== 'missed')
+          reviewCount++;
       });
     });
   }
@@ -59,7 +60,7 @@ export default function AdminScreen(): React.ReactElement {
 
   const handleCopyCode = (): void => {
     if (!cfg || !cfg.familyCode) return;
-    copyToClipboard(cfg.familyCode).then((ok) => {
+    copyToClipboard(cfg.familyCode).then(ok => {
       if (ok) {
         setCodeCopied(true);
         ctx.notify('Copied!');
@@ -77,94 +78,92 @@ export default function AdminScreen(): React.ReactElement {
       <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center mb-3'>
           <div className='font-display text-2xl font-bold text-qslate'>
-            {myName
-              ? `Hey, ${myName}!`
-              : 'Parent Dashboard'}
+            {myName ? `Hey, ${myName}!` : 'Parent Dashboard'}
           </div>
           <HamburgerMenu
-          items={[
-            {
-              id: 'account',
-              icon: 'circle-user',
-              label: 'Account',
-              onClick: () => {
-                setAtab('account');
+            items={[
+              {
+                id: 'account',
+                icon: 'circle-user',
+                label: 'Account',
+                onClick: () => {
+                  setAtab('account');
+                },
               },
-            },
-            {
-              id: 'children',
-              icon: 'children',
-              label: 'Children',
-              onClick: () => {
-                setAtab('children');
+              {
+                id: 'children',
+                icon: 'children',
+                label: 'Children',
+                onClick: () => {
+                  setAtab('children');
+                },
               },
-            },
-            {
-              id: 'settings',
-              icon: 'gear',
-              label: 'Settings',
-              onClick: () => {
-                setAtab('settings');
+              {
+                id: 'settings',
+                icon: 'gear',
+                label: 'Settings',
+                onClick: () => {
+                  setAtab('settings');
+                },
               },
-            },
-            {
-              id: 'logout',
-              icon: 'left-from-bracket',
-              label: 'Logout',
-              onClick: () => {
-                if (ctx.onLogout) {
-                  ctx.onLogout();
-                } else {
-                  ctx.setCurUser(null);
-                  ctx.setScreen('login');
-                }
+              {
+                id: 'logout',
+                icon: 'left-from-bracket',
+                label: 'Logout',
+                onClick: () => {
+                  if (ctx.onLogout) {
+                    ctx.onLogout();
+                  } else {
+                    ctx.setCurUser(null);
+                    ctx.setScreen('login');
+                  }
+                },
               },
-            },
-          ]}
-        />
-      </div>
-      {cfg && cfg.familyCode && (
-        <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3'>
-          <div className='flex items-center gap-1.5'>
-            <span className='font-semibold'>Family Code</span>
-            <div className='relative group'>
-              <span className='text-[12px] cursor-help inline-flex items-center justify-center rounded-full'>
-                <FontAwesomeIcon icon={faCircleQuestion} />
-              </span>
-              <div className='absolute top-3/4 left-full -translate-y-1/2 mb-1 px-3 py-2 bg-white rounded-badge text-xs w-52 hidden group-hover:block z-10 text-center leading-relaxed shadow-lg'>
-                Share this code with family members so they can join your
-                LootBound family on their devices.
+            ]}
+          />
+        </div>
+        {cfg && cfg.familyCode && (
+          <div className='flex items-center justify-between bg-qcoral rounded-btn px-4 py-3'>
+            <div className='flex items-center gap-1.5'>
+              <span className='font-semibold'>Family Code</span>
+              <div className='relative group'>
+                <span className='text-[12px] cursor-help inline-flex items-center justify-center rounded-full'>
+                  <FontAwesomeIcon icon={faCircleQuestion} />
+                </span>
+                <div className='absolute top-3/4 left-full -translate-y-1/2 mb-1 px-3 py-2 bg-white rounded-badge text-xs w-52 hidden group-hover:block z-10 text-center leading-relaxed shadow-lg'>
+                  Share this code with family members so they can join your
+                  LootBound family on their devices.
+                </div>
               </div>
             </div>
+            <div className='flex flex-col items-end relative'>
+              <button
+                onClick={handleCopyCode}
+                className='font-display text-base font-bold text-qslate tracking-[4px] bg-transparent border-none cursor-pointer p-0 hover:opacity-80 transition-opacity flex items-center gap-1.5'
+              >
+                {cfg.familyCode}
+                <FontAwesomeIcon icon={faCopy} className='text-xs' />
+              </button>
+            </div>
           </div>
-          <div className='flex flex-col items-end relative'>
-            <button
-              onClick={handleCopyCode}
-              className='font-display text-base font-bold text-qslate tracking-[4px] bg-transparent border-none cursor-pointer p-0 hover:opacity-80 transition-opacity flex items-center gap-1.5'
-            >
-              {cfg.familyCode}
-              <FontAwesomeIcon icon={faCopy} className='text-xs' />
-            </button>
-          </div>
-        </div>
-      )}
+        )}
       </div>
 
       {/* Tab Content */}
       <div className='px-4 pt-3'>
-      {atab === 'overview' && <OverviewTab onSwitchTab={setAtab} />}
-      {atab === 'approvals' && <ApprovalsTab />}
-      {atab === 'review' && <ReviewTab />}
-      {atab === 'tasks' && <TasksTab onSwitchTab={setAtab} />}
-      {atab === 'rewards' && <RewardsTab />}
-      {atab === 'children' && <ChildrenTab />}
-      {atab === 'settings' && <SettingsTab />}
-      {atab === 'account' && <AccountTab />}
+        {atab === 'overview' && <OverviewTab onSwitchTab={setAtab} />}
+        {atab === 'approvals' && <ApprovalsTab />}
+        {atab === 'review' && <ReviewTab />}
+        {atab === 'tasks' && <TasksTab onSwitchTab={setAtab} />}
+        {atab === 'rewards' && <RewardsTab />}
+        {atab === 'children' && <ChildrenTab />}
+        {atab === 'settings' && <SettingsTab />}
+        {atab === 'account' && <AccountTab />}
       </div>
 
       {/* Bottom Navigation */}
       <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>
-        {bottomTabs.map((t) => {
+        {bottomTabs.map(t => {
           const badge = t[3];
           return (
             <button

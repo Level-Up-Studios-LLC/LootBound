@@ -41,19 +41,16 @@ export async function deleteAllChildPhotos(
   childId: string
 ): Promise<void> {
   await signInAnonymousKid();
-  const folderRef = ref(
-    storage,
-    `families/${familyId}/photos/${childId}`
-  );
+  const folderRef = ref(storage, `families/${familyId}/photos/${childId}`);
   try {
     const result = await listAll(folderRef);
     // List date subfolders
     const promises: Promise<void>[] = [];
-    result.prefixes.forEach((dateFolder) => {
+    result.prefixes.forEach(dateFolder => {
       promises.push(
-        listAll(dateFolder).then((dateResult) => {
+        listAll(dateFolder).then(dateResult => {
           const deletes: Promise<void>[] = [];
-          dateResult.items.forEach((item) => {
+          dateResult.items.forEach(item => {
             deletes.push(
               deleteObject(item).catch(() => {
                 /* ignore missing */
@@ -65,7 +62,7 @@ export async function deleteAllChildPhotos(
       );
     });
     // Also delete any files directly in the child folder
-    result.items.forEach((item) => {
+    result.items.forEach(item => {
       promises.push(
         deleteObject(item).catch(() => {
           /* ignore missing */
@@ -87,24 +84,22 @@ export async function deleteAllChildPhotos(
  * Delete all photos for an entire family.
  * Used during full data reset.
  */
-export async function deleteAllFamilyPhotos(
-  familyId: string
-): Promise<void> {
+export async function deleteAllFamilyPhotos(familyId: string): Promise<void> {
   await signInAnonymousKid();
   const folderRef = ref(storage, `families/${familyId}/photos`);
   try {
     const result = await listAll(folderRef);
     const promises: Promise<void>[] = [];
-    result.prefixes.forEach((childFolder) => {
+    result.prefixes.forEach(childFolder => {
       promises.push(
-        listAll(childFolder).then((childResult) => {
+        listAll(childFolder).then(childResult => {
           const subPromises: Promise<void>[] = [];
           // Date subfolders
-          childResult.prefixes.forEach((dateFolder) => {
+          childResult.prefixes.forEach(dateFolder => {
             subPromises.push(
-              listAll(dateFolder).then((dateResult) => {
+              listAll(dateFolder).then(dateResult => {
                 const deletes: Promise<void>[] = [];
-                dateResult.items.forEach((item) => {
+                dateResult.items.forEach(item => {
                   deletes.push(
                     deleteObject(item).catch(() => {
                       /* ignore */
@@ -116,7 +111,7 @@ export async function deleteAllFamilyPhotos(
             );
           });
           // Direct files
-          childResult.items.forEach((item) => {
+          childResult.items.forEach(item => {
             subPromises.push(
               deleteObject(item).catch(() => {
                 /* ignore */

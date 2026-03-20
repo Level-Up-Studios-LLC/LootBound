@@ -3,7 +3,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFamilyPants } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE, altBg } from '../../constants.ts';
-import { freshUser, getToday, isTaskActiveToday, getLevelTitle } from '../../utils.ts';
+import {
+  freshUser,
+  getToday,
+  isTaskActiveToday,
+  getLevelTitle,
+} from '../../utils.ts';
 import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 
 interface OverviewTabProps {
@@ -55,7 +60,7 @@ export default function OverviewTab(
         const udata = allU[c.id] || freshUser();
         const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
         const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-        const done = tasks.filter((t) => {
+        const done = tasks.filter(t => {
           const l = log[t.id];
           return l && !l.rejected && l.status !== 'missed';
         }).length;
@@ -67,7 +72,10 @@ export default function OverviewTab(
                 <span className='text-qslate'>
                   {c.avatar} {c.name} (age {c.age})
                 </span>
-                <div className='text-[11px] font-semibold' style={{ color: lt.color }}>
+                <div
+                  className='text-[11px] font-semibold'
+                  style={{ color: lt.color }}
+                >
                   Lv.{udata.level || 1} {lt.title}
                 </div>
               </div>
@@ -83,7 +91,7 @@ export default function OverviewTab(
             </div>
             <div className='flex gap-2 flex-wrap items-center'>
               <span className='text-xs text-qmuted'>Adjust:</span>
-              {[10, 25, 50, -10, -25, -50].map((p) => {
+              {[10, 25, 50, -10, -25, -50].map(p => {
                 return (
                   <button
                     key={p}
@@ -107,7 +115,7 @@ export default function OverviewTab(
               id={c.id}
               redeems={udata.redemptions || []}
               isOpen={expanded[c.id] || false}
-              onToggle={(id) => {
+              onToggle={id => {
                 const next = { ...expanded };
                 next[id] = !next[id];
                 setExpanded(next);

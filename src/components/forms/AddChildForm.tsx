@@ -43,7 +43,7 @@ export default function AddChildForm(
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Avatar</label>
         <div className='flex gap-1 flex-wrap'>
-          {AVATARS.map((a) => {
+          {AVATARS.map(a => {
             return (
               <button
                 key={a}
@@ -64,7 +64,7 @@ export default function AddChildForm(
       <div>
         <label className='text-qslate font-semibold mb-2 block'>Color</label>
         <div className='flex gap-2 flex-wrap'>
-          {COLORS.map((cl) => {
+          {COLORS.map(cl => {
             return (
               <button
                 key={cl}

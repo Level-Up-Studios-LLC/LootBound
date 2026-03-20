@@ -21,7 +21,7 @@ export default function StoreScreen(): React.ReactElement | null {
 
   if (!ch || !ud) return null;
 
-  const rewards = (cfg!.rewards || []).filter((r) => r.active);
+  const rewards = (cfg!.rewards || []).filter(r => r.active);
   const pendingR = ud.pendingRedemptions || [];
 
   return (
@@ -43,7 +43,7 @@ export default function StoreScreen(): React.ReactElement | null {
             <div className='text-sm font-bold text-qslate mb-2'>
               Pending Approval
             </div>
-            {pendingR.map((p) => {
+            {pendingR.map(p => {
               return (
                 <div
                   key={`${p.rewardId}-${p.requestedAt}`}
@@ -71,7 +71,11 @@ export default function StoreScreen(): React.ReactElement | null {
                 '/' +
                 r.limitMax +
                 ' ' +
-                (r.limitType === 'daily' ? 'today' : r.limitType === 'weekly' ? 'wk' : 'total');
+                (r.limitType === 'daily'
+                  ? 'today'
+                  : r.limitType === 'weekly'
+                    ? 'wk'
+                    : 'total');
             }
             const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
             const dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
@@ -127,7 +131,8 @@ export default function StoreScreen(): React.ReactElement | null {
               .slice(-5)
               .reverse()
               .map((r, i) => {
-                const recentBg = i % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
+                const recentBg =
+                  i % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
                 return (
                   <div
                     key={`${r.rewardId}-${r.date}-${i}`}
@@ -153,10 +158,16 @@ export default function StoreScreen(): React.ReactElement | null {
             aria-describedby='confirmR-desc'
           >
             <div className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto animate-slide-up'>
-              <div id='confirmR-title' className='font-display text-xl font-bold mb-4'>
+              <div
+                id='confirmR-title'
+                className='font-display text-xl font-bold mb-4'
+              >
                 {needsApproval(confirmR) ? 'Request Approval?' : 'Redeem?'}
               </div>
-              <div id='confirmR-desc' className='flex flex-col items-center gap-2 mb-5'>
+              <div
+                id='confirmR-desc'
+                className='flex flex-col items-center gap-2 mb-5'
+              >
                 <div className='text-[32px]'>{confirmR.icon}</div>
                 <div className='text-base font-semibold'>{confirmR.name}</div>
                 <div className='text-qteal text-lg font-bold'>
@@ -187,14 +198,20 @@ export default function StoreScreen(): React.ReactElement | null {
                       setConfirmR(null);
                     } catch (err) {
                       console.error('Redemption failed:', err);
-                      Sentry.captureException(err, { tags: { action: 'redemption' } });
+                      Sentry.captureException(err, {
+                        tags: { action: 'redemption' },
+                      });
                     } finally {
                       setRedeeming(false);
                     }
                   }}
                   className='btn-primary rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body hover:brightness-110 transition-all disabled:opacity-60'
                 >
-                  {redeeming ? 'Processing...' : needsApproval(confirmR) ? 'Request' : 'Confirm'}
+                  {redeeming
+                    ? 'Processing...'
+                    : needsApproval(confirmR)
+                      ? 'Request'
+                      : 'Confirm'}
                 </button>
               </div>
             </div>

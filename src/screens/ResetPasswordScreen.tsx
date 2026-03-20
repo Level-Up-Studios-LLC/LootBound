@@ -26,7 +26,7 @@ export default function ResetPasswordScreen(
     setInvalidCode(false);
     setEmail(null);
     verifyResetCode(props.oobCode)
-      .then((resolvedEmail) => {
+      .then(resolvedEmail => {
         setEmail(resolvedEmail);
       })
       .catch((err: any) => {
@@ -82,7 +82,10 @@ export default function ResetPasswordScreen(
         </div>
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qcoral-dim flex flex-col gap-4 items-center'>
           <div className='text-[32px]'>
-            <FontAwesomeIcon icon={faTriangleExclamation} style={FA_ICON_STYLE} />
+            <FontAwesomeIcon
+              icon={faTriangleExclamation}
+              style={FA_ICON_STYLE}
+            />
           </div>
           <div className='font-display text-lg font-bold text-qslate'>
             Invalid Reset Link
@@ -108,13 +111,17 @@ export default function ResetPasswordScreen(
         </div>
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qcoral-dim flex flex-col gap-4 items-center'>
           <div className='text-[32px]'>
-            <FontAwesomeIcon icon={faTriangleExclamation} style={FA_ICON_STYLE} />
+            <FontAwesomeIcon
+              icon={faTriangleExclamation}
+              style={FA_ICON_STYLE}
+            />
           </div>
           <div className='font-display text-lg font-bold text-qslate'>
             Connection Error
           </div>
           <div className='text-sm text-qmuted text-center'>
-            Could not verify the reset link. Check your connection and try again.
+            Could not verify the reset link. Check your connection and try
+            again.
           </div>
           <button onClick={verifyCode} className='btn-primary w-full'>
             Retry

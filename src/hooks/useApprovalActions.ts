@@ -45,7 +45,9 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch(() => { /* ignore */ });
+    }).catch(() => {
+      /* ignore */
+    });
   };
 
   const denyPending = async (uid: string, idx: number) => {
@@ -68,7 +70,9 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch(() => { /* ignore */ });
+    }).catch(() => {
+      /* ignore */
+    });
   };
 
   return {

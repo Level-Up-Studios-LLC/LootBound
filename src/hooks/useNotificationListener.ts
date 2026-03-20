@@ -24,7 +24,12 @@ function isEligible(
 ): boolean {
   if (n.read) return false;
   if (n.targetRole !== role) return false;
-  if (n.targetRole === 'kid' && n.childId && (!childId || n.childId !== childId)) return false;
+  if (
+    n.targetRole === 'kid' &&
+    n.childId &&
+    (!childId || n.childId !== childId)
+  )
+    return false;
   var typeKey = n.type.replace(/_([a-z])/g, function (_: string, c: string) {
     return c.toUpperCase();
   }) as keyof NotificationPrefs;
@@ -35,58 +40,76 @@ function isEligible(
 export function useNotificationListener(deps: NotificationListenerDeps) {
   var seenRef = useRef<Set<string>>(new Set());
   var firstSnapshotRef = useRef(true);
-  var prefsRef = useRef<NotificationPrefs>(deps.prefs || DEF_NOTIFICATION_PREFS);
+  var prefsRef = useRef<NotificationPrefs>(
+    deps.prefs || DEF_NOTIFICATION_PREFS
+  );
   prefsRef.current = deps.prefs || DEF_NOTIFICATION_PREFS;
 
-  useEffect(function () {
-    if (!deps.familyId || deps.loading) return;
+  useEffect(
+    function () {
+      if (!deps.familyId || deps.loading) return;
 
-    firstSnapshotRef.current = true;
+      firstSnapshotRef.current = true;
 
-    var unsub = onNotificationsSnapshot(deps.familyId, function (list) {
-      var prefs = prefsRef.current;
+      var unsub = onNotificationsSnapshot(deps.familyId, function (list) {
+        var prefs = prefsRef.current;
 
-      if (firstSnapshotRef.current) {
-        firstSnapshotRef.current = false;
-        // On first snapshot, surface unread eligible notifications and mark all as seen
-        list.forEach(function (n) {
-          if (!seenRef.current.has(n.id) && isEligible(n, deps.role, deps.childId, prefs)) {
-            var toastType = n.type === 'level_up' ? 'levelup' : (
-              n.type === 'mission_rejected' || n.type === 'loot_denied' ? 'error' : 'success'
-            );
-            deps.notify(n.body || n.title, toastType);
-            if (prefs.soundEnabled) {
-              playSound(notifTypeToSound(n.type));
+        if (firstSnapshotRef.current) {
+          firstSnapshotRef.current = false;
+          // On first snapshot, surface unread eligible notifications and mark all as seen
+          list.forEach(function (n) {
+            if (
+              !seenRef.current.has(n.id) &&
+              isEligible(n, deps.role, deps.childId, prefs)
+            ) {
+              var toastType =
+                n.type === 'level_up'
+                  ? 'levelup'
+                  : n.type === 'mission_rejected' || n.type === 'loot_denied'
+                    ? 'error'
+                    : 'success';
+              deps.notify(n.body || n.title, toastType);
+              if (prefs.soundEnabled) {
+                playSound(notifTypeToSound(n.type));
+              }
+              markNotificationRead(deps.familyId, n.id).catch(function () {
+                /* ignore */
+              });
+              seenRef.current.add(n.id);
             }
-            markNotificationRead(deps.familyId, n.id).catch(function () { /* ignore */ });
-            seenRef.current.add(n.id);
-          }
-        });
-        return;
-      }
-
-      list.forEach(function (n) {
-        if (seenRef.current.has(n.id)) return;
-
-        if (!isEligible(n, deps.role, deps.childId, prefs)) return;
-
-        seenRef.current.add(n.id);
-
-        var toastType = n.type === 'level_up' ? 'levelup' : (
-          n.type === 'mission_rejected' || n.type === 'loot_denied' ? 'error' : 'success'
-        );
-        deps.notify(n.body || n.title, toastType);
-
-        if (prefs.soundEnabled) {
-          playSound(notifTypeToSound(n.type));
+          });
+          return;
         }
 
-        markNotificationRead(deps.familyId, n.id).catch(function () { /* ignore */ });
-      });
-    });
+        list.forEach(function (n) {
+          if (seenRef.current.has(n.id)) return;
 
-    return function () {
-      unsub();
-    };
-  }, [deps.familyId, deps.role, deps.childId, deps.loading]);
+          if (!isEligible(n, deps.role, deps.childId, prefs)) return;
+
+          seenRef.current.add(n.id);
+
+          var toastType =
+            n.type === 'level_up'
+              ? 'levelup'
+              : n.type === 'mission_rejected' || n.type === 'loot_denied'
+                ? 'error'
+                : 'success';
+          deps.notify(n.body || n.title, toastType);
+
+          if (prefs.soundEnabled) {
+            playSound(notifTypeToSound(n.type));
+          }
+
+          markNotificationRead(deps.familyId, n.id).catch(function () {
+            /* ignore */
+          });
+        });
+      });
+
+      return function () {
+        unsub();
+      };
+    },
+    [deps.familyId, deps.role, deps.childId, deps.loading]
+  );
 }

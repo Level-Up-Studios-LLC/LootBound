@@ -132,129 +132,137 @@ export default function LoginScreen(
       )}
 
       {/* PIN entry modal for existing PIN */}
-      {pinTarget && !createPin && (() => {
-        const targetChild = ctx.getChild(pinTarget);
-        if (!targetChild) return null;
-        return (
-        <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={`Enter PIN for ${targetChild.name}`}>
-            <div className='text-[32px] mb-1'>
-              {targetChild.avatar}
-            </div>
-            <div className='text-sm text-qmuted'>
-              Enter PIN for {targetChild.name}
-            </div>
-            <div className='flex gap-2'>
-              <input
-                type='password'
-                maxLength={4}
-                value={kpin}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setKpin(e.target.value.replace(/[^0-9]/g, ''));
-                  setPinErr('');
-                }}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.key === 'Enter') submitKidPin();
-                }}
-                className='quest-input w-[100px] text-center'
-                autoFocus
-              />
-              <button onClick={submitKidPin} className='btn-primary'>
-                Go
-              </button>
-            </div>
-            {pinErr && (
-              <div className='text-qcoral text-[13px] animate-shake'>
-                {pinErr}
+      {pinTarget &&
+        !createPin &&
+        (() => {
+          const targetChild = ctx.getChild(pinTarget);
+          if (!targetChild) return null;
+          return (
+            <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
+              <div
+                className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up'
+                role='dialog'
+                aria-label={`Enter PIN for ${targetChild.name}`}
+              >
+                <div className='text-[32px] mb-1'>{targetChild.avatar}</div>
+                <div className='text-sm text-qmuted'>
+                  Enter PIN for {targetChild.name}
+                </div>
+                <div className='flex gap-2'>
+                  <input
+                    type='password'
+                    maxLength={4}
+                    value={kpin}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setKpin(e.target.value.replace(/[^0-9]/g, ''));
+                      setPinErr('');
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'Enter') submitKidPin();
+                    }}
+                    className='quest-input w-[100px] text-center'
+                    autoFocus
+                  />
+                  <button onClick={submitKidPin} className='btn-primary'>
+                    Go
+                  </button>
+                </div>
+                {pinErr && (
+                  <div className='text-qcoral text-[13px] animate-shake'>
+                    {pinErr}
+                  </div>
+                )}
+                <button
+                  onClick={() => {
+                    setPinTarget(null);
+                    setPinErr('');
+                  }}
+                  className='btn-ghost'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setPinTarget(null);
+                    setPinErr('');
+                  }}
+                  className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
+                >
+                  Forgot PIN? Ask a parent to reset it.
+                </button>
               </div>
-            )}
-            <button
-              onClick={() => {
-                setPinTarget(null);
-                setPinErr('');
-              }}
-              className='btn-ghost'
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                setPinTarget(null);
-                setPinErr('');
-              }}
-              className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
-            >
-              Forgot PIN? Ask a parent to reset it.
-            </button>
-          </div>
-        </div>
-        );
-      })()}
+            </div>
+          );
+        })()}
 
       {/* PIN creation modal for first-time kids */}
-      {pinTarget && createPin && (() => {
-        const targetChild = ctx.getChild(pinTarget);
-        if (!targetChild) return null;
-        return (
-        <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={`Create PIN for ${targetChild.name}`}>
-            <div className='text-[32px] mb-1'>
-              {targetChild.avatar}
-            </div>
-            <div className='text-sm text-qmuted'>
-              Create a PIN for {targetChild.name}
-            </div>
-            <div className='text-xs text-qdim'>
-              Choose a 4-digit PIN to protect your profile
-            </div>
-            <input
-              type='password'
-              maxLength={4}
-              placeholder='New PIN'
-              value={newPin}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setNewPin(e.target.value.replace(/[^0-9]/g, ''));
-                setPinErr('');
-              }}
-              className='quest-input w-[120px] text-center'
-              autoFocus
-            />
-            <input
-              type='password'
-              maxLength={4}
-              placeholder='Confirm PIN'
-              value={confirmPin}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
-                setPinErr('');
-              }}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter') submitCreatePin();
-              }}
-              className='quest-input w-[120px] text-center'
-            />
-            {pinErr && (
-              <div className='text-qcoral text-[13px] animate-shake'>
-                {pinErr}
+      {pinTarget &&
+        createPin &&
+        (() => {
+          const targetChild = ctx.getChild(pinTarget);
+          if (!targetChild) return null;
+          return (
+            <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
+              <div
+                className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up'
+                role='dialog'
+                aria-label={`Create PIN for ${targetChild.name}`}
+              >
+                <div className='text-[32px] mb-1'>{targetChild.avatar}</div>
+                <div className='text-sm text-qmuted'>
+                  Create a PIN for {targetChild.name}
+                </div>
+                <div className='text-xs text-qdim'>
+                  Choose a 4-digit PIN to protect your profile
+                </div>
+                <input
+                  type='password'
+                  maxLength={4}
+                  placeholder='New PIN'
+                  value={newPin}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setNewPin(e.target.value.replace(/[^0-9]/g, ''));
+                    setPinErr('');
+                  }}
+                  className='quest-input w-[120px] text-center'
+                  autoFocus
+                />
+                <input
+                  type='password'
+                  maxLength={4}
+                  placeholder='Confirm PIN'
+                  value={confirmPin}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
+                    setPinErr('');
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === 'Enter') submitCreatePin();
+                  }}
+                  className='quest-input w-[120px] text-center'
+                />
+                {pinErr && (
+                  <div className='text-qcoral text-[13px] animate-shake'>
+                    {pinErr}
+                  </div>
+                )}
+                <button onClick={submitCreatePin} className='btn-primary'>
+                  Set PIN
+                </button>
+                <button
+                  onClick={() => {
+                    setPinTarget(null);
+                    setCreatePin(false);
+                    setPinErr('');
+                  }}
+                  className='btn-ghost'
+                >
+                  Cancel
+                </button>
               </div>
-            )}
-            <button onClick={submitCreatePin} className='btn-primary'>
-              Set PIN
-            </button>
-            <button
-              onClick={() => {
-                setPinTarget(null);
-                setCreatePin(false);
-                setPinErr('');
-              }}
-              className='btn-ghost'
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-        );
-      })()}
+            </div>
+          );
+        })()}
 
       {/* Switch family button for kid devices */}
       {props.onSwitchFamily && (

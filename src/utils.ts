@@ -81,7 +81,11 @@ export function slugify(s: string): string {
   return `${s.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now().toString(36)}`;
 }
 
-export function getTaskStatus(task: Task, completedAt: number | null, bedtime?: number): string {
+export function getTaskStatus(
+  task: Task,
+  completedAt: number | null,
+  bedtime?: number
+): string {
   const now = nowMin();
   const s = timeToMin(task.windowStart);
   const e = timeToMin(task.windowEnd);
@@ -109,7 +113,14 @@ export function calcRewards(
   tc: TierConfig,
   status: string
 ): { coins: number; xp: number } {
-  const mult = status === 'early' ? 1.25 : status === 'ontime' ? 1.0 : status === 'late' ? 0.5 : 0;
+  const mult =
+    status === 'early'
+      ? 1.25
+      : status === 'ontime'
+        ? 1.0
+        : status === 'late'
+          ? 0.5
+          : 0;
   if (status === 'missed') return { coins: -tc.coins, xp: 0 };
   return {
     coins: Math.round(tc.coins * mult),
@@ -156,9 +167,9 @@ export function getLevelCoinBonus(level: number): number {
 }
 
 export function resizeImg(file: File, maxW: number): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const img = new Image();
       img.onload = () => {
         let w = img.width,
@@ -187,7 +198,7 @@ export function countRedeems(
   if (!redemptions || !redemptions.length) return 0;
   const today = getToday();
   const ws = getWeekStart();
-  return redemptions.filter((r) => {
+  return redemptions.filter(r => {
     if (r.rewardId !== rid) return false;
     if (lt === 'daily') return r.date === today;
     if (lt === 'weekly') return r.date >= ws;

@@ -39,31 +39,41 @@ export async function setStorage(key: string, val: string): Promise<void> {
   if (isNative()) {
     try {
       await Preferences.set({ key: key, value: val });
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     return;
   }
   try {
     sessionStorage.setItem(key, val);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 export async function removeStorage(key: string): Promise<void> {
   if (isNative()) {
     try {
       await Preferences.remove({ key: key });
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     return;
   }
   try {
     sessionStorage.removeItem(key);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Persistent storage — Preferences on native, localStorage on web
 // ---------------------------------------------------------------------------
 
-export async function getPersistentStorage(key: string): Promise<string | null> {
+export async function getPersistentStorage(
+  key: string
+): Promise<string | null> {
   if (isNative()) {
     try {
       var result = await Preferences.get({ key: key });
@@ -79,28 +89,39 @@ export async function getPersistentStorage(key: string): Promise<string | null> 
   }
 }
 
-export async function setPersistentStorage(key: string, val: string): Promise<void> {
+export async function setPersistentStorage(
+  key: string,
+  val: string
+): Promise<void> {
   if (isNative()) {
     try {
       await Preferences.set({ key: key, value: val });
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     return;
   }
   try {
     localStorage.setItem(key, val);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 export async function removePersistentStorage(key: string): Promise<void> {
   if (isNative()) {
     try {
       await Preferences.remove({ key: key });
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     return;
   }
   try {
     localStorage.removeItem(key);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +141,9 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     try {
       await navigator.clipboard.writeText(text);
       return true;
-    } catch (_e) { /* fall through */ }
+    } catch (_e) {
+      /* fall through */
+    }
   }
   var ta = document.createElement('textarea');
   ta.value = text;
@@ -167,7 +190,9 @@ export async function capturePhoto(): Promise<string | null> {
 // Haptics
 // ---------------------------------------------------------------------------
 
-export async function triggerHaptic(type: 'light' | 'medium' | 'success' | 'error'): Promise<void> {
+export async function triggerHaptic(
+  type: 'light' | 'medium' | 'success' | 'error'
+): Promise<void> {
   if (!isNative()) return;
   try {
     if (type === 'success') {
@@ -179,7 +204,9 @@ export async function triggerHaptic(type: 'light' | 'medium' | 'success' | 'erro
     } else {
       await Haptics.impact({ style: ImpactStyle.Light });
     }
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 // ---------------------------------------------------------------------------

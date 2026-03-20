@@ -18,12 +18,13 @@ import {
   getLevelTitle,
   resizeImg,
 } from '../utils.ts';
-import {
-  uploadTaskPhoto,
-  deleteTaskPhoto,
-} from '../services/photoStorage.ts';
+import { uploadTaskPhoto, deleteTaskPhoto } from '../services/photoStorage.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
-import { capturePhoto as nativeCapturePhoto, triggerHaptic, isNative } from '../services/platform.ts';
+import {
+  capturePhoto as nativeCapturePhoto,
+  triggerHaptic,
+  isNative,
+} from '../services/platform.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
 
 interface TaskActionsDeps {
@@ -54,29 +55,30 @@ export function useTaskActions(deps: TaskActionsDeps) {
     const ud = deps.allU[deps.curUser!];
     const now = nowSec();
     if (ud && ud.lastTaskTime && now - ud.lastTaskTime < cfgCooldown) {
-      deps.notify(
-        `Wait ${cfgCooldown - (now - ud.lastTaskTime)}s`,
-        'error'
-      );
+      deps.notify(`Wait ${cfgCooldown - (now - ud.lastTaskTime)}s`, 'error');
       return;
     }
     setCapturing(taskId);
     if (isNative()) {
-      nativeCapturePhoto().then(function (photo) {
-        if (photo) {
-          doComplete(taskId, photo).then(function () {
+      nativeCapturePhoto()
+        .then(function (photo) {
+          if (photo) {
+            doComplete(taskId, photo)
+              .then(function () {
+                setCapturing(null);
+              })
+              .catch(function (err) {
+                console.error('doComplete failed:', err);
+                setCapturing(null);
+              });
+          } else {
             setCapturing(null);
-          }).catch(function (err) {
-            console.error('doComplete failed:', err);
-            setCapturing(null);
-          });
-        } else {
+          }
+        })
+        .catch(function (err) {
+          console.error('nativeCapturePhoto failed:', err);
           setCapturing(null);
-        }
-      }).catch(function (err) {
-        console.error('nativeCapturePhoto failed:', err);
-        setCapturing(null);
-      });
+        });
     } else {
       if (fileRef.current) {
         fileRef.current.value = '';
@@ -93,16 +95,19 @@ export function useTaskActions(deps: TaskActionsDeps) {
       setCapturing(null);
       return;
     }
-    resizeImg(file, 800).then((photo) => {
-      return doComplete(capturing!, photo);
-    }).then(() => {
-      setCapturing(null);
-      if (fileRef.current) fileRef.current.value = '';
-    }).catch((err) => {
-      console.warn('Photo capture failed:', err);
-      setCapturing(null);
-      if (fileRef.current) fileRef.current.value = '';
-    });
+    resizeImg(file, 800)
+      .then(photo => {
+        return doComplete(capturing!, photo);
+      })
+      .then(() => {
+        setCapturing(null);
+        if (fileRef.current) fileRef.current.value = '';
+      })
+      .catch(err => {
+        console.warn('Photo capture failed:', err);
+        setCapturing(null);
+        if (fileRef.current) fileRef.current.value = '';
+      });
   };
 
   const doComplete = async (taskId: string, photo: string | null) => {
@@ -116,7 +121,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     const d = getToday();
     if (!ud.taskLog) ud.taskLog = {};
     if (!ud.taskLog[d]) ud.taskLog[d] = {};
-    const task = (deps.cfg.tasks[uid] || []).find((t) => t.id === taskId);
+    const task = (deps.cfg.tasks[uid] || []).find(t => t.id === taskId);
     if (!task) return;
     const ex = ud.taskLog[d][taskId];
     if (ex && !ex.rejected) return;
@@ -149,7 +154,10 @@ export function useTaskActions(deps: TaskActionsDeps) {
     const rewards = calcRewards(tc, status);
     // Apply level coin bonus
     const lvlBonus = getLevelCoinBonus(ud.level || 1);
-    const coins = lvlBonus > 0 ? Math.round(rewards.coins * (1 + lvlBonus / 100)) : rewards.coins;
+    const coins =
+      lvlBonus > 0
+        ? Math.round(rewards.coins * (1 + lvlBonus / 100))
+        : rewards.coins;
     // Apply streak XP multiplier
     const streakMult = getStreakMultiplier(ud.streak || 0);
     const xp = Math.round(rewards.xp * streakMult);
@@ -168,11 +176,11 @@ export function useTaskActions(deps: TaskActionsDeps) {
     ud.level = getLevelFromXp(ud.xp);
     ud.lastTaskTime = nowSec();
     const todayActive = (deps.cfg.tasks[uid] || []).filter(isTaskActiveToday);
-    const allDone = todayActive.every((t) => {
+    const allDone = todayActive.every(t => {
       const l = ud.taskLog[d] && ud.taskLog[d][t.id];
       return l && !l.rejected;
     });
-    const noneMissed = todayActive.every((t) => {
+    const noneMissed = todayActive.every(t => {
       const l = ud.taskLog[d] && ud.taskLog[d][t.id];
       return l && l.status !== 'missed' && !l.rejected;
     });
@@ -221,7 +229,9 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'parent',
-    }).catch((err) => { console.warn('Notification failed (mission_complete):', err); });
+    }).catch(err => {
+      console.warn('Notification failed (mission_complete):', err);
+    });
     if (ud.level > oldLevel) {
       const title = getLevelTitle(ud.level);
       deps.notify(`LEVEL UP! Lv.${ud.level} ${title.title}!`, 'levelup');
@@ -235,10 +245,19 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => { console.warn('Notification failed (level_up):', err); });
+      }).catch(err => {
+        console.warn('Notification failed (level_up):', err);
+      });
     }
     // Streak notifications
-    if (allDone && noneMissed && (ud.streak === 3 || ud.streak === 7 || ud.streak === 15 || ud.streak === 30)) {
+    if (
+      allDone &&
+      noneMissed &&
+      (ud.streak === 3 ||
+        ud.streak === 7 ||
+        ud.streak === 15 ||
+        ud.streak === 30)
+    ) {
       writeNotification(deps.familyId, {
         type: 'streak',
         title: 'Streak Milestone!',
@@ -246,7 +265,9 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => { console.warn('Notification failed (streak):', err); });
+      }).catch(err => {
+        console.warn('Notification failed (streak):', err);
+      });
     }
   };
 
@@ -259,7 +280,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
 
     // Delete photo from Firebase Storage if it's a Storage URL
     if (entry.photo && entry.photo.indexOf('firebasestorage') !== -1) {
-      deleteTaskPhoto(deps.familyId, uid, d, taskId).catch((err) => {
+      deleteTaskPhoto(deps.familyId, uid, d, taskId).catch(err => {
         console.warn('Photo delete failed:', err);
         Sentry.captureException(err, { tags: { action: 'photo-delete' } });
       });
@@ -279,7 +300,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     let taskName = '';
     if (deps.cfg) {
       const tasks = deps.cfg.tasks[uid] || [];
-      const found = tasks.find((t) => t.id === taskId);
+      const found = tasks.find(t => t.id === taskId);
       if (found) taskName = found.name;
     }
     writeNotification(deps.familyId, {
@@ -289,7 +310,9 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch((err) => { console.warn('Notification failed (mission_rejected):', err); });
+    }).catch(err => {
+      console.warn('Notification failed (mission_rejected):', err);
+    });
   };
 
   return {
