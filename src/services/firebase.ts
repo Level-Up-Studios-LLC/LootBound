@@ -9,7 +9,7 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
@@ -24,22 +24,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 const auth = getAuth(app);
 const storage = getStorage(app);
-
-// Enable offline persistence — Firestore caches data in IndexedDB
-// so the app works fully offline and syncs when connectivity returns.
-enableIndexedDbPersistence(db).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn(
-      'Firestore persistence unavailable: multiple tabs open. Only one tab can use offline persistence at a time.'
-    );
-  } else if (err.code === 'unimplemented') {
-    console.warn(
-      'Firestore persistence unavailable: this browser does not support IndexedDB persistence.'
-    );
-  }
-});
 
 export { app, db, auth, storage };
