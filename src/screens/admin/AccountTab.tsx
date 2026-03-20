@@ -16,8 +16,21 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
-import { changePassword, changeEmail, setPassword, deleteAuthAccount, reauthenticate, getCurrentUid, hasPasswordProvider } from '../../services/auth.ts';
-import { deleteFamily, saveParentMember, deleteParentMember, onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
+import {
+  changePassword,
+  changeEmail,
+  setPassword,
+  deleteAuthAccount,
+  reauthenticate,
+  getCurrentUid,
+  hasPasswordProvider,
+} from '../../services/auth.ts';
+import {
+  deleteFamily,
+  saveParentMember,
+  deleteParentMember,
+  onParentMemberSnapshot,
+} from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import { copyToClipboard } from '../../services/platform.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -45,7 +58,7 @@ export default function AccountTab(): React.ReactElement | null {
 
   useEffect(() => {
     if (!currentUid) return;
-    return onParentMemberSnapshot(currentUid, (member) => {
+    return onParentMemberSnapshot(currentUid, member => {
       setMyName(member && member.parentName ? member.parentName : undefined);
       setMyPin(member && member.parentPin ? member.parentPin : '');
     });
@@ -98,7 +111,10 @@ export default function AccountTab(): React.ReactElement | null {
       ctx.notify('Password updated');
     } catch (err: any) {
       const code = err.code || err.message || '';
-      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      if (
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential'
+      ) {
         setPassErr('Current password is incorrect');
       } else if (code === 'auth/weak-password') {
         setPassErr('New password is too weak');
@@ -132,7 +148,9 @@ export default function AccountTab(): React.ReactElement | null {
       if (code === 'auth/weak-password') {
         setPassErr('Password is too weak');
       } else if (code === 'auth/requires-recent-login') {
-        setPassErr('Please sign out and sign back in with Google, then try again.');
+        setPassErr(
+          'Please sign out and sign back in with Google, then try again.'
+        );
       } else {
         setPassErr('Failed to set password. Please try again.');
       }
@@ -193,7 +211,11 @@ export default function AccountTab(): React.ReactElement | null {
     }
     setDeleteBusy(true);
     const uid = currentUid;
-    if (!uid) { setDeleteErr('Not signed in'); setDeleteBusy(false); return; }
+    if (!uid) {
+      setDeleteErr('Not signed in');
+      setDeleteBusy(false);
+      return;
+    }
 
     try {
       if (hasPasswordProvider()) {
@@ -205,17 +227,39 @@ export default function AccountTab(): React.ReactElement | null {
         await deleteAllFamilyPhotos(ctx.familyId);
       } catch (photoErr) {
         console.warn('Photo cleanup failed:', photoErr);
-        Sentry.captureException(photoErr, { tags: { action: 'delete-family-photos' } });
+        Sentry.captureException(photoErr, {
+          tags: { action: 'delete-family-photos' },
+        });
       }
 
-      // Delete Firestore data, then auth account immediately after
+      // Delete Firestore data, then auth account
+      // Auth must come last because Firestore security rules require an active session.
       await deleteFamily(ctx.familyId, uid);
-      await deleteAuthAccount();
+
+      try {
+        await deleteAuthAccount();
+      } catch (authErr: any) {
+        console.error(
+          'Family data deleted but auth account removal failed:',
+          authErr
+        );
+        Sentry.captureException(authErr, {
+          tags: { action: 'delete-family-auth' },
+        });
+        setDeleteErr(
+          'Family data deleted, but we couldn\u2019t remove your login. Please sign out and contact support.'
+        );
+        setDeleteBusy(false);
+        return;
+      }
     } catch (err: any) {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
       const code = err.code || err.message || '';
-      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      if (
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential'
+      ) {
         setDeleteErr('Incorrect password');
       } else {
         setDeleteErr('Failed to delete account. Please try again.');
@@ -233,20 +277,44 @@ export default function AccountTab(): React.ReactElement | null {
     }
     setDeleteBusy(true);
     const uid = currentUid;
-    if (!uid) { setDeleteErr('Not signed in'); setDeleteBusy(false); return; }
+    if (!uid) {
+      setDeleteErr('Not signed in');
+      setDeleteBusy(false);
+      return;
+    }
 
     try {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
-      // Remove own parentMembers doc, then auth account immediately after
+      // Remove own parentMembers doc, then auth account
+      // Auth must come last because Firestore security rules require an active session.
       await deleteParentMember(uid);
-      await deleteAuthAccount();
+
+      try {
+        await deleteAuthAccount();
+      } catch (authErr: any) {
+        console.error(
+          'Parent member deleted but auth account removal failed:',
+          authErr
+        );
+        Sentry.captureException(authErr, {
+          tags: { action: 'leave-family-auth' },
+        });
+        setDeleteErr(
+          'Your membership was removed, but we couldn\u2019t delete your login. Please sign out and contact support.'
+        );
+        setDeleteBusy(false);
+        return;
+      }
     } catch (err: any) {
       console.error('Failed to leave family:', err);
       Sentry.captureException(err, { tags: { action: 'leave-family' } });
       const code = err.code || err.message || '';
-      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      if (
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential'
+      ) {
         setDeleteErr('Incorrect password');
       } else {
         setDeleteErr('Failed to leave family. Please try again.');
@@ -310,7 +378,10 @@ export default function AccountTab(): React.ReactElement | null {
                     {editBusy ? 'Saving...' : 'Save'}
                   </button>
                   <button
-                    onClick={() => { setEditing(false); setEditErr(''); }}
+                    onClick={() => {
+                      setEditing(false);
+                      setEditErr('');
+                    }}
                     className='bg-qslate-dim text-qslate rounded-badge px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer font-body'
                   >
                     Cancel
@@ -323,12 +394,14 @@ export default function AccountTab(): React.ReactElement | null {
                   <span className='text-sm font-bold text-qslate'>
                     {myName || 'Parent'}
                   </span>
-                  <span className={
-                    'text-[10px] font-bold px-1.5 py-0.5 rounded-badge ' +
-                    (currentUid === ctx.familyId
-                      ? 'bg-qteal/15 text-qteal'
-                      : 'bg-qslate/10 text-qmuted')
-                  }>
+                  <span
+                    className={
+                      'text-[10px] font-bold px-1.5 py-0.5 rounded-badge ' +
+                      (currentUid === ctx.familyId
+                        ? 'bg-qteal/15 text-qteal'
+                        : 'bg-qslate/10 text-qmuted')
+                    }
+                  >
                     {currentUid === ctx.familyId ? 'Owner' : 'Member'}
                   </span>
                   <button
@@ -341,13 +414,19 @@ export default function AccountTab(): React.ReactElement | null {
                     className='bg-transparent border-none cursor-pointer p-0 text-qmuted hover:text-qteal transition-colors'
                     aria-label='Edit profile'
                   >
-                    <FontAwesomeIcon icon={faPenToSquare} className='text-[11px]' />
+                    <FontAwesomeIcon
+                      icon={faPenToSquare}
+                      className='text-[11px]'
+                    />
                   </button>
                 </div>
                 <div className='text-[12px] text-qmuted'>
                   {auth.authUser ? auth.authUser.email : '—'}
                   {auth.authUser && auth.authUser.emailVerified && (
-                    <FontAwesomeIcon icon={faCircleCheck} className='text-qteal text-[9px] ml-1' />
+                    <FontAwesomeIcon
+                      icon={faCircleCheck}
+                      className='text-qteal text-[9px] ml-1'
+                    />
                   )}
                 </div>
               </div>
@@ -359,7 +438,7 @@ export default function AccountTab(): React.ReactElement | null {
           <button
             onClick={() => {
               if (!cfg || !cfg.familyCode) return;
-              copyToClipboard(cfg.familyCode).then((ok) => {
+              copyToClipboard(cfg.familyCode).then(ok => {
                 if (ok) {
                   ctx.notify('Copied!');
                 } else {
@@ -385,7 +464,8 @@ export default function AccountTab(): React.ReactElement | null {
             Verify Your Email
           </div>
           <div className='text-[13px] text-qmuted mb-3'>
-            Please verify your email address to secure your account. Check your inbox for a verification link.
+            Please verify your email address to secure your account. Check your
+            inbox for a verification link.
           </div>
           <div className='flex gap-2'>
             <button
@@ -398,7 +478,11 @@ export default function AccountTab(): React.ReactElement | null {
               disabled={verifyBusy || verifySent}
               className='bg-qteal text-white rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body text-[13px] disabled:opacity-60'
             >
-              {verifySent ? 'Email Sent!' : verifyBusy ? 'Sending...' : 'Resend Verification'}
+              {verifySent
+                ? 'Email Sent!'
+                : verifyBusy
+                  ? 'Sending...'
+                  : 'Resend Verification'}
             </button>
             <button
               onClick={() => {
@@ -471,7 +555,8 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
         {!hasPasswordProvider() && (
           <div className='text-[13px] text-qmuted mb-2'>
-            You signed in with Google. Set a password to also sign in with email and password.
+            You signed in with Google. Set a password to also sign in with email
+            and password.
           </div>
         )}
         <div className='flex flex-col gap-3'>
@@ -490,7 +575,11 @@ export default function AccountTab(): React.ReactElement | null {
           )}
           <input
             type='password'
-            placeholder={hasPasswordProvider() ? 'New password (6+ characters)' : 'Password (6+ characters)'}
+            placeholder={
+              hasPasswordProvider()
+                ? 'New password (6+ characters)'
+                : 'Password (6+ characters)'
+            }
             value={newPass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewPass(e.target.value);
@@ -519,12 +608,12 @@ export default function AccountTab(): React.ReactElement | null {
             }}
             className='quest-input'
           />
-          {passErr && (
-            <div className='text-qcoral text-[13px]'>{passErr}</div>
-          )}
+          {passErr && <div className='text-qcoral text-[13px]'>{passErr}</div>}
           {passSuccess && (
             <div className='text-qteal text-[13px]'>
-              {hasPasswordProvider() ? 'Password updated successfully.' : 'Password set! You can now sign in with email and password.'}
+              {hasPasswordProvider()
+                ? 'Password updated successfully.'
+                : 'Password set! You can now sign in with email and password.'}
             </div>
           )}
           <button
@@ -538,31 +627,36 @@ export default function AccountTab(): React.ReactElement | null {
             disabled={passBusy}
             className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body disabled:opacity-60'
           >
-            {passBusy ? 'Updating...' : (hasPasswordProvider() ? 'Update Password' : 'Set Password')}
+            {passBusy
+              ? 'Updating...'
+              : hasPasswordProvider()
+                ? 'Update Password'
+                : 'Set Password'}
           </button>
         </div>
       </div>
 
       {/* Reset All Data — owner only */}
-      {isOwner && <div className='bg-qyellow rounded-card p-4 mb-4'>
-        <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
-          <FontAwesomeIcon icon={faRotate} style={FA_ICON_STYLE} />
-          Reset All Data
+      {isOwner && (
+        <div className='bg-qyellow rounded-card p-4 mb-4'>
+          <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
+            <FontAwesomeIcon icon={faRotate} style={FA_ICON_STYLE} />
+            Reset All Data
+          </div>
+          <div className='text-[13px] text-qmuted mb-2'>
+            Clears all coins, streaks, and history for all children. Tasks,
+            rewards, and children profiles will remain.
+          </div>
+          <button
+            onClick={() => {
+              setShowResetConfirm(true);
+            }}
+            className='bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
+          >
+            Reset Everything
+          </button>
         </div>
-        <div className='text-[13px] text-qmuted mb-2'>
-          Clears all coins, streaks, and history for all children.
-          Tasks, rewards, and children profiles will remain.
-        </div>
-        <button
-          onClick={() => {
-            setShowResetConfirm(true);
-          }}
-          className='bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
-        >
-          Reset Everything
-        </button>
-      </div>
-      }
+      )}
       {showResetConfirm && (
         <ConfirmDialog
           title='Reset All Data?'
@@ -584,7 +678,16 @@ export default function AccountTab(): React.ReactElement | null {
       {/* Delete / Leave Family */}
       <div className='bg-qcoral-dim rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qcoral flex items-center gap-2'>
-          <FontAwesomeIcon icon={faTrashCan} style={{ '--fa-primary-color': '#e05a5a', '--fa-secondary-color': '#FF8C94', '--fa-secondary-opacity': '1' } as any} />
+          <FontAwesomeIcon
+            icon={faTrashCan}
+            style={
+              {
+                '--fa-primary-color': '#e05a5a',
+                '--fa-secondary-color': '#FF8C94',
+                '--fa-secondary-opacity': '1',
+              } as any
+            }
+          />
           {isOwner ? 'Delete Family Account' : 'Leave Family'}
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
@@ -604,11 +707,21 @@ export default function AccountTab(): React.ReactElement | null {
       {showDeleteConfirm && (
         <ConfirmDialog
           title={isOwner ? 'Delete Family Account?' : 'Leave Family?'}
-          message={isOwner
-            ? 'This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
-            : 'This will remove your account from this family. You will no longer be able to access this family\'s data. The family will remain for other members.'}
+          message={
+            isOwner
+              ? 'This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
+              : "This will remove your account from this family. You will no longer be able to access this family's data. The family will remain for other members."
+          }
           warning={isOwner ? 'THIS ACTION CANNOT BE UNDONE.' : undefined}
-          confirmLabel={deleteBusy ? (isOwner ? 'Deleting...' : 'Leaving...') : (isOwner ? 'Delete' : 'Leave')}
+          confirmLabel={
+            deleteBusy
+              ? isOwner
+                ? 'Deleting...'
+                : 'Leaving...'
+              : isOwner
+                ? 'Delete'
+                : 'Leave'
+          }
           confirmColor='bg-qcoral'
           onConfirm={() => {
             if (!deleteBusy && (!hasPasswordProvider() || deletePass)) {
@@ -628,32 +741,35 @@ export default function AccountTab(): React.ReactElement | null {
           }}
         >
           {hasPasswordProvider() && (
-          <div className='mt-3'>
-            <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
-              Enter your password to confirm:
-            </label>
-            <input
-              id='delete-pass'
-              type='password'
-              placeholder='Password'
-              value={deletePass}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setDeletePass(e.target.value);
-                setDeleteErr('');
-              }}
-              onKeyDown={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter' && !deleteBusy) {
-                  if (isOwner) {
-                    handleDeleteFamily();
-                  } else {
-                    handleLeaveFamily();
+            <div className='mt-3'>
+              <label
+                htmlFor='delete-pass'
+                className='text-[13px] text-qmuted mb-1.5 block'
+              >
+                Enter your password to confirm:
+              </label>
+              <input
+                id='delete-pass'
+                type='password'
+                placeholder='Password'
+                value={deletePass}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setDeletePass(e.target.value);
+                  setDeleteErr('');
+                }}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' && !deleteBusy) {
+                    if (isOwner) {
+                      handleDeleteFamily();
+                    } else {
+                      handleLeaveFamily();
+                    }
                   }
-                }
-              }}
-              className='quest-input'
-              autoFocus
-            />
-          </div>
+                }}
+                className='quest-input'
+                autoFocus
+              />
+            </div>
           )}
           {deleteErr && (
             <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
