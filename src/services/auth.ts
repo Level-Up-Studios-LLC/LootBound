@@ -181,11 +181,9 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
 }
 
 export async function signOutFamily(): Promise<void> {
-  // Clear any session persistence data
-  try {
-    sessionStorage.removeItem('qb-parent-session');
-    sessionStorage.removeItem('qb-kid-session');
-  } catch (_e) { /* ignore */ }
+  var { removeStorage } = await import('./platform.ts');
+  await removeStorage('qb-parent-session');
+  await removeStorage('qb-kid-session');
   return signOut(auth);
 }
 

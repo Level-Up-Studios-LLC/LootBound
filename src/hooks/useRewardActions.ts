@@ -1,6 +1,7 @@
 import type { Config, UserData, Reward } from '../types.ts';
 import { freshUser, getToday, countRedeems } from '../utils.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
+import { triggerHaptic } from '../services/platform.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
 
 interface RewardActionsDeps {
@@ -66,6 +67,7 @@ export function useRewardActions(deps: RewardActionsDeps) {
       await deps.saveUsr(uid, ud);
       deps.notify('Sent for approval');
 
+      triggerHaptic('light');
       deps.playSound('approval');
       // Write in-app notification for parent
       const childName = deps.getChildName ? deps.getChildName(uid) : uid;
@@ -96,6 +98,7 @@ export function useRewardActions(deps: RewardActionsDeps) {
     await deps.saveUsr(uid, ud);
     deps.notify(`Redeemed: ${reward.name}`);
 
+    triggerHaptic('success');
     deps.playSound('success');
   };
 

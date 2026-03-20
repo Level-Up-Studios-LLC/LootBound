@@ -28,7 +28,6 @@ import {
   limit,
   DocumentData,
   addDoc,
-  updateDoc,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
@@ -546,6 +545,18 @@ export interface InAppNotificationDoc {
   createdAt: Timestamp | number;
 }
 
+export async function saveNotification(
+  familyId: string,
+  notifId: string,
+  data: Record<string, any>
+): Promise<void> {
+  await setDoc(
+    doc(db, 'families', familyId, 'notifications', notifId),
+    data,
+    { merge: true }
+  );
+}
+
 export async function writeNotification(
   familyId: string,
   data: Omit<InAppNotificationDoc, 'read' | 'createdAt'>
@@ -561,10 +572,7 @@ export async function markNotificationRead(
   familyId: string,
   notifId: string
 ): Promise<void> {
-  await updateDoc(
-    doc(db, 'families', familyId, 'notifications', notifId),
-    { read: true }
-  );
+  await saveNotification(familyId, notifId, { read: true });
 }
 
 export function onNotificationsSnapshot(
@@ -579,6 +587,7 @@ export function onNotificationsSnapshot(
   return onSnapshot(q, (snap) => {
     const list: (InAppNotificationDoc & { id: string })[] = [];
     snap.forEach((d) => {
+      if (d.data().createdAt == null) return;
       list.push({ id: d.id, ...d.data() } as InAppNotificationDoc & { id: string });
     });
     callback(list);
@@ -587,15 +596,15 @@ export function onNotificationsSnapshot(
 
 export async function cleanupOldNotifications(familyId: string): Promise<void> {
   const BATCH_LIMIT = 500;
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const snap = await getDocs(collection(db, 'families', familyId, 'notifications'));
+  const cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const q = query(
+    collection(db, 'families', familyId, 'notifications'),
+    where('createdAt', '<', cutoffTs)
+  );
+  const snap = await getDocs(q);
   const refs: import('firebase/firestore').DocumentReference[] = [];
   snap.forEach((d) => {
-    const data = d.data();
-    const ts = data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : data.createdAt;
-    if (typeof ts === 'number' && ts < cutoff) {
-      refs.push(d.ref);
-    }
+    refs.push(d.ref);
   });
   for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
     const chunk = refs.slice(start, start + BATCH_LIMIT);

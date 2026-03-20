@@ -1,6 +1,7 @@
 import type { UserData } from '../types.ts';
 import { freshUser, getToday } from '../utils.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
+import { triggerHaptic } from '../services/platform.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
 
 interface ApprovalActionsDeps {
@@ -33,6 +34,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     await deps.saveUsr(uid, ud);
     deps.notify(`Approved: ${p.name}`);
 
+    triggerHaptic('success');
     deps.playSound('approval');
     // Write in-app notification for kid
     const childName = deps.getChildName ? deps.getChildName(uid) : uid;
@@ -55,6 +57,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     await deps.saveUsr(uid, ud);
     deps.notify('Denied');
 
+    triggerHaptic('error');
     deps.playSound('error');
     // Write in-app notification for kid
     const childName = deps.getChildName ? deps.getChildName(uid) : uid;

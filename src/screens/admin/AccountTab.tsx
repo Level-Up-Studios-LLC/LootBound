@@ -19,6 +19,7 @@ import { FA_ICON_STYLE } from '../../constants.ts';
 import { changePassword, changeEmail, setPassword, deleteAuthAccount, reauthenticate, getCurrentUid, hasPasswordProvider } from '../../services/auth.ts';
 import { deleteFamily, saveParentMember, deleteParentMember, onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
+import { copyToClipboard } from '../../services/platform.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
 
@@ -356,33 +357,13 @@ export default function AccountTab(): React.ReactElement | null {
           <button
             onClick={() => {
               if (!cfg || !cfg.familyCode) return;
-              const text = cfg.familyCode;
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
+              copyToClipboard(cfg.familyCode).then((ok) => {
+                if (ok) {
                   ctx.notify('Copied!');
-                }).catch(() => {
-                  ctx.notify('Long-press to copy', 'error');
-                });
-              } else {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.style.position = 'fixed';
-                ta.style.left = '-9999px';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.focus();
-                ta.select();
-                try {
-                  if (document.execCommand('copy')) {
-                    ctx.notify('Copied!');
-                  } else {
-                    ctx.notify('Long-press to copy');
-                  }
-                } catch (_e) {
+                } else {
                   ctx.notify('Long-press to copy', 'error');
                 }
-                document.body.removeChild(ta);
-              }
+              });
             }}
             className='text-[13px] text-qslate font-semibold tracking-[2px] bg-transparent border-none cursor-pointer p-0 flex items-center gap-1.5 hover:opacity-80 transition-opacity'
           >

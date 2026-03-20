@@ -23,6 +23,7 @@ import {
   deleteTaskPhoto,
 } from '../services/photoStorage.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
+import { capturePhoto as nativeCapturePhoto, triggerHaptic, isNative } from '../services/platform.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
 
 interface TaskActionsDeps {
@@ -60,9 +61,29 @@ export function useTaskActions(deps: TaskActionsDeps) {
       return;
     }
     setCapturing(taskId);
-    if (fileRef.current) {
-      fileRef.current.value = '';
-      fileRef.current.click();
+    if (isNative()) {
+      nativeCapturePhoto().then(function (photo) {
+        if (photo) {
+          doComplete(taskId, photo).then(function () {
+            setCapturing(null);
+          }).catch(function (err) {
+            console.error('doComplete failed:', err);
+            setCapturing(null);
+          });
+        } else {
+          setCapturing(null);
+        }
+      }).catch(function (err) {
+        console.error('nativeCapturePhoto failed:', err);
+        setCapturing(null);
+      });
+    } else {
+      if (fileRef.current) {
+        fileRef.current.value = '';
+        fileRef.current.click();
+      } else {
+        setCapturing(null);
+      }
     }
   };
 
@@ -73,16 +94,14 @@ export function useTaskActions(deps: TaskActionsDeps) {
       return;
     }
     resizeImg(file, 800).then((photo) => {
-      doComplete(capturing!, photo).then(() => {
-        setCapturing(null);
-        if (fileRef.current) fileRef.current.value = '';
-      }).catch((err) => {
-        console.error('doComplete failed:', err);
-        setCapturing(null);
-      });
-    }).catch((err) => {
-      console.error('Photo resize failed:', err);
+      return doComplete(capturing!, photo);
+    }).then(() => {
       setCapturing(null);
+      if (fileRef.current) fileRef.current.value = '';
+    }).catch((err) => {
+      console.warn('Photo capture failed:', err);
+      setCapturing(null);
+      if (fileRef.current) fileRef.current.value = '';
     });
   };
 
@@ -186,6 +205,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     await deps.saveUsr(uid, ud);
     // Haptic feedback + sound on task completion
 
+    triggerHaptic('success');
     deps.playSound('success');
     // Notify with coins + XP, and level-up if applicable
     const sl = SL[status] || {};
@@ -201,11 +221,12 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'parent',
-    }).catch(() => { /* ignore */ });
+    }).catch((err) => { console.warn('Notification failed (mission_complete):', err); });
     if (ud.level > oldLevel) {
       const title = getLevelTitle(ud.level);
       deps.notify(`LEVEL UP! Lv.${ud.level} ${title.title}!`, 'levelup');
 
+      triggerHaptic('medium');
       deps.playSound('levelup');
       writeNotification(deps.familyId, {
         type: 'level_up',
@@ -214,7 +235,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch(() => { /* ignore */ });
+      }).catch((err) => { console.warn('Notification failed (level_up):', err); });
     }
     // Streak notifications
     if (allDone && noneMissed && (ud.streak === 3 || ud.streak === 7 || ud.streak === 15 || ud.streak === 30)) {
@@ -225,7 +246,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch(() => { /* ignore */ });
+      }).catch((err) => { console.warn('Notification failed (streak):', err); });
     }
   };
 
@@ -251,6 +272,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     entry.photo = null;
     await deps.saveUsr(uid, ud);
 
+    triggerHaptic('error');
     deps.playSound('error');
     // Write in-app notification for kid
     const childName = deps.getChildName ? deps.getChildName(uid) : uid;
@@ -267,7 +289,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch(() => { /* ignore */ });
+    }).catch((err) => { console.warn('Notification failed (mission_rejected):', err); });
   };
 
   return {

@@ -5,6 +5,7 @@ import { getToday } from '../../utils.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
+import { copyToClipboard } from '../../services/platform.ts';
 import HamburgerMenu from '../../components/HamburgerMenu.tsx';
 import IconBadge from '../../components/IconBadge.tsx';
 import OverviewTab from './OverviewTab.tsx';
@@ -58,47 +59,17 @@ export default function AdminScreen(): React.ReactElement {
 
   const handleCopyCode = (): void => {
     if (!cfg || !cfg.familyCode) return;
-    const text = cfg.familyCode;
-
-    const onSuccess = () => {
-      setCodeCopied(true);
-      ctx.notify('Copied!');
-      setTimeout(() => {
-        setCodeCopied(false);
-      }, 2000);
-    };
-
-    // Try modern clipboard API first, fall back to execCommand for iOS Safari
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
-        fallbackCopy(text, onSuccess);
-      });
-    } else {
-      fallbackCopy(text, onSuccess);
-    }
-  };
-
-  const fallbackCopy = (text: string, cb: () => void): void => {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try {
-      const ok = document.execCommand('copy');
+    copyToClipboard(cfg.familyCode).then((ok) => {
       if (ok) {
-        cb();
+        setCodeCopied(true);
+        ctx.notify('Copied!');
+        setTimeout(() => {
+          setCodeCopied(false);
+        }, 2000);
       } else {
         ctx.notify('Long-press the code to copy', 'error');
       }
-    } catch (_e) {
-      ctx.notify('Long-press the code to copy', 'error');
-    } finally {
-      document.body.removeChild(ta);
-    }
+    });
   };
 
   return (

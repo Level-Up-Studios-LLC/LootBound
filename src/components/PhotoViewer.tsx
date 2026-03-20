@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faSpinner, faDownload } from '../fa.ts';
+import { isNative } from '../services/platform.ts';
 
 interface PhotoViewerProps {
   photo: string | null;
@@ -21,21 +22,26 @@ export default function PhotoViewer(p: PhotoViewerProps) {
     setSaving(true);
 
     try {
-      const response = await fetch(p.photo);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'lootbound-photo.jpg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1000);
+      if (isNative()) {
+        const { Share } = await import('@capacitor/share');
+        await Share.share({ title: 'LootBound Photo', url: p.photo });
+      } else {
+        const response = await fetch(p.photo);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lootbound-photo.jpg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }
     } catch (err) {
       console.error('[PhotoViewer] Save failed:', err);
-      window.open(p.photo, '_blank');
+      if (!isNative()) window.open(p.photo, '_blank');
     } finally {
       setSaving(false);
     }

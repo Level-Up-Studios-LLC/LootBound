@@ -41,7 +41,7 @@ export default function KidCodeScreen(
         setBusy(false);
         return;
       }
-      setStoredFamilyCode(code);
+      await setStoredFamilyCode(code);
       await signInAnonymousKid();
       props.onSuccess(familyId);
     } catch (_e) {

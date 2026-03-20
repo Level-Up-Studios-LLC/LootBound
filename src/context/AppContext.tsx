@@ -1,6 +1,7 @@
 import React, {
   useState,
   useEffect,
+  useMemo,
   createContext,
   useContext,
 } from 'react';
@@ -15,6 +16,7 @@ import type {
   Notification,
 } from '../types.ts';
 import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, MIN_COINS } from '../constants.ts';
+import { setStorage, removeStorage } from '../services/platform.ts';
 import {
   freshUser,
   getToday,
@@ -118,14 +120,12 @@ export function AppProvider(props: {
 
   const setCurUser = (uid: string | null) => {
     setCurUserRaw(uid);
-    try {
-      if (uid && uid !== 'parent') {
-        sessionStorage.setItem('qb-kid-session', JSON.stringify({ val: uid, ts: Date.now() }));
-      } else if (!uid) {
-        sessionStorage.removeItem('qb-kid-session');
-        if (props.onLogout) props.onLogout();
-      }
-    } catch (_e) { /* ignore */ }
+    if (uid && uid !== 'parent') {
+      setStorage('qb-kid-session', JSON.stringify({ val: uid, ts: Date.now() }));
+    } else if (!uid) {
+      removeStorage('qb-kid-session');
+      if (props.onLogout) props.onLogout();
+    }
   };
   const [cfg, setCfg] = useState<Config | null>(null);
   const [allU, setAllU] = useState<Record<string, UserData>>({});
@@ -487,7 +487,8 @@ export function AppProvider(props: {
   // --- In-app notification listener ---
   const notifRole: 'parent' | 'kid' = curUser === 'parent' ? 'parent' : 'kid';
   const notifChildId = curUser && curUser !== 'parent' ? curUser : null;
-  const notifPrefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+  const rawPrefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+  const notifPrefs = useMemo(() => rawPrefs, [JSON.stringify(rawPrefs)]);
 
   useNotificationListener({
     familyId,
@@ -516,11 +517,13 @@ export function AppProvider(props: {
     };
   }, []);
 
-  // --- Cleanup old notifications on load ---
+  // --- Cleanup old notifications on load (parents only) ---
   useEffect(() => {
-    if (!familyId || loading) return;
-    cleanupOldNotifications(familyId).catch(() => { /* ignore */ });
-  }, [familyId, loading]);
+    if (!familyId || loading || curUser !== 'parent') return;
+    cleanupOldNotifications(familyId).catch((err) => {
+      console.warn('Notification cleanup failed:', err);
+    });
+  }, [familyId, loading, curUser]);
 
   // 30-second tick for bedtime cutoff detection (time-based, not data-based)
   useEffect(() => {

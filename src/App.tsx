@@ -7,11 +7,12 @@ import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
 import { getParentMember, saveParentMember } from './services/firestoreStorage.ts';
 import {
-  getStoredFamilyCode,
+  getStoredFamilyCodeAsync,
   clearStoredFamilyCode,
   lookupFamilyCode,
 } from './services/familyCode.ts';
 import { signInAnonymousKid, getCurrentUid, applyVerificationCode } from './services/auth.ts';
+import { getStorage, setStorage, removeStorage } from './services/platform.ts';
 import NotificationToast from './components/NotificationToast.tsx';
 import HamburgerMenu from './components/HamburgerMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
@@ -34,36 +35,31 @@ const SESSION_KEY_PARENT = 'qb-parent-session';
 const SESSION_KEY_KID = 'qb-kid-session';
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-const getSession = (key: string): string | null => {
+const parseSessionValue = (raw: string | null): string | null => {
+  if (!raw) return null;
   try {
-    const raw = sessionStorage.getItem(key);
-    if (!raw) return null;
     const data = JSON.parse(raw);
-    if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) {
-      sessionStorage.removeItem(key);
-      return null;
-    }
-    if (Date.now() - data.ts > SESSION_TTL) {
-      sessionStorage.removeItem(key);
-      return null;
-    }
+    if (typeof data.val !== 'string' || !Number.isFinite(data.ts)) return null;
+    if (Date.now() - data.ts > SESSION_TTL) return null;
     return data.val;
   } catch (_e) {
-    try { sessionStorage.removeItem(key); } catch (_e2) { /* ignore */ }
     return null;
   }
 };
 
+const getSessionAsync = async (key: string): Promise<string | null> => {
+  const raw = await getStorage(key);
+  const val = parseSessionValue(raw);
+  if (raw && !val) await removeStorage(key);
+  return val;
+};
+
 const setSession = (key: string, val: string): void => {
-  try {
-    sessionStorage.setItem(key, JSON.stringify({ val, ts: Date.now() }));
-  } catch (_e) { /* ignore */ }
+  setStorage(key, JSON.stringify({ val, ts: Date.now() }));
 };
 
 const clearSession = (key: string): void => {
-  try {
-    sessionStorage.removeItem(key);
-  } catch (_e) { /* ignore */ }
+  removeStorage(key);
 };
 
 /**
@@ -231,16 +227,15 @@ function AppRouter() {
   useEffect(() => {
     if (auth.authLoading) return;
     if (auth.authUser) {
-      const stored = getSession(SESSION_KEY_PARENT);
-      if (stored === auth.authUser.uid) {
-        setParentVerifiedRaw(true);
-      } else if (stored) {
-        // Stored session belongs to a different user — clear it
-        clearSession(SESSION_KEY_PARENT);
-        setParentVerifiedRaw(false);
-      }
+      getSessionAsync(SESSION_KEY_PARENT).then((stored) => {
+        if (stored === auth.authUser!.familyId) {
+          setParentVerifiedRaw(true);
+        } else {
+          if (stored) clearSession(SESSION_KEY_PARENT);
+          setParentVerifiedRaw(false);
+        }
+      });
     } else {
-      // No user — clear any stale session from memory and storage
       clearSession(SESSION_KEY_PARENT);
       setParentVerifiedRaw(false);
     }
@@ -258,44 +253,47 @@ function AppRouter() {
   const [parentPin, setParentPin] = useState<string | null>(null);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
+  const [storedKid, setStoredKid] = useState<string | null | undefined>(undefined);
 
   // On mount, check for stored family code (kid device persistence)
   // or persisted Firebase session (parent device persistence)
   useEffect(() => {
-    const storedCode = getStoredFamilyCode();
-    if (storedCode) {
-      lookupFamilyCode(storedCode).then((fid) => {
-        if (fid) {
-          signInAnonymousKid().then(() => {
+    (async () => {
+      try {
+        const kidSession = await getSessionAsync(SESSION_KEY_KID);
+        setStoredKid(kidSession);
+        const storedCode = await getStoredFamilyCodeAsync();
+        if (storedCode) {
+          const fid = await lookupFamilyCode(storedCode);
+          if (fid) {
+            await signInAnonymousKid();
             setRole('kid');
             setKidFamilyId(fid);
-          }).catch((err) => {
-            console.error('Kid sign-in failed:', err);
-          }).finally(() => {
-            setInitDone(true);
-          });
-        } else {
-          // Stored code is no longer valid
-          clearStoredFamilyCode();
-          setInitDone(true);
+          } else {
+            // Stored code is no longer valid
+            await clearStoredFamilyCode();
+            setStoredKid(null);
+          }
         }
-      }).catch((err) => {
-        console.error('Family code lookup failed:', err);
+      } catch (err) {
+        console.error('Init failed:', err);
+      } finally {
         setInitDone(true);
-      });
-    } else {
-      setInitDone(true);
-    }
+      }
+    })();
   }, []);
 
   // Auto-detect persisted parent session
+  var roleRef = useRef(role);
+  roleRef.current = role;
   useEffect(
     () => {
       if (!auth.authLoading && auth.authUser && !role && initDone) {
-        const storedCode = getStoredFamilyCode();
-        if (!storedCode) {
-          setRole('parent');
-        }
+        getStoredFamilyCodeAsync().then((storedCode) => {
+          if (!storedCode && !roleRef.current) {
+            setRole('parent');
+          }
+        });
       }
     },
     [auth.authLoading, auth.authUser, role, initDone]
@@ -500,7 +498,6 @@ function AppRouter() {
     // Family code resolved → show app
     // Pass stored kid as initialUser but start at 'login' — AppContext will
     // validate the child ID against cfg.children and promote to 'dashboard'
-    const storedKid = getSession(SESSION_KEY_KID);
     return (
       <AppProvider
         familyId={kidFamilyId}
@@ -508,8 +505,9 @@ function AppRouter() {
       >
         <AppInner
           onSwitchFamily={() => {
-            clearStoredFamilyCode();
+            clearStoredFamilyCode().catch(() => { /* ignore */ });
             clearSession(SESSION_KEY_KID);
+            setStoredKid(null);
             setKidFamilyId(null);
             setRole(null);
           }}

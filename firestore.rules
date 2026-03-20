@@ -17,6 +17,8 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+
+
     match /families/{familyId} {
       // Parents can read and write family config.
       // Kids (anonymous) can read so they see children, tasks, rewards, settings.
@@ -52,8 +54,11 @@ service cloud.firestore {
       }
 
       match /notifications/{notifId} {
+        // Both parents and kids need read/create (kids trigger notifications
+        // for parents via task completions and loot requests).
+        // Anonymous kids can't be tied to a specific family in rules.
         allow read: if isAuthenticated();
-        // Validate notification schema and restrict to known types
+        // Validate schema and restrict to known types
         allow create: if isAuthenticated() &&
           request.resource.data.keys().hasAll(['type', 'title', 'body', 'targetRole', 'read', 'createdAt']) &&
           request.resource.data.type in [

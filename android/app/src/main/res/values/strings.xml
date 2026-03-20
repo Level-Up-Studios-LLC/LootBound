@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LootBound</string>
+    <string name="title_activity_main">LootBound</string>
+    <string name="package_name">com.levelupstudios.lootbound</string>
+    <string name="custom_url_scheme">com.levelupstudios.lootbound</string>
+</resources>
