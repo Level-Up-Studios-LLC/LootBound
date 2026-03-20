@@ -310,8 +310,11 @@ function AppRouter() {
           const pin = member ? member.parentPin || '' : '';
           setParentPin(pin);
         }).catch((err) => {
-          console.error('Failed to load parent PIN:', err);
-          Sentry.captureException(err, { tags: { action: 'load-parent-pin' } });
+          // permission-denied is expected during account deletion — don't report
+          if (err?.code !== 'permission-denied') {
+            console.error('Failed to load parent PIN:', err);
+            Sentry.captureException(err, { tags: { action: 'load-parent-pin' } });
+          }
           setParentPin('');
         });
       }

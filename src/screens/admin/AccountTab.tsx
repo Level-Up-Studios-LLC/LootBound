@@ -192,24 +192,25 @@ export default function AccountTab(): React.ReactElement | null {
       return;
     }
     setDeleteBusy(true);
+    const uid = currentUid;
+    if (!uid) { setDeleteErr('Not signed in'); setDeleteBusy(false); return; }
+
     try {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
 
-      // Delete all photos from Storage
+      // Delete photos (best-effort)
       try {
         await deleteAllFamilyPhotos(ctx.familyId);
       } catch (photoErr) {
         console.warn('Photo cleanup failed:', photoErr);
         Sentry.captureException(photoErr, { tags: { action: 'delete-family-photos' } });
-        ctx.notify('Some photos could not be deleted', 'error');
       }
-      // Delete all Firestore data
-      const uid = currentUid;
-      if (!uid) throw new Error('Not signed in');
+
+      // Delete Firestore data, then auth account immediately after
       await deleteFamily(ctx.familyId, uid);
-      await deleteAuthAccount(deletePass);
+      await deleteAuthAccount();
     } catch (err: any) {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
@@ -231,15 +232,16 @@ export default function AccountTab(): React.ReactElement | null {
       return;
     }
     setDeleteBusy(true);
+    const uid = currentUid;
+    if (!uid) { setDeleteErr('Not signed in'); setDeleteBusy(false); return; }
+
     try {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
-      const uid = currentUid;
-      if (!uid) throw new Error('Not signed in');
-      // Only remove own parentMembers doc and auth account
+      // Remove own parentMembers doc, then auth account immediately after
       await deleteParentMember(uid);
-      await deleteAuthAccount(deletePass);
+      await deleteAuthAccount();
     } catch (err: any) {
       console.error('Failed to leave family:', err);
       Sentry.captureException(err, { tags: { action: 'leave-family' } });
