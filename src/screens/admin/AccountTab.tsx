@@ -199,7 +199,19 @@ export default function AccountTab(): React.ReactElement | null {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
+    } catch (err: any) {
+      console.error('Failed to reauthenticate:', err);
+      const code = err.code || err.message || '';
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setDeleteErr('Incorrect password');
+      } else {
+        setDeleteErr('Failed to verify credentials. Please try again.');
+      }
+      setDeleteBusy(false);
+      return;
+    }
 
+    try {
       // Delete photos (best-effort)
       try {
         await deleteAllFamilyPhotos(ctx.familyId);
@@ -208,18 +220,22 @@ export default function AccountTab(): React.ReactElement | null {
         Sentry.captureException(photoErr, { tags: { action: 'delete-family-photos' } });
       }
 
-      // Delete Firestore data, then auth account immediately after
+      // Delete Firestore data first (requires auth), then auth account
       await deleteFamily(ctx.familyId, uid);
-      await deleteAuthAccount();
+
+      try {
+        await deleteAuthAccount();
+      } catch (authErr: any) {
+        console.error('Auth account deletion failed after Firestore cleanup:', authErr);
+        Sentry.captureException(authErr, { tags: { action: 'delete-auth-after-firestore' } });
+        setDeleteErr('Family data deleted, but your login could not be removed. Sign out — your account will be cleaned up automatically.');
+        setDeleteBusy(false);
+        return;
+      }
     } catch (err: any) {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
-      const code = err.code || err.message || '';
-      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        setDeleteErr('Incorrect password');
-      } else {
-        setDeleteErr('Failed to delete account. Please try again.');
-      }
+      setDeleteErr('Failed to delete account. Please try again.');
       setDeleteBusy(false);
       return;
     }
@@ -239,18 +255,35 @@ export default function AccountTab(): React.ReactElement | null {
       if (hasPasswordProvider()) {
         await reauthenticate(deletePass);
       }
-      // Remove own parentMembers doc, then auth account immediately after
-      await deleteParentMember(uid);
-      await deleteAuthAccount();
     } catch (err: any) {
-      console.error('Failed to leave family:', err);
-      Sentry.captureException(err, { tags: { action: 'leave-family' } });
+      console.error('Failed to reauthenticate:', err);
       const code = err.code || err.message || '';
       if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setDeleteErr('Incorrect password');
       } else {
-        setDeleteErr('Failed to leave family. Please try again.');
+        setDeleteErr('Failed to verify credentials. Please try again.');
       }
+      setDeleteBusy(false);
+      return;
+    }
+
+    try {
+      // Remove own parentMembers doc first (requires auth), then auth account
+      await deleteParentMember(uid);
+
+      try {
+        await deleteAuthAccount();
+      } catch (authErr: any) {
+        console.error('Auth account deletion failed after member cleanup:', authErr);
+        Sentry.captureException(authErr, { tags: { action: 'delete-auth-after-leave' } });
+        setDeleteErr('You have left the family, but your login could not be removed. Sign out — your account will be cleaned up automatically.');
+        setDeleteBusy(false);
+        return;
+      }
+    } catch (err: any) {
+      console.error('Failed to leave family:', err);
+      Sentry.captureException(err, { tags: { action: 'leave-family' } });
+      setDeleteErr('Failed to leave family. Please try again.');
       setDeleteBusy(false);
       return;
     }
