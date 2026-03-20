@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCircleQuestion } from '../../fa.ts';
+import { getToday } from '../../utils.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
 import HamburgerMenu from '../../components/HamburgerMenu.tsx';
+import IconBadge from '../../components/IconBadge.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';
 import ReviewTab from './ReviewTab.tsx';
@@ -31,16 +33,27 @@ export default function AdminScreen(): React.ReactElement {
   const cfg = ctx.cfg;
   const pendingCount = ctx.pendingCount;
 
-  const bottomTabs: [string, string, string][] = [
-    ['overview', 'chart-bar', 'Overview'],
-    [
-      'approvals',
-      'circle-check',
-      `Approvals${pendingCount > 0 ? ` (${pendingCount})` : ''}`,
-    ],
-    ['review', 'magnifying-glass', 'Review'],
-    ['tasks', 'crosshairs', 'Missions'],
-    ['rewards', 'treasure-chest', 'Loot'],
+  // Count reviewable items (completed, not rejected, not missed)
+  let reviewCount = 0;
+  if (cfg) {
+    const d = getToday();
+    ctx.children.forEach((c) => {
+      const udata = ctx.allU[c.id];
+      if (!udata) return;
+      const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
+      (cfg.tasks[c.id] || []).forEach((t) => {
+        const entry = log[t.id];
+        if (entry && !entry.rejected && entry.status !== 'missed') reviewCount++;
+      });
+    });
+  }
+
+  const bottomTabs: [string, string, string, number][] = [
+    ['overview', 'chart-bar', 'Overview', 0],
+    ['approvals', 'circle-check', 'Approvals', pendingCount],
+    ['review', 'magnifying-glass', 'Review', reviewCount],
+    ['tasks', 'crosshairs', 'Missions', 0],
+    ['rewards', 'treasure-chest', 'Loot', 0],
   ];
 
   const handleCopyCode = (): void => {
@@ -181,6 +194,7 @@ export default function AdminScreen(): React.ReactElement {
       {/* Bottom Navigation */}
       <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>
         {bottomTabs.map((t) => {
+          const badge = t[3];
           return (
             <button
               key={t[0]}
@@ -192,9 +206,7 @@ export default function AdminScreen(): React.ReactElement {
                 (atab === t[0] ? 'text-qteal' : 'text-qslate')
               }
             >
-              <span className='text-xl'>
-                <FontAwesomeIcon icon={['fas', t[1]] as any} />
-              </span>
+              <IconBadge icon={t[1]} badge={badge} />
               <span className='text-xs font-semibold'>{t[2]}</span>
             </button>
           );
