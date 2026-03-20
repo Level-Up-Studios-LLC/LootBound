@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/react';
 import type { Config, UserData, Child, AddChildFormData } from '../types.ts';
-import type { ChildData } from '../services/firestoreStorage.ts';
 import { freshUser, slugify } from '../utils.ts';
 import { deleteChildData as fsDeleteChildData, replaceChildData } from '../services/firestoreStorage.ts';
 import {
@@ -99,7 +98,7 @@ export function useChildActions(deps: ChildActionsDeps) {
       var fresh = freshUser();
       resetUsers[children[i].id] = fresh;
       promises.push(
-        replaceChildData(deps.familyId, children[i].id, fresh as unknown as ChildData)
+        replaceChildData(deps.familyId, children[i].id, fresh)
       );
     }
     try {

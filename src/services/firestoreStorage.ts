@@ -27,6 +27,7 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase.ts';
+import type { UserData } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -316,7 +317,7 @@ export async function saveChildData(
 export async function replaceChildData(
   familyId: string,
   childId: string,
-  data: ChildData
+  data: ChildData | UserData
 ): Promise<void> {
   await setDoc(doc(db, 'families', familyId, 'childData', childId), data as DocumentData);
 }
