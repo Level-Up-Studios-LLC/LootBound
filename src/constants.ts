@@ -140,6 +140,8 @@ export const DEF_NOTIFICATION_PREFS: NotificationPrefs = {
   streak: true,
 };
 
+export const FEEDBACK_URL = 'https://lootbound.canny.io';
+
 export const KID_NAV = [
   { id: 'dashboard', icon: 'house-chimney', label: 'HQ' },
   { id: 'tasks', icon: 'crosshairs', label: 'Missions' },

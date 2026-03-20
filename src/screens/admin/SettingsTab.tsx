@@ -12,9 +12,8 @@ import {
   faVolumeHigh,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE } from '../../constants.ts';
+import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE, FEEDBACK_URL } from '../../constants.ts';
 import type { Config, TierConfig, NotificationPrefs } from '../../types.ts';
-const DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 const SAVE_DELAY = 1500;
 
@@ -300,16 +299,15 @@ export default function SettingsTab(): React.ReactElement {
           Feedback
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Found a bug or have an idea? Visit our discussions board to share
-          feedback, request features, and vote on ideas.
+          Share feedback, request features, and vote on ideas.
         </div>
         <a
-          href={DISCUSSIONS_URL}
+          href={FEEDBACK_URL}
           target='_blank'
           rel='noopener noreferrer'
           className='inline-flex items-center gap-2 bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body no-underline'
         >
-          Open Discussions
+          Share Feedback
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} className='text-xs' />
         </a>
       </div>

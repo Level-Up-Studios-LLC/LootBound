@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentDots, faCircleCheck } from './fa.ts';
-import { FA_ICON_STYLE } from './constants.ts';
+import { FA_ICON_STYLE, FEEDBACK_URL } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
 import { getParentMember, saveParentMember } from './services/firestoreStorage.ts';
@@ -28,8 +28,6 @@ import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
 import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
-
-const DISCUSSIONS_URL = 'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 const SESSION_KEY_PARENT = 'qb-parent-session';
 const SESSION_KEY_KID = 'qb-kid-session';
@@ -192,7 +190,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
 
       {showFab && (
         <a
-          href={DISCUSSIONS_URL}
+          href={FEEDBACK_URL}
           target='_blank'
           rel='noopener noreferrer'
           className='fixed bottom-[100px] right-5 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform no-underline'
