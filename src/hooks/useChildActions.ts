@@ -19,47 +19,47 @@ interface ChildActionsDeps {
 }
 
 export function useChildActions(deps: ChildActionsDeps) {
-  async function doAddChild(form: AddChildFormData) {
-    var id = slugify(form.name);
-    var newChild: Child = {
-      id: id,
+  const doAddChild = async (form: AddChildFormData) => {
+    if (!deps.cfg) return;
+    const id = slugify(form.name);
+    const newChild: Child = {
+      id,
       name: form.name,
       age: Number(form.age) || 1,
       avatar: form.avatar,
       color: form.color,
       pin: null,
     };
-    var newCfg = Object.assign({}, deps.cfg!) as Config;
+    const newCfg = Object.assign({}, deps.cfg) as Config;
     newCfg.children = (newCfg.children || []).concat([newChild]);
     if (!newCfg.tasks) newCfg.tasks = {};
     newCfg.tasks[id] = [];
     await deps.saveCfg(newCfg);
     await deps.saveUsr(id, freshUser());
-    deps.notify(form.name + ' added!');
-  }
+    deps.notify(`${form.name} added!`);
+  };
 
-  async function doRemoveChild(id: string) {
-    var newCfg = Object.assign({}, deps.cfg!) as Config;
-    newCfg.children = (newCfg.children || []).filter(function (c) {
-      return c.id !== id;
-    });
-    var newTasks = Object.assign({}, newCfg.tasks);
+  const doRemoveChild = async (id: string) => {
+    if (!deps.cfg) return;
+    const newCfg = Object.assign({}, deps.cfg) as Config;
+    newCfg.children = (newCfg.children || []).filter((c) => c.id !== id);
+    const newTasks = Object.assign({}, newCfg.tasks);
     delete newTasks[id];
     newCfg.tasks = newTasks;
     await deps.saveCfg(newCfg);
-    var childDataDeleted = true;
+    let childDataDeleted = true;
     try {
       await fsDeleteChildData(deps.familyId, id);
     } catch (err) {
       Sentry.captureException(err, { tags: { action: 'delete-child-data', childId: id } });
       childDataDeleted = false;
     }
-    deleteAllChildPhotos(deps.familyId, id).catch(function (err) {
+    deleteAllChildPhotos(deps.familyId, id).catch((err) => {
       Sentry.captureException(err, { tags: { action: 'delete-child-photos', childId: id } });
     });
-    deps.setAllU(function (p) {
-      var o: Record<string, UserData> = {};
-      for (var k in p) if (k !== id) o[k] = p[k];
+    deps.setAllU((p) => {
+      const o: Record<string, UserData> = {};
+      for (const k in p) if (k !== id) o[k] = p[k];
       return o;
     });
     if (childDataDeleted) {
@@ -67,39 +67,38 @@ export function useChildActions(deps: ChildActionsDeps) {
     } else {
       deps.notify('Child removed, but some data cleanup failed');
     }
-  }
+  };
 
-  async function addBonus(uid: string, pts: number) {
-    var ud = JSON.parse(
-      JSON.stringify(deps.allU[uid] || freshUser())
-    ) as UserData;
+  const addBonus = async (uid: string, pts: number) => {
+    const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
     ud.points = (ud.points || 0) + pts;
     await deps.saveUsr(uid, ud);
     deps.notify(
-      (pts > 0 ? '+' : '') +
-        pts +
-        ' coins for' +
-        (deps.getChild(uid) || ({} as any)).name
+      `${pts > 0 ? '+' : ''}${pts} coins for${(deps.getChild(uid) || ({} as any)).name}`
     );
-  }
+  };
 
-  async function resetAll() {
-    var children = deps.cfg ? deps.cfg.children : [];
+  const resetAll = async () => {
+    const children = deps.cfg ? deps.cfg.children : [];
     // Delete all photos from Storage
-    deleteAllFamilyPhotos(deps.familyId).catch(function (err) {
+    deleteAllFamilyPhotos(deps.familyId).catch((err) => {
       console.warn('Photo cleanup failed during reset:', err);
       Sentry.captureException(err, { tags: { action: 'reset-all-photo-cleanup' } });
     });
-    for (var i = 0; i < children.length; i++) {
-      await deps.saveUsr(children[i].id, freshUser());
+    const promises = children.map((ch) => deps.saveUsr(ch.id, freshUser()));
+    try {
+      await Promise.all(promises);
+      deps.notify('All data reset');
+    } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'reset-all' } });
+      deps.notify('Data reset failed — please try again', 'error');
     }
-    deps.notify('All data reset');
-  }
+  };
 
   return {
-    doAddChild: doAddChild,
-    doRemoveChild: doRemoveChild,
-    addBonus: addBonus,
-    resetAll: resetAll,
+    doAddChild,
+    doRemoveChild,
+    addBonus,
+    resetAll,
   };
 }

@@ -10,24 +10,24 @@ import EmptyState from '../../components/ui/EmptyState.tsx';
 import type { StatusLabel, ReviewTaskItem } from '../../types.ts';
 
 export default function ReviewTab(): React.ReactElement {
-  var _reviewTask = useState<ReviewTaskItem | null>(null),
-    reviewTask = _reviewTask[0],
-    setReviewTask = _reviewTask[1];
+  const [reviewTask, setReviewTask] = useState<ReviewTaskItem | null>(null);
 
-  var ctx = useAppContext();
-  var children = ctx.children;
-  var allU = ctx.allU;
-  var cfg = ctx.cfg;
-  var d = getToday();
+  const ctx = useAppContext();
+  const children = ctx.children;
+  const allU = ctx.allU;
+  const cfg = ctx.cfg;
+  const d = getToday();
 
-  var items: ReviewTaskItem[] = [];
-  children.forEach(function (c) {
-    var udata = allU[c.id] || freshUser();
-    var log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-    (cfg!.tasks[c.id] || []).forEach(function (t) {
-      var entry = log[t.id];
+  if (!cfg) return <div />;
+
+  const items: ReviewTaskItem[] = [];
+  children.forEach((c) => {
+    const udata = allU[c.id] || freshUser();
+    const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
+    (cfg.tasks[c.id] || []).forEach((t) => {
+      const entry = log[t.id];
       if (entry && !entry.rejected && entry.status !== 'missed')
-        items.push({ uid: c.id, child: c, task: t, entry: entry });
+        items.push({ uid: c.id, child: c, task: t, entry });
     });
   });
 
@@ -45,10 +45,10 @@ export default function ReviewTab(): React.ReactElement {
           description='No completed missions to review today. Once children complete missions, they will show up here with photo proof.'
         />
       )}
-      {items.map(function (item, ri) {
+      {items.map((item, ri) => {
         return (
           <div
-            key={item.uid + '-' + item.task.id}
+            key={`${item.uid}-${item.task.id}`}
             className={altBg(ri) + ' rounded-[10px] p-4 mb-4'}
           >
             <div className='flex justify-between items-start'>
@@ -67,7 +67,7 @@ export default function ReviewTab(): React.ReactElement {
             <div className='flex gap-3 mt-3'>
               {item.entry.photo && (
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     ctx.setViewPhoto(item.entry.photo);
                   }}
                   className='bg-qblue-dim text-qblue rounded-badge px-4 py-2 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1.5'
@@ -77,7 +77,7 @@ export default function ReviewTab(): React.ReactElement {
                 </button>
               )}
               <button
-                onClick={function () {
+                onClick={() => {
                   setReviewTask(item);
                 }}
                 className='bg-qcoral-dim text-qcoral rounded-badge px-4 py-2 text-xs font-semibold border-none cursor-pointer font-body'
@@ -108,7 +108,7 @@ export default function ReviewTab(): React.ReactElement {
           )}
           <div className='flex gap-3 justify-end'>
             <button
-              onClick={function () {
+              onClick={() => {
                 setReviewTask(null);
               }}
               className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
@@ -116,7 +116,7 @@ export default function ReviewTab(): React.ReactElement {
               Cancel
             </button>
             <button
-              onClick={function () {
+              onClick={() => {
                 ctx.rejectTask(reviewTask!.uid, reviewTask!.task.id);
                 setReviewTask(null);
               }}

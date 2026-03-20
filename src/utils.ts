@@ -29,11 +29,11 @@ export function getToday(): string {
 }
 
 export function getWeekStart(resetDay?: number): string {
-  var day = resetDay != null ? resetDay : 0;
-  var d = new Date();
-  var dow = d.getDay();
-  var diff = dow >= day ? dow - day : dow + 7 - day;
-  var s = new Date(d);
+  const day = resetDay != null ? resetDay : 0;
+  const d = new Date();
+  const dow = d.getDay();
+  const diff = dow >= day ? dow - day : dow + 7 - day;
+  const s = new Date(d);
   s.setDate(d.getDate() - diff);
   return formatYMD(s);
 }
@@ -43,12 +43,12 @@ export function todayDow(): number {
 }
 
 export function timeToMin(t: string): number {
-  var p = t.split(':');
+  const p = t.split(':');
   return Number(p[0]) * 60 + Number(p[1]);
 }
 
 export function nowMin(): number {
-  var n = new Date();
+  const n = new Date();
   return n.getHours() * 60 + n.getMinutes();
 }
 
@@ -57,18 +57,12 @@ export function nowSec(): number {
 }
 
 export function fmtTime(t: string): string {
-  var p = t.split(':').map(Number);
-  return (
-    (p[0] % 12 || 12) +
-    ':' +
-    String(p[1]).padStart(2, '0') +
-    ' ' +
-    (p[0] >= 12 ? 'PM' : 'AM')
-  );
+  const p = t.split(':').map(Number);
+  return `${p[0] % 12 || 12}:${String(p[1]).padStart(2, '0')} ${p[0] >= 12 ? 'PM' : 'AM'}`;
 }
 
 export function prevDate(d: string): string {
-  var dt = new Date(d + 'T12:00:00');
+  const dt = new Date(`${d}T12:00:00`);
   dt.setDate(dt.getDate() - 1);
   return formatYMD(dt);
 }
@@ -84,16 +78,14 @@ export function isTaskActiveToday(task: Task): boolean {
 }
 
 export function slugify(s: string): string {
-  return (
-    s.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36)
-  );
+  return `${s.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now().toString(36)}`;
 }
 
 export function getTaskStatus(task: Task, completedAt: number | null, bedtime?: number): string {
-  var now = nowMin();
-  var s = timeToMin(task.windowStart);
-  var e = timeToMin(task.windowEnd);
-  var bt = bedtime != null ? bedtime : BEDTIME;
+  const now = nowMin();
+  const s = timeToMin(task.windowStart);
+  const e = timeToMin(task.windowEnd);
+  const bt = bedtime != null ? bedtime : BEDTIME;
   if (completedAt != null) {
     if (completedAt < s) return 'early';
     if (completedAt <= e) return 'ontime';
@@ -117,7 +109,7 @@ export function calcRewards(
   tc: TierConfig,
   status: string
 ): { coins: number; xp: number } {
-  var mult = status === 'early' ? 1.25 : status === 'ontime' ? 1.0 : status === 'late' ? 0.5 : 0;
+  const mult = status === 'early' ? 1.25 : status === 'ontime' ? 1.0 : status === 'late' ? 0.5 : 0;
   if (status === 'missed') return { coins: -tc.coins, xp: 0 };
   return {
     coins: Math.round(tc.coins * mult),
@@ -135,7 +127,7 @@ export function getStreakMultiplier(streak: number): number {
 }
 
 export function getLevelFromXp(totalXp: number): number {
-  for (var i = LEVEL_XP.length - 1; i >= 0; i--) {
+  for (let i = LEVEL_XP.length - 1; i >= 0; i--) {
     if (totalXp >= LEVEL_XP[i]) return i + 2;
   }
   return 1;
@@ -146,16 +138,16 @@ export function getXpProgress(
   level: number
 ): { current: number; needed: number; pct: number } {
   if (level >= 20) return { current: 0, needed: 0, pct: 100 };
-  var floor = level >= 2 ? LEVEL_XP[level - 2] : 0;
-  var ceil = LEVEL_XP[level - 1];
-  var current = totalXp - floor;
-  var needed = ceil - floor;
-  var pct = needed > 0 ? Math.round((current / needed) * 100) : 100;
-  return { current: current, needed: needed, pct: pct };
+  const floor = level >= 2 ? LEVEL_XP[level - 2] : 0;
+  const ceil = LEVEL_XP[level - 1];
+  const current = totalXp - floor;
+  const needed = ceil - floor;
+  const pct = needed > 0 ? Math.round((current / needed) * 100) : 100;
+  return { current, needed, pct };
 }
 
 export function getLevelTitle(level: number): { title: string; color: string } {
-  var idx = Math.max(0, Math.min(level - 1, LEVEL_TITLES.length - 1));
+  const idx = Math.max(0, Math.min(level - 1, LEVEL_TITLES.length - 1));
   return LEVEL_TITLES[idx];
 }
 
@@ -164,18 +156,18 @@ export function getLevelCoinBonus(level: number): number {
 }
 
 export function resizeImg(file: File, maxW: number): Promise<string> {
-  return new Promise(function (resolve) {
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      var img = new Image();
-      img.onload = function () {
-        var w = img.width,
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width,
           h = img.height;
         if (w > maxW) {
           h = Math.round((h * maxW) / w);
           w = maxW;
         }
-        var c = document.createElement('canvas');
+        const c = document.createElement('canvas');
         c.width = w;
         c.height = h;
         c.getContext('2d')!.drawImage(img, 0, 0, w, h);
@@ -193,9 +185,9 @@ export function countRedeems(
   lt: string
 ): number {
   if (!redemptions || !redemptions.length) return 0;
-  var today = getToday();
-  var ws = getWeekStart();
-  return redemptions.filter(function (r) {
+  const today = getToday();
+  const ws = getWeekStart();
+  return redemptions.filter((r) => {
     if (r.rewardId !== rid) return false;
     if (lt === 'daily') return r.date === today;
     if (lt === 'weekly') return r.date >= ws;

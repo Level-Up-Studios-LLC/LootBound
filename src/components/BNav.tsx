@@ -12,15 +12,15 @@ interface BNavProps {
 }
 
 export default function BNav(p: BNavProps) {
-  var ctx = useAppContext();
+  const ctx = useAppContext();
 
   // Count incomplete + redo missions for the current kid
-  var missionBadge = 0;
+  let missionBadge = 0;
   if (ctx.curUser && ctx.curUser !== 'parent') {
-    var total = ctx.todayTasks.length;
-    var done = 0;
-    ctx.todayTasks.forEach(function (t) {
-      var entry = ctx.tLog[t.id];
+    const total = ctx.todayTasks.length;
+    let done = 0;
+    ctx.todayTasks.forEach((t) => {
+      const entry = ctx.tLog[t.id];
       if (entry && !entry.rejected) done++;
     });
     missionBadge = total - done;
@@ -28,13 +28,13 @@ export default function BNav(p: BNavProps) {
 
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-3 z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-      {p.tabs.map(function (t) {
-        var isActive = ctx.screen === t.id;
-        var badge = t.id === 'tasks' ? missionBadge : 0;
+      {p.tabs.map((t) => {
+        const isActive = ctx.screen === t.id;
+        const badge = t.id === 'tasks' ? missionBadge : 0;
         return (
           <button
             key={t.id}
-            onClick={function () {
+            onClick={() => {
               ctx.setScreen(t.id);
             }}
             className={

@@ -19,7 +19,7 @@ export default function RoleSelectScreen(
 
       <div className='flex gap-6 justify-center'>
         <button
-          onClick={function () {
+          onClick={() => {
             props.onSelectRole('parent');
           }}
           className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
@@ -32,7 +32,7 @@ export default function RoleSelectScreen(
         </button>
 
         <button
-          onClick={function () {
+          onClick={() => {
             props.onSelectRole('kid');
           }}
           className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'

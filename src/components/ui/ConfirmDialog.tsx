@@ -17,11 +17,9 @@ interface ConfirmDialogProps {
 export default function ConfirmDialog(
   props: ConfirmDialogProps
 ): React.ReactElement {
-  var _typed = useState(''),
-    typed = _typed[0],
-    setTyped = _typed[1];
+  const [typed, setTyped] = useState('');
 
-  var confirmed = !props.requiredText ||
+  const confirmed = !props.requiredText ||
     typed.trim().toLowerCase() === props.requiredText.trim().toLowerCase();
 
   return (
@@ -43,16 +41,16 @@ export default function ConfirmDialog(
           {props.requiredText && (
             <div className='mt-3'>
               <label htmlFor='confirm-required-text' className='text-[13px] text-qmuted mb-1.5 block'>
-                {props.requiredTextLabel || 'Type "' + props.requiredText + '" to confirm:'}
+                {props.requiredTextLabel || `Type "${props.requiredText}" to confirm:`}
               </label>
               <input
                 id='confirm-required-text'
                 type='text'
                 value={typed}
-                onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setTyped(e.target.value);
                 }}
-                onKeyDown={function (e: React.KeyboardEvent) {
+                onKeyDown={(e: React.KeyboardEvent) => {
                   if (e.key === 'Enter' && confirmed) props.onConfirm();
                 }}
                 className='quest-input'
@@ -70,7 +68,7 @@ export default function ConfirmDialog(
             Cancel
           </button>
           <button
-            onClick={function () {
+            onClick={() => {
               if (confirmed) props.onConfirm();
             }}
             disabled={!confirmed}

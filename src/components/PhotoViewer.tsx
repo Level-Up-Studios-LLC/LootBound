@@ -9,32 +9,28 @@ interface PhotoViewerProps {
 }
 
 export default function PhotoViewer(p: PhotoViewerProps) {
-  var _loaded = useState(false),
-    loaded = _loaded[0],
-    setLoaded = _loaded[1];
-  var _saving = useState(false),
-    saving = _saving[0],
-    setSaving = _saving[1];
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(function () {
+  useEffect(() => {
     setLoaded(false);
   }, [p.photo]);
 
-  async function handleSave() {
+  const handleSave = async () => {
     if (!p.photo || saving) return;
     setSaving(true);
 
     try {
-      var response = await fetch(p.photo);
-      var blob = await response.blob();
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
+      const response = await fetch(p.photo);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
       a.href = url;
       a.download = 'lootbound-photo.jpg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(function () {
+      setTimeout(() => {
         URL.revokeObjectURL(url);
       }, 1000);
     } catch (err) {
@@ -43,7 +39,7 @@ export default function PhotoViewer(p: PhotoViewerProps) {
     } finally {
       setSaving(false);
     }
-  }
+  };
 
   if (!p.photo) return null;
   return (
@@ -53,7 +49,7 @@ export default function PhotoViewer(p: PhotoViewerProps) {
     >
       <div
         className="max-w-[360px] w-full"
-        onClick={function (e) {
+        onClick={(e) => {
           e.stopPropagation();
         }}
       >
@@ -73,7 +69,7 @@ export default function PhotoViewer(p: PhotoViewerProps) {
           src={p.photo}
           alt="proof"
           className={'w-full rounded-btn shadow-lg' + (loaded ? '' : ' hidden')}
-          onLoad={function () {
+          onLoad={() => {
             setLoaded(true);
           }}
         />

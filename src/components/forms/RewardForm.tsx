@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Reward } from '../../types.ts';
 
-var REWARD_EMOJIS = [
+const REWARD_EMOJIS = [
   '\u{1F3AE}',
   '\u{1F4F1}',
   '\u{1F355}',
@@ -23,12 +23,10 @@ interface RewardFormProps {
 }
 
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
-  var _s = useState<Reward>(props.reward),
-    f = _s[0],
-    setF = _s[1];
-  function u(k: string, v: any): void {
-    setF(Object.assign({}, f, { [k]: v }));
-  }
+  const [f, setF] = useState<Reward>(props.reward);
+  const u = <K extends keyof Reward>(k: K, v: Reward[K]): void => {
+    setF((prev) => Object.assign({}, prev, { [k]: v }));
+  };
   return (
     <div className='flex flex-col gap-4'>
       <div>
@@ -38,7 +36,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         <input
           placeholder='Loot name'
           value={f.name}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             u('name', e.target.value);
           }}
           className='quest-input'
@@ -47,11 +45,11 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Icon</label>
         <div className='flex gap-1 flex-wrap'>
-          {REWARD_EMOJIS.map(function (e) {
+          {REWARD_EMOJIS.map((e) => {
             return (
               <button
                 key={e}
-                onClick={function () {
+                onClick={() => {
                   u('icon', e);
                 }}
                 className={
@@ -72,7 +70,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         <input
           type='number'
           value={f.cost}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             u('cost', Number(e.target.value));
           }}
           className='quest-input'
@@ -82,7 +80,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         <label className='text-qslate font-semibold mb-1 block'>Limit</label>
         <select
           value={f.limitType || 'none'}
-          onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
             u('limitType', e.target.value);
           }}
           className='quest-input'
@@ -101,7 +99,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
             type='number'
             value={f.limitMax || 1}
             min={1}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               u('limitMax', Number(e.target.value) || 1);
             }}
             className='quest-input'
@@ -112,7 +110,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         <input
           type='checkbox'
           checked={!!f.requireApproval}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             u('requireApproval', e.target.checked);
           }}
         />{' '}
@@ -126,7 +124,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
           Cancel
         </button>
         <button
-          onClick={function () {
+          onClick={() => {
             if (f.name) props.onSave(f);
           }}
           className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'

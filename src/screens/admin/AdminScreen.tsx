@@ -17,43 +17,38 @@ import SettingsTab from './SettingsTab.tsx';
 import AccountTab from './AccountTab.tsx';
 
 export default function AdminScreen(): React.ReactElement {
-  var _atab = useState<string>('overview'),
-    atab = _atab[0],
-    setAtab = _atab[1];
-  var _codeCopied = useState<boolean>(false),
-    setCodeCopied = _codeCopied[1];
-  var _myName = useState<string | undefined>(undefined),
-    myName = _myName[0],
-    setMyName = _myName[1];
+  const [atab, setAtab] = useState<string>('overview');
+  const [, setCodeCopied] = useState<boolean>(false);
+  const [myName, setMyName] = useState<string | undefined>(undefined);
 
-  useEffect(function () {
-    var uid = getCurrentUid();
+  useEffect(() => {
+    const uid = getCurrentUid();
     if (!uid) return;
-    return onParentMemberSnapshot(uid, function (member) {
+    return onParentMemberSnapshot(uid, (member) => {
       setMyName(member && member.parentName ? member.parentName : undefined);
     });
   }, []);
 
-  var ctx = useAppContext();
-  var cfg = ctx.cfg;
-  var pendingCount = ctx.pendingCount;
+  const ctx = useAppContext();
+  const cfg = ctx.cfg;
+  const pendingCount = ctx.pendingCount;
 
   // Count reviewable items (completed, not rejected, not missed)
-  var reviewCount = 0;
+  let reviewCount = 0;
   if (cfg) {
-    var d = getToday();
-    ctx.children.forEach(function (c) {
-      var udata = ctx.allU[c.id];
+    const d = getToday();
+    ctx.children.forEach((c) => {
+      const udata = ctx.allU[c.id];
       if (!udata) return;
-      var log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-      (cfg!.tasks[c.id] || []).forEach(function (t) {
-        var entry = log[t.id];
+      const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
+      (cfg!.tasks[c.id] || []).forEach((t) => {
+        const entry = log[t.id];
         if (entry && !entry.rejected && entry.status !== 'missed') reviewCount++;
       });
     });
   }
 
-  var bottomTabs: [string, string, string, number][] = [
+  const bottomTabs: [string, string, string, number][] = [
     ['overview', 'chart-bar', 'Overview', 0],
     ['approvals', 'circle-check', 'Approvals', pendingCount],
     ['review', 'magnifying-glass', 'Review', reviewCount],
@@ -61,30 +56,30 @@ export default function AdminScreen(): React.ReactElement {
     ['rewards', 'treasure-chest', 'Loot', 0],
   ];
 
-  function handleCopyCode(): void {
+  const handleCopyCode = (): void => {
     if (!cfg || !cfg.familyCode) return;
-    var text = cfg.familyCode;
+    const text = cfg.familyCode;
 
-    function onSuccess() {
+    const onSuccess = () => {
       setCodeCopied(true);
       ctx.notify('Copied!');
-      setTimeout(function () {
+      setTimeout(() => {
         setCodeCopied(false);
       }, 2000);
-    }
+    };
 
     // Try modern clipboard API first, fall back to execCommand for iOS Safari
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
+      navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
         fallbackCopy(text, onSuccess);
       });
     } else {
       fallbackCopy(text, onSuccess);
     }
-  }
+  };
 
-  function fallbackCopy(text: string, cb: () => void): void {
-    var ta = document.createElement('textarea');
+  const fallbackCopy = (text: string, cb: () => void): void => {
+    const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
     ta.style.left = '-9999px';
@@ -93,7 +88,7 @@ export default function AdminScreen(): React.ReactElement {
     ta.focus();
     ta.select();
     try {
-      var ok = document.execCommand('copy');
+      const ok = document.execCommand('copy');
       if (ok) {
         cb();
       } else {
@@ -104,7 +99,7 @@ export default function AdminScreen(): React.ReactElement {
     } finally {
       document.body.removeChild(ta);
     }
-  }
+  };
 
   return (
     <div className='pb-[72px]'>
@@ -112,7 +107,7 @@ export default function AdminScreen(): React.ReactElement {
         <div className='flex justify-between items-center mb-3'>
           <div className='font-display text-2xl font-bold text-qslate'>
             {myName
-              ? 'Hey, ' + myName + '!'
+              ? `Hey, ${myName}!`
               : 'Parent Dashboard'}
           </div>
           <HamburgerMenu
@@ -121,7 +116,7 @@ export default function AdminScreen(): React.ReactElement {
               id: 'account',
               icon: 'circle-user',
               label: 'Account',
-              onClick: function () {
+              onClick: () => {
                 setAtab('account');
               },
             },
@@ -129,7 +124,7 @@ export default function AdminScreen(): React.ReactElement {
               id: 'children',
               icon: 'children',
               label: 'Children',
-              onClick: function () {
+              onClick: () => {
                 setAtab('children');
               },
             },
@@ -137,7 +132,7 @@ export default function AdminScreen(): React.ReactElement {
               id: 'settings',
               icon: 'gear',
               label: 'Settings',
-              onClick: function () {
+              onClick: () => {
                 setAtab('settings');
               },
             },
@@ -145,7 +140,7 @@ export default function AdminScreen(): React.ReactElement {
               id: 'logout',
               icon: 'left-from-bracket',
               label: 'Logout',
-              onClick: function () {
+              onClick: () => {
                 if (ctx.onLogout) {
                   ctx.onLogout();
                 } else {
@@ -198,12 +193,12 @@ export default function AdminScreen(): React.ReactElement {
 
       {/* Bottom Navigation */}
       <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>
-        {bottomTabs.map(function (t) {
-          var badge = t[3];
+        {bottomTabs.map((t) => {
+          const badge = t[3];
           return (
             <button
               key={t[0]}
-              onClick={function () {
+              onClick={() => {
                 setAtab(t[0]);
               }}
               className={

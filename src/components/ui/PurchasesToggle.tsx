@@ -19,7 +19,7 @@ export default function PurchasesToggle(
   return (
     <div className='mt-3 pt-3 border-t border-qslate/10'>
       <button
-        onClick={function () {
+        onClick={() => {
           props.onToggle(props.id);
         }}
         className='flex items-center gap-1.5 bg-transparent border-none cursor-pointer p-0 font-body'
@@ -39,10 +39,10 @@ export default function PurchasesToggle(
       </button>
       {props.isOpen && (
         <div className='mt-2'>
-          {props.redeems.slice().reverse().map(function (r, i) {
+          {props.redeems.slice().reverse().map((r, i) => {
             return (
               <div
-                key={r.rewardId + '-' + r.date + '-' + i}
+                key={`${r.rewardId}-${r.date}-${i}`}
                 className='flex justify-between items-center rounded-badge px-2.5 py-1.5 mb-1 text-[11px] bg-white/60'
               >
                 <span className='text-qslate'>{r.name}</span>

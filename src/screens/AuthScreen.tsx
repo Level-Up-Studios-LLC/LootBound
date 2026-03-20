@@ -6,7 +6,7 @@ import { FA_ICON_STYLE } from '../constants.ts';
 import { saveConfig, saveParentMember } from '../services/firestoreStorage.ts';
 import { getCurrentUid } from '../services/auth.ts';
 
-var REFERRAL_OPTIONS = [
+const REFERRAL_OPTIONS = [
   'Friend or family',
   'Social media',
   'Search engine',
@@ -23,46 +23,22 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
-  var _mode = useState<'signin' | 'signup'>('signin'),
-    mode = _mode[0],
-    setMode = _mode[1];
-  var _step = useState(1),
-    step = _step[0],
-    setStep = _step[1];
-  var _email = useState(''),
-    email = _email[0],
-    setEmail = _email[1];
-  var _pass = useState(''),
-    pass = _pass[0],
-    setPass = _pass[1];
-  var _confirm = useState(''),
-    confirm = _confirm[0],
-    setConfirm = _confirm[1];
-  var _joinCode = useState(''),
-    joinCode = _joinCode[0],
-    setJoinCode = _joinCode[1];
-  var _busy = useState(false),
-    busy = _busy[0],
-    setBusy = _busy[1];
-  var _localErr = useState<string | null>(null),
-    localErr = _localErr[0],
-    setLocalErr = _localErr[1];
-  var _resetSent = useState(false),
-    resetSent = _resetSent[0],
-    setResetSent = _resetSent[1];
-  var _showReset = useState(false),
-    showReset = _showReset[0],
-    setShowReset = _showReset[1];
-  var _parentName = useState(''),
-    parentName = _parentName[0],
-    setParentName = _parentName[1];
-  var _referral = useState(''),
-    referral = _referral[0],
-    setReferral = _referral[1];
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [localErr, setLocalErr] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [parentName, setParentName] = useState('');
+  const [referral, setReferral] = useState('');
 
-  var auth = useAuthContext();
+  const auth = useAuthContext();
 
-  function switchMode() {
+  const switchMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     setStep(1);
     setLocalErr(null);
@@ -74,9 +50,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     setShowReset(false);
     setResetSent(false);
     auth.clearAuthError();
-  }
+  };
 
-  function handleSignupStep1() {
+  const handleSignupStep1 = () => {
     setLocalErr(null);
     auth.clearAuthError();
     if (!email.trim()) {
@@ -88,9 +64,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       return;
     }
     setStep(2);
-  }
+  };
 
-  async function handleResetPassword() {
+  const handleResetPassword = async () => {
     setLocalErr(null);
     auth.clearAuthError();
     if (!email.trim()) {
@@ -98,12 +74,15 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       return;
     }
     setBusy(true);
-    var ok = await auth.doResetPassword(email.trim());
-    if (ok) setResetSent(true);
-    setBusy(false);
-  }
+    try {
+      const ok = await auth.doResetPassword(email.trim());
+      if (ok) setResetSent(true);
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     setLocalErr(null);
     auth.clearAuthError();
 
@@ -125,7 +104,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     }
 
     setBusy(true);
-    var familyId: string | null = null;
+    let familyId: string | null = null;
     if (mode === 'signin') {
       await auth.doSignIn(email.trim(), pass);
     } else if (joinCode.trim()) {
@@ -136,7 +115,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     // Save parent name to per-parent doc, referral to family doc
     if (mode === 'signup' && familyId) {
       try {
-        var uid = getCurrentUid();
+        const uid = getCurrentUid();
         if (uid && parentName.trim()) {
           await saveParentMember(uid, { parentName: parentName.trim() });
         }
@@ -148,9 +127,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       }
     }
     setBusy(false);
-  }
+  };
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !busy) {
       if (mode === 'signup' && step === 1) {
         handleSignupStep1();
@@ -158,12 +137,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         handleSubmit();
       }
     }
-  }
+  };
 
-  function handleJoinCodeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    var val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (val.length <= 6) setJoinCode(val);
-  }
+  };
 
   // Show family code after successful signup
   if (auth.lastFamilyCode && auth.authUser) {
@@ -191,7 +170,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </div>
 
         <button
-          onClick={function () {
+          onClick={() => {
             auth.clearLastFamilyCode();
           }}
           className='btn-primary'
@@ -204,7 +183,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
 
   // Password reset view
   if (showReset) {
-    var resetError = localErr || auth.authError;
+    const resetError = localErr || auth.authError;
     return (
       <div className='page-wrapper page-centered'>
         <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
@@ -224,7 +203,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
                 We sent a password reset link to <strong>{email}</strong>. Check your inbox and follow the link to set a new password.
               </div>
               <button
-                onClick={function () {
+                onClick={() => {
                   setShowReset(false);
                   setResetSent(false);
                   setLocalErr(null);
@@ -248,10 +227,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
                   type='email'
                   placeholder='family@example.com'
                   value={email}
-                  onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setEmail(e.target.value);
                   }}
-                  onKeyDown={function (e: React.KeyboardEvent) {
+                  onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Enter' && !busy) handleResetPassword();
                   }}
                   className='quest-input'
@@ -272,7 +251,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
                 {busy ? 'Sending...' : 'Send Reset Link'}
               </button>
               <button
-                onClick={function () {
+                onClick={() => {
                   setShowReset(false);
                   setLocalErr(null);
                   auth.clearAuthError();
@@ -289,9 +268,9 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     );
   }
 
-  var error = localErr || auth.authError;
+  const error = localErr || auth.authError;
 
-  function handleSigninStep1() {
+  const handleSigninStep1 = () => {
     setLocalErr(null);
     auth.clearAuthError();
     if (!email.trim()) {
@@ -303,7 +282,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       return;
     }
     setStep(2);
-  }
+  };
 
   // --- Sign In Step 1: Email + Google ---
   if (mode === 'signin' && step === 1) {
@@ -325,11 +304,11 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               type='email'
               placeholder='family@example.com'
               value={email}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setEmail(e.target.value);
                 setLocalErr(null);
               }}
-              onKeyDown={function (e: React.KeyboardEvent) {
+              onKeyDown={(e: React.KeyboardEvent) => {
                 if (e.key === 'Enter') handleSigninStep1();
               }}
               className='quest-input'
@@ -358,7 +337,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </div>
 
           <button
-            onClick={function () {
+            onClick={() => {
               if (!busy) auth.doGoogleSignIn();
             }}
             disabled={busy}
@@ -409,7 +388,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               type='password'
               placeholder='Enter password'
               value={pass}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setPass(e.target.value);
               }}
               onKeyDown={handleKeyDown}
@@ -434,7 +413,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </button>
 
           <button
-            onClick={function () {
+            onClick={() => {
               setLocalErr(null);
               auth.clearAuthError();
               setShowReset(true);
@@ -446,7 +425,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </button>
 
           <button
-            onClick={function () {
+            onClick={() => {
               setStep(1);
               setPass('');
               setLocalErr(null);
@@ -483,7 +462,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
               type='email'
               placeholder='family@example.com'
               value={email}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setEmail(e.target.value);
                 setLocalErr(null);
               }}
@@ -514,7 +493,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </div>
 
           <button
-            onClick={function () {
+            onClick={() => {
               if (!busy) auth.doGoogleSignIn();
             }}
             disabled={busy}
@@ -564,7 +543,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             type='text'
             placeholder='Your first name'
             value={parentName}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setParentName(e.target.value);
             }}
             onKeyDown={handleKeyDown}
@@ -582,7 +561,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             type='password'
             placeholder='At least 6 characters'
             value={pass}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setPass(e.target.value);
             }}
             onKeyDown={handleKeyDown}
@@ -599,7 +578,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             type='password'
             placeholder='Confirm password'
             value={confirm}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setConfirm(e.target.value);
             }}
             onKeyDown={handleKeyDown}
@@ -634,13 +613,13 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </label>
           <select
             value={referral}
-            onChange={function (e: React.ChangeEvent<HTMLSelectElement>) {
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setReferral(e.target.value);
             }}
             className='quest-input'
           >
             <option value=''>Select one (optional)</option>
-            {REFERRAL_OPTIONS.map(function (o) {
+            {REFERRAL_OPTIONS.map((o) => {
               return (
                 <option key={o} value={o}>
                   {o}
@@ -669,7 +648,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </button>
 
         <button
-          onClick={function () {
+          onClick={() => {
             setStep(1);
             setLocalErr(null);
             auth.clearAuthError();

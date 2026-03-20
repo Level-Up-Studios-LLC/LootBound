@@ -37,39 +37,32 @@ interface AuthContextValue {
   clearJustSignedIn: () => void;
 }
 
-var AuthContext = createContext<AuthContextValue | null>(null);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function useAuthContext(): AuthContextValue {
-  var ctx = useContext(AuthContext);
+  const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuthContext must be used inside AuthProvider');
   return ctx;
 }
 
 export function AuthProvider(props: { children: React.ReactNode }) {
-  var _user = useState<AuthUser | null>(null),
-    authUser = _user[0],
-    setAuthUser = _user[1];
-  var _loading = useState(true),
-    authLoading = _loading[0],
-    setAuthLoading = _loading[1];
-  var _error = useState<string | null>(null),
-    authError = _error[0],
-    setAuthError = _error[1];
-  var _familyCode = useState<string | null>(null),
-    lastFamilyCode = _familyCode[0],
-    setLastFamilyCode = _familyCode[1];
-  var _justSignedIn = useState(false),
-    justSignedIn = _justSignedIn[0],
-    setJustSignedIn = _justSignedIn[1];
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [lastFamilyCode, setLastFamilyCode] = useState<string | null>(null);
+  const [justSignedIn, setJustSignedIn] = useState(false);
 
   // Wait for Google redirect result before listening to auth state.
   // Without this, onAuthStateChanged fires with null before the
   // redirect credential is resolved, causing a flash of the role selector.
-  useEffect(function () {
-    var unsub: (() => void) | null = null;
+  useEffect(() => {
+    let unsub: (() => void) | null = null;
+    let disposed = false;
 
-    function startAuthListener() {
-      unsub = onAuthChange(function (user) {
+    const startAuthListener = () => {
+      if (disposed) return;
+      unsub = onAuthChange((user) => {
+        if (disposed) return;
         setAuthUser(user);
         setAuthLoading(false);
         if (user) {
@@ -78,28 +71,29 @@ export function AuthProvider(props: { children: React.ReactNode }) {
           Sentry.setUser(null);
         }
       });
-    }
+    };
 
-    handleGoogleRedirectResult().then(function (code) {
+    handleGoogleRedirectResult().then((code) => {
       if (code) {
         setLastFamilyCode(code);
         setJustSignedIn(true);
       }
-    }).catch(function (err: any) {
+    }).catch((err: any) => {
       if (err.code !== 'auth/popup-closed-by-user') {
         setAuthError(err.message || 'Google sign-in failed');
       }
-    }).finally(function () {
+    }).finally(() => {
       startAuthListener();
     });
 
-    return function () {
+    return () => {
+      disposed = true;
       if (unsub) unsub();
     };
   }, []);
 
-  function mapError(err: any): string {
-    var msg = err.code || err.message || 'Something went wrong';
+  const mapError = (err: any): string => {
+    const msg = err.code || err.message || 'Something went wrong';
     if (msg === 'auth/invalid-credential' || msg === 'auth/wrong-password') {
       return 'Invalid email or password';
     }
@@ -128,9 +122,9 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       return 'This credential is already linked to another account.';
     }
     return msg;
-  }
+  };
 
-  async function doSignIn(email: string, password: string) {
+  const doSignIn = async (email: string, password: string) => {
     setAuthError(null);
     try {
       await signInFamily(email, password);
@@ -138,12 +132,12 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     } catch (err: any) {
       setAuthError(mapError(err));
     }
-  }
+  };
 
-  async function doSignUp(email: string, password: string): Promise<string | null> {
+  const doSignUp = async (email: string, password: string): Promise<string | null> => {
     setAuthError(null);
     try {
-      var result = await signUpFamily(email, password);
+      const result = await signUpFamily(email, password);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
       return result.user.familyId;
@@ -151,16 +145,16 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       setAuthError(mapError(err));
       return null;
     }
-  }
+  };
 
-  async function doJoinFamily(
+  const doJoinFamily = async (
     email: string,
     password: string,
     code: string
-  ): Promise<string | null> {
+  ): Promise<string | null> => {
     setAuthError(null);
     try {
-      var result = await joinFamilyByCode(email, password, code);
+      const result = await joinFamilyByCode(email, password, code);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
       return result.user.familyId;
@@ -168,9 +162,9 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       setAuthError(mapError(err));
       return null;
     }
-  }
+  };
 
-  async function doResetPassword(email: string): Promise<boolean> {
+  const doResetPassword = async (email: string): Promise<boolean> => {
     setAuthError(null);
     try {
       await resetPassword(email);
@@ -179,18 +173,18 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       setAuthError(mapError(err));
       return false;
     }
-  }
+  };
 
-  async function doGoogleSignIn() {
+  const doGoogleSignIn = async () => {
     setAuthError(null);
     try {
       await startGoogleSignIn();
     } catch (err: any) {
       setAuthError(mapError(err));
     }
-  }
+  };
 
-  async function doSendVerification(): Promise<boolean> {
+  const doSendVerification = async (): Promise<boolean> => {
     setAuthError(null);
     try {
       await sendVerification();
@@ -199,57 +193,57 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       setAuthError(mapError(err));
       return false;
     }
-  }
+  };
 
-  async function doRefreshVerification() {
+  const doRefreshVerification = async () => {
     try {
-      var verified = await refreshEmailVerified();
+      const verified = await refreshEmailVerified();
       if (verified && authUser) {
-        setAuthUser(Object.assign({}, authUser, { emailVerified: true }));
+        setAuthUser({ ...authUser, emailVerified: true });
       }
     } catch (err: any) {
       console.warn('Failed to refresh verification status:', err);
     }
-  }
+  };
 
-  async function doSignOut() {
+  const doSignOut = async () => {
     setAuthError(null);
     try {
       await signOutFamily();
     } catch (err: any) {
       setAuthError(err.message || 'Sign out failed');
     }
-  }
+  };
 
-  function clearAuthError() {
+  const clearAuthError = () => {
     setAuthError(null);
-  }
+  };
 
-  function clearLastFamilyCode() {
+  const clearLastFamilyCode = () => {
     setLastFamilyCode(null);
-  }
+  };
 
-  function clearJustSignedIn() {
+  const clearJustSignedIn = () => {
     setJustSignedIn(false);
-  }
+  };
 
-  var value: AuthContextValue = {
-    authUser: authUser,
-    authLoading: authLoading,
-    authError: authError,
-    lastFamilyCode: lastFamilyCode,
-    justSignedIn: justSignedIn,
-    doSignIn: doSignIn,
-    doSignUp: doSignUp,
-    doJoinFamily: doJoinFamily,
-    doGoogleSignIn: doGoogleSignIn,
-    doSignOut: doSignOut,
-    doResetPassword: doResetPassword,
-    doSendVerification: doSendVerification,
-    doRefreshVerification: doRefreshVerification,
-    clearAuthError: clearAuthError,
-    clearLastFamilyCode: clearLastFamilyCode,
-    clearJustSignedIn: clearJustSignedIn,
+  const value: AuthContextValue = {
+    authUser,
+    authLoading,
+    authError,
+    lastFamilyCode,
+    justSignedIn,
+    doSignIn,
+    doSignUp,
+    doJoinFamily,
+    doGoogleSignIn,
+    doSignOut,
+    doResetPassword,
+    doSendVerification,
+    doRefreshVerification,
+    clearAuthError,
+    clearLastFamilyCode,
+    clearJustSignedIn,
   };
 
   return (

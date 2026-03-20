@@ -6,7 +6,7 @@ interface BadgeProps {
 }
 
 export default function Badge(p: BadgeProps) {
-  var sl: StatusLabel = SL[p.status] || {
+  const sl: StatusLabel = SL[p.status] || {
     text: '',
     color: '#a0a3b5',
     bg: 'transparent',

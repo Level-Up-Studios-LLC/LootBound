@@ -17,37 +17,27 @@ interface ParentPinScreenProps {
 export default function ParentPinScreen(
   props: ParentPinScreenProps
 ): React.ReactElement {
-  var hasPin = !!props.parentPin;
+  const hasPin = !!props.parentPin;
 
-  var _pin = useState(''),
-    pin = _pin[0],
-    setPin = _pin[1];
-  var _err = useState(''),
-    err = _err[0],
-    setErr = _err[1];
-  var _forgot = useState(false),
-    forgot = _forgot[0],
-    setForgot = _forgot[1];
-  var _pass = useState(''),
-    pass = _pass[0],
-    setPass = _pass[1];
-  var _busy = useState(false),
-    busy = _busy[0],
-    setBusy = _busy[1];
+  const [pin, setPin] = useState('');
+  const [err, setErr] = useState('');
+  const [forgot, setForgot] = useState(false);
+  const [pass, setPass] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  function handlePinSubmit() {
+  const handlePinSubmit = () => {
     if (pin === props.parentPin) {
       props.onSuccess();
     } else {
       setErr('Wrong PIN');
     }
-  }
+  };
 
-  function handlePinKeyDown(e: React.KeyboardEvent) {
+  const handlePinKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handlePinSubmit();
-  }
+  };
 
-  async function handlePasswordSubmit() {
+  const handlePasswordSubmit = async () => {
     if (!pass) {
       setErr('Password is required');
       return;
@@ -61,9 +51,9 @@ export default function ParentPinScreen(
       setErr('Incorrect password');
     }
     setBusy(false);
-  }
+  };
 
-  async function handleResetPin() {
+  const handleResetPin = async () => {
     if (!pass) {
       setErr('Password is required');
       return;
@@ -84,7 +74,7 @@ export default function ParentPinScreen(
       setErr('Failed to clear PIN. Please try again.');
     }
     setBusy(false);
-  }
+  };
 
   return (
     <div className="page-wrapper page-centered">
@@ -106,7 +96,7 @@ export default function ParentPinScreen(
               type="password"
               maxLength={6}
               value={pin}
-              onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setPin(e.target.value);
                 setErr('');
               }}
@@ -125,7 +115,7 @@ export default function ParentPinScreen(
             <div className="text-qcoral text-[13px]">{err}</div>
           )}
           <button
-            onClick={function () {
+            onClick={() => {
               setForgot(true);
               setErr('');
               setPin('');
@@ -152,11 +142,11 @@ export default function ParentPinScreen(
             type="password"
             placeholder="Account password"
             value={pass}
-            onChange={function (e: React.ChangeEvent<HTMLInputElement>) {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setPass(e.target.value);
               setErr('');
             }}
-            onKeyDown={function (e: React.KeyboardEvent) {
+            onKeyDown={(e: React.KeyboardEvent) => {
               if (e.key === 'Enter' && !busy) {
                 if (forgot) {
                   handleResetPin();
@@ -174,7 +164,7 @@ export default function ParentPinScreen(
           <div className="flex gap-2">
             {forgot && (
               <button
-                onClick={function () {
+                onClick={() => {
                   setForgot(false);
                   setPass('');
                   setErr('');
@@ -186,7 +176,7 @@ export default function ParentPinScreen(
               </button>
             )}
             <button
-              onClick={function () {
+              onClick={() => {
                 if (forgot) {
                   handleResetPin();
                 } else {

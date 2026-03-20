@@ -11,23 +11,15 @@ import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
 export default function ChildrenTab(): React.ReactElement {
-  var _kidPinEdit = useState<KidPinEditState>({ uid: null, val: '' }),
-    kidPinEdit = _kidPinEdit[0],
-    setKidPinEdit = _kidPinEdit[1];
-  var _addChildForm = useState<AddChildFormData | null>(null),
-    addChildForm = _addChildForm[0],
-    setAddChildForm = _addChildForm[1];
-  var _removeChild = useState<Child | null>(null),
-    removeChild = _removeChild[0],
-    setRemoveChild = _removeChild[1];
-  var _expanded = useState<Record<string, boolean>>({}),
-    expanded = _expanded[0],
-    setExpanded = _expanded[1];
+  const [kidPinEdit, setKidPinEdit] = useState<KidPinEditState>({ uid: null, val: '' });
+  const [addChildForm, setAddChildForm] = useState<AddChildFormData | null>(null);
+  const [removeChild, setRemoveChild] = useState<Child | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  var ctx = useAppContext();
-  var children = ctx.children;
-  var allU = ctx.allU;
-  var cfg = ctx.cfg;
+  const ctx = useAppContext();
+  const children = ctx.children;
+  const allU = ctx.allU;
+  const cfg = ctx.cfg;
 
   return (
     <div>
@@ -39,7 +31,7 @@ export default function ChildrenTab(): React.ReactElement {
       <div className='flex justify-between items-center mb-4'>
         <span className='font-bold text-qslate'>Manage Children</span>
         <button
-          onClick={function () {
+          onClick={() => {
             setAddChildForm({
               name: '',
               age: '',
@@ -53,7 +45,7 @@ export default function ChildrenTab(): React.ReactElement {
           Add Child
         </button>
       </div>
-      {children.map(function (c, ci) {
+      {children.map((c, ci) => {
         return (
           <div key={c.id} className={altBg(ci) + ' rounded-btn p-4 mb-4'}>
             <div className='flex justify-between items-center'>
@@ -78,26 +70,20 @@ export default function ChildrenTab(): React.ReactElement {
                       maxLength={4}
                       placeholder='PIN'
                       value={kidPinEdit.val}
-                      onChange={function (
-                        e: React.ChangeEvent<HTMLInputElement>
-                      ) {
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         setKidPinEdit({ uid: c.id, val: e.target.value });
                       }}
                       className='quest-input w-[60px]! text-center py-1! px-1.5! text-xs!'
                     />
                     <button
-                      onClick={function () {
+                      onClick={() => {
                         if (kidPinEdit.val.length === 4) {
-                          var nc = cfg!.children.map(function (x) {
+                          const nc = cfg!.children.map((x) => {
                             return x.id === c.id
-                              ? Object.assign({}, x, {
-                                  pin: kidPinEdit.val,
-                                })
+                              ? { ...x, pin: kidPinEdit.val }
                               : x;
                           });
-                          ctx.saveCfg(
-                            Object.assign({}, cfg!, { children: nc })
-                          );
+                          ctx.saveCfg({ ...cfg!, children: nc });
                           setKidPinEdit({ uid: null, val: '' });
                           ctx.notify('PIN saved');
                         }
@@ -107,7 +93,7 @@ export default function ChildrenTab(): React.ReactElement {
                       OK
                     </button>
                     <button
-                      onClick={function () {
+                      onClick={() => {
                         setKidPinEdit({ uid: null, val: '' });
                       }}
                       className='bg-qslate-dim text-qslate rounded-badge px-1.5 py-[3px] text-[11px] font-semibold border-none cursor-pointer font-body'
@@ -119,7 +105,7 @@ export default function ChildrenTab(): React.ReactElement {
                 ) : (
                   <div className='flex gap-1'>
                     <button
-                      onClick={function () {
+                      onClick={() => {
                         setKidPinEdit({ uid: c.id, val: '' });
                       }}
                       className='bg-qblue-dim text-qblue rounded-[6px] px-2 py-[3px] text-[11px] font-semibold border-none cursor-pointer font-body flex items-center gap-1'
@@ -129,15 +115,13 @@ export default function ChildrenTab(): React.ReactElement {
                     </button>
                     {c.pin && (
                       <button
-                        onClick={function () {
-                          var nc = cfg!.children.map(function (x) {
+                        onClick={() => {
+                          const nc = cfg!.children.map((x) => {
                             return x.id === c.id
-                              ? Object.assign({}, x, { pin: null })
+                              ? { ...x, pin: null }
                               : x;
                           });
-                          ctx.saveCfg(
-                            Object.assign({}, cfg!, { children: nc })
-                          );
+                          ctx.saveCfg({ ...cfg!, children: nc });
                           ctx.notify('PIN removed');
                         }}
                         className='bg-qred-dim text-qred rounded-[6px] px-2 py-[3px] text-[11px] font-bold border-none cursor-pointer font-body'
@@ -148,7 +132,7 @@ export default function ChildrenTab(): React.ReactElement {
                   </div>
                 )}
                 <button
-                  onClick={function () {
+                  onClick={() => {
                     setRemoveChild(c);
                   }}
                   className='bg-qred-dim text-qred rounded-[6px] px-2 py-[3px] text-[11px] font-bold border-none cursor-pointer font-body flex items-center gap-1'
@@ -162,8 +146,8 @@ export default function ChildrenTab(): React.ReactElement {
               id={c.id}
               redeems={(allU[c.id] || ({} as UserData)).redemptions || []}
               isOpen={expanded[c.id] || false}
-              onToggle={function (id) {
-                var next = Object.assign({}, expanded);
+              onToggle={(id) => {
+                const next = { ...expanded };
                 next[id] = !next[id];
                 setExpanded(next);
               }}
@@ -183,14 +167,14 @@ export default function ChildrenTab(): React.ReactElement {
         <Modal title='Add Child'>
           <AddChildForm
             form={addChildForm}
-            onChange={function (f) {
+            onChange={(f) => {
               setAddChildForm(f);
             }}
-            onSave={function () {
+            onSave={() => {
               ctx.doAddChild(addChildForm!);
               setAddChildForm(null);
             }}
-            onCancel={function () {
+            onCancel={() => {
               setAddChildForm(null);
             }}
           />
@@ -199,19 +183,15 @@ export default function ChildrenTab(): React.ReactElement {
 
       {removeChild && (
         <ConfirmDialog
-          title={'Remove ' + removeChild.name + '?'}
-          message={
-            'This permanently removes ' +
-            removeChild.name +
-            ' from LootBound, including all their coins, missions, streaks, and history.'
-          }
+          title={`Remove ${removeChild.name}?`}
+          message={`This permanently removes ${removeChild.name} from LootBound, including all their coins, missions, streaks, and history.`}
           warning='This action cannot be undone.'
           confirmLabel='Remove'
-          onConfirm={function () {
+          onConfirm={() => {
             ctx.doRemoveChild(removeChild!.id);
             setRemoveChild(null);
           }}
-          onCancel={function () {
+          onCancel={() => {
             setRemoveChild(null);
           }}
         />
