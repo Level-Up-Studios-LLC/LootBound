@@ -15,6 +15,7 @@ import {
   listAll,
 } from 'firebase/storage';
 import { storage } from './firebase.ts';
+import { signInAnonymousKid } from './auth.ts';
 
 export async function uploadTaskPhoto(
   familyId: string,
@@ -23,6 +24,8 @@ export async function uploadTaskPhoto(
   taskId: string,
   base64Data: string
 ): Promise<string> {
+  // Ensure anonymous auth is active before uploading
+  await signInAnonymousKid();
   const path = `families/${familyId}/photos/${childId}/${date}/${taskId}.jpg`;
   const storageRef = ref(storage, path);
   await uploadString(storageRef, base64Data, 'data_url');
@@ -37,6 +40,7 @@ export async function deleteAllChildPhotos(
   familyId: string,
   childId: string
 ): Promise<void> {
+  await signInAnonymousKid();
   const folderRef = ref(
     storage,
     `families/${familyId}/photos/${childId}`
@@ -86,6 +90,7 @@ export async function deleteAllChildPhotos(
 export async function deleteAllFamilyPhotos(
   familyId: string
 ): Promise<void> {
+  await signInAnonymousKid();
   const folderRef = ref(storage, `families/${familyId}/photos`);
   try {
     const result = await listAll(folderRef);
@@ -139,6 +144,7 @@ export async function deleteTaskPhoto(
   date: string,
   taskId: string
 ): Promise<void> {
+  await signInAnonymousKid();
   const path = `families/${familyId}/photos/${childId}/${date}/${taskId}.jpg`;
   const storageRef = ref(storage, path);
   try {

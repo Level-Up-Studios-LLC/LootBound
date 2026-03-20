@@ -27,6 +27,7 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase.ts';
+import type { UserData } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -307,6 +308,18 @@ export async function saveChildData(
   await setDoc(doc(db, 'families', familyId, 'childData', childId), data, {
     merge: true,
   });
+}
+
+/**
+ * Fully replace child data (no merge). Used by resetAll to ensure
+ * old taskLog entries are wiped cleanly.
+ */
+export async function replaceChildData(
+  familyId: string,
+  childId: string,
+  data: ChildData | UserData
+): Promise<void> {
+  await setDoc(doc(db, 'families', familyId, 'childData', childId), data as DocumentData);
 }
 
 export async function deleteChildData(

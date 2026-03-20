@@ -17,15 +17,15 @@ export function freshUser(): UserData {
   };
 }
 
-function formatYMD(d: Date): string {
-  var y = d.getFullYear();
-  var m = d.getMonth() + 1;
-  var day = d.getDate();
-  return y + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+function localDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export function getToday(): string {
-  return formatYMD(new Date());
+  return localDateStr(new Date());
 }
 
 export function getWeekStart(resetDay?: number): string {
@@ -35,7 +35,7 @@ export function getWeekStart(resetDay?: number): string {
   const diff = dow >= day ? dow - day : dow + 7 - day;
   const s = new Date(d);
   s.setDate(d.getDate() - diff);
-  return formatYMD(s);
+  return localDateStr(s);
 }
 
 export function todayDow(): number {
@@ -64,7 +64,7 @@ export function fmtTime(t: string): string {
 export function prevDate(d: string): string {
   const dt = new Date(`${d}T12:00:00`);
   dt.setDate(dt.getDate() - 1);
-  return formatYMD(dt);
+  return localDateStr(dt);
 }
 
 export function isPastBedtime(bedtime?: number): boolean {

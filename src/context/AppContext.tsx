@@ -14,7 +14,7 @@ import type {
   AddChildFormData,
   Notification,
 } from '../types.ts';
-import { DEF_TIER_CONFIG } from '../constants.ts';
+import { DEF_TIER_CONFIG, MIN_COINS } from '../constants.ts';
 import {
   freshUser,
   getToday,
@@ -496,7 +496,7 @@ export function AppProvider(props: {
               rejected: false,
               autoCutoff: true,
             };
-            updated.points = (updated.points || 0) - tc.coins;
+            updated.points = Math.max(MIN_COINS, (updated.points || 0) - tc.coins);
             changed = true;
           }
         });
