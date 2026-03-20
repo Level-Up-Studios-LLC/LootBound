@@ -226,7 +226,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName: childName,
       targetRole: 'parent',
-    }).catch(function () { /* ignore */ });
+    }).catch(function (err) { console.warn('Notification failed (mission_complete):', err); });
     if (ud.level > oldLevel) {
       var title = getLevelTitle(ud.level);
       deps.notify('LEVEL UP! Lv.' + ud.level + ' ' + title.title + '!', 'levelup');
@@ -240,7 +240,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName: childName,
         targetRole: 'parent',
-      }).catch(function () { /* ignore */ });
+      }).catch(function (err) { console.warn('Notification failed (level_up):', err); });
     }
     // Streak notifications
     if (allDone && noneMissed && (ud.streak === 3 || ud.streak === 7 || ud.streak === 15 || ud.streak === 30)) {
@@ -251,7 +251,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName: childName,
         targetRole: 'parent',
-      }).catch(function () { /* ignore */ });
+      }).catch(function (err) { console.warn('Notification failed (streak):', err); });
     }
   }
 
