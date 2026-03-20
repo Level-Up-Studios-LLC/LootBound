@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react';
 import type { UserData } from '../types.ts';
 import { freshUser, getToday } from '../utils.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
@@ -45,7 +46,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch(() => { /* ignore */ });
+    }).catch((err) => { Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'loot_approved' } }); });
   };
 
   const denyPending = async (uid: string, idx: number) => {
@@ -68,7 +69,7 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch(() => { /* ignore */ });
+    }).catch((err) => { Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'loot_denied' } }); });
   };
 
   return {

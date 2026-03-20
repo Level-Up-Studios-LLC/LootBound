@@ -32,6 +32,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase.ts';
+import * as Sentry from '@sentry/react';
 import {
   generateFamilyCode,
   registerFamilyCode,
@@ -89,6 +90,7 @@ export async function signUpFamily(
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch((err) => {
     console.warn('Verification email failed:', err);
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
   });
 
   return {
@@ -119,6 +121,7 @@ export async function joinFamilyByCode(
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch((err) => {
     console.warn('Verification email failed:', err);
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
   });
 
   return {
@@ -204,6 +207,7 @@ export function onAuthChange(
       }).catch((err) => {
         if (token !== seq) return;
         console.error('resolveFamilyId failed:', err);
+        Sentry.captureException(err, { tags: { action: 'resolve-family-id' } });
         callback(null);
       });
     } else {

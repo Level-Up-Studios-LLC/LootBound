@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react';
 import type { Config, UserData, Reward } from '../types.ts';
 import { freshUser, getToday, countRedeems } from '../utils.ts';
 import { writeNotification } from '../services/firestoreStorage.ts';
@@ -78,7 +79,7 @@ export function useRewardActions(deps: RewardActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch(() => { /* ignore */ });
+      }).catch((err) => { Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'loot_request' } }); });
       return;
     }
     await execRedeem(uid, reward);

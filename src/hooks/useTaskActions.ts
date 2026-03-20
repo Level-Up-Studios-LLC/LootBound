@@ -68,6 +68,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
             setCapturing(null);
           }).catch(function (err) {
             console.error('doComplete failed:', err);
+            Sentry.captureException(err, { tags: { action: 'do-complete' } });
             setCapturing(null);
           });
         } else {
@@ -75,6 +76,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         }
       }).catch(function (err) {
         console.error('nativeCapturePhoto failed:', err);
+        Sentry.captureException(err, { tags: { action: 'native-capture-photo' } });
         setCapturing(null);
       });
     } else {
@@ -100,6 +102,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       if (fileRef.current) fileRef.current.value = '';
     }).catch((err) => {
       console.warn('Photo capture failed:', err);
+      Sentry.captureException(err, { level: 'warning', tags: { action: 'photo-capture' } });
       setCapturing(null);
       if (fileRef.current) fileRef.current.value = '';
     });
@@ -221,7 +224,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'parent',
-    }).catch((err) => { console.warn('Notification failed (mission_complete):', err); });
+    }).catch((err) => { console.warn('Notification failed (mission_complete):', err); Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'mission_complete' } }); });
     if (ud.level > oldLevel) {
       const title = getLevelTitle(ud.level);
       deps.notify(`LEVEL UP! Lv.${ud.level} ${title.title}!`, 'levelup');
@@ -235,7 +238,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => { console.warn('Notification failed (level_up):', err); });
+      }).catch((err) => { console.warn('Notification failed (level_up):', err); Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'level_up' } }); });
     }
     // Streak notifications
     if (allDone && noneMissed && (ud.streak === 3 || ud.streak === 7 || ud.streak === 15 || ud.streak === 30)) {
@@ -246,7 +249,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => { console.warn('Notification failed (streak):', err); });
+      }).catch((err) => { console.warn('Notification failed (streak):', err); Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'streak' } }); });
     }
   };
 
@@ -289,7 +292,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch((err) => { console.warn('Notification failed (mission_rejected):', err); });
+    }).catch((err) => { console.warn('Notification failed (mission_rejected):', err); Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'mission_rejected' } }); });
   };
 
   return {

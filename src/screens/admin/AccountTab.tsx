@@ -104,6 +104,7 @@ export default function AccountTab(): React.ReactElement | null {
         setPassErr('New password is too weak');
       } else {
         setPassErr('Failed to update password. Please try again.');
+        Sentry.captureException(err, { tags: { action: 'change-password' } });
       }
     }
     setPassBusy(false);
@@ -135,6 +136,7 @@ export default function AccountTab(): React.ReactElement | null {
         setPassErr('Please sign out and sign back in with Google, then try again.');
       } else {
         setPassErr('Failed to set password. Please try again.');
+        Sentry.captureException(err, { tags: { action: 'set-password' } });
       }
     }
     setPassBusy(false);
@@ -178,6 +180,7 @@ export default function AccountTab(): React.ReactElement | null {
         setEditErr('Invalid email address');
       } else {
         setEditErr('Failed to update. Please try again.');
+        Sentry.captureException(err, { tags: { action: 'save-profile' } });
       }
     }
     setEditBusy(false);

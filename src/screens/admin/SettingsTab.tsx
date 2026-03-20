@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBed,
@@ -10,6 +11,7 @@ import {
   faArrowUpRightFromSquare,
   faBell,
   faVolumeHigh,
+  faTriangleExclamation,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE, FEEDBACK_URL } from '../../constants.ts';
@@ -49,6 +51,7 @@ export default function SettingsTab(): React.ReactElement {
         if (localRef.current) {
           ctx.saveCfg(localRef.current).catch((err: unknown) => {
             console.error('Settings save failed on unmount:', err);
+            Sentry.captureException(err, { tags: { action: 'save-config' } });
           });
         }
       }
@@ -66,6 +69,7 @@ export default function SettingsTab(): React.ReactElement {
         })
         .catch((err: unknown) => {
           console.error('Settings save failed:', err);
+          Sentry.captureException(err, { tags: { action: 'save-config' } });
           ctx.notify('Save failed. Please try again.');
         });
     }, SAVE_DELAY);
@@ -286,6 +290,33 @@ export default function SettingsTab(): React.ReactElement {
             });
           })()}
         </div>
+      </div>
+      <div className='bg-qyellow rounded-card p-4 mb-4'>
+        <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
+          <FontAwesomeIcon icon={faTriangleExclamation} style={FA_ICON_STYLE} />
+          Error Reporting
+        </div>
+        <div className='text-[13px] text-qmuted mb-3'>
+          Help improve LootBound by sending anonymous error reports.
+        </div>
+        <label className='flex items-center justify-between py-1.5'>
+          <span className='text-[13px] text-qslate font-semibold'>
+            Send error reports
+          </span>
+          <input
+            type='checkbox'
+            checked={localStorage.getItem('lootbound-sentry-enabled') !== 'false'}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const enabled = e.target.checked;
+              localStorage.setItem('lootbound-sentry-enabled', String(enabled));
+              const client = Sentry.getClient();
+              if (client) {
+                client.getOptions().enabled = enabled;
+              }
+            }}
+            className='w-[18px] h-[18px] accent-qteal cursor-pointer'
+          />
+        </label>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='text-xs text-qmuted'>
