@@ -100,7 +100,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
     }).then(function () {
       setCapturing(null);
       if (fileRef.current) fileRef.current.value = '';
-    }).catch(function () {
+    }).catch(function (err) {
+      console.warn('Photo capture failed:', err);
       setCapturing(null);
       if (fileRef.current) fileRef.current.value = '';
     });
@@ -296,7 +297,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName: childName,
       targetRole: 'kid',
-    }).catch(function () { /* ignore */ });
+    }).catch(function (err) { console.warn('Notification failed (mission_rejected):', err); });
   }
 
   return {
