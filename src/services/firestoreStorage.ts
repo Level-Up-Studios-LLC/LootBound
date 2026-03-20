@@ -30,6 +30,7 @@ import {
   addDoc,
   updateDoc,
   serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase.ts';
 
@@ -529,7 +530,7 @@ export interface InAppNotificationDoc {
   childName?: string;
   targetRole: string;
   read: boolean;
-  createdAt: number;
+  createdAt: Timestamp | number;
 }
 
 export async function writeNotification(
@@ -578,7 +579,8 @@ export async function cleanupOldNotifications(familyId: string): Promise<void> {
   var refs: import('firebase/firestore').DocumentReference[] = [];
   snap.forEach(function (d) {
     var data = d.data();
-    if (data.createdAt && data.createdAt < cutoff) {
+    var ts = data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : data.createdAt;
+    if (ts && ts < cutoff) {
       refs.push(d.ref);
     }
   });
