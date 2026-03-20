@@ -580,7 +580,7 @@ export async function cleanupOldNotifications(familyId: string): Promise<void> {
   snap.forEach(function (d) {
     var data = d.data();
     var ts = data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : data.createdAt;
-    if (ts && ts < cutoff) {
+    if (typeof ts === 'number' && ts < cutoff) {
       refs.push(d.ref);
     }
   });
