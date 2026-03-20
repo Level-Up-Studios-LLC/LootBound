@@ -194,7 +194,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
           target='_blank'
           rel='noopener noreferrer'
           className='fixed bottom-[100px] right-5 w-12 h-12 rounded-full bg-qteal text-white shadow-lg flex items-center justify-center border-none cursor-pointer z-[101] hover:scale-110 transition-transform no-underline'
-          aria-label='Open Discussions'
+          aria-label='Open feedback board'
         >
           <FontAwesomeIcon icon={faCommentDots} className='text-lg' />
         </a>
