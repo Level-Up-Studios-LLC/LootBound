@@ -7,7 +7,7 @@ interface IconBadgeProps {
 }
 
 export default function IconBadge(p: IconBadgeProps) {
-  var display = p.badge != null && p.badge > 99 ? '99+' : p.badge;
+  const display = p.badge != null && p.badge > 99 ? '99+' : p.badge;
   return (
     <span className="text-xl relative">
       <FontAwesomeIcon icon={['fas', p.icon as IconName]} />

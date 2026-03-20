@@ -41,7 +41,7 @@ export default function AdminScreen(): React.ReactElement {
       const udata = ctx.allU[c.id];
       if (!udata) return;
       const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-      (cfg!.tasks[c.id] || []).forEach((t) => {
+      (cfg.tasks[c.id] || []).forEach((t) => {
         const entry = log[t.id];
         if (entry && !entry.rejected && entry.status !== 'missed') reviewCount++;
       });
