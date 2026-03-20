@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
+import PasswordInput from '../components/ui/PasswordInput.tsx';
 
 interface CreatePinPromptProps {
   onCreated: (pin: string) => void;
@@ -43,8 +44,7 @@ export default function CreatePinPrompt(
       </div>
 
       <div className="flex flex-col items-center gap-4 w-full max-w-[280px]">
-        <input
-          type="password"
+        <PasswordInput
           maxLength={6}
           placeholder="New PIN (4+ digits)"
           value={pin}
@@ -55,8 +55,7 @@ export default function CreatePinPrompt(
           className="quest-input text-center text-lg"
           autoFocus
         />
-        <input
-          type="password"
+        <PasswordInput
           maxLength={6}
           placeholder="Confirm PIN"
           value={confirm}

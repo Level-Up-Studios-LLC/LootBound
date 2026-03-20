@@ -8,6 +8,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
+import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
 export default function ChildrenTab(): React.ReactElement {
@@ -65,8 +66,7 @@ export default function ChildrenTab(): React.ReactElement {
               <div className='flex gap-1.5'>
                 {kidPinEdit.uid === c.id ? (
                   <div className='flex gap-1'>
-                    <input
-                      type='password'
+                    <PasswordInput
                       maxLength={4}
                       placeholder='PIN'
                       value={kidPinEdit.val}

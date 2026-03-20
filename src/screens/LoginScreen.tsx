@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { saveChild as fsSaveChild } from '../services/firestoreStorage.ts';
+import PasswordInput from '../components/ui/PasswordInput.tsx';
 
 interface LoginScreenProps {
   onSwitchFamily?: () => void;
@@ -145,8 +146,7 @@ export default function LoginScreen(
               Enter PIN for {targetChild.name}
             </div>
             <div className='flex gap-2'>
-              <input
-                type='password'
+              <PasswordInput
                 maxLength={4}
                 value={kpin}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,8 +207,7 @@ export default function LoginScreen(
             <div className='text-xs text-qdim'>
               Choose a 4-digit PIN to protect your profile
             </div>
-            <input
-              type='password'
+            <PasswordInput
               maxLength={4}
               placeholder='New PIN'
               value={newPin}
@@ -219,8 +218,7 @@ export default function LoginScreen(
               className='quest-input w-[120px] text-center'
               autoFocus
             />
-            <input
-              type='password'
+            <PasswordInput
               maxLength={4}
               placeholder='Confirm PIN'
               value={confirmPin}

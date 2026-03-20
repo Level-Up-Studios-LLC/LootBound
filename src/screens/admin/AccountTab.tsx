@@ -13,6 +13,7 @@ import {
   faCircleCheck,
   faCopy,
 } from '../../fa.ts';
+import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
@@ -427,8 +428,7 @@ export default function AccountTab(): React.ReactElement | null {
           </div>
         )}
         <div className='flex gap-3'>
-          <input
-            type='password'
+          <PasswordInput
             maxLength={6}
             placeholder={myPin ? 'New PIN' : 'Create PIN'}
             value={newPin}
@@ -474,8 +474,7 @@ export default function AccountTab(): React.ReactElement | null {
         )}
         <div className='flex flex-col gap-3'>
           {hasPasswordProvider() && (
-            <input
-              type='password'
+            <PasswordInput
               placeholder='Current password'
               value={curPass}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -486,8 +485,7 @@ export default function AccountTab(): React.ReactElement | null {
               className='quest-input'
             />
           )}
-          <input
-            type='password'
+          <PasswordInput
             placeholder={hasPasswordProvider() ? 'New password (6+ characters)' : 'Password (6+ characters)'}
             value={newPass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -497,8 +495,7 @@ export default function AccountTab(): React.ReactElement | null {
             }}
             className='quest-input'
           />
-          <input
-            type='password'
+          <PasswordInput
             placeholder='Confirm password'
             value={confirmPass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -630,9 +627,8 @@ export default function AccountTab(): React.ReactElement | null {
             <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
               Enter your password to confirm:
             </label>
-            <input
+            <PasswordInput
               id='delete-pass'
-              type='password'
               placeholder='Password'
               value={deletePass}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

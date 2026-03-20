@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { isBiometricAvailable, authenticateWithBiometric, isNative } from '../services/platform.ts';
+import PasswordInput from '../components/ui/PasswordInput.tsx';
 
 interface ParentPinScreenProps {
   email: string;
@@ -120,8 +121,7 @@ export default function ParentPinScreen(
         <div className="flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6">
           <div className="text-sm text-qmuted">Enter parent PIN</div>
           <div className="flex gap-2">
-            <input
-              type="password"
+            <PasswordInput
               maxLength={6}
               value={pin}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,8 +174,7 @@ export default function ParentPinScreen(
               ? 'Enter your account password to clear your PIN. You will be prompted to create a new one.'
               : 'Enter your account password to continue'}
           </div>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Account password"
             value={pass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
