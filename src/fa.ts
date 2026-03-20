@@ -66,6 +66,10 @@ import {
   faMedal,
   faEnvelope,
   faArrowUpRightFromSquare,
+  faBell,
+  faBellSlash,
+  faVolumeHigh,
+  faVolumeXmark,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
@@ -177,7 +181,11 @@ library.add(
   faCommentDots,
   faMedal,
   faEnvelope,
-  faArrowUpRightFromSquare
+  faArrowUpRightFromSquare,
+  faBell,
+  faBellSlash,
+  faVolumeHigh,
+  faVolumeXmark
 );
 
 export {
@@ -247,4 +255,8 @@ export {
   faMedal,
   faEnvelope,
   faArrowUpRightFromSquare,
+  faBell,
+  faBellSlash,
+  faVolumeHigh,
+  faVolumeXmark,
 };

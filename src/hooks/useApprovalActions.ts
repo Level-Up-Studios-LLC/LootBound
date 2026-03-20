@@ -1,10 +1,15 @@
 import type { UserData } from '../types.ts';
 import { freshUser, getToday } from '../utils.ts';
+import { writeNotification } from '../services/firestoreStorage.ts';
+import type { SoundKey } from '../services/notificationSound.ts';
 
 interface ApprovalActionsDeps {
   allU: Record<string, UserData>;
+  familyId: string;
   saveUsr: (uid: string, data: UserData) => Promise<void>;
   notify: (msg: string, type?: string) => void;
+  getChildName?: (id: string) => string;
+  playSound: (key: SoundKey) => void;
 }
 
 export function useApprovalActions(deps: ApprovalActionsDeps) {
@@ -27,14 +32,40 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     ud.pendingRedemptions.splice(idx, 1);
     await deps.saveUsr(uid, ud);
     deps.notify(`Approved: ${p.name}`);
+
+    deps.playSound('approval');
+    // Write in-app notification for kid
+    const childName = deps.getChildName ? deps.getChildName(uid) : uid;
+    writeNotification(deps.familyId, {
+      type: 'loot_approved',
+      title: 'Loot Approved!',
+      body: `${p.name} was approved!`,
+      childId: uid,
+      childName,
+      targetRole: 'kid',
+    }).catch(() => { /* ignore */ });
   };
 
   const denyPending = async (uid: string, idx: number) => {
     const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
     if (!ud.pendingRedemptions) return;
+    const p = ud.pendingRedemptions[idx];
+    if (!p) return;
     ud.pendingRedemptions.splice(idx, 1);
     await deps.saveUsr(uid, ud);
     deps.notify('Denied');
+
+    deps.playSound('error');
+    // Write in-app notification for kid
+    const childName = deps.getChildName ? deps.getChildName(uid) : uid;
+    writeNotification(deps.familyId, {
+      type: 'loot_denied',
+      title: 'Loot Denied',
+      body: `${p.name} was denied.`,
+      childId: uid,
+      childName,
+      targetRole: 'kid',
+    }).catch(() => { /* ignore */ });
   };
 
   return {

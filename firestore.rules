@@ -50,6 +50,26 @@ service cloud.firestore {
           allow read, write: if isAuthenticated();
         }
       }
+
+      match /notifications/{notifId} {
+        allow read: if isAuthenticated();
+        // Validate notification schema and restrict to known types
+        allow create: if isAuthenticated() &&
+          request.resource.data.keys().hasAll(['type', 'title', 'body', 'targetRole', 'read', 'createdAt']) &&
+          request.resource.data.type in [
+            'mission_complete', 'mission_rejected', 'loot_request',
+            'loot_approved', 'loot_denied', 'level_up', 'streak'
+          ] &&
+          request.resource.data.targetRole in ['parent', 'kid'] &&
+          request.resource.data.read == false &&
+          request.resource.data.title is string &&
+          request.resource.data.body is string;
+        // Only allow updating the 'read' field
+        allow update: if isAuthenticated() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        // Parents can delete notifications
+        allow delete: if isParent(familyId);
+      }
     }
 
     // Feedback — any authenticated user can submit

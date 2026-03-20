@@ -14,7 +14,7 @@ import type {
   AddChildFormData,
   Notification,
 } from '../types.ts';
-import { DEF_TIER_CONFIG, MIN_COINS } from '../constants.ts';
+import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, MIN_COINS } from '../constants.ts';
 import {
   freshUser,
   getToday,
@@ -44,6 +44,10 @@ import { useRewardActions } from '../hooks/useRewardActions.ts';
 import { useApprovalActions } from '../hooks/useApprovalActions.ts';
 import { useChildActions } from '../hooks/useChildActions.ts';
 import { useFirestoreSync } from '../hooks/useFirestoreSync.ts';
+import { useNotificationListener } from '../hooks/useNotificationListener.ts';
+import { unlockAudio, preloadSounds, playSound } from '../services/notificationSound.ts';
+import type { SoundKey } from '../services/notificationSound.ts';
+import { cleanupOldNotifications } from '../services/firestoreStorage.ts';
 
 interface AppContextValue {
   familyId: string;
@@ -185,6 +189,7 @@ export function AppProvider(props: {
     if (newCfg.weeklyResetDay != null)
       cfgFields.weeklyResetDay = newCfg.weeklyResetDay;
     if (newCfg.cooldown != null) cfgFields.cooldown = newCfg.cooldown;
+    if (newCfg.notificationPrefs) cfgFields.notificationPrefs = newCfg.notificationPrefs;
     promises.push(fsSaveConfig(familyId, cfgFields));
 
     (newCfg.children || []).forEach((ch) => {
@@ -234,6 +239,20 @@ export function AppProvider(props: {
     await Promise.all(promises);
   };
 
+  // --- Helper to get child name by ID ---
+  const getChildName = (id: string): string => {
+    const ch = getChild(id);
+    return ch ? ch.name : id;
+  };
+
+  // --- Pref-aware sound helper ---
+  const playSoundIfAllowed = (key: SoundKey): void => {
+    const prefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+    if (prefs.soundEnabled) {
+      playSound(key);
+    }
+  };
+
   // --- Compose action hooks ---
   const taskActions = useTaskActions({
     cfg,
@@ -244,20 +263,28 @@ export function AppProvider(props: {
     notify: notification.notify,
     tp,
     tierCfg,
+    getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   const rewardActions = useRewardActions({
     cfg,
     allU,
     curUser,
+    familyId,
     saveUsr,
     notify: notification.notify,
+    getChildName: getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   const approvalActions = useApprovalActions({
     allU,
+    familyId,
     saveUsr,
     notify: notification.notify,
+    getChildName: getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   const childActions = useChildActions({
@@ -398,6 +425,7 @@ export function AppProvider(props: {
         cooldown: fc && fc.cooldown != null ? fc.cooldown : undefined,
         parentName: fc && fc.parentName ? fc.parentName : undefined,
         referralSource: fc && fc.referralSource ? fc.referralSource : undefined,
+        notificationPrefs: fc && fc.notificationPrefs ? fc.notificationPrefs : undefined,
       };
       if (!c.children) c.children = [];
       if (!c.tierConfig) c.tierConfig = structuredClone(DEF_TIER_CONFIG);
@@ -455,6 +483,44 @@ export function AppProvider(props: {
     setCfg,
     setAllU,
   });
+
+  // --- In-app notification listener ---
+  const notifRole: 'parent' | 'kid' = curUser === 'parent' ? 'parent' : 'kid';
+  const notifChildId = curUser && curUser !== 'parent' ? curUser : null;
+  const notifPrefs = cfg ? cfg.notificationPrefs || DEF_NOTIFICATION_PREFS : DEF_NOTIFICATION_PREFS;
+
+  useNotificationListener({
+    familyId,
+    role: notifRole,
+    childId: notifChildId,
+    prefs: notifPrefs,
+    notify: notification.notify,
+    loading,
+  });
+
+  // --- Audio unlock on first user interaction ---
+  // iOS Safari requires one .play() inside a user gesture to activate
+  // the audio session. After that, non-gesture plays work.
+  useEffect(() => {
+    const handleInteraction = () => {
+      unlockAudio();
+      preloadSounds();
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
+  // --- Cleanup old notifications on load ---
+  useEffect(() => {
+    if (!familyId || loading) return;
+    cleanupOldNotifications(familyId).catch(() => { /* ignore */ });
+  }, [familyId, loading]);
 
   // 30-second tick for bedtime cutoff detection (time-based, not data-based)
   useEffect(() => {

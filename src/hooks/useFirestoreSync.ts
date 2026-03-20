@@ -52,6 +52,7 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
           familyCode: fc.familyCode || prev.familyCode,
           parentName:
             fc.parentName != null ? fc.parentName : prev.parentName,
+          notificationPrefs: fc.notificationPrefs || prev.notificationPrefs,
         };
       });
     });

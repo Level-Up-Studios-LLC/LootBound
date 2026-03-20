@@ -1,4 +1,4 @@
-import type { StatusLabel, TierConfig } from './types.ts';
+import type { StatusLabel, TierConfig, NotificationPrefs } from './types.ts';
 
 export const CFG_KEY = 'qb-cfg-v5';
 export const childKey = (id: string): string => {
@@ -127,6 +127,17 @@ export const FA_ICON_STYLE = {
 
 export const altBg = (index: number): string => {
   return index % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+};
+
+export const DEF_NOTIFICATION_PREFS: NotificationPrefs = {
+  soundEnabled: true,
+  missionComplete: true,
+  missionRejected: true,
+  lootRequest: true,
+  lootApproved: true,
+  lootDenied: true,
+  levelUp: true,
+  streak: true,
 };
 
 export const KID_NAV = [

@@ -14,7 +14,7 @@ export function useNotification() {
   const notify = (msg: string, type?: string) => {
     if (nRef.current) clearTimeout(nRef.current);
     setNotif({ msg, type: type || 'success' });
-    const dur = type === 'levelup' ? 4000 : 2500;
+    const dur = type === 'levelup' ? 4000 : type === 'streak' ? 3500 : 2500;
     nRef.current = setTimeout(() => {
       setNotif(null);
     }, dur);
