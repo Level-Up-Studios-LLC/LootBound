@@ -96,10 +96,13 @@ export function useTaskActions(deps: TaskActionsDeps) {
       return;
     }
     resizeImg(file, 800).then(function (photo) {
-      doComplete(capturing!, photo).then(function () {
-        setCapturing(null);
-        if (fileRef.current) fileRef.current.value = '';
-      });
+      return doComplete(capturing!, photo);
+    }).then(function () {
+      setCapturing(null);
+      if (fileRef.current) fileRef.current.value = '';
+    }).catch(function () {
+      setCapturing(null);
+      if (fileRef.current) fileRef.current.value = '';
     });
   }
 

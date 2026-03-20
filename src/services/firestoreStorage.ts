@@ -574,6 +574,7 @@ export function onNotificationsSnapshot(
   return onSnapshot(q, function (snap) {
     var list: (InAppNotificationDoc & { id: string })[] = [];
     snap.forEach(function (d) {
+      if (d.data().createdAt == null) return;
       list.push(Object.assign({ id: d.id }, d.data()) as InAppNotificationDoc & { id: string });
     });
     callback(list);
