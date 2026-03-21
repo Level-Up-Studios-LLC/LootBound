@@ -241,7 +241,7 @@ function AppRouter() {
     if (auth.authLoading) return;
     if (auth.authUser) {
       getSessionAsync(SESSION_KEY_PARENT).then(stored => {
-        if (stored === auth.authUser!.familyId) {
+        if (stored === auth.authUser!.uid) {
           setParentVerifiedRaw(true);
         } else {
           if (stored) clearSession(SESSION_KEY_PARENT);

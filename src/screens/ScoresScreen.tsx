@@ -12,7 +12,12 @@ import {
   getLevelTitle,
   getStreakMultiplier,
 } from '../utils.ts';
-import type { UserData } from '../types.ts';
+import type { Task, UserData } from '../types.ts';
+
+function isTaskDone(task: Task, log: Record<string, any>): boolean {
+  const l = log[task.id];
+  return !!l && !l.rejected && l.status !== 'missed';
+}
 
 function countPerfectDays(
   ud: UserData,
@@ -65,10 +70,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   if (children.length === 1) {
     const myTasks = (cfg!.tasks[ch.id] || []).filter(isTaskActiveToday);
     const myLog = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
-    const myDone = myTasks.filter(t => {
-      const l = myLog[t.id];
-      return l && !l.rejected && l.status !== 'missed';
-    }).length;
+    const myDone = myTasks.filter(t => isTaskDone(t, myLog)).length;
     const myPerfect = countPerfectDays(ud, cfg!.tasks[ch.id] || [], ws);
     const lt = getLevelTitle(ud.level || 1);
     const sMult = getStreakMultiplier(ud.streak || 0);
@@ -228,10 +230,7 @@ export default function ScoresScreen(): React.ReactElement | null {
           const udata = allU[c.id] || freshUser();
           const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
           const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
-          const done = tasks.filter(t => {
-            const l = log[t.id];
-            return l && !l.rejected && l.status !== 'missed';
-          }).length;
+          const done = tasks.filter(t => isTaskDone(t, log)).length;
           const isMe = c.id === curUser;
           const isTop = topPerfect > 0 && topIds.indexOf(c.id) !== -1;
           const cardBg = isTop

@@ -61,13 +61,13 @@ export function useTaskActions(deps: TaskActionsDeps) {
     setCapturing(taskId);
     if (isNative()) {
       nativeCapturePhoto()
-        .then(function (photo) {
+        .then((photo) => {
           if (photo) {
             doComplete(taskId, photo)
-              .then(function () {
+              .then(() => {
                 setCapturing(null);
               })
-              .catch(function (err) {
+              .catch((err) => {
                 console.error('doComplete failed:', err);
                 setCapturing(null);
               });
@@ -75,7 +75,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
             setCapturing(null);
           }
         })
-        .catch(function (err) {
+        .catch((err) => {
           console.error('nativeCapturePhoto failed:', err);
           setCapturing(null);
         });
