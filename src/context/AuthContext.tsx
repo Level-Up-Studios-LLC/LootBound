@@ -83,6 +83,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       .catch((err: any) => {
         if (err.code !== 'auth/popup-closed-by-user') {
           setAuthError(err.message || 'Google sign-in failed');
+          Sentry.captureException(err, { tags: { action: 'google-redirect-result' } });
         }
       })
       .finally(() => {

@@ -10,6 +10,7 @@
  * share the same familyId.
  */
 
+import * as Sentry from '@sentry/react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -94,6 +95,7 @@ export async function signUpFamily(
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch(err => {
     console.warn('Verification email failed:', err);
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
   });
 
   return {
@@ -133,6 +135,7 @@ export async function joinFamilyByCode(
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch(err => {
     console.warn('Verification email failed:', err);
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
   });
 
   return {
@@ -239,6 +242,7 @@ export function onAuthChange(
         .catch(err => {
           if (token !== seq) return;
           console.error('resolveFamilyId failed:', err);
+          Sentry.captureException(err, { tags: { action: 'resolve-familyid-authchange' } });
           callback(null);
         });
     } else {

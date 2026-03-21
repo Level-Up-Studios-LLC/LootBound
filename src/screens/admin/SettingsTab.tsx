@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import * as Sentry from '@sentry/react';
 import {
   faBed,
   faCalendarDays,
@@ -10,6 +11,7 @@ import {
   faArrowUpRightFromSquare,
   faBell,
   faVolumeHigh,
+  faBug,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import {
@@ -20,6 +22,7 @@ import {
   DAYS,
   FA_ICON_STYLE,
 } from '../../constants.ts';
+import { getPersistentStorage, setPersistentStorage } from '../../services/platform.ts';
 import type { Config, TierConfig, NotificationPrefs } from '../../types.ts';
 const DISCUSSIONS_URL =
   'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
@@ -35,9 +38,28 @@ function formatMinutesToTime(mins: number): string {
 export default function SettingsTab(): React.ReactElement {
   const ctx = useAppContext();
   const [local, setLocal] = useState<Config | null>(ctx.cfg);
+  const [sentryEnabled, setSentryEnabled] = useState(true);
+  const applySentryEnabled = (enabled: boolean) => {
+    const client = Sentry.getClient();
+    if (client) client.getOptions().enabled = enabled;
+  };
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const localRef = useRef(local);
   localRef.current = local;
+
+  // Load Sentry preference and apply to runtime client
+  useEffect(() => {
+    let cancelled = false;
+    getPersistentStorage('lootbound-sentry-enabled').then((val) => {
+      if (cancelled) return;
+      const enabled = val !== 'false';
+      setSentryEnabled(enabled);
+      applySentryEnabled(enabled);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Sync from context when cfg changes externally (e.g. real-time listener)
   const ctxCfgRef = useRef(ctx.cfg);
@@ -58,6 +80,7 @@ export default function SettingsTab(): React.ReactElement {
         if (localRef.current) {
           ctx.saveCfg(localRef.current).catch((err: unknown) => {
             console.error('Settings save failed on unmount:', err);
+            Sentry.captureException(err, { tags: { action: 'save-settings-unmount' } });
           });
         }
       }
@@ -76,6 +99,7 @@ export default function SettingsTab(): React.ReactElement {
         })
         .catch((err: unknown) => {
           console.error('Settings save failed:', err);
+          Sentry.captureException(err, { tags: { action: 'save-settings' } });
           ctx.notify('Save failed. Please try again.');
         });
     }, SAVE_DELAY);
@@ -326,6 +350,38 @@ export default function SettingsTab(): React.ReactElement {
           day.
         </div>
       </div>
+      {/* Error Reporting */}
+      <div className='bg-qmint rounded-card p-4 mb-4'>
+        <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
+          <FontAwesomeIcon icon={faBug} style={FA_ICON_STYLE} />
+          Error Reporting
+        </div>
+        <div className='text-[13px] text-qmuted mb-2'>
+          Help us improve LootBound by automatically reporting errors.
+          No personal data is collected.
+        </div>
+        <label className='flex items-center gap-3 cursor-pointer'>
+          <input
+            type='checkbox'
+            checked={sentryEnabled}
+            onChange={(e) => {
+              const enabled = e.target.checked;
+              setSentryEnabled(enabled);
+              applySentryEnabled(enabled);
+              void setPersistentStorage(
+                'lootbound-sentry-enabled',
+                enabled ? 'true' : 'false'
+              );
+              ctx.notify(enabled ? 'Error reporting enabled' : 'Error reporting disabled');
+            }}
+            className='w-5 h-5 accent-qteal'
+          />
+          <span className='text-sm text-qslate font-semibold'>
+            Send anonymous error reports
+          </span>
+        </label>
+      </div>
+
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCommentDots} style={FA_ICON_STYLE} />
