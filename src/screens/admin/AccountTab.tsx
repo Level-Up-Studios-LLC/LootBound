@@ -205,6 +205,11 @@ export default function AccountTab(): React.ReactElement | null {
 
   const handleDeleteFamily = async () => {
     setDeleteErr('');
+    const uid = currentUid;
+    if (!uid) {
+      setDeleteErr('Not signed in');
+      return;
+    }
     if (!hasPasswordProvider()) {
       setDeleteErr('Please set a password on your account before deleting.');
       return;
@@ -214,12 +219,6 @@ export default function AccountTab(): React.ReactElement | null {
       return;
     }
     setDeleteBusy(true);
-    const uid = currentUid;
-    if (!uid) {
-      setDeleteErr('Not signed in');
-      setDeleteBusy(false);
-      return;
-    }
 
     try {
       await reauthenticate(deletePass);
@@ -264,6 +263,11 @@ export default function AccountTab(): React.ReactElement | null {
 
   const handleLeaveFamily = async () => {
     setDeleteErr('');
+    const uid = currentUid;
+    if (!uid) {
+      setDeleteErr('Not signed in');
+      return;
+    }
     if (!hasPasswordProvider()) {
       setDeleteErr('Please set a password on your account before leaving.');
       return;
@@ -273,12 +277,6 @@ export default function AccountTab(): React.ReactElement | null {
       return;
     }
     setDeleteBusy(true);
-    const uid = currentUid;
-    if (!uid) {
-      setDeleteErr('Not signed in');
-      setDeleteBusy(false);
-      return;
-    }
 
     try {
       await reauthenticate(deletePass);
@@ -720,7 +718,7 @@ export default function AccountTab(): React.ReactElement | null {
           }
           confirmColor='bg-qcoral'
           onConfirm={() => {
-            if (!deleteBusy && (!hasPasswordProvider() || deletePass)) {
+            if (!deleteBusy) {
               if (isOwner) {
                 handleDeleteFamily();
               } else {
