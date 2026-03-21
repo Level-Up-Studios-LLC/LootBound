@@ -222,22 +222,12 @@ export default function AccountTab(): React.ReactElement | null {
         await reauthenticate(deletePass);
       }
 
-      // Delete photos (best-effort)
-      try {
-        await deleteAllFamilyPhotos(ctx.familyId);
-      } catch (photoErr) {
-        console.warn('Photo cleanup failed:', photoErr);
-        Sentry.captureException(photoErr, {
-          tags: { action: 'delete-family-photos' },
-        });
-      }
-
       // Delete Firestore data, then auth account
       // Auth must come last because Firestore security rules require an active session.
       await deleteFamily(ctx.familyId, uid);
 
       try {
-        await deleteAuthAccount();
+        await deleteAuthAccount(deletePass);
       } catch (authErr: any) {
         console.error(
           'Family data deleted but auth account removal failed:',
@@ -251,6 +241,16 @@ export default function AccountTab(): React.ReactElement | null {
         );
         setDeleteBusy(false);
         return;
+      }
+
+      // Delete photos (best-effort, runs after irreversible teardown)
+      try {
+        await deleteAllFamilyPhotos(ctx.familyId);
+      } catch (photoErr) {
+        console.warn('Photo cleanup failed:', photoErr);
+        Sentry.captureException(photoErr, {
+          tags: { action: 'delete-family-photos' },
+        });
       }
     } catch (err: any) {
       console.error('Failed to delete family:', err);
@@ -292,7 +292,7 @@ export default function AccountTab(): React.ReactElement | null {
       await deleteParentMember(uid);
 
       try {
-        await deleteAuthAccount();
+        await deleteAuthAccount(deletePass);
       } catch (authErr: any) {
         console.error(
           'Parent member deleted but auth account removal failed:',
