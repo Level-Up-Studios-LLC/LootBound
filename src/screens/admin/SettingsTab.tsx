@@ -39,15 +39,26 @@ export default function SettingsTab(): React.ReactElement {
   const ctx = useAppContext();
   const [local, setLocal] = useState<Config | null>(ctx.cfg);
   const [sentryEnabled, setSentryEnabled] = useState(true);
+  const applySentryEnabled = (enabled: boolean) => {
+    const client = Sentry.getClient();
+    if (client) client.getOptions().enabled = enabled;
+  };
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const localRef = useRef(local);
   localRef.current = local;
 
-  // Load Sentry preference
+  // Load Sentry preference and apply to runtime client
   useEffect(() => {
+    let cancelled = false;
     getPersistentStorage('lootbound-sentry-enabled').then((val) => {
-      setSentryEnabled(val !== 'false');
+      if (cancelled) return;
+      const enabled = val !== 'false';
+      setSentryEnabled(enabled);
+      applySentryEnabled(enabled);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Sync from context when cfg changes externally (e.g. real-time listener)
@@ -356,11 +367,11 @@ export default function SettingsTab(): React.ReactElement {
             onChange={(e) => {
               const enabled = e.target.checked;
               setSentryEnabled(enabled);
-              setPersistentStorage('lootbound-sentry-enabled', enabled ? 'true' : 'false');
-              const client = Sentry.getClient();
-              if (client) {
-                client.getOptions().enabled = enabled;
-              }
+              applySentryEnabled(enabled);
+              void setPersistentStorage(
+                'lootbound-sentry-enabled',
+                enabled ? 'true' : 'false'
+              );
               ctx.notify(enabled ? 'Error reporting enabled' : 'Error reporting disabled');
             }}
             className='w-5 h-5 accent-qteal'
