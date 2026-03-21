@@ -4,7 +4,7 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   warning?: string;
-  confirmLabel: string;
+  confirmLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   bgColor?: string;
@@ -80,19 +80,21 @@ export default function ConfirmDialog(
           >
             Cancel
           </button>
-          <button
-            onClick={() => {
-              if (confirmed) props.onConfirm();
-            }}
-            disabled={!confirmed}
-            className={
-              (props.confirmColor || 'bg-qcoral') +
-              ' text-white rounded-badge px-5 py-2.5 font-bold border-none font-body' +
-              (confirmed ? ' cursor-pointer' : ' opacity-40 cursor-not-allowed')
-            }
-          >
-            {props.confirmLabel}
-          </button>
+          {props.confirmLabel && (
+            <button
+              onClick={() => {
+                if (confirmed) props.onConfirm();
+              }}
+              disabled={!confirmed}
+              className={
+                (props.confirmColor || 'bg-qcoral') +
+                ' text-white rounded-badge px-5 py-2.5 font-bold border-none font-body' +
+                (confirmed ? ' cursor-pointer' : ' opacity-40 cursor-not-allowed')
+              }
+            >
+              {props.confirmLabel}
+            </button>
+          )}
         </div>
       </div>
     </div>

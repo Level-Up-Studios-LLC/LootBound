@@ -24,8 +24,10 @@ import {
   setPassword,
   deleteAuthAccount,
   reauthenticate,
+  reauthenticateWithGoogle,
   getCurrentUid,
   hasPasswordProvider,
+  hasGoogleProvider,
 } from '../../services/auth.ts';
 import {
   deleteFamily,
@@ -209,37 +211,47 @@ export default function AccountTab(): React.ReactElement | null {
 
   const isOwner = currentUid === ctx.familyId;
 
-  const handleDeleteFamily = async () => {
+  // Reauthenticate using password or Google, show errors in dialog
+  const doReauth = async (method: 'password' | 'google'): Promise<boolean> => {
+    try {
+      if (method === 'google') {
+        await reauthenticateWithGoogle();
+      } else {
+        await reauthenticate(deletePass);
+      }
+      return true;
+    } catch (err: any) {
+      const code = err.code || err.message || '';
+      if (code === 'auth/popup-closed-by-user') {
+        setDeleteErr('Google sign-in was cancelled.');
+      } else if (
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential'
+      ) {
+        setDeleteErr('Incorrect password');
+      } else {
+        setDeleteErr('Authentication failed. Please try again.');
+        Sentry.captureException(err, { tags: { action: 'delete-reauth' } });
+      }
+      return false;
+    }
+  };
+
+  const handleDeleteFamily = async (method: 'password' | 'google' = 'password') => {
     setDeleteErr('');
     const uid = currentUid;
     if (!uid) {
       setDeleteErr('Not signed in');
       return;
     }
-    if (!hasPasswordProvider()) {
-      setDeleteErr('Please set a password on your account before deleting.');
-      return;
-    }
-    if (!deletePass) {
+    if (method === 'password' && !deletePass) {
       setDeleteErr('Enter your password to confirm deletion');
       return;
     }
     setDeleteBusy(true);
 
-    // Reauthenticate before showing overlay so password errors show in the dialog
-    try {
-      await reauthenticate(deletePass);
-    } catch (err: any) {
-      const code = err.code || err.message || '';
-      if (
-        code === 'auth/wrong-password' ||
-        code === 'auth/invalid-credential'
-      ) {
-        setDeleteErr('Incorrect password');
-      } else {
-        setDeleteErr('Failed to verify password. Please try again.');
-        Sentry.captureException(err, { tags: { action: 'delete-family-reauth' } });
-      }
+    // Reauthenticate before showing overlay so errors show in the dialog
+    if (!await doReauth(method)) {
       setDeleteBusy(false);
       return;
     }
@@ -264,7 +276,7 @@ export default function AccountTab(): React.ReactElement | null {
       await deleteFamily(ctx.familyId, uid);
 
       try {
-        await deleteAuthAccount(deletePass);
+        await deleteAuthAccount(method === 'password' ? deletePass : undefined);
       } catch (authErr: any) {
         console.error(
           'Family data deleted but auth account removal failed:',
@@ -288,36 +300,35 @@ export default function AccountTab(): React.ReactElement | null {
     }
   };
 
-  const handleLeaveFamily = async () => {
+  const handleLeaveFamily = async (method: 'password' | 'google' = 'password') => {
     setDeleteErr('');
     const uid = currentUid;
     if (!uid) {
       setDeleteErr('Not signed in');
       return;
     }
-    if (!hasPasswordProvider()) {
-      setDeleteErr('Please set a password on your account before leaving.');
-      return;
-    }
-    if (!deletePass) {
+    if (method === 'password' && !deletePass) {
       setDeleteErr('Enter your password to confirm');
       return;
     }
     setDeleteBusy(true);
 
+    if (!await doReauth(method)) {
+      setDeleteBusy(false);
+      return;
+    }
+
+    // Close dialog, show full-screen overlay
+    setShowDeleteConfirm(false);
+    setDeletionInProgress(true);
+
     try {
-      await reauthenticate(deletePass);
-
-      // Close dialog, show full-screen overlay
-      setShowDeleteConfirm(false);
-      setDeletionInProgress(true);
-
       // Remove own parentMembers doc, then auth account
       // Auth must come last because Firestore security rules require an active session.
       await deleteParentMember(uid);
 
       try {
-        await deleteAuthAccount(deletePass);
+        await deleteAuthAccount(method === 'password' ? deletePass : undefined);
       } catch (authErr: any) {
         console.error(
           'Parent member deleted but auth account removal failed:',
@@ -334,19 +345,9 @@ export default function AccountTab(): React.ReactElement | null {
     } catch (err: any) {
       console.error('Failed to leave family:', err);
       Sentry.captureException(err, { tags: { action: 'leave-family' } });
-      const code = err.code || err.message || '';
-      const errorMsg =
-        code === 'auth/wrong-password' || code === 'auth/invalid-credential'
-          ? 'Incorrect password'
-          : 'Failed to leave family. Please try again.';
-      if (!showDeleteConfirm) {
-        ctx.notify(errorMsg, 'error');
-      } else {
-        setDeleteErr(errorMsg);
-      }
       setDeletionInProgress(false);
+      ctx.notify('Failed to leave family. Please try again.', 'error');
       setDeleteBusy(false);
-      return;
     }
   };
 
@@ -733,21 +734,23 @@ export default function AccountTab(): React.ReactElement | null {
           }
           warning={isOwner ? 'THIS ACTION CANNOT BE UNDONE.' : undefined}
           confirmLabel={
-            deleteBusy
-              ? isOwner
-                ? 'Deleting...'
-                : 'Leaving...'
-              : isOwner
-                ? 'Delete'
-                : 'Leave'
+            hasPasswordProvider()
+              ? deleteBusy
+                ? isOwner
+                  ? 'Deleting...'
+                  : 'Leaving...'
+                : isOwner
+                  ? 'Delete'
+                  : 'Leave'
+              : undefined
           }
           confirmColor='bg-qcoral'
           onConfirm={() => {
-            if (!deleteBusy) {
+            if (!deleteBusy && hasPasswordProvider()) {
               if (isOwner) {
-                handleDeleteFamily();
+                handleDeleteFamily('password');
               } else {
-                handleLeaveFamily();
+                handleLeaveFamily('password');
               }
             }
           }}
@@ -760,30 +763,62 @@ export default function AccountTab(): React.ReactElement | null {
           }}
         >
           {hasPasswordProvider() && (
-          <div className='mt-3'>
-            <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
-              Enter your password to confirm:
-            </label>
-            <PasswordInput
-              id='delete-pass'
-              placeholder='Password'
-              value={deletePass}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setDeletePass(e.target.value);
-                setDeleteErr('');
-              }}
-              onKeyDown={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter' && !deleteBusy) {
-                  if (isOwner) {
-                    handleDeleteFamily();
-                  } else {
-                    handleLeaveFamily();
+            <div className='mt-3'>
+              <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
+                Enter your password to confirm:
+              </label>
+              <PasswordInput
+                id='delete-pass'
+                placeholder='Password'
+                value={deletePass}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setDeletePass(e.target.value);
+                  setDeleteErr('');
+                }}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' && !deleteBusy) {
+                    if (isOwner) {
+                      handleDeleteFamily('password');
+                    } else {
+                      handleLeaveFamily('password');
+                    }
                   }
-                }
-              }}
-              className='quest-input'
+                }}
+                className='quest-input'
                 autoFocus
               />
+            </div>
+          )}
+          {hasGoogleProvider() && (
+            <div className={hasPasswordProvider() ? 'mt-3' : 'mt-3'}>
+              {hasPasswordProvider() && (
+                <div className='flex items-center gap-2 my-2'>
+                  <div className='flex-1 h-px bg-qslate/20'></div>
+                  <span className='text-xs text-qmuted'>or</span>
+                  <div className='flex-1 h-px bg-qslate/20'></div>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  if (!deleteBusy) {
+                    if (isOwner) {
+                      handleDeleteFamily('google');
+                    } else {
+                      handleLeaveFamily('google');
+                    }
+                  }
+                }}
+                disabled={deleteBusy}
+                className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-4 py-2 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors text-[13px]'
+              >
+                <svg width='16' height='16' viewBox='0 0 48 48'>
+                  <path fill='#EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' />
+                  <path fill='#4285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' />
+                  <path fill='#FBBC05' d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z' />
+                  <path fill='#34A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z' />
+                </svg>
+                Confirm with Google
+              </button>
             </div>
           )}
           {deleteErr && (
