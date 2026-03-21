@@ -224,6 +224,8 @@ export default function AccountTab(): React.ReactElement | null {
       const code = err.code || err.message || '';
       if (code === 'auth/popup-closed-by-user') {
         setDeleteErr('Google sign-in was cancelled.');
+      } else if (code === 'auth/user-mismatch') {
+        setDeleteErr('Please sign in with the same Google account you used to create this account.');
       } else if (
         code === 'auth/wrong-password' ||
         code === 'auth/invalid-credential'
@@ -790,7 +792,7 @@ export default function AccountTab(): React.ReactElement | null {
             </div>
           )}
           {hasGoogleProvider() && (
-            <div className={hasPasswordProvider() ? 'mt-3' : 'mt-3'}>
+            <div className='mt-3'>
               {hasPasswordProvider() && (
                 <div className='flex items-center gap-2 my-2'>
                   <div className='flex-1 h-px bg-qslate/20'></div>
