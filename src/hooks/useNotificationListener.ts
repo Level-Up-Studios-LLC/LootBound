@@ -82,7 +82,7 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
           playSound(notifTypeToSound(n.type));
         }
 
-        markNotificationRead(deps.familyId, n.id).catch(function () { /* ignore */ });
+        markNotificationRead(deps.familyId, n.id).catch(function (err) { Sentry.captureException(err, { level: 'warning', tags: { action: 'mark-notification-read' } }); });
       });
     });
 

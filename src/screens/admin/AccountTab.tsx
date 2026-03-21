@@ -18,7 +18,7 @@ import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
 import { changePassword, changeEmail, setPassword, deleteAuthAccount, reauthenticate, getCurrentUid, hasPasswordProvider } from '../../services/auth.ts';
 import { deleteFamily, saveParentMember, deleteParentMember, onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
-import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
+
 import { copyToClipboard } from '../../services/platform.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
@@ -200,15 +200,7 @@ export default function AccountTab(): React.ReactElement | null {
         await reauthenticate(deletePass);
       }
 
-      // Delete all photos from Storage
-      try {
-        await deleteAllFamilyPhotos(ctx.familyId);
-      } catch (photoErr) {
-        console.warn('Photo cleanup failed:', photoErr);
-        Sentry.captureException(photoErr, { tags: { action: 'delete-family-photos' } });
-        ctx.notify('Some photos could not be deleted', 'error');
-      }
-      // Delete all Firestore data
+      // Delete Firestore data, then auth account
       const uid = currentUid;
       if (!uid) throw new Error('Not signed in');
       await deleteFamily(ctx.familyId, uid);
