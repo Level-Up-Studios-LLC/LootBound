@@ -5,6 +5,7 @@
  * falls back to browser APIs on web.
  */
 
+import * as Sentry from '@sentry/react';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { Clipboard } from '@capacitor/clipboard';
@@ -39,15 +40,15 @@ export async function setStorage(key: string, val: string): Promise<void> {
   if (isNative()) {
     try {
       await Preferences.set({ key: key, value: val });
-    } catch (_e) {
-      /* ignore */
+    } catch (e) {
+      Sentry.captureException(e, { level: 'warning', tags: { action: 'set-storage', key } });
     }
     return;
   }
   try {
     sessionStorage.setItem(key, val);
-  } catch (_e) {
-    /* ignore */
+  } catch (e) {
+    Sentry.captureException(e, { level: 'warning', tags: { action: 'set-storage', key } });
   }
 }
 
@@ -96,15 +97,15 @@ export async function setPersistentStorage(
   if (isNative()) {
     try {
       await Preferences.set({ key: key, value: val });
-    } catch (_e) {
-      /* ignore */
+    } catch (e) {
+      Sentry.captureException(e, { level: 'warning', tags: { action: 'set-persistent-storage', key } });
     }
     return;
   }
   try {
     localStorage.setItem(key, val);
-  } catch (_e) {
-    /* ignore */
+  } catch (e) {
+    Sentry.captureException(e, { level: 'warning', tags: { action: 'set-persistent-storage', key } });
   }
 }
 

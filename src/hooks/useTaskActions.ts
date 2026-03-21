@@ -231,6 +231,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       targetRole: 'parent',
     }).catch((err) => {
       console.warn('Notification failed (mission_complete):', err);
+      Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'mission_complete' } });
     });
     if (ud.level > oldLevel) {
       const title = getLevelTitle(ud.level);
@@ -247,6 +248,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         targetRole: 'parent',
       }).catch((err) => {
         console.warn('Notification failed (level_up):', err);
+        Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'level_up' } });
       });
     }
     // Streak notifications
@@ -267,6 +269,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         targetRole: 'parent',
       }).catch((err) => {
         console.warn('Notification failed (streak):', err);
+        Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'streak' } });
       });
     }
   };
@@ -312,6 +315,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       targetRole: 'kid',
     }).catch((err) => {
       console.warn('Notification failed (mission_rejected):', err);
+      Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'mission_rejected' } });
     });
   };
 

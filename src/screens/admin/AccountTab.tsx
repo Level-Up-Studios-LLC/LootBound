@@ -558,8 +558,9 @@ export default function AccountTab(): React.ReactElement | null {
                     setMyPin(newPin);
                     setNewPin('');
                     ctx.notify('PIN updated');
-                  } catch (_e) {
+                  } catch (pinErr) {
                     ctx.notify('Failed to save PIN', 'error');
+                    Sentry.captureException(pinErr, { tags: { action: 'save-parent-pin' } });
                   }
                 }
               }
