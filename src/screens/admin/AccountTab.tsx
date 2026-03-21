@@ -271,9 +271,7 @@ export default function AccountTab(): React.ReactElement | null {
           tags: { action: 'delete-family-auth' },
         });
         setDeletionInProgress(false);
-        setDeleteErr(
-          'Family data deleted, but we couldn\u2019t remove your login. Please sign out and contact support.'
-        );
+        ctx.notify('Family data deleted, but we couldn\u2019t remove your login. Please sign out and contact support.', 'error');
         setDeleteBusy(false);
         return;
       }
@@ -282,7 +280,7 @@ export default function AccountTab(): React.ReactElement | null {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
       setDeletionInProgress(false);
-      setDeleteErr('Failed to delete account. Please try again.');
+      ctx.notify('Failed to delete account. Please try again.', 'error');
       setDeleteBusy(false);
     }
   };
@@ -325,9 +323,7 @@ export default function AccountTab(): React.ReactElement | null {
         Sentry.captureException(authErr, {
           tags: { action: 'leave-family-auth' },
         });
-        setDeleteErr(
-          'Your membership was removed, but we couldn\u2019t delete your login. Please sign out and contact support.'
-        );
+        ctx.notify('Your membership was removed, but we couldn\u2019t delete your login. Please sign out and contact support.', 'error');
         setDeletionInProgress(false);
         setDeleteBusy(false);
         return;
@@ -336,13 +332,14 @@ export default function AccountTab(): React.ReactElement | null {
       console.error('Failed to leave family:', err);
       Sentry.captureException(err, { tags: { action: 'leave-family' } });
       const code = err.code || err.message || '';
-      if (
-        code === 'auth/wrong-password' ||
-        code === 'auth/invalid-credential'
-      ) {
-        setDeleteErr('Incorrect password');
+      const errorMsg =
+        code === 'auth/wrong-password' || code === 'auth/invalid-credential'
+          ? 'Incorrect password'
+          : 'Failed to leave family. Please try again.';
+      if (!showDeleteConfirm) {
+        ctx.notify(errorMsg, 'error');
       } else {
-        setDeleteErr('Failed to leave family. Please try again.');
+        setDeleteErr(errorMsg);
       }
       setDeletionInProgress(false);
       setDeleteBusy(false);
@@ -803,7 +800,7 @@ export default function AccountTab(): React.ReactElement | null {
         </ConfirmDialog>
       )}
       {deletionInProgress && (
-        <div className='fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[600]'>
+        <div className='fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[600]' role='alert' aria-live='polite' aria-busy='true'>
           <FontAwesomeIcon icon={faSpinner} spin className='text-4xl text-qteal mb-4' />
           <div className='font-display text-xl text-white mb-2'>
             Deleting account...
