@@ -12,6 +12,7 @@ import {
   faEnvelope,
   faCircleCheck,
   faCopy,
+  faSpinner,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
@@ -32,6 +33,7 @@ import {
   onParentMemberSnapshot,
 } from '../../services/firestoreStorage.ts';
 
+import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import { copyToClipboard } from '../../services/platform.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
@@ -79,6 +81,7 @@ export default function AccountTab(): React.ReactElement | null {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deletionInProgress, setDeletionInProgress] = useState(false);
   const [deletePass, setDeletePass] = useState('');
   const [deleteErr, setDeleteErr] = useState('');
   const [verifyBusy, setVerifyBusy] = useState(false);
@@ -220,9 +223,39 @@ export default function AccountTab(): React.ReactElement | null {
     }
     setDeleteBusy(true);
 
+    // Reauthenticate before showing overlay so password errors show in the dialog
     try {
       await reauthenticate(deletePass);
+    } catch (err: any) {
+      const code = err.code || err.message || '';
+      if (
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential'
+      ) {
+        setDeleteErr('Incorrect password');
+      } else {
+        setDeleteErr('Failed to verify password. Please try again.');
+        Sentry.captureException(err, { tags: { action: 'delete-family-reauth' } });
+      }
+      setDeleteBusy(false);
+      return;
+    }
 
+    // Close dialog, show full-screen deletion overlay
+    setShowDeleteConfirm(false);
+    setDeletionInProgress(true);
+
+    // Best-effort photo cleanup (parent is still authenticated)
+    try {
+      await deleteAllFamilyPhotos(ctx.familyId, true);
+    } catch (photoErr) {
+      console.warn('Photo cleanup failed (proceeding):', photoErr);
+      Sentry.captureException(photoErr, {
+        tags: { action: 'delete-family-photos' },
+      });
+    }
+
+    try {
       // Delete Firestore data, then auth account
       // Auth must come last because Firestore security rules require an active session.
       await deleteFamily(ctx.familyId, uid);
@@ -237,27 +270,20 @@ export default function AccountTab(): React.ReactElement | null {
         Sentry.captureException(authErr, {
           tags: { action: 'delete-family-auth' },
         });
+        setDeletionInProgress(false);
         setDeleteErr(
           'Family data deleted, but we couldn\u2019t remove your login. Please sign out and contact support.'
         );
         setDeleteBusy(false);
         return;
       }
-
+      // Success: auth state listener fires, redirects to sign-in
     } catch (err: any) {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
-      const code = err.code || err.message || '';
-      if (
-        code === 'auth/wrong-password' ||
-        code === 'auth/invalid-credential'
-      ) {
-        setDeleteErr('Incorrect password');
-      } else {
-        setDeleteErr('Failed to delete account. Please try again.');
-      }
+      setDeletionInProgress(false);
+      setDeleteErr('Failed to delete account. Please try again.');
       setDeleteBusy(false);
-      return;
     }
   };
 
@@ -686,7 +712,7 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
           {isOwner
-            ? 'Permanently delete your family account, all children, missions, loot, and data. Photos will be cleaned up automatically. This cannot be undone.'
+            ? 'Permanently delete your family account, all children, missions, loot, and data. This cannot be undone.'
             : 'Remove yourself from this family. Your login will be deleted. The family and its data will remain for other members.'}
         </div>
         <button
@@ -703,7 +729,7 @@ export default function AccountTab(): React.ReactElement | null {
           title={isOwner ? 'Delete Family Account?' : 'Leave Family?'}
           message={
             isOwner
-              ? 'This will permanently delete your entire family account including all children, missions, loot, coins, and data. Your login will be removed and you will not be able to recover any data. Photos will be cleaned up automatically.'
+              ? 'This will permanently delete your entire family account including all children, missions, loot, coins, and data. Your login will be removed and you will not be able to recover any data.'
               : "This will remove your account from this family. You will no longer be able to access this family's data. The family will remain for other members."
           }
           warning={isOwner ? 'THIS ACTION CANNOT BE UNDONE.' : undefined}
@@ -769,6 +795,17 @@ export default function AccountTab(): React.ReactElement | null {
             <div className='text-qcoral text-[13px] mt-2'>{deleteErr}</div>
           )}
         </ConfirmDialog>
+      )}
+      {deletionInProgress && (
+        <div className='fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[600]'>
+          <FontAwesomeIcon icon={faSpinner} spin className='text-4xl text-qteal mb-4' />
+          <div className='font-display text-xl text-white mb-2'>
+            Deleting account...
+          </div>
+          <div className='text-sm text-white/70'>
+            Please don't close the app or switch tabs.
+          </div>
+        </div>
       )}
     </div>
   );

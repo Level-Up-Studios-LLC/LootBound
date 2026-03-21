@@ -88,9 +88,10 @@ export async function deleteAllChildPhotos(
  * Used during full data reset.
  */
 export async function deleteAllFamilyPhotos(
-  familyId: string
+  familyId: string,
+  skipAuth?: boolean
 ): Promise<void> {
-  await signInAnonymousKid();
+  if (!skipAuth) await signInAnonymousKid();
   const folderRef = ref(storage, `families/${familyId}/photos`);
   try {
     const result = await listAll(folderRef);
