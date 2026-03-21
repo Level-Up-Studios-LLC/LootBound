@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPartyHorn, faAngleLeft, faArrowLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { saveConfig, saveParentMember } from '../services/firestoreStorage.ts';
+import PasswordInput from '../components/ui/PasswordInput.tsx';
 import { getCurrentUid } from '../services/auth.ts';
 
 const REFERRAL_OPTIONS = [
@@ -394,8 +395,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             <label className='block text-qslate font-semibold mb-1 tracking-wide'>
               Password
             </label>
-            <input
-              type='password'
+            <PasswordInput
               placeholder='Enter password'
               value={pass}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -575,8 +575,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Password
           </label>
-          <input
-            type='password'
+          <PasswordInput
             placeholder='At least 6 characters'
             value={pass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -592,8 +591,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
             Confirm Password
           </label>
-          <input
-            type='password'
+          <PasswordInput
             placeholder='Confirm password'
             value={confirm}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faCircleCheck, faTriangleExclamation } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { verifyResetCode, completePasswordReset } from '../services/auth.ts';
+import PasswordInput from '../components/ui/PasswordInput.tsx';
 
 interface ResetPasswordScreenProps {
   oobCode: string;
@@ -186,8 +187,7 @@ export default function ResetPasswordScreen(
           <FontAwesomeIcon icon={faLock} style={FA_ICON_STYLE} />
           New Password
         </div>
-        <input
-          type='password'
+        <PasswordInput
           placeholder='New password (6+ characters)'
           value={newPass}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,8 +197,7 @@ export default function ResetPasswordScreen(
           className='quest-input'
           autoFocus
         />
-        <input
-          type='password'
+        <PasswordInput
           placeholder='Confirm new password'
           value={confirmPass}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

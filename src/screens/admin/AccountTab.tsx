@@ -14,6 +14,7 @@ import {
   faCopy,
   faSpinner,
 } from '../../fa.ts';
+import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { useAuthContext } from '../../context/AuthContext.tsx';
 import { FA_ICON_STYLE } from '../../constants.ts';
@@ -538,8 +539,7 @@ export default function AccountTab(): React.ReactElement | null {
           </div>
         )}
         <div className='flex gap-3'>
-          <input
-            type='password'
+          <PasswordInput
             maxLength={6}
             placeholder={myPin ? 'New PIN' : 'Create PIN'}
             value={newPin}
@@ -586,8 +586,7 @@ export default function AccountTab(): React.ReactElement | null {
         )}
         <div className='flex flex-col gap-3'>
           {hasPasswordProvider() && (
-            <input
-              type='password'
+            <PasswordInput
               placeholder='Current password'
               value={curPass}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -598,13 +597,8 @@ export default function AccountTab(): React.ReactElement | null {
               className='quest-input'
             />
           )}
-          <input
-            type='password'
-            placeholder={
-              hasPasswordProvider()
-                ? 'New password (6+ characters)'
-                : 'Password (6+ characters)'
-            }
+          <PasswordInput
+            placeholder={hasPasswordProvider() ? 'New password (6+ characters)' : 'Password (6+ characters)'}
             value={newPass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewPass(e.target.value);
@@ -613,8 +607,7 @@ export default function AccountTab(): React.ReactElement | null {
             }}
             className='quest-input'
           />
-          <input
-            type='password'
+          <PasswordInput
             placeholder='Confirm password'
             value={confirmPass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -766,32 +759,28 @@ export default function AccountTab(): React.ReactElement | null {
           }}
         >
           {hasPasswordProvider() && (
-            <div className='mt-3'>
-              <label
-                htmlFor='delete-pass'
-                className='text-[13px] text-qmuted mb-1.5 block'
-              >
-                Enter your password to confirm:
-              </label>
-              <input
-                id='delete-pass'
-                type='password'
-                placeholder='Password'
-                value={deletePass}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setDeletePass(e.target.value);
-                  setDeleteErr('');
-                }}
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && !deleteBusy) {
-                    if (isOwner) {
-                      handleDeleteFamily();
-                    } else {
-                      handleLeaveFamily();
-                    }
+          <div className='mt-3'>
+            <label htmlFor='delete-pass' className='text-[13px] text-qmuted mb-1.5 block'>
+              Enter your password to confirm:
+            </label>
+            <PasswordInput
+              id='delete-pass'
+              placeholder='Password'
+              value={deletePass}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setDeletePass(e.target.value);
+                setDeleteErr('');
+              }}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' && !deleteBusy) {
+                  if (isOwner) {
+                    handleDeleteFamily();
+                  } else {
+                    handleLeaveFamily();
                   }
-                }}
-                className='quest-input'
+                }
+              }}
+              className='quest-input'
                 autoFocus
               />
             </div>
