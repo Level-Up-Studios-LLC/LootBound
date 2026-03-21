@@ -2,7 +2,13 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faCamera, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import { KID_NAV, SL, DAYS_SHORT, TIER_COLORS, FA_ICON_STYLE } from '../constants.ts';
+import {
+  KID_NAV,
+  SL,
+  DAYS_SHORT,
+  TIER_COLORS,
+  FA_ICON_STYLE,
+} from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
@@ -60,7 +66,8 @@ export default function TasksScreen(): React.ReactElement | null {
           const entry = tLog[t.id];
           const isRej = entry && entry.rejected;
           const isDone = entry && !entry.rejected && entry.status !== 'missed';
-          const isMissed = entry && entry.status === 'missed' && !entry.rejected;
+          const isMissed =
+            entry && entry.status === 'missed' && !entry.rejected;
           const status = isDone
             ? entry.status
             : isMissed
@@ -79,7 +86,7 @@ export default function TasksScreen(): React.ReactElement | null {
               ? entry.points
               : tp(t.tier);
           const xpVal = isDone
-            ? (entry.xp || 0)
+            ? entry.xp || 0
             : isMissed
               ? 0
               : tierCfgFn(t.tier).xp;

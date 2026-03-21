@@ -19,18 +19,27 @@ export default function ConfirmDialog(
 ): React.ReactElement {
   const [typed, setTyped] = useState('');
 
-  const confirmed = !props.requiredText ||
+  const confirmed =
+    !props.requiredText ||
     typed.trim().toLowerCase() === props.requiredText.trim().toLowerCase();
 
   return (
-    <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5' role='dialog' aria-modal='true' aria-labelledby='confirm-dialog-title'>
+    <div
+      className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
+      role='dialog'
+      aria-modal='true'
+      aria-labelledby='confirm-dialog-title'
+    >
       <div
         className={
           (props.bgColor || 'bg-white') +
           ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg'
         }
       >
-        <div id='confirm-dialog-title' className='font-display text-xl font-bold mb-4 text-qslate'>
+        <div
+          id='confirm-dialog-title'
+          className='font-display text-xl font-bold mb-4 text-qslate'
+        >
           {props.title}
         </div>
         <div className='mb-4'>
@@ -40,8 +49,12 @@ export default function ConfirmDialog(
           )}
           {props.requiredText && (
             <div className='mt-3'>
-              <label htmlFor='confirm-required-text' className='text-[13px] text-qmuted mb-1.5 block'>
-                {props.requiredTextLabel || `Type "${props.requiredText}" to confirm:`}
+              <label
+                htmlFor='confirm-required-text'
+                className='text-[13px] text-qmuted mb-1.5 block'
+              >
+                {props.requiredTextLabel ||
+                  `Type "${props.requiredText}" to confirm:`}
               </label>
               <input
                 id='confirm-required-text'

@@ -15,7 +15,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
   const tc = props.tierConfig;
   type FormState = Task & { uid: string };
   const u = <K extends keyof FormState>(k: K, v: FormState[K]): void => {
-    setF((prev) => ({ ...prev, [k]: v }));
+    setF(prev => ({ ...prev, [k]: v }));
   };
   return (
     <div className='flex flex-col gap-4'>
@@ -51,7 +51,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           }}
           className='quest-input'
         >
-          {TIER_ORDER.map((t) => {
+          {TIER_ORDER.map(t => {
             const cfg = tc[t] || { coins: 0, xp: 0 };
             return (
               <option key={t} value={t}>

@@ -25,7 +25,7 @@ interface RewardFormProps {
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
   const [f, setF] = useState<Reward>(props.reward);
   const u = <K extends keyof Reward>(k: K, v: Reward[K]): void => {
-    setF((prev) => Object.assign({}, prev, { [k]: v }));
+    setF(prev => Object.assign({}, prev, { [k]: v }));
   };
   return (
     <div className='flex flex-col gap-4'>
@@ -45,7 +45,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Icon</label>
         <div className='flex gap-1 flex-wrap'>
-          {REWARD_EMOJIS.map((e) => {
+          {REWARD_EMOJIS.map(e => {
             return (
               <button
                 key={e}

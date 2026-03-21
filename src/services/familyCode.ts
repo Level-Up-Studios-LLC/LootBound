@@ -61,9 +61,7 @@ export async function registerFamilyCode(
 /**
  * Look up a family code. Returns familyId or null.
  */
-export async function lookupFamilyCode(
-  code: string
-): Promise<string | null> {
+export async function lookupFamilyCode(code: string): Promise<string | null> {
   const snap = await getDoc(doc(db, 'familyCodes', code.toUpperCase()));
   if (!snap.exists()) return null;
   const data = snap.data();

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBed,
@@ -11,11 +10,19 @@ import {
   faArrowUpRightFromSquare,
   faBell,
   faVolumeHigh,
-  faTriangleExclamation,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
-import { DEF_TIER_CONFIG, DEF_NOTIFICATION_PREFS, TIER_ORDER, TIER_COLORS, DAYS, FA_ICON_STYLE, FEEDBACK_URL } from '../../constants.ts';
+import {
+  DEF_TIER_CONFIG,
+  DEF_NOTIFICATION_PREFS,
+  TIER_ORDER,
+  TIER_COLORS,
+  DAYS,
+  FA_ICON_STYLE,
+} from '../../constants.ts';
 import type { Config, TierConfig, NotificationPrefs } from '../../types.ts';
+const DISCUSSIONS_URL =
+  'https://github.com/Level-Up-Studios-LLC/LootBound/discussions';
 
 const SAVE_DELAY = 1500;
 
@@ -51,7 +58,6 @@ export default function SettingsTab(): React.ReactElement {
         if (localRef.current) {
           ctx.saveCfg(localRef.current).catch((err: unknown) => {
             console.error('Settings save failed on unmount:', err);
-            Sentry.captureException(err, { tags: { action: 'save-config' } });
           });
         }
       }
@@ -63,13 +69,13 @@ export default function SettingsTab(): React.ReactElement {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
-      ctx.saveCfg(next)
+      ctx
+        .saveCfg(next)
         .then(() => {
           ctx.notify('Saved!');
         })
         .catch((err: unknown) => {
           console.error('Settings save failed:', err);
-          Sentry.captureException(err, { tags: { action: 'save-config' } });
           ctx.notify('Save failed. Please try again.');
         });
     }, SAVE_DELAY);
@@ -89,8 +95,11 @@ export default function SettingsTab(): React.ReactElement {
           Tier Coin & XP Values
         </div>
         <div className='flex flex-col gap-3'>
-          {TIER_ORDER.map((tier) => {
-            const tc = (cfg.tierConfig || DEF_TIER_CONFIG)[tier] || { coins: 0, xp: 0 };
+          {TIER_ORDER.map(tier => {
+            const tc = (cfg.tierConfig || DEF_TIER_CONFIG)[tier] || {
+              coins: 0,
+              xp: 0,
+            };
             return (
               <div key={tier} className='flex items-center gap-2'>
                 <span
@@ -105,7 +114,9 @@ export default function SettingsTab(): React.ReactElement {
                   aria-label={`${tier} coins`}
                   value={tc.coins}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const n: Record<string, TierConfig> = structuredClone(cfg.tierConfig || DEF_TIER_CONFIG);
+                    const n: Record<string, TierConfig> = structuredClone(
+                      cfg.tierConfig || DEF_TIER_CONFIG
+                    );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     const v = Number(e.target.value);
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
@@ -120,7 +131,9 @@ export default function SettingsTab(): React.ReactElement {
                   aria-label={`${tier} XP`}
                   value={tc.xp}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const n: Record<string, TierConfig> = structuredClone(cfg.tierConfig || DEF_TIER_CONFIG);
+                    const n: Record<string, TierConfig> = structuredClone(
+                      cfg.tierConfig || DEF_TIER_CONFIG
+                    );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
                     const v = Number(e.target.value);
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
@@ -177,7 +190,12 @@ export default function SettingsTab(): React.ReactElement {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               if (!e.target.value) return;
               const parts = e.target.value.split(':').map(Number);
-              if (parts.length < 2 || !Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) return;
+              if (
+                parts.length < 2 ||
+                !Number.isFinite(parts[0]) ||
+                !Number.isFinite(parts[1])
+              )
+                return;
               const mins = parts[0] * 60 + parts[1];
               update({ ...cfg, bedtime: mins });
             }}
@@ -251,7 +269,8 @@ export default function SettingsTab(): React.ReactElement {
         </div>
         <div className='flex flex-col gap-2'>
           {(() => {
-            const prefs: NotificationPrefs = cfg.notificationPrefs || DEF_NOTIFICATION_PREFS;
+            const prefs: NotificationPrefs =
+              cfg.notificationPrefs || DEF_NOTIFICATION_PREFS;
             const togglePref = (key: keyof NotificationPrefs) => {
               const next = structuredClone(prefs);
               (next as any)[key] = !(next as any)[key];
@@ -274,14 +293,24 @@ export default function SettingsTab(): React.ReactElement {
                   key={key}
                   className={`flex items-center justify-between py-1.5${isMain ? ' border-b border-qborder pb-2.5 mb-1' : ''}`}
                 >
-                  <span className={`text-[13px]${isMain ? ' font-bold text-qslate flex items-center gap-1.5' : ' text-qmuted pl-1'}`}>
-                    {isMain && <FontAwesomeIcon icon={faVolumeHigh} style={FA_ICON_STYLE} className='text-xs' />}
+                  <span
+                    className={`text-[13px]${isMain ? ' font-bold text-qslate flex items-center gap-1.5' : ' text-qmuted pl-1'}`}
+                  >
+                    {isMain && (
+                      <FontAwesomeIcon
+                        icon={faVolumeHigh}
+                        style={FA_ICON_STYLE}
+                        className='text-xs'
+                      />
+                    )}
                     {label}
                   </span>
                   <input
                     type='checkbox'
                     checked={!!prefs[key]}
-                    onChange={() => { togglePref(key); }}
+                    onChange={() => {
+                      togglePref(key);
+                    }}
                     disabled={!isMain && !prefs.soundEnabled}
                     className='w-[18px] h-[18px] accent-qteal cursor-pointer'
                   />
@@ -290,33 +319,6 @@ export default function SettingsTab(): React.ReactElement {
             });
           })()}
         </div>
-      </div>
-      <div className='bg-qyellow rounded-card p-4 mb-4'>
-        <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
-          <FontAwesomeIcon icon={faTriangleExclamation} style={FA_ICON_STYLE} />
-          Error Reporting
-        </div>
-        <div className='text-[13px] text-qmuted mb-3'>
-          Help improve LootBound by sending anonymous error reports.
-        </div>
-        <label className='flex items-center justify-between py-1.5'>
-          <span className='text-[13px] text-qslate font-semibold'>
-            Send error reports
-          </span>
-          <input
-            type='checkbox'
-            checked={localStorage.getItem('lootbound-sentry-enabled') !== 'false'}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const enabled = e.target.checked;
-              localStorage.setItem('lootbound-sentry-enabled', String(enabled));
-              const client = Sentry.getClient();
-              if (client) {
-                client.getOptions().enabled = enabled;
-              }
-            }}
-            className='w-[18px] h-[18px] accent-qteal cursor-pointer'
-          />
-        </label>
       </div>
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='text-xs text-qmuted'>
@@ -330,16 +332,20 @@ export default function SettingsTab(): React.ReactElement {
           Feedback
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Share feedback, request features, and vote on ideas.
+          Found a bug or have an idea? Visit our discussions board to share
+          feedback, request features, and vote on ideas.
         </div>
         <a
-          href={FEEDBACK_URL}
+          href={DISCUSSIONS_URL}
           target='_blank'
           rel='noopener noreferrer'
           className='inline-flex items-center gap-2 bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body no-underline'
         >
-          Share Feedback
-          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className='text-xs' />
+          Open Discussions
+          <FontAwesomeIcon
+            icon={faArrowUpRightFromSquare}
+            className='text-xs'
+          />
         </a>
       </div>
     </div>

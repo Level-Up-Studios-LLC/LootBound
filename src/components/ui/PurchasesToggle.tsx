@@ -34,25 +34,29 @@ export default function PurchasesToggle(
         </span>
         <FontAwesomeIcon
           icon={faChevronRight}
-          className={'text-[9px] text-qmuted transition-transform' + (props.isOpen ? ' rotate-90' : '')}
+          className={
+            'text-[9px] text-qmuted transition-transform' +
+            (props.isOpen ? ' rotate-90' : '')
+          }
         />
       </button>
       {props.isOpen && (
         <div className='mt-2'>
-          {props.redeems.slice().reverse().map((r, i) => {
-            return (
-              <div
-                key={`${r.rewardId}-${r.date}-${i}`}
-                className='flex justify-between items-center rounded-badge px-2.5 py-1.5 mb-1 text-[11px] bg-white/60'
-              >
-                <span className='text-qslate'>{r.name}</span>
-                <span className='text-qcoral font-semibold'>
-                  -{r.cost}
-                </span>
-                <span className='text-qmuted'>{r.date}</span>
-              </div>
-            );
-          })}
+          {props.redeems
+            .slice()
+            .reverse()
+            .map((r, i) => {
+              return (
+                <div
+                  key={`${r.rewardId}-${r.date}-${i}`}
+                  className='flex justify-between items-center rounded-badge px-2.5 py-1.5 mb-1 text-[11px] bg-white/60'
+                >
+                  <span className='text-qslate'>{r.name}</span>
+                  <span className='text-qcoral font-semibold'>-{r.cost}</span>
+                  <span className='text-qmuted'>{r.date}</span>
+                </div>
+              );
+            })}
         </div>
       )}
     </div>

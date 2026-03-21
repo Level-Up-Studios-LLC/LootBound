@@ -61,7 +61,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
 
     const startAuthListener = () => {
       if (disposed) return;
-      unsub = onAuthChange((user) => {
+      unsub = onAuthChange(user => {
         if (disposed) return;
         setAuthUser(user);
         setAuthLoading(false);
@@ -73,19 +73,21 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       });
     };
 
-    handleGoogleRedirectResult().then((code) => {
-      if (code) {
-        setLastFamilyCode(code);
-        setJustSignedIn(true);
-      }
-    }).catch((err: any) => {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setAuthError(err.message || 'Google sign-in failed');
-        Sentry.captureException(err, { tags: { action: 'google-redirect' } });
-      }
-    }).finally(() => {
-      startAuthListener();
-    });
+    handleGoogleRedirectResult()
+      .then(code => {
+        if (code) {
+          setLastFamilyCode(code);
+          setJustSignedIn(true);
+        }
+      })
+      .catch((err: any) => {
+        if (err.code !== 'auth/popup-closed-by-user') {
+          setAuthError(err.message || 'Google sign-in failed');
+        }
+      })
+      .finally(() => {
+        startAuthListener();
+      });
 
     return () => {
       disposed = true;
@@ -135,7 +137,10 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   };
 
-  const doSignUp = async (email: string, password: string): Promise<string | null> => {
+  const doSignUp = async (
+    email: string,
+    password: string
+  ): Promise<string | null> => {
     setAuthError(null);
     try {
       const result = await signUpFamily(email, password);

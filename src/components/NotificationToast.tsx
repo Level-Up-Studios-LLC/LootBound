@@ -9,15 +9,23 @@ export default function NotificationToast(p: NotificationToastProps) {
   const isLevelUp = p.notif.type === 'levelup';
   const isStreak = p.notif.type === 'streak';
   const isSuccess = p.notif.type === 'success' || isLevelUp || isStreak;
-  const bg = isLevelUp ? 'bg-qpurple' : isStreak ? 'bg-gradient-to-r from-qcoral to-qpurple' : isSuccess ? 'bg-qteal' : 'bg-qcoral';
+  const bg = isLevelUp
+    ? 'bg-qpurple'
+    : isStreak
+      ? 'bg-gradient-to-r from-qcoral to-qpurple'
+      : isSuccess
+        ? 'bg-qteal'
+        : 'bg-qcoral';
   return (
     <div
       className={
         'fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-btn font-bold text-sm z-[1000] text-white shadow-lg animate-slide-up ' +
-        bg + (isLevelUp ? ' animate-confetti' : '')
+        bg +
+        (isLevelUp ? ' animate-confetti' : '')
       }
     >
-      {isLevelUp ? '🎉 ' : isStreak ? '🔥 ' : ''}{p.notif.msg}
+      {isLevelUp ? '🎉 ' : isStreak ? '🔥 ' : ''}
+      {p.notif.msg}
     </div>
   );
 }

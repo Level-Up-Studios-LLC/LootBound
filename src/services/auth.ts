@@ -32,7 +32,6 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase.ts';
-import * as Sentry from '@sentry/react';
 import {
   generateFamilyCode,
   registerFamilyCode,
@@ -48,7 +47,8 @@ export interface AuthUser {
 
 const appActionCodeSettings = () => {
   return {
-    url: (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
+    url:
+      (import.meta.env.VITE_APP_URL as string) || 'https://app.lootbound.com',
     handleCodeInApp: true,
   };
 };
@@ -79,22 +79,30 @@ export async function signUpFamily(
   const familyId = cred.user.uid;
 
   // Register parent member mapping
-  await setDoc(doc(db, 'parentMembers', familyId), {
-    familyId,
-  }, { merge: true });
+  await setDoc(
+    doc(db, 'parentMembers', familyId),
+    {
+      familyId,
+    },
+    { merge: true }
+  );
 
   // Generate and register family code
   const code = await generateFamilyCode();
   await registerFamilyCode(code, familyId);
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user, appActionCodeSettings()).catch((err) => {
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(err => {
     console.warn('Verification email failed:', err);
-    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
   });
 
   return {
-    user: { uid: cred.user.uid, familyId, email: cred.user.email ?? email, emailVerified: false },
+    user: {
+      uid: cred.user.uid,
+      familyId,
+      email: cred.user.email ?? email,
+      emailVerified: false,
+    },
     familyCode: code,
   };
 }
@@ -114,18 +122,26 @@ export async function joinFamilyByCode(
   const cred = await createUserWithEmailAndPassword(auth, email, password);
 
   // Map this parent to the existing family
-  await setDoc(doc(db, 'parentMembers', cred.user.uid), {
-    familyId,
-  }, { merge: true });
+  await setDoc(
+    doc(db, 'parentMembers', cred.user.uid),
+    {
+      familyId,
+    },
+    { merge: true }
+  );
 
   // Send verification email (fire-and-forget)
-  sendEmailVerification(cred.user, appActionCodeSettings()).catch((err) => {
+  sendEmailVerification(cred.user, appActionCodeSettings()).catch(err => {
     console.warn('Verification email failed:', err);
-    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
   });
 
   return {
-    user: { uid: cred.user.uid, familyId, email: cred.user.email ?? email, emailVerified: false },
+    user: {
+      uid: cred.user.uid,
+      familyId,
+      email: cred.user.email ?? email,
+      emailVerified: false,
+    },
     familyCode: code,
   };
 }
@@ -140,7 +156,12 @@ export async function signInFamily(
 ): Promise<AuthUser> {
   const cred = await signInWithEmailAndPassword(auth, email, password);
   const familyId = await resolveFamilyId(cred.user.uid);
-  return { uid: cred.user.uid, familyId, email: cred.user.email ?? email, emailVerified: cred.user.emailVerified };
+  return {
+    uid: cred.user.uid,
+    familyId,
+    email: cred.user.email ?? email,
+    emailVerified: cred.user.emailVerified,
+  };
 }
 
 /**
@@ -177,7 +198,11 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
   if (snap.exists()) return null;
 
   // New user — create family
-  await setDoc(doc(db, 'parentMembers', uid), { familyId: uid }, { merge: true });
+  await setDoc(
+    doc(db, 'parentMembers', uid),
+    { familyId: uid },
+    { merge: true }
+  );
   const code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
   return code;
@@ -198,18 +223,24 @@ export function onAuthChange(
   callback: (user: AuthUser | null) => void
 ): () => void {
   var seq = 0;
-  var unsub = onAuthStateChanged(auth, (user) => {
+  var unsub = onAuthStateChanged(auth, user => {
     var token = ++seq;
     if (user && !user.isAnonymous) {
-      resolveFamilyId(user.uid).then((familyId) => {
-        if (token !== seq) return;
-        callback({ uid: user.uid, familyId, email: user.email ?? '', emailVerified: user.emailVerified });
-      }).catch((err) => {
-        if (token !== seq) return;
-        console.error('resolveFamilyId failed:', err);
-        Sentry.captureException(err, { tags: { action: 'resolve-family-id' } });
-        callback(null);
-      });
+      resolveFamilyId(user.uid)
+        .then(familyId => {
+          if (token !== seq) return;
+          callback({
+            uid: user.uid,
+            familyId,
+            email: user.email ?? '',
+            emailVerified: user.emailVerified,
+          });
+        })
+        .catch(err => {
+          if (token !== seq) return;
+          console.error('resolveFamilyId failed:', err);
+          callback(null);
+        });
     } else {
       callback(null);
     }
@@ -368,7 +399,7 @@ export function getCurrentUid(): string | null {
 export function hasPasswordProvider(): boolean {
   const user = auth.currentUser;
   if (!user) return false;
-  return user.providerData.some((p) => p.providerId === 'password');
+  return user.providerData.some(p => p.providerId === 'password');
 }
 
 /** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */

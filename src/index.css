@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap');
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* New flat palette */
@@ -7,33 +7,33 @@
   --color-qsurface: #ffffff;
   --color-qcard: #ffffff;
   --color-qborder: #e0e0da;
-  --color-qmint: #B8F2E6;
+  --color-qmint: #b8f2e6;
   --color-qmint-dim: #d9f7ef;
-  --color-qteal: #4AC7A8;
+  --color-qteal: #4ac7a8;
   --color-qteal-dim: #c8f0e4;
-  --color-qyellow: #FFE08A;
+  --color-qyellow: #ffe08a;
   --color-qyellow-dim: #fff2c7;
-  --color-qcoral: #FF8C94;
+  --color-qcoral: #ff8c94;
   --color-qcoral-dim: #ffe0e3;
-  --color-qslate: #4B4E6D;
+  --color-qslate: #4b4e6d;
   --color-qslate-dim: #e8e8ee;
 
   /* Semantic aliases */
   --color-qgold: #e6a817;
   --color-qgold-dim: #fdf0c8;
-  --color-qgreen: #4AC7A8;
+  --color-qgreen: #4ac7a8;
   --color-qgreen-dim: #c8f0e4;
   --color-qblue: #5b9bd5;
   --color-qblue-dim: #d6e6f5;
   --color-qpurple: #8b7ec8;
   --color-qpurple-dim: #e4dff2;
-  --color-qpink: #FF8C94;
+  --color-qpink: #ff8c94;
   --color-qorange: #e8a44a;
   --color-qorange-dim: #f8e6cf;
   --color-qred: #e05a5a;
   --color-qred-dim: #f8d4d4;
   --color-qcyan: #5ec4d4;
-  --color-qtext: #4B4E6D;
+  --color-qtext: #4b4e6d;
   --color-qmuted: #7a7d96;
   --color-qdim: #a0a3b5;
   --color-qinput: #ffffff;
@@ -125,7 +125,6 @@ body,
 }
 
 @keyframes gentle-shake {
-
   0%,
   100% {
     transform: translateX(0);
@@ -163,7 +162,6 @@ body,
 }
 
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0);

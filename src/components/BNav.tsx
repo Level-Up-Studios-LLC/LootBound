@@ -19,7 +19,7 @@ export default function BNav(p: BNavProps) {
   if (ctx.curUser && ctx.curUser !== 'parent') {
     const total = ctx.todayTasks.length;
     let done = 0;
-    ctx.todayTasks.forEach((t) => {
+    ctx.todayTasks.forEach(t => {
       const entry = ctx.tLog[t.id];
       if (entry && !entry.rejected) done++;
     });
@@ -27,8 +27,8 @@ export default function BNav(p: BNavProps) {
   }
 
   return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-3 z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-      {p.tabs.map((t) => {
+    <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-3 z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]'>
+      {p.tabs.map(t => {
         const isActive = ctx.screen === t.id;
         const badge = t.id === 'tasks' ? missionBadge : 0;
         return (
@@ -43,7 +43,7 @@ export default function BNav(p: BNavProps) {
             }
           >
             <IconBadge icon={t.icon} badge={badge} />
-            <span className="text-xs font-semibold">{t.label}</span>
+            <span className='text-xs font-semibold'>{t.label}</span>
           </button>
         );
       })}

@@ -8,7 +8,6 @@ interface CreatePinPromptProps {
   onSkip: () => void;
 }
 
-
 export default function CreatePinPrompt(
   props: CreatePinPromptProps
 ): React.ReactElement {
@@ -29,36 +28,36 @@ export default function CreatePinPrompt(
   };
 
   return (
-    <div className="page-wrapper page-centered">
-      <div className="font-display text-5xl font-bold text-qslate tracking-wider mb-1">
+    <div className='page-wrapper page-centered'>
+      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
         LOOTBOUND
       </div>
-      <div className="font-display text-lg font-semibold mb-3">
-        <FontAwesomeIcon icon={faLock} className="mr-2" style={FA_ICON_STYLE} />
+      <div className='font-display text-lg font-semibold mb-3'>
+        <FontAwesomeIcon icon={faLock} className='mr-2' style={FA_ICON_STYLE} />
         Create a Parent PIN
       </div>
-      <div className="text-[13px] text-qmuted text-center mb-9 max-w-[280px]">
+      <div className='text-[13px] text-qmuted text-center mb-9 max-w-[280px]'>
         A PIN lets you quickly access the parent dashboard without entering your
         password each time.
       </div>
 
-      <div className="flex flex-col items-center gap-4 w-full max-w-[280px]">
+      <div className='flex flex-col items-center gap-4 w-full max-w-[280px]'>
         <input
-          type="password"
+          type='password'
           maxLength={6}
-          placeholder="New PIN (4+ digits)"
+          placeholder='New PIN (4+ digits)'
           value={pin}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setPin(e.target.value.replace(/[^0-9]/g, ''));
             setErr('');
           }}
-          className="quest-input text-center text-lg"
+          className='quest-input text-center text-lg'
           autoFocus
         />
         <input
-          type="password"
+          type='password'
           maxLength={6}
-          placeholder="Confirm PIN"
+          placeholder='Confirm PIN'
           value={confirm}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setConfirm(e.target.value.replace(/[^0-9]/g, ''));
@@ -67,27 +66,19 @@ export default function CreatePinPrompt(
           onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Enter') handleSubmit();
           }}
-          className="quest-input text-center text-lg"
+          className='quest-input text-center text-lg'
         />
 
-        {err && (
-          <div className="text-qcoral text-[13px]">{err}</div>
-        )}
+        {err && <div className='text-qcoral text-[13px]'>{err}</div>}
 
-        <button
-          onClick={handleSubmit}
-          className="btn-primary w-full mt-2"
-        >
+        <button onClick={handleSubmit} className='btn-primary w-full mt-2'>
           Set PIN
         </button>
 
-        <button
-          onClick={props.onSkip}
-          className="btn-ghost"
-        >
+        <button onClick={props.onSkip} className='btn-ghost'>
           Skip for now
         </button>
-        <div className="text-[11px] text-qdim text-center max-w-[260px]">
+        <div className='text-[11px] text-qdim text-center max-w-[260px]'>
           You can always create a PIN later in Settings. Without a PIN, you'll
           need to enter your password each time.
         </div>

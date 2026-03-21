@@ -12,7 +12,9 @@ interface FirestoreSyncDeps {
   familyId: string;
   loading: boolean;
   setCfg: (fn: (prev: Config | null) => Config | null) => void;
-  setAllU: (fn: (prev: Record<string, UserData>) => Record<string, UserData>) => void;
+  setAllU: (
+    fn: (prev: Record<string, UserData>) => Record<string, UserData>
+  ) => void;
 }
 
 /**
@@ -32,9 +34,9 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     let dead = false;
 
     // --- Config listener ---
-    const unsubConfig = onConfigSnapshot(familyId, (fc) => {
+    const unsubConfig = onConfigSnapshot(familyId, fc => {
       if (dead) return;
-      setCfg((prev) => {
+      setCfg(prev => {
         if (!prev || !fc) return prev;
         return {
           ...prev,
@@ -50,17 +52,19 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
             fc.weeklyResetDay != null ? fc.weeklyResetDay : prev.weeklyResetDay,
           cooldown: fc.cooldown != null ? fc.cooldown : prev.cooldown,
           familyCode: fc.familyCode || prev.familyCode,
-          parentName:
-            fc.parentName != null ? fc.parentName : prev.parentName,
-          notificationPrefs: fc.notificationPrefs != null ? fc.notificationPrefs : prev.notificationPrefs,
+          parentName: fc.parentName != null ? fc.parentName : prev.parentName,
+          notificationPrefs:
+            fc.notificationPrefs != null
+              ? fc.notificationPrefs
+              : prev.notificationPrefs,
         };
       });
     });
 
     // --- Children listener ---
-    const unsubChildren = onChildrenSnapshot(familyId, (list) => {
+    const unsubChildren = onChildrenSnapshot(familyId, list => {
       if (dead) return;
-      setCfg((prev) => {
+      setCfg(prev => {
         if (!prev) return prev;
         return {
           ...prev,
@@ -68,14 +72,14 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
         };
       });
       // Sync per-child data listeners
-      syncChildDataListeners(list.map((c) => c.id));
+      syncChildDataListeners(list.map(c => c.id));
     });
 
     // --- Tasks listener ---
-    const unsubTasks = onTasksSnapshot(familyId, (list) => {
+    const unsubTasks = onTasksSnapshot(familyId, list => {
       if (dead) return;
       const tasksMap: Record<string, Task[]> = {};
-      list.forEach((t) => {
+      list.forEach(t => {
         const cid = t.childId || '';
         if (!tasksMap[cid]) tasksMap[cid] = [];
         tasksMap[cid].push({
@@ -88,16 +92,16 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
           dueDay: t.dueDay,
         });
       });
-      setCfg((prev) => {
+      setCfg(prev => {
         if (!prev) return prev;
         return { ...prev, tasks: tasksMap };
       });
     });
 
     // --- Rewards listener ---
-    const unsubRewards = onRewardsSnapshot(familyId, (list) => {
+    const unsubRewards = onRewardsSnapshot(familyId, list => {
       if (dead) return;
-      setCfg((prev) => {
+      setCfg(prev => {
         if (!prev) return prev;
         return {
           ...prev,
@@ -112,9 +116,9 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
       childUnsubsRef.current[childId] = onChildDataSnapshot(
         familyId,
         childId,
-        (data) => {
+        data => {
           if (dead) return;
-          setAllU((prev) => {
+          setAllU(prev => {
             if (!data) {
               const next = { ...prev };
               delete next[childId];
@@ -128,16 +132,16 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
 
     const syncChildDataListeners = (childIds: string[]) => {
       const idSet: Record<string, boolean> = {};
-      childIds.forEach((id) => {
+      childIds.forEach(id => {
         idSet[id] = true;
         attachChildDataListener(id);
       });
       // Remove listeners and stale data for children that no longer exist
-      Object.keys(childUnsubsRef.current).forEach((id) => {
+      Object.keys(childUnsubsRef.current).forEach(id => {
         if (!idSet[id]) {
           childUnsubsRef.current[id]();
           delete childUnsubsRef.current[id];
-          setAllU((prev) => {
+          setAllU(prev => {
             const next = { ...prev };
             delete next[id];
             return next;
@@ -147,11 +151,9 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     };
 
     // Attach childData listeners for current children
-    setCfg((prev) => {
+    setCfg(prev => {
       if (prev && prev.children) {
-        syncChildDataListeners(
-          prev.children.map((c) => c.id)
-        );
+        syncChildDataListeners(prev.children.map(c => c.id));
       }
       return prev; // no mutation — just reading
     });
@@ -163,7 +165,7 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
       unsubTasks();
       unsubRewards();
       // Clean up all child data listeners
-      Object.keys(childUnsubsRef.current).forEach((id) => {
+      Object.keys(childUnsubsRef.current).forEach(id => {
         childUnsubsRef.current[id]();
       });
       childUnsubsRef.current = {};

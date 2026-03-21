@@ -13,7 +13,7 @@ export default function ApprovalsTab(): React.ReactElement {
   const allU = ctx.allU;
 
   const items: ApprovalItem[] = [];
-  children.forEach((c) => {
+  children.forEach(c => {
     const udata = allU[c.id] || freshUser();
     (udata.pendingRedemptions || []).forEach((p, i) => {
       items.push({ uid: c.id, child: c, pending: p, idx: i });
@@ -23,9 +23,9 @@ export default function ApprovalsTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        When children redeem high-value loot (above the approval threshold)
-        or loot flagged for approval, their requests appear here. Approve to
-        deduct coins and grant the loot, or deny to cancel.
+        When children redeem high-value loot (above the approval threshold) or
+        loot flagged for approval, their requests appear here. Approve to deduct
+        coins and grant the loot, or deny to cancel.
       </div>
       {items.length === 0 && (
         <EmptyState

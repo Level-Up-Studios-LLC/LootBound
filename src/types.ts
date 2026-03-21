@@ -129,7 +129,14 @@ export interface ApprovalItem {
 
 export interface InAppNotification {
   id: string;
-  type: 'mission_complete' | 'mission_rejected' | 'loot_request' | 'loot_approved' | 'loot_denied' | 'level_up' | 'streak';
+  type:
+    | 'mission_complete'
+    | 'mission_rejected'
+    | 'loot_request'
+    | 'loot_approved'
+    | 'loot_denied'
+    | 'level_up'
+    | 'streak';
   title: string;
   body: string;
   childId?: string;

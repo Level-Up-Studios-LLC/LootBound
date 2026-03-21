@@ -8,7 +8,7 @@
  */
 
 var SOUND_KEYS = ['success', 'error', 'approval', 'levelup', 'streak'] as const;
-export type SoundKey = typeof SOUND_KEYS[number];
+export type SoundKey = (typeof SOUND_KEYS)[number];
 
 var SOUND_URLS: Record<SoundKey, string> = {
   success: '/sounds/success.mp3',
@@ -21,7 +21,8 @@ var SOUND_URLS: Record<SoundKey, string> = {
 var audioElements: Record<string, HTMLAudioElement> = {};
 var unlocked = false;
 
-var SILENT_MP3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAABhgFJSdkAAAAAAAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAABhgFJSdkAAAAAAAAAAAAAAAAAAAAA';
+var SILENT_MP3 =
+  'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAABhgFJSdkAAAAAAAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAABhgFJSdkAAAAAAAAAAAAAAAAAAAAA';
 
 export function unlockAudio(): void {
   if (unlocked) return;
@@ -29,8 +30,12 @@ export function unlockAudio(): void {
   try {
     var silent = new Audio(SILENT_MP3);
     silent.volume = 0.01;
-    silent.play().catch(function () { /* ignore */ });
-  } catch (_e) { /* ignore */ }
+    silent.play().catch(function () {
+      /* ignore */
+    });
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 export function preloadSounds(): void {
@@ -53,13 +58,20 @@ export function playSound(key: SoundKey): void {
   }
   audio.currentTime = 0;
   audio.volume = 1;
-  audio.play().catch(function () { /* ignore */ });
+  audio.play().catch(function () {
+    /* ignore */
+  });
 }
 
 export function notifTypeToSound(type: string): SoundKey {
   if (type === 'mission_complete') return 'success';
   if (type === 'mission_rejected') return 'error';
-  if (type === 'loot_request' || type === 'loot_approved' || type === 'loot_denied') return 'approval';
+  if (
+    type === 'loot_request' ||
+    type === 'loot_approved' ||
+    type === 'loot_denied'
+  )
+    return 'approval';
   if (type === 'level_up') return 'levelup';
   if (type === 'streak') return 'streak';
   return 'success';
