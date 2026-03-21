@@ -31,7 +31,7 @@ import {
   deleteParentMember,
   onParentMemberSnapshot,
 } from '../../services/firestoreStorage.ts';
-import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
+
 import { copyToClipboard } from '../../services/platform.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
@@ -243,15 +243,6 @@ export default function AccountTab(): React.ReactElement | null {
         return;
       }
 
-      // Delete photos (best-effort, runs after irreversible teardown)
-      try {
-        await deleteAllFamilyPhotos(ctx.familyId);
-      } catch (photoErr) {
-        console.warn('Photo cleanup failed:', photoErr);
-        Sentry.captureException(photoErr, {
-          tags: { action: 'delete-family-photos' },
-        });
-      }
     } catch (err: any) {
       console.error('Failed to delete family:', err);
       Sentry.captureException(err, { tags: { action: 'delete-family' } });
