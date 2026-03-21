@@ -205,7 +205,11 @@ export default function AccountTab(): React.ReactElement | null {
 
   const handleDeleteFamily = async () => {
     setDeleteErr('');
-    if (hasPasswordProvider() && !deletePass) {
+    if (!hasPasswordProvider()) {
+      setDeleteErr('Please set a password on your account before deleting.');
+      return;
+    }
+    if (!deletePass) {
       setDeleteErr('Enter your password to confirm deletion');
       return;
     }
@@ -218,9 +222,7 @@ export default function AccountTab(): React.ReactElement | null {
     }
 
     try {
-      if (hasPasswordProvider()) {
-        await reauthenticate(deletePass);
-      }
+      await reauthenticate(deletePass);
 
       // Delete Firestore data, then auth account
       // Auth must come last because Firestore security rules require an active session.
@@ -262,7 +264,11 @@ export default function AccountTab(): React.ReactElement | null {
 
   const handleLeaveFamily = async () => {
     setDeleteErr('');
-    if (hasPasswordProvider() && !deletePass) {
+    if (!hasPasswordProvider()) {
+      setDeleteErr('Please set a password on your account before leaving.');
+      return;
+    }
+    if (!deletePass) {
       setDeleteErr('Enter your password to confirm');
       return;
     }
@@ -275,9 +281,8 @@ export default function AccountTab(): React.ReactElement | null {
     }
 
     try {
-      if (hasPasswordProvider()) {
-        await reauthenticate(deletePass);
-      }
+      await reauthenticate(deletePass);
+
       // Remove own parentMembers doc, then auth account
       // Auth must come last because Firestore security rules require an active session.
       await deleteParentMember(uid);
@@ -683,7 +688,7 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
           {isOwner
-            ? 'Permanently delete your family account, all children, missions, loot, photos, and data. This cannot be undone.'
+            ? 'Permanently delete your family account, all children, missions, loot, and data. Photos will be cleaned up automatically. This cannot be undone.'
             : 'Remove yourself from this family. Your login will be deleted. The family and its data will remain for other members.'}
         </div>
         <button
@@ -700,7 +705,7 @@ export default function AccountTab(): React.ReactElement | null {
           title={isOwner ? 'Delete Family Account?' : 'Leave Family?'}
           message={
             isOwner
-              ? 'This will permanently delete your entire family account including all children, missions, loot, coins, photos, and data. Your login will be removed and you will not be able to recover any data.'
+              ? 'This will permanently delete your entire family account including all children, missions, loot, coins, and data. Your login will be removed and you will not be able to recover any data. Photos will be cleaned up automatically.'
               : "This will remove your account from this family. You will no longer be able to access this family's data. The family will remain for other members."
           }
           warning={isOwner ? 'THIS ACTION CANNOT BE UNDONE.' : undefined}
