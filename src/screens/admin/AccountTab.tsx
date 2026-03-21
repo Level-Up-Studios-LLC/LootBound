@@ -307,6 +307,10 @@ export default function AccountTab(): React.ReactElement | null {
     try {
       await reauthenticate(deletePass);
 
+      // Close dialog, show full-screen overlay
+      setShowDeleteConfirm(false);
+      setDeletionInProgress(true);
+
       // Remove own parentMembers doc, then auth account
       // Auth must come last because Firestore security rules require an active session.
       await deleteParentMember(uid);
@@ -324,6 +328,7 @@ export default function AccountTab(): React.ReactElement | null {
         setDeleteErr(
           'Your membership was removed, but we couldn\u2019t delete your login. Please sign out and contact support.'
         );
+        setDeletionInProgress(false);
         setDeleteBusy(false);
         return;
       }
@@ -339,6 +344,7 @@ export default function AccountTab(): React.ReactElement | null {
       } else {
         setDeleteErr('Failed to leave family. Please try again.');
       }
+      setDeletionInProgress(false);
       setDeleteBusy(false);
       return;
     }
