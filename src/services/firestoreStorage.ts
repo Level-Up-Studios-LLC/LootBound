@@ -31,6 +31,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
+import * as Sentry from '@sentry/react';
 import { db } from './firebase.ts';
 import type { UserData } from '../types.ts';
 
@@ -157,10 +158,14 @@ export async function deleteParentMember(uid: string): Promise<void> {
 
 export function onParentMemberSnapshot(
   uid: string,
-  callback: (data: ParentMember | null) => void
+  callback: (data: ParentMember | null) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(doc(db, 'parentMembers', uid), (snap) => {
     callback(snap.exists() ? (snap.data() as ParentMember) : null);
+  }, (err) => {
+    Sentry.captureException(err, { tags: { action: 'parent-member-snapshot' } });
+    if (onError) onError(err);
   });
 }
 
@@ -462,16 +467,21 @@ export async function batchSeedFamily(
 
 export function onConfigSnapshot(
   familyId: string,
-  callback: (data: FamilyConfig | null) => void
+  callback: (data: FamilyConfig | null) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(doc(db, 'families', familyId), (snap) => {
     callback(snap.exists() ? (snap.data() as FamilyConfig) : null);
+  }, (err) => {
+    Sentry.captureException(err, { tags: { action: 'config-snapshot' } });
+    if (onError) onError(err);
   });
 }
 
 export function onChildrenSnapshot(
   familyId: string,
-  callback: (list: ChildProfile[]) => void
+  callback: (list: ChildProfile[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(
     collection(db, 'families', familyId, 'children'),
@@ -481,13 +491,18 @@ export function onChildrenSnapshot(
         list.push({ id: d.id, ...d.data() } as ChildProfile);
       });
       callback(list);
+    },
+    (err) => {
+      Sentry.captureException(err, { tags: { action: 'children-snapshot' } });
+      if (onError) onError(err);
     }
   );
 }
 
 export function onTasksSnapshot(
   familyId: string,
-  callback: (list: TaskDef[]) => void
+  callback: (list: TaskDef[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(
     collection(db, 'families', familyId, 'tasks'),
@@ -497,13 +512,18 @@ export function onTasksSnapshot(
         list.push({ id: d.id, ...d.data() } as TaskDef);
       });
       callback(list);
+    },
+    (err) => {
+      Sentry.captureException(err, { tags: { action: 'tasks-snapshot' } });
+      if (onError) onError(err);
     }
   );
 }
 
 export function onRewardsSnapshot(
   familyId: string,
-  callback: (list: RewardDef[]) => void
+  callback: (list: RewardDef[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(
     collection(db, 'families', familyId, 'rewards'),
@@ -513,6 +533,10 @@ export function onRewardsSnapshot(
         list.push({ id: d.id, ...d.data() } as RewardDef);
       });
       callback(list);
+    },
+    (err) => {
+      Sentry.captureException(err, { tags: { action: 'rewards-snapshot' } });
+      if (onError) onError(err);
     }
   );
 }
@@ -520,12 +544,17 @@ export function onRewardsSnapshot(
 export function onChildDataSnapshot(
   familyId: string,
   childId: string,
-  callback: (data: ChildData | null) => void
+  callback: (data: ChildData | null) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(
     doc(db, 'families', familyId, 'childData', childId),
     (snap) => {
       callback(snap.exists() ? (snap.data() as ChildData) : null);
+    },
+    (err) => {
+      Sentry.captureException(err, { tags: { action: 'child-data-snapshot', childId } });
+      if (onError) onError(err);
     }
   );
 }
@@ -577,7 +606,8 @@ export async function markNotificationRead(
 
 export function onNotificationsSnapshot(
   familyId: string,
-  callback: (list: (InAppNotificationDoc & { id: string })[]) => void
+  callback: (list: (InAppNotificationDoc & { id: string })[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   const q = query(
     collection(db, 'families', familyId, 'notifications'),
@@ -591,6 +621,9 @@ export function onNotificationsSnapshot(
       list.push({ id: d.id, ...d.data() } as InAppNotificationDoc & { id: string });
     });
     callback(list);
+  }, (err) => {
+    Sentry.captureException(err, { tags: { action: 'notifications-snapshot' } });
+    if (onError) onError(err);
   });
 }
 

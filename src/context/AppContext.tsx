@@ -522,6 +522,7 @@ export function AppProvider(props: {
     if (!familyId || loading || curUser !== 'parent') return;
     cleanupOldNotifications(familyId).catch((err) => {
       console.warn('Notification cleanup failed:', err);
+      Sentry.captureException(err, { level: 'warning', tags: { action: 'cleanup-old-notifications' } });
     });
   }, [familyId, loading, curUser]);
 

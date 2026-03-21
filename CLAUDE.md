@@ -151,7 +151,7 @@ Configurable reset day (default Sunday). On reset:
 - **Loot Management** — CRUD for rewards with cost, icon, limits, approval flags
 - **Children Management** — add/remove children, manage profiles and PINs
 - **Settings** — tier coin/XP values, approval threshold, parent PIN, bedtime, weekly reset day, cooldown
-- **Feedback** — in-app feedback submission
+- **Feedback** — links to Canny.io board for feedback, feature requests, and voting
 
 ### Abuse Prevention
 
@@ -182,7 +182,6 @@ families/{familyId}              — Family config
 
 parentMembers/{uid}              — Per-parent data (familyId, PIN, name)
 familyCodes/{code}               — Maps family codes to family IDs
-feedback/{docId}                 — User-submitted feedback
 ```
 
 ### Parent Member (Firestore document: `parentMembers/{uid}`)

@@ -5,6 +5,7 @@
  * falls back to browser APIs on web.
  */
 
+import * as Sentry from '@sentry/react';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { Clipboard } from '@capacitor/clipboard';
@@ -39,12 +40,16 @@ export async function setStorage(key: string, val: string): Promise<void> {
   if (isNative()) {
     try {
       await Preferences.set({ key: key, value: val });
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      Sentry.captureException(_e, { level: 'warning', tags: { action: 'session-storage', op: 'set' } });
+    }
     return;
   }
   try {
     sessionStorage.setItem(key, val);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    Sentry.captureException(_e, { level: 'warning', tags: { action: 'session-storage', op: 'set' } });
+  }
 }
 
 export async function removeStorage(key: string): Promise<void> {
@@ -83,12 +88,16 @@ export async function setPersistentStorage(key: string, val: string): Promise<vo
   if (isNative()) {
     try {
       await Preferences.set({ key: key, value: val });
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      Sentry.captureException(_e, { level: 'warning', tags: { action: 'local-storage', op: 'set' } });
+    }
     return;
   }
   try {
     localStorage.setItem(key, val);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    Sentry.captureException(_e, { level: 'warning', tags: { action: 'local-storage', op: 'set' } });
+  }
 }
 
 export async function removePersistentStorage(key: string): Promise<void> {

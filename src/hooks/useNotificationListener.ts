@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import * as Sentry from '@sentry/react';
 import type { NotificationPrefs } from '../types.ts';
 import { DEF_NOTIFICATION_PREFS } from '../constants.ts';
 import {
@@ -58,7 +59,7 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
             if (prefs.soundEnabled) {
               playSound(notifTypeToSound(n.type));
             }
-            markNotificationRead(deps.familyId, n.id).catch(function () { /* ignore */ });
+            markNotificationRead(deps.familyId, n.id).catch(function (err) { Sentry.captureException(err, { level: 'warning', tags: { action: 'mark-notification-read' } }); });
             seenRef.current.add(n.id);
           }
         });
@@ -81,7 +82,7 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
           playSound(notifTypeToSound(n.type));
         }
 
-        markNotificationRead(deps.familyId, n.id).catch(function () { /* ignore */ });
+        markNotificationRead(deps.familyId, n.id).catch(function (err) { Sentry.captureException(err, { level: 'warning', tags: { action: 'mark-notification-read' } }); });
       });
     });
 

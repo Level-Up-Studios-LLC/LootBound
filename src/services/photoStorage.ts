@@ -14,6 +14,7 @@ import {
   deleteObject,
   listAll,
 } from 'firebase/storage';
+import * as Sentry from '@sentry/react';
 import { storage } from './firebase.ts';
 import { signInAnonymousKid } from './auth.ts';
 
@@ -79,6 +80,7 @@ export async function deleteAllChildPhotos(
       (e as Error & { code?: string }).code !== 'storage/object-not-found'
     ) {
       console.warn('Failed to delete child photos:', e);
+      Sentry.captureException(e, { level: 'warning', tags: { action: 'delete-child-photos' } });
     }
   }
 }
@@ -134,6 +136,7 @@ export async function deleteAllFamilyPhotos(
       (e as Error & { code?: string }).code !== 'storage/object-not-found'
     ) {
       console.warn('Failed to delete family photos:', e);
+      Sentry.captureException(e, { level: 'warning', tags: { action: 'delete-family-photos' } });
     }
   }
 }
