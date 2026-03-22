@@ -398,9 +398,14 @@ export async function deleteAuthAccount(password?: string): Promise<void> {
   } catch (err: any) {
     if (err.code === 'auth/requires-recent-login') {
       if (!password || !user.email) throw err;
-      const cred = EmailAuthProvider.credential(user.email, password);
-      await reauthenticateWithCredential(user, cred);
-      await user.delete();
+      try {
+        const cred = EmailAuthProvider.credential(user.email, password);
+        await reauthenticateWithCredential(user, cred);
+        await user.delete();
+      } catch (retryErr) {
+        Sentry.captureException(retryErr, { tags: { action: 'delete-auth-retry' } });
+        throw retryErr;
+      }
     } else {
       throw err;
     }
