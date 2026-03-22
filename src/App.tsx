@@ -262,6 +262,7 @@ function AppRouter() {
   };
 
   const [parentPin, setParentPin] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
   const [storedKid, setStoredKid] = useState<string | null | undefined>(
@@ -424,18 +425,18 @@ function AppRouter() {
           <div className='flex flex-col gap-3 w-full max-w-[260px]'>
             <button
               onClick={async () => {
-                const ok = await auth.doSendVerification();
-                if (ok) {
-                  // Show brief confirmation
-                  const el = document.getElementById('resend-status');
-                  if (el) el.textContent = 'Email sent!';
+                try {
+                  const ok = await auth.doSendVerification();
+                  setResendStatus(ok ? 'Email sent!' : 'Failed to send');
+                } catch {
+                  setResendStatus('Failed to send');
                 }
               }}
               className='btn-primary'
             >
               Resend Verification Email
             </button>
-            <div id='resend-status' className='text-qteal text-[13px] text-center min-h-[20px]'></div>
+            <div className='text-qteal text-[13px] text-center min-h-[20px]'>{resendStatus}</div>
             <button
               onClick={() => {
                 auth.doRefreshVerification();
