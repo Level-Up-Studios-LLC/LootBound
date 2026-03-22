@@ -263,7 +263,7 @@ function AppRouter() {
 
   const [parentPin, setParentPin] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
-  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyAction, setVerifyAction] = useState<'send' | 'check' | null>(null);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
   useEffect(() => {
@@ -428,28 +428,35 @@ function AppRouter() {
           </div>
           <div className='flex flex-col gap-3 w-full max-w-[260px]'>
             <button
-              disabled={verifyLoading}
+              disabled={verifyAction !== null}
               onClick={async () => {
-                setVerifyLoading(true);
+                setVerifyAction('send');
                 try {
                   const ok = await auth.doSendVerification();
                   setResendStatus(ok ? 'Email sent!' : 'Failed to send');
                 } catch {
                   setResendStatus('Failed to send');
                 } finally {
-                  setVerifyLoading(false);
+                  setVerifyAction(null);
                 }
               }}
               className='btn-primary'
             >
-              {verifyLoading ? 'Sending...' : 'Resend Verification Email'}
+              {verifyAction === 'send' ? 'Sending...' : 'Resend Verification Email'}
             </button>
-            <div className='text-qteal text-[13px] text-center min-h-[20px]'>{resendStatus}</div>
+            <div
+              role='status'
+              aria-live='polite'
+              aria-atomic='true'
+              className='text-qteal text-[13px] text-center min-h-[20px]'
+            >
+              {resendStatus}
+            </div>
             <button
-              disabled={verifyLoading}
+              disabled={verifyAction !== null}
               onClick={async () => {
                 setResendStatus('Checking verification status...');
-                setVerifyLoading(true);
+                setVerifyAction('check');
                 try {
                   const verified = await auth.doRefreshVerification();
                   if (!verified) {
@@ -460,21 +467,22 @@ function AppRouter() {
                 } catch {
                   setResendStatus('Could not check verification status. Please try again.');
                 } finally {
-                  setVerifyLoading(false);
+                  setVerifyAction(null);
                 }
               }}
               className='btn-ghost'
             >
-              {verifyLoading ? 'Checking...' : "I've Verified My Email"}
+              {verifyAction === 'check' ? 'Checking...' : "I've Verified My Email"}
             </button>
             <button
               onClick={async () => {
                 try {
                   await auth.doSignOut();
+                  auth.clearJustSignedIn();
                   setParentVerified(false);
                   setParentPin(null);
                   setShowCreatePin(false);
-                  setVerifyLoading(false);
+                  setVerifyAction(null);
                   setResendStatus(null);
                   setRole(null);
                 } catch {
