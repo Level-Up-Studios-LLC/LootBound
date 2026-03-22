@@ -17,6 +17,7 @@ import {
 import {
   signInAnonymousKid,
   getCurrentUid,
+  hasPasswordProvider,
   applyVerificationCode,
 } from './services/auth.ts';
 import { getStorage, setStorage, removeStorage } from './services/platform.ts';
@@ -400,6 +401,60 @@ function AppRouter() {
             setRole(null);
           }}
         />
+      );
+    }
+
+    // Email verification gate — block unverified email+password users
+    if (
+      hasPasswordProvider() &&
+      !auth.authUser.emailVerified
+    ) {
+      return (
+        <div className='page-wrapper page-centered'>
+          <div className='text-5xl mb-5'>
+            <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
+          </div>
+          <div className='font-display text-2xl font-bold mb-3 text-qslate'>
+            Verify Your Email
+          </div>
+          <div className='text-sm text-qmuted text-center mb-6 max-w-[300px]'>
+            We sent a verification link to <strong>{auth.authUser.email}</strong>.
+            Please check your inbox and click the link to continue.
+          </div>
+          <div className='flex flex-col gap-3 w-full max-w-[260px]'>
+            <button
+              onClick={async () => {
+                const ok = await auth.doSendVerification();
+                if (ok) {
+                  // Show brief confirmation
+                  const el = document.getElementById('resend-status');
+                  if (el) el.textContent = 'Email sent!';
+                }
+              }}
+              className='btn-primary'
+            >
+              Resend Verification Email
+            </button>
+            <div id='resend-status' className='text-qteal text-[13px] text-center min-h-[20px]'></div>
+            <button
+              onClick={() => {
+                auth.doRefreshVerification();
+              }}
+              className='btn-ghost'
+            >
+              I've Verified My Email
+            </button>
+            <button
+              onClick={() => {
+                auth.doSignOut();
+                setRole(null);
+              }}
+              className='btn-ghost text-qmuted'
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
       );
     }
 

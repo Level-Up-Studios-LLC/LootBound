@@ -492,46 +492,6 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
       </div>
 
-      {/* Email Verification Banner */}
-      {auth.authUser && !auth.authUser.emailVerified && (
-        <div className='bg-qcoral-dim rounded-card p-4 mb-4'>
-          <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
-            <FontAwesomeIcon icon={faEnvelope} style={FA_ICON_STYLE} />
-            Verify Your Email
-          </div>
-          <div className='text-[13px] text-qmuted mb-3'>
-            Please verify your email address to secure your account. Check your
-            inbox for a verification link.
-          </div>
-          <div className='flex gap-2'>
-            <button
-              onClick={async () => {
-                setVerifyBusy(true);
-                const ok = await auth.doSendVerification();
-                setVerifyBusy(false);
-                if (ok) setVerifySent(true);
-              }}
-              disabled={verifyBusy || verifySent}
-              className='bg-qteal text-white rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body text-[13px] disabled:opacity-60'
-            >
-              {verifySent
-                ? 'Email Sent!'
-                : verifyBusy
-                  ? 'Sending...'
-                  : 'Resend Verification'}
-            </button>
-            <button
-              onClick={() => {
-                auth.doRefreshVerification();
-              }}
-              className='bg-qslate-dim text-qslate rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body text-[13px]'
-            >
-              I've Verified
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Parent PIN */}
       <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
