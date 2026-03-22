@@ -212,12 +212,15 @@ export default function AccountTab(): React.ReactElement | null {
   const isOwner = currentUid === ctx.familyId;
 
   // Reauthenticate using password or Google, show errors in dialog
-  const doReauth = async (method: 'password' | 'google'): Promise<boolean> => {
+  const doReauth = async (
+    method: 'password' | 'google',
+    password?: string
+  ): Promise<boolean> => {
     try {
       if (method === 'google') {
         await reauthenticateWithGoogle();
       } else {
-        await reauthenticate(deletePass);
+        await reauthenticate(password ?? '');
       }
       return true;
     } catch (err: any) {
@@ -225,7 +228,7 @@ export default function AccountTab(): React.ReactElement | null {
       if (code === 'auth/popup-closed-by-user') {
         setDeleteErr('Google sign-in was cancelled.');
       } else if (code === 'auth/user-mismatch') {
-        setDeleteErr('Please sign in with the same Google account you used to create this account.');
+        setDeleteErr('Please sign in with the same Google account linked to this profile.');
       } else if (
         code === 'auth/wrong-password' ||
         code === 'auth/invalid-credential'
@@ -242,21 +245,23 @@ export default function AccountTab(): React.ReactElement | null {
   const handleDeleteFamily = async (method: 'password' | 'google' = 'password') => {
     setDeleteErr('');
     const uid = currentUid;
+    const password = method === 'password' ? deletePass : undefined;
     if (!uid) {
       setDeleteErr('Not signed in');
       return;
     }
-    if (method === 'password' && !deletePass) {
+    if (method === 'password' && !password) {
       setDeleteErr('Enter your password to confirm deletion');
       return;
     }
     setDeleteBusy(true);
 
     // Reauthenticate before showing overlay so errors show in the dialog
-    if (!await doReauth(method)) {
+    if (!await doReauth(method, password)) {
       setDeleteBusy(false);
       return;
     }
+    setDeletePass('');
 
     // Close dialog, show full-screen deletion overlay
     setShowDeleteConfirm(false);
@@ -278,7 +283,7 @@ export default function AccountTab(): React.ReactElement | null {
       await deleteFamily(ctx.familyId, uid);
 
       try {
-        await deleteAuthAccount(method === 'password' ? deletePass : undefined);
+        await deleteAuthAccount(password);
       } catch (authErr: any) {
         console.error(
           'Family data deleted but auth account removal failed:',
@@ -305,20 +310,22 @@ export default function AccountTab(): React.ReactElement | null {
   const handleLeaveFamily = async (method: 'password' | 'google' = 'password') => {
     setDeleteErr('');
     const uid = currentUid;
+    const password = method === 'password' ? deletePass : undefined;
     if (!uid) {
       setDeleteErr('Not signed in');
       return;
     }
-    if (method === 'password' && !deletePass) {
+    if (method === 'password' && !password) {
       setDeleteErr('Enter your password to confirm');
       return;
     }
     setDeleteBusy(true);
 
-    if (!await doReauth(method)) {
+    if (!await doReauth(method, password)) {
       setDeleteBusy(false);
       return;
     }
+    setDeletePass('');
 
     // Close dialog, show full-screen overlay
     setShowDeleteConfirm(false);
@@ -330,7 +337,7 @@ export default function AccountTab(): React.ReactElement | null {
       await deleteParentMember(uid);
 
       try {
-        await deleteAuthAccount(method === 'password' ? deletePass : undefined);
+        await deleteAuthAccount(password);
       } catch (authErr: any) {
         console.error(
           'Parent member deleted but auth account removal failed:',
