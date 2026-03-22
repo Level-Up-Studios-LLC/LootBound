@@ -185,11 +185,16 @@ export default function DashboardScreen(): React.ReactElement | null {
               const entry = tLog[t.id];
               const isRej = entry && entry.rejected;
               const isPreview = !isTaskActiveToday(t);
+              const baseStatus = getTaskStatus(
+                t,
+                null,
+                ctx.cfg ? ctx.cfg.bedtime : undefined
+              );
               const status = isPreview
                 ? 'upcoming'
-                : isRej
+                : isRej && baseStatus !== 'missed'
                   ? 'rejected'
-                  : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+                  : baseStatus;
               const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
               return (
                 <div
@@ -241,10 +246,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                 </div>
               );
             })}
-          {activeTasks.filter(t => {
-            const l = tLog[t.id];
-            return !l || l.rejected;
-          }).length === 0 && (
+          {total > 0 && done === total && (
             <div className='text-center p-5 text-qteal font-semibold text-lg animate-confetti'>
               <FontAwesomeIcon
                 icon={faPartyHorn}
