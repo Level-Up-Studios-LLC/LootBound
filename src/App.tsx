@@ -268,6 +268,7 @@ function AppRouter() {
   const [initDone, setInitDone] = useState(false);
   useEffect(() => {
     setResendStatus(null);
+    setVerifyAction(null);
   }, [role, auth.authUser?.uid, auth.authUser?.emailVerified]);
   const [storedKid, setStoredKid] = useState<string | null | undefined>(
     undefined
