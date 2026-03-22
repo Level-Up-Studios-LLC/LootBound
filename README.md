@@ -3,12 +3,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9%20Strict-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Storage-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase" />
   <img src="https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/Font%20Awesome-Pro%206-528DD7?style=flat-square&logo=fontawesome&logoColor=white" alt="FontAwesome" />
+  <img src="https://img.shields.io/badge/Font%20Awesome-Pro%207-528DD7?style=flat-square&logo=fontawesome&logoColor=white" alt="FontAwesome" />
+  <img src="https://img.shields.io/badge/Capacitor-7-119EFF?style=flat-square&logo=capacitor&logoColor=white" alt="Capacitor" />
   <img src="https://img.shields.io/badge/Sentry-Error%20Tracking-362D59?style=flat-square&logo=sentry&logoColor=white" alt="Sentry" />
 </p>
 
@@ -54,25 +55,26 @@ Dev server starts at **http://localhost:3000**.
 
 ### 👦 Kid Features
 
-- **🏠 Dashboard (HQ)** — Today's progress, active streak, coin balance, XP bar with level + title, and upcoming missions
-- **🎯 Missions** — Daily mission list with tier badges (S through F), status indicators, time windows, and coin + XP breakdowns
+- **🏠 Dashboard (HQ)** — Today's progress, active streak, coin balance, XP bar with level + title, upcoming missions, and next-day mission preview after bedtime
+- **🎯 Missions** — Daily mission list with tier badges (S through F), status indicators, time windows, coin + XP breakdowns, and badge count on nav tab
 - **📸 Photo Proof** — Camera capture on completion (camera-only on mobile to prevent gallery uploads)
 - **🏆 Leaderboard** — Rankings by perfect days with "Top Adventurer" highlight, level titles, and streaks
 - **🛒 Loot Shop** — Browse and redeem rewards, view limits, track pending approvals and history
 - **🔥 Streaks** — Perfect days build streaks with escalating bonuses and XP multipliers (up to 2.0x)
+- **🔔 Notifications** — Real-time in-app notifications for mission completions, level ups, streaks, and loot requests/approvals with configurable sounds
 - **🔒 PIN Protection** — Per-child 4-digit PIN to prevent sibling access
 
 ### 👨‍👩‍👧‍👦 Parent Features
 
 - **📊 Overview** — All children at a glance with coins, levels, progress, quick +/- adjustments, and collapsible purchase history
-- **✅ Approvals** — Queue for high-value redemptions with approve/deny actions
-- **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins and XP, XP cannot go below 0)
+- **✅ Approvals** — Queue for high-value redemptions with approve/deny actions, badge count on nav tab
+- **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins and XP, XP cannot go below 0), badge count on nav tab
 - **📋 Mission Management** — Add, edit, delete missions per child with tier (S-F), time windows, and scheduling
 - **🎁 Loot Management** — Full CRUD for rewards with cost, icon, limits, and approval flags
 - **👶 Children Management** — Add/remove children, manage profiles and PINs, view purchase history
 - **👤 Account** — Editable name and email, initials avatar, Owner/Member role badge, PIN management, password change (or set for Google users), email verification
-- **⚙️ Settings** — Tier coin/XP values, approval threshold, bedtime, weekly reset day, cooldown (with debounced auto-save)
-- **💬 Feedback** — Links to GitHub Discussions
+- **⚙️ Settings** — Tier coin/XP values, approval threshold, bedtime, weekly reset day, cooldown, notification sound preferences, error reporting toggle (with debounced auto-save)
+- **💬 Feedback** — Links to Canny.io board for feature requests and voting
 - **🔐 Multi-parent support** — Each parent has their own PIN, name, and role. Owners can delete the family; members can leave.
 - **📱 Session persistence** — Refreshing preserves login state (24h session window)
 
@@ -177,7 +179,7 @@ Formula: `Math.min(Math.floor(level * 1.32), 25)` percent bonus on coins earned 
 ## 🔐 Auth Flow
 
 1. **🎭 Role Selection** — User chooses "I'm a Parent" or "I'm a Kid"
-2. **👨‍💼 Parent Flow** — Sign up or sign in with email/password. Optional PIN creation for quick access on return visits. Parents can join an existing family with a family code.
+2. **👨‍💼 Parent Flow** — Sign up or sign in with email/password or Google. Email verification required for email/password users. Optional PIN creation for quick access on return visits. Parents can join an existing family with a family code.
 3. **👦 Kid Flow** — Enter a 6-character family code to access profiles. Select a profile and enter or create a PIN. Code is persisted locally.
 
 ---
@@ -195,21 +197,22 @@ Formula: `Math.min(Math.floor(level * 1.32), 25)` percent bonus on coins earned 
 | 🌙 Bedtime lockout | Disables missions after bedtime cutoff |
 | 📋 Audit log | All redemptions logged with timestamps |
 | 🧢 XP multiplier cap | Streak XP bonus capped at 2.0x |
+| 📧 Email verification | Unverified parents blocked from app access |
 
 ---
 
 ## 🗄 Firebase Collections
 
 ```text
-families/{familyId}              — Family config (PIN, tier values, thresholds)
+families/{familyId}              — Family config (tier values, thresholds, notification prefs)
   /children/{childId}            — Child profiles (name, age, avatar, color, PIN)
   /tasks/{taskId}                — Mission definitions (name, tier, time window, schedule)
   /rewards/{rewardId}            — Reward definitions (name, cost, icon, limits)
   /childData/{childId}           — Runtime data (coins, XP, level, streak, task logs, redemptions)
+  /notifications/{notifId}       — In-app notifications (7-day TTL, auto-cleaned)
 
-parentMembers/{uid}              — Maps parent auth UIDs to family IDs
+parentMembers/{uid}              — Per-parent data (familyId, PIN, name)
 familyCodes/{code}               — Maps family codes to family IDs
-feedback/{docId}                 — User-submitted feedback
 ```
 
 ---
@@ -258,30 +261,36 @@ LootBound/
       useChildActions.ts        # Child CRUD operations
       useFirestoreSync.ts       # Real-time Firestore listeners
       useNotification.ts        # Toast notification management
+      useNotificationListener.ts # Firestore notification listener with sounds
       useRewardActions.ts       # Reward CRUD and redemption logic
       useTaskActions.ts         # Task completion logic with XP/coin calculation
     services/
       auth.ts                   # Firebase Auth operations
       familyCode.ts             # Family code generation and lookup
-      feedback.ts               # Feedback submission
       firebase.ts               # Firebase app initialization
       firestoreStorage.ts       # Firestore read/write operations
       photoStorage.ts           # Firebase Storage photo upload/retrieval
+      platform.ts               # Platform abstraction (web/Capacitor)
     components/
       Badge.tsx                 # Status badges
-      BNav.tsx                  # Bottom navigation bar
+      BNav.tsx                  # Bottom navigation bar with badge counts
       HamburgerMenu.tsx         # Hamburger menu overlay
+      IconBadge.tsx             # Reusable icon + badge rendering
       NotificationToast.tsx     # Toast notifications (with level-up celebration)
       PhotoViewer.tsx           # Photo proof viewer
-      ui/                       # Reusable UI primitives
+      ui/
+        ConfirmDialog.tsx       # Confirmation modal
+        PasswordInput.tsx       # Password field with eye toggle
+        ...                     # Other UI primitives
       forms/                    # Form components
     screens/
       RoleSelectScreen.tsx      # Parent/Kid role selection
       LoginScreen.tsx           # Child profile selection
       KidCodeScreen.tsx         # Kid family code entry
-      AuthScreen.tsx            # Parent auth (login/signup)
+      AuthScreen.tsx            # Parent auth (login/signup with Google)
       ParentPinScreen.tsx       # Parent PIN verification
       CreatePinPrompt.tsx       # PIN setup prompt
+      ResetPasswordScreen.tsx   # Branded password reset page
       DashboardScreen.tsx       # Kid HQ with XP bar
       TasksScreen.tsx           # Kid missions list
       ScoresScreen.tsx          # Leaderboard / personal stats
