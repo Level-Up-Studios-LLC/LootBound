@@ -446,8 +446,10 @@ function AppRouter() {
             </button>
             <div className='text-qteal text-[13px] text-center min-h-[20px]'>{resendStatus}</div>
             <button
+              disabled={verifyLoading}
               onClick={async () => {
                 setResendStatus('Checking verification status...');
+                setVerifyLoading(true);
                 try {
                   const verified = await auth.doRefreshVerification();
                   if (!verified) {
@@ -457,11 +459,13 @@ function AppRouter() {
                   }
                 } catch {
                   setResendStatus('Could not check verification status. Please try again.');
+                } finally {
+                  setVerifyLoading(false);
                 }
               }}
               className='btn-ghost'
             >
-              I've Verified My Email
+              {verifyLoading ? 'Checking...' : "I've Verified My Email"}
             </button>
             <button
               onClick={async () => {
