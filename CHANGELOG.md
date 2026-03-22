@@ -5,6 +5,76 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-03-22
+
+### Added
+- Email verification gate — blocks unverified email/password users from accessing the app
+- Email verification screen with resend button, check status button, and action-specific loading states
+- Password reveal eye icon on all password and PIN fields (new `PasswordInput` component)
+- Sentry toggle in Settings — parents can enable/disable error reporting via localStorage
+- Comprehensive Sentry instrumentation across all Firestore writes, snapshot listeners, and auth retry paths
+- Sentry Session Replay integration for debugging production issues
+- In-app notification system with cross-device Firestore sync and configurable sounds
+- Notification preferences in Settings (sound toggles per notification type)
+- Badge counts on parent nav tabs (approvals, review) and kid nav tab (missions)
+- Next-day mission preview on kid dashboard after bedtime cutoff
+- `isTaskVisibleToday` utility for showing tomorrow's tasks after bedtime
+- Google re-authentication support for account deletion and leaving family
+- Alternating mint/yellow section colors in Settings for visual clarity
+- Accessibility: `role="status"` and `aria-live="polite"` on verification feedback
+- `IconBadge` component to deduplicate icon + badge rendering in nav
+- Shared `FEEDBACK_URL` constant pointing to Canny.io board
+- Outer `ErrorBoundary` wrapping the full app for uncaught errors
+
+### Fixed
+- UTC date bug in `getToday()`, `getWeekStart()`, and `prevDate()` — now uses local dates
+- XP thresholds had non-monotonic increments — replaced with exponential curve (`50 * level^1.5`)
+- `resetAll` used `merge: true` leaving stale taskLog entries — now uses `replaceChildData`
+- Coins could go infinitely negative — clamped at -300 floor
+- Photo uploads failed with expired anonymous auth — added `signInAnonymousKid()` before Storage ops
+- Late-added tasks incorrectly penalized as missed — bedtime penalty now checks active tasks only
+- Missed status now correctly overrides rejected status after bedtime
+- Preview/upcoming tasks are no longer completable by kids
+- `createdAt` field preserved through task hydration and edit cycles
+- Firestore persistence lock error — switched to multi-tab cache mode
+- `parentMembers` update rule now allows partial updates
+- `auth/user-mismatch` handled in delete re-auth flow
+- Verification button labels showed wrong action (both said "Sending..."/"Checking..." simultaneously)
+- Sign-out from verification screen now clears `justSignedIn` flag
+- `verifyAction` state resets on auth/role transitions to prevent stale in-flight state
+- `deletePass` snapshot captured before async work to prevent closure bug
+- `resetAll` closure-over-loop-variable crash fixed
+- Notification cleanup handles Firestore `Timestamp` type correctly in expiry comparison
+
+### Changed
+- Modernized codebase to ES6+ TypeScript (const/let, spread, arrows, structuredClone, template literals)
+- Upgraded to React 19, Vite 8, TypeScript 5.9
+- Capacitor platform abstraction layer for iOS/Android native builds
+- CI updated to Node.js 22, GitHub Actions v6
+- Deploy workflow triggers from production branch instead of main
+- Feedback links point to Canny.io board instead of GitHub Discussions
+- `ConfirmDialog` component refactored for cleaner prop types
+
+## [1.4.0] - 2026-03-19
+
+### Added
+- Capacitor setup with platform abstraction layer (iOS/Android, haptics, biometrics, camera)
+- In-app notification system with Firestore-backed cross-device sync and sound effects
+- Badge counts on parent bottom nav (approvals, review) and kid bottom nav (missions)
+- `IconBadge` component for reusable icon + badge rendering
+
+### Changed
+- Modernized entire codebase to ES6+ TypeScript (const/let, spread, arrows, structuredClone)
+- Upgraded React 18 → 19, Vite 6 → 8, TypeScript 5.7 → 5.9
+- Updated CLAUDE.md: removed legacy JS conventions, added Capacitor branch
+
+### Fixed
+- UTC date bug in date utilities causing wrong day calculations
+- XP level thresholds replaced with monotonic exponential curve
+- `resetAll` merge behavior leaving stale task log entries
+- Negative coin balance uncapped — added -300 floor
+- Photo upload auth failures for anonymous kid sessions
+
 ## [1.3.0] - 2026-03-18
 
 ### Added
