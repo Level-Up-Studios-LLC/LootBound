@@ -184,9 +184,12 @@ export default function DashboardScreen(): React.ReactElement | null {
             .map((t, idx) => {
               const entry = tLog[t.id];
               const isRej = entry && entry.rejected;
-              const status = isRej
-                ? 'rejected'
-                : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+              const isPreview = !isTaskActiveToday(t);
+              const status = isPreview
+                ? 'upcoming'
+                : isRej
+                  ? 'rejected'
+                  : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
               const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
               return (
                 <div
@@ -238,7 +241,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                 </div>
               );
             })}
-          {todayTasks.filter(t => {
+          {activeTasks.filter(t => {
             const l = tLog[t.id];
             return !l || l.rejected;
           }).length === 0 && (

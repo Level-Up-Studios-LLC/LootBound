@@ -521,14 +521,20 @@ function ErrorFallback(props: { resetError: () => void }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Sentry.ErrorBoundary
-        fallback={errorProps => {
-          return <ErrorFallback resetError={errorProps.resetError} />;
-        }}
-      >
-        <AppRouter />
-      </Sentry.ErrorBoundary>
-    </AuthProvider>
+    <Sentry.ErrorBoundary
+      fallback={errorProps => {
+        return <ErrorFallback resetError={errorProps.resetError} />;
+      }}
+    >
+      <AuthProvider>
+        <Sentry.ErrorBoundary
+          fallback={errorProps => {
+            return <ErrorFallback resetError={errorProps.resetError} />;
+          }}
+        >
+          <AppRouter />
+        </Sentry.ErrorBoundary>
+      </AuthProvider>
+    </Sentry.ErrorBoundary>
   );
 }
