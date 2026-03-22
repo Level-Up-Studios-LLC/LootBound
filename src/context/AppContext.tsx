@@ -27,6 +27,7 @@ import {
   getWeekStart,
   isPastBedtime,
   isTaskActiveToday,
+  isTaskVisibleToday,
 } from '../utils.ts';
 import {
   getConfig as fsGetConfig,
@@ -579,6 +580,8 @@ export function AppProvider(props: {
         let changed = false;
         tasks.forEach(t => {
           const entry = updated.taskLog[d][t.id];
+          // Skip tasks created today — don't penalize for late-added missions
+          if (t.createdAt === d) return;
           if (!entry || entry.rejected) {
             const tc = tierCfg(t.tier);
             updated.taskLog[d][t.id] = {
@@ -633,7 +636,7 @@ export function AppProvider(props: {
     curUser && curUser !== 'parent' ? allU[curUser] || null : null;
   const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
-  const todayTasks = uTasks.filter(isTaskActiveToday);
+  const todayTasks = uTasks.filter(t => isTaskVisibleToday(t, cfg?.bedtime));
   const d = getToday();
   const tLog =
     currentUserData && currentUserData.taskLog && currentUserData.taskLog[d]

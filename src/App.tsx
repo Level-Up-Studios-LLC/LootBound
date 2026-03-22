@@ -5,10 +5,7 @@ import { faCommentDots, faCircleCheck } from './fa.ts';
 import { FA_ICON_STYLE, FEEDBACK_URL } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-import {
-  getParentMember,
-  saveParentMember,
-} from './services/firestoreStorage.ts';
+import { getParentMember } from './services/firestoreStorage.ts';
 import {
   getStoredFamilyCodeAsync,
   clearStoredFamilyCode,
@@ -33,7 +30,7 @@ import TasksScreen from './screens/TasksScreen.tsx';
 import ScoresScreen from './screens/ScoresScreen.tsx';
 import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
-import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
+
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 
 const SESSION_KEY_PARENT = 'qb-parent-session';
@@ -261,7 +258,6 @@ function AppRouter() {
   };
 
   const [parentPin, setParentPin] = useState<string | null>(null);
-  const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
   const [storedKid, setStoredKid] = useState<string | null | undefined>(
     undefined
@@ -408,46 +404,11 @@ function AppRouter() {
       return <LoadingScreen />;
     }
 
-    // Just signed in/signed up → show create PIN prompt if no PIN
+    // Fresh sign-in/sign-up → skip PIN, go straight to dashboard
     if (auth.justSignedIn && !parentVerified) {
-      if (parentPin) {
-        // Already has a custom PIN → go straight to dashboard
-        auth.clearJustSignedIn();
-        setParentVerified(true);
-      } else if (!showCreatePin) {
-        setShowCreatePin(true);
-        return <LoadingScreen />;
-      }
-    }
-
-    // Create PIN prompt after fresh sign-in/sign-up (skippable)
-    if (showCreatePin && !parentVerified) {
-      return (
-        <CreatePinPrompt
-          onCreated={newPin => {
-            const pinUid = getCurrentUid();
-            if (!pinUid) return;
-            saveParentMember(pinUid, { parentPin: newPin })
-              .then(() => {
-                setParentPin(newPin);
-                setShowCreatePin(false);
-                setParentVerified(true);
-                auth.clearJustSignedIn();
-              })
-              .catch(err => {
-                console.error('Failed to save PIN:', err);
-                Sentry.captureException(err, {
-                  tags: { action: 'save-parent-pin' },
-                });
-              });
-          }}
-          onSkip={() => {
-            setShowCreatePin(false);
-            setParentVerified(true);
-            auth.clearJustSignedIn();
-          }}
-        />
-      );
+      auth.clearJustSignedIn();
+      setParentVerified(true);
+      return <LoadingScreen />;
     }
 
     // Returning from persisted session (not a fresh sign-in/sign-up)
@@ -487,7 +448,6 @@ function AppRouter() {
           auth.doSignOut();
           setParentVerified(false);
           setParentPin(null);
-          setShowCreatePin(false);
           setRole(null);
         }}
       >
@@ -561,14 +521,14 @@ function ErrorFallback(props: { resetError: () => void }) {
 
 export default function App() {
   return (
-    <Sentry.ErrorBoundary
-      fallback={errorProps => {
-        return <ErrorFallback resetError={errorProps.resetError} />;
-      }}
-    >
-      <AuthProvider>
+    <AuthProvider>
+      <Sentry.ErrorBoundary
+        fallback={errorProps => {
+          return <ErrorFallback resetError={errorProps.resetError} />;
+        }}
+      >
         <AppRouter />
-      </AuthProvider>
-    </Sentry.ErrorBoundary>
+      </Sentry.ErrorBoundary>
+    </AuthProvider>
   );
 }
