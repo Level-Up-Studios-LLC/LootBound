@@ -21,7 +21,7 @@ The app runs on all devices, uses Firebase (Firestore + Storage + Auth) for pers
 - **Hosting:** Firebase Hosting
 - **Styling:** Tailwind CSS v4
 - **Icons:** FontAwesome Pro 7 (duotone + classic solid + brands, registered in `src/fa.ts`)
-- **Error Tracking:** Sentry
+- **Error Tracking:** Sentry (with Session Replay, user-toggleable in Settings)
 - **Fonts:** Google Fonts — Fredoka (display), Nunito (body)
 - **Deployment Target:** iPad Safari (mobile-first 480px max-width app)
 
@@ -136,10 +136,11 @@ Configurable reset day (default Sunday). On reset:
 
 ### Kid Features
 
-- **Dashboard (HQ)** — progress %, streak, coins badge, XP progress bar with level + title, streak multiplier indicator, "Up Next" task list
-- **Missions** — daily mission list with colored tier badges (S-F), status indicators, time windows, coin + XP breakdowns, photo capture on completion
+- **Dashboard (HQ)** — progress %, streak, coins badge, XP progress bar with level + title, streak multiplier indicator, "Up Next" task list, next-day mission preview after bedtime
+- **Missions** — daily mission list with colored tier badges (S-F), status indicators, time windows, coin + XP breakdowns, photo capture on completion, badge count on nav tab
 - **Leaderboard** — multi-kid: ranked by perfect days with "Top Adventurer" highlight, level titles; solo kid: personal stats view with milestones
 - **Loot Shop** — browse rewards, see limits and availability, redeem or request approval, pending status, redemption history with double-submit guard
+- **Notifications** — real-time in-app notifications for mission completions, level ups, streaks, loot requests/approvals/denials with configurable sounds
 - **PIN Protection** — optional per-child 4-digit PIN
 
 ### Parent Features
@@ -150,7 +151,8 @@ Configurable reset day (default Sunday). On reset:
 - **Mission Management** — CRUD per child with tier (S-F), time windows, daily/weekly scheduling
 - **Loot Management** — CRUD for rewards with cost, icon, limits, approval flags
 - **Children Management** — add/remove children, manage profiles and PINs
-- **Settings** — tier coin/XP values, approval threshold, parent PIN, bedtime, weekly reset day, cooldown
+- **Settings** — tier coin/XP values, approval threshold, parent PIN, bedtime, weekly reset day, cooldown, notification sound preferences, Sentry error reporting toggle
+- **Approvals/Review** — badge counts on nav tabs showing pending items
 - **Feedback** — links to Canny.io board for feedback, feature requests, and voting
 
 ### Abuse Prevention
@@ -166,6 +168,7 @@ Configurable reset day (default Sunday). On reset:
 | Bedtime lockout           | Late-night task manipulation                |
 | Full audit log            | All redemptions logged with timestamps      |
 | XP multiplier cap (2.0x)  | Prevents streak abuse of XP system          |
+| Email verification        | Unverified parents can't access the app      |
 
 ---
 
@@ -179,6 +182,7 @@ families/{familyId}              — Family config
   /tasks/{taskId}                — Mission definitions (includes childId field)
   /rewards/{rewardId}            — Reward definitions
   /childData/{childId}           — Runtime data (coins, XP, level, streaks, logs)
+  /notifications/{notifId}       — In-app notifications (7-day TTL, auto-cleaned)
 
 parentMembers/{uid}              — Per-parent data (familyId, PIN, name)
 familyCodes/{code}               — Maps family codes to family IDs
@@ -214,6 +218,15 @@ familyCodes/{code}               — Maps family codes to family IDs
   bedtime: 1260,                   // Minutes from midnight (21:00 = 1260)
   weeklyResetDay: 0,               // 0=Sunday
   cooldown: 60,                    // Seconds between task completions
+  notificationPrefs: {             // Sound toggles per notification type
+    mission_complete: true,
+    level_up: true,
+    streak: true,
+    loot_request: true,
+    loot_approved: true,
+    loot_denied: true,
+    mission_rejected: true,
+  },
 }
 ```
 
@@ -249,9 +262,9 @@ When AppContext loads config, it checks for the old numeric `tierPoints` format 
 ## Auth Flow
 
 1. **Role Selection** — "I'm a Parent" or "I'm a Kid"
-2. **Parent Sign-Up** — Step 1: email/Google → Step 2: name, password, family code, referral → PIN creation (skippable) → App
-3. **Parent Sign-In** — Step 1: email/Google → Step 2: password → PIN (if set) → App
-4. **Returning Parent** — Firebase session persists → PIN screen (if set) or auto-verify → App
+2. **Parent Sign-Up** — Step 1: email/Google → Step 2: name, password, family code, referral → Email verification (if email/password) → PIN creation (skippable) → App
+3. **Parent Sign-In** — Step 1: email/Google → Step 2: password → Email verification (if unverified) → PIN (if set) → App
+4. **Returning Parent** — Firebase session persists → Email verification (if unverified) → PIN screen (if set) or auto-verify → App
 5. **Kid Flow** — Enter family code → Select profile → Enter/create PIN → App
 6. **PIN semantics** — Per-parent, stored on `parentMembers/{uid}`. Empty string = no PIN set.
 7. **Family code** — 6-character alphanumeric, persisted in localStorage for kid devices
@@ -262,6 +275,7 @@ When AppContext loads config, it checks for the old numeric `tierPoints` format 
 
 ## Conventions
 
+- **Password/PIN fields** — always use `<PasswordInput>` from `src/components/ui/PasswordInput.tsx` (includes eye toggle, supports `maxLength` and `inputMode="numeric"` for PINs)
 - **FontAwesome icons** — must be imported in `src/fa.ts` and added to `library.add()`
 - **No Co-Authored-By** — do not add "Co-Authored-By: Claude" to commit messages
 - **TypeScript only** — all source files must be `.ts`/`.tsx`. Never create `.js`/`.jsx` files in `src/`.
