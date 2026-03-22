@@ -31,7 +31,7 @@ interface AuthContextValue {
   doSignOut: () => Promise<void>;
   doResetPassword: (email: string) => Promise<boolean>;
   doSendVerification: () => Promise<boolean>;
-  doRefreshVerification: () => Promise<void>;
+  doRefreshVerification: () => Promise<boolean>;
   clearAuthError: () => void;
   clearLastFamilyCode: () => void;
   clearJustSignedIn: () => void;
@@ -202,14 +202,16 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     }
   };
 
-  const doRefreshVerification = async () => {
+  const doRefreshVerification = async (): Promise<boolean> => {
     try {
       const verified = await refreshEmailVerified();
       if (verified && authUser) {
         setAuthUser({ ...authUser, emailVerified: true });
       }
+      return verified;
     } catch (err: any) {
       console.warn('Failed to refresh verification status:', err);
+      throw err;
     }
   };
 

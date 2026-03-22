@@ -449,12 +449,14 @@ function AppRouter() {
               onClick={async () => {
                 setResendStatus('Checking verification status...');
                 try {
-                  await auth.doRefreshVerification();
-                  if (!auth.authUser?.emailVerified) {
+                  const verified = await auth.doRefreshVerification();
+                  if (!verified) {
                     setResendStatus('Not verified yet. Please check your inbox.');
+                  } else {
+                    setResendStatus('Email verified! Redirecting...');
                   }
                 } catch {
-                  setResendStatus('Failed to check verification. Please try again.');
+                  setResendStatus('Could not check verification status. Please try again.');
                 }
               }}
               className='btn-ghost'
@@ -462,11 +464,18 @@ function AppRouter() {
               I've Verified My Email
             </button>
             <button
-              onClick={() => {
-                auth.doSignOut();
-                setParentVerified(false);
-                setParentPin(null);
-                setRole(null);
+              onClick={async () => {
+                try {
+                  await auth.doSignOut();
+                  setParentVerified(false);
+                  setParentPin(null);
+                  setShowCreatePin(false);
+                  setVerifyLoading(false);
+                  setResendStatus(null);
+                  setRole(null);
+                } catch {
+                  setResendStatus('Sign out failed. Please try again.');
+                }
               }}
               className='btn-ghost text-qmuted'
             >
