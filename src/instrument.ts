@@ -9,7 +9,11 @@ Sentry.init({
   enabled: !!dsn && !userDisabled,
   integrations: [
     Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: true,
+      maskAllInputs: true,
+      blockAllMedia: false,
+    }),
   ],
   tracesSampleRate: 0.2,
   replaysSessionSampleRate: 0.1,

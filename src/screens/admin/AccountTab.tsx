@@ -9,7 +9,6 @@ import {
   faRotate,
   faTrashCan,
   faTriangleExclamation,
-  faEnvelope,
   faCircleCheck,
   faCopy,
   faSpinner,
@@ -86,8 +85,6 @@ export default function AccountTab(): React.ReactElement | null {
   const [deletionInProgress, setDeletionInProgress] = useState(false);
   const [deletePass, setDeletePass] = useState('');
   const [deleteErr, setDeleteErr] = useState('');
-  const [verifyBusy, setVerifyBusy] = useState(false);
-  const [verifySent, setVerifySent] = useState(false);
 
   if (!cfg) return null;
 

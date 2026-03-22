@@ -446,9 +446,12 @@ function AppRouter() {
             </button>
             <div className='text-qteal text-[13px] text-center min-h-[20px]'>{resendStatus}</div>
             <button
-              onClick={() => {
-                auth.doRefreshVerification();
+              onClick={async () => {
                 setResendStatus('Checking verification status...');
+                await auth.doRefreshVerification();
+                if (!auth.authUser?.emailVerified) {
+                  setResendStatus('Not verified yet. Please check your inbox.');
+                }
               }}
               className='btn-ghost'
             >
