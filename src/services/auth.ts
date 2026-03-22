@@ -25,6 +25,7 @@ import {
   applyActionCode,
   EmailAuthProvider,
   GoogleAuthProvider,
+  reauthenticateWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signInAnonymously,
@@ -362,6 +363,26 @@ export async function reauthenticate(password: string): Promise<void> {
   if (!user || !user.email) throw new Error('Not signed in');
   const cred = EmailAuthProvider.credential(user.email, password);
   await reauthenticateWithCredential(user, cred);
+}
+
+/**
+ * Re-authenticate the current user via Google popup.
+ * Used for Google-only users before destructive operations.
+ */
+export async function reauthenticateWithGoogle(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  const provider = new GoogleAuthProvider();
+  await reauthenticateWithPopup(user, provider);
+}
+
+/**
+ * Check if the current user has a Google provider.
+ */
+export function hasGoogleProvider(): boolean {
+  const user = auth.currentUser;
+  if (!user) return false;
+  return user.providerData.some(p => p.providerId === 'google.com');
 }
 
 /**
