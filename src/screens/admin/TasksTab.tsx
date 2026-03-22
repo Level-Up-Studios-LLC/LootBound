@@ -141,6 +141,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                 nt[uid] = nt[uid].map(x => {
                   return x.id === t.id
                     ? {
+                        ...x,
                         id: t.id,
                         name: t.name,
                         tier: t.tier,

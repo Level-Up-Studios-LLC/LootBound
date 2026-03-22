@@ -420,6 +420,7 @@ export function AppProvider(props: {
             windowEnd: t.windowEnd,
             daily: t.daily,
             dueDay: t.dueDay,
+            createdAt: t.createdAt,
           });
         });
 
