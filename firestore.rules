@@ -101,7 +101,7 @@ service cloud.firestore {
       );
       allow create: if request.auth != null && request.auth.uid == uid;
       allow update: if request.auth != null && request.auth.uid == uid &&
-        request.resource.data.familyId == resource.data.familyId;
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['familyId']);
       allow delete: if request.auth != null && (
         request.auth.uid == uid ||
         resource.data.familyId == request.auth.uid
