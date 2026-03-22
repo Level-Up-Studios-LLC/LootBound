@@ -197,7 +197,7 @@ export default function SettingsTab(): React.ReactElement {
           <span className='text-[13px] text-qmuted'>coins</span>
         </div>
       </div>
-      <div className='bg-qyellow rounded-card p-4 mb-4'>
+      <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faBed} style={FA_ICON_STYLE} />
           Bedtime Cutoff
@@ -227,7 +227,7 @@ export default function SettingsTab(): React.ReactElement {
           />
         </div>
       </div>
-      <div className='bg-qmint rounded-card p-4 mb-4'>
+      <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCalendarDays} style={FA_ICON_STYLE} />
           Weekly Reset
@@ -257,7 +257,7 @@ export default function SettingsTab(): React.ReactElement {
           </select>
         </div>
       </div>
-      <div className='bg-qyellow rounded-card p-4 mb-4'>
+      <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faStopwatch} style={FA_ICON_STYLE} />
           Mission Cooldown
@@ -283,7 +283,7 @@ export default function SettingsTab(): React.ReactElement {
           <span className='text-[13px] text-qmuted'>seconds</span>
         </div>
       </div>
-      <div className='bg-qmint rounded-card p-4 mb-4'>
+      <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faBell} style={FA_ICON_STYLE} />
           Notifications
@@ -351,7 +351,7 @@ export default function SettingsTab(): React.ReactElement {
         </div>
       </div>
       {/* Error Reporting */}
-      <div className='bg-qmint rounded-card p-4 mb-4'>
+      <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faBug} style={FA_ICON_STYLE} />
           Error Reporting
