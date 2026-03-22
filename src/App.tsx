@@ -265,6 +265,9 @@ function AppRouter() {
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
+  useEffect(() => {
+    setResendStatus(null);
+  }, [role, auth.authUser?.uid, auth.authUser?.emailVerified]);
   const [storedKid, setStoredKid] = useState<string | null | undefined>(
     undefined
   );
