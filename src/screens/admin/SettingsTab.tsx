@@ -21,10 +21,10 @@ import {
   TIER_COLORS,
   DAYS,
   FA_ICON_STYLE,
+  FEEDBACK_URL,
 } from '../../constants.ts';
 import { getPersistentStorage, setPersistentStorage } from '../../services/platform.ts';
 import type { Config, TierConfig, NotificationPrefs } from '../../types.ts';
-const FEEDBACK_URL = 'https://lootbound.canny.io/';
 
 const SAVE_DELAY = 1500;
 
