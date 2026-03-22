@@ -15,6 +15,7 @@ export interface Task {
   windowEnd: string;
   daily: boolean;
   dueDay: number | null;
+  createdAt?: string; // ISO date (YYYY-MM-DD) — tasks created on this date skip same-day bedtime penalty
 }
 
 export interface Reward {

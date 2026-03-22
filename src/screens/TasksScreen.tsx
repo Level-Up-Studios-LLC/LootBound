@@ -12,7 +12,7 @@ import {
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
-import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
+import { getTaskStatus, fmtTime, timeToMin, isTaskActiveToday } from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
   const ctx = useAppContext();
@@ -68,13 +68,16 @@ export default function TasksScreen(): React.ReactElement | null {
           const isDone = entry && !entry.rejected && entry.status !== 'missed';
           const isMissed =
             entry && entry.status === 'missed' && !entry.rejected;
-          const status = isDone
-            ? entry.status
-            : isMissed
-              ? 'missed'
-              : isRej
-                ? 'rejected'
-                : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+          const isPreview = !isTaskActiveToday(t);
+          const status = isPreview
+            ? 'upcoming'
+            : isDone
+              ? entry.status
+              : isMissed
+                ? 'missed'
+                : isRej
+                  ? 'rejected'
+                  : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
           const sl = SL[status] || {
             text: '',
             color: '#64748b',
@@ -171,7 +174,12 @@ export default function TasksScreen(): React.ReactElement | null {
                   View photo proof
                 </button>
               )}
-              {!isDone && !isMissed && status !== 'missed' && (
+              {isPreview && !isDone && !isMissed && (
+                <div className='w-full text-center text-[12px] font-bold text-qmuted bg-qslate/10 rounded-badge py-2.5 mt-3'>
+                  Tomorrow's Mission
+                </div>
+              )}
+              {!isPreview && !isDone && !isMissed && status !== 'missed' && (
                 <button
                   onClick={() => {
                     startCapture(t.id);

@@ -13,7 +13,7 @@ import {
   TIER_COLORS,
   altBg,
 } from '../../constants.ts';
-import { fmtTime } from '../../utils.ts';
+import { fmtTime, getToday } from '../../utils.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import TaskForm from '../../components/forms/TaskForm.tsx';
@@ -141,6 +141,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                 nt[uid] = nt[uid].map(x => {
                   return x.id === t.id
                     ? {
+                        ...x,
                         id: t.id,
                         name: t.name,
                         tier: t.tier,
@@ -161,6 +162,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     windowEnd: t.windowEnd,
                     daily: t.daily,
                     dueDay: t.daily ? null : t.dueDay,
+                    createdAt: getToday(),
                   },
                 ]);
               }

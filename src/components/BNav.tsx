@@ -17,9 +17,9 @@ export default function BNav(p: BNavProps) {
   // Count incomplete + redo missions for the current kid
   let missionBadge = 0;
   if (ctx.curUser && ctx.curUser !== 'parent') {
-    const total = ctx.todayTasks.length;
+    const total = ctx.activeTasks.length;
     let done = 0;
-    ctx.todayTasks.forEach(t => {
+    ctx.activeTasks.forEach(t => {
       const entry = ctx.tLog[t.id];
       if (entry && !entry.rejected) done++;
     });

@@ -5,10 +5,7 @@ import { faCommentDots, faCircleCheck } from './fa.ts';
 import { FA_ICON_STYLE, FEEDBACK_URL } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-import {
-  getParentMember,
-  saveParentMember,
-} from './services/firestoreStorage.ts';
+import { getParentMember } from './services/firestoreStorage.ts';
 import {
   getStoredFamilyCodeAsync,
   clearStoredFamilyCode,
@@ -34,7 +31,7 @@ import TasksScreen from './screens/TasksScreen.tsx';
 import ScoresScreen from './screens/ScoresScreen.tsx';
 import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
-import CreatePinPrompt from './screens/CreatePinPrompt.tsx';
+
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 
 const SESSION_KEY_PARENT = 'qb-parent-session';
@@ -264,7 +261,7 @@ function AppRouter() {
   const [parentPin, setParentPin] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [verifyAction, setVerifyAction] = useState<'send' | 'check' | null>(null);
-  const [showCreatePin, setShowCreatePin] = useState(false);
+
   const [initDone, setInitDone] = useState(false);
   useEffect(() => {
     setResendStatus(null);
@@ -355,6 +352,21 @@ function AppRouter() {
       verifyRefreshedRef.current = null;
     }
   }, [auth.authUser]);
+
+  // Handle parent auto-verify transitions outside render
+  useEffect(() => {
+    if (role !== 'parent' || !auth.authUser || parentPin === null) return;
+
+    if (auth.justSignedIn && !parentVerified) {
+      auth.clearJustSignedIn();
+      setParentVerified(true);
+      return;
+    }
+
+    if (!parentVerified && !auth.justSignedIn && !parentPin) {
+      setParentVerified(true);
+    }
+  }, [role, auth.authUser, auth.justSignedIn, parentPin, parentVerified]);
 
   // Handle Firebase action URLs (password reset, email verification)
   if (actionParams && actionParams.mode === 'verifyEmail') {
@@ -482,7 +494,6 @@ function AppRouter() {
                   auth.clearJustSignedIn();
                   setParentVerified(false);
                   setParentPin(null);
-                  setShowCreatePin(false);
                   setVerifyAction(null);
                   setResendStatus(null);
                   setRole(null);
@@ -504,46 +515,9 @@ function AppRouter() {
       return <LoadingScreen />;
     }
 
-    // Just signed in/signed up → show create PIN prompt if no PIN
+    // Fresh sign-in/sign-up transition in progress
     if (auth.justSignedIn && !parentVerified) {
-      if (parentPin) {
-        // Already has a custom PIN → go straight to dashboard
-        auth.clearJustSignedIn();
-        setParentVerified(true);
-      } else if (!showCreatePin) {
-        setShowCreatePin(true);
-        return <LoadingScreen />;
-      }
-    }
-
-    // Create PIN prompt after fresh sign-in/sign-up (skippable)
-    if (showCreatePin && !parentVerified) {
-      return (
-        <CreatePinPrompt
-          onCreated={newPin => {
-            const pinUid = getCurrentUid();
-            if (!pinUid) return;
-            saveParentMember(pinUid, { parentPin: newPin })
-              .then(() => {
-                setParentPin(newPin);
-                setShowCreatePin(false);
-                setParentVerified(true);
-                auth.clearJustSignedIn();
-              })
-              .catch(err => {
-                console.error('Failed to save PIN:', err);
-                Sentry.captureException(err, {
-                  tags: { action: 'save-parent-pin' },
-                });
-              });
-          }}
-          onSkip={() => {
-            setShowCreatePin(false);
-            setParentVerified(true);
-            auth.clearJustSignedIn();
-          }}
-        />
-      );
+      return <LoadingScreen />;
     }
 
     // Returning from persisted session (not a fresh sign-in/sign-up)
@@ -568,8 +542,7 @@ function AppRouter() {
         );
       }
 
-      // No PIN set — auto-verify immediately (no flash)
-      setParentVerified(true);
+      // No PIN set — auto-verify handled by effect above
       return <LoadingScreen />;
     }
 
@@ -583,7 +556,6 @@ function AppRouter() {
           auth.doSignOut();
           setParentVerified(false);
           setParentPin(null);
-          setShowCreatePin(false);
           setRole(null);
         }}
       >
@@ -663,7 +635,13 @@ export default function App() {
       }}
     >
       <AuthProvider>
-        <AppRouter />
+        <Sentry.ErrorBoundary
+          fallback={errorProps => {
+            return <ErrorFallback resetError={errorProps.resetError} />;
+          }}
+        >
+          <AppRouter />
+        </Sentry.ErrorBoundary>
       </AuthProvider>
     </Sentry.ErrorBoundary>
   );

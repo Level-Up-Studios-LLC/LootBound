@@ -77,6 +77,20 @@ export function isTaskActiveToday(task: Task): boolean {
   return true;
 }
 
+/**
+ * Check if a task should be displayed — includes tomorrow's tasks after bedtime.
+ * Use this for UI display only, not for bedtime penalty logic.
+ */
+export function isTaskVisibleToday(task: Task, bedtime?: number): boolean {
+  if (isTaskActiveToday(task)) return true;
+  // After bedtime, also show tomorrow's tasks as a preview
+  if (isPastBedtime(bedtime) && task.dueDay != null) {
+    const tomorrowDow = (todayDow() + 1) % 7;
+    return task.dueDay === tomorrowDow;
+  }
+  return false;
+}
+
 export function slugify(s: string): string {
   return `${s.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now().toString(36)}`;
 }

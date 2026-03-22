@@ -12,6 +12,7 @@ import {
   getLevelTitle,
   getXpProgress,
   getStreakMultiplier,
+  isTaskActiveToday,
 } from '../utils.ts';
 
 export default function DashboardScreen(): React.ReactElement | null {
@@ -19,17 +20,18 @@ export default function DashboardScreen(): React.ReactElement | null {
   const ch = ctx.currentChild;
   const ud = ctx.currentUserData;
   const todayTasks = ctx.todayTasks;
+  const activeTasks = ctx.activeTasks;
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
 
   if (!ch || !ud) return null;
 
-  const done = todayTasks.filter(t => {
+  const done = activeTasks.filter(t => {
     const l = tLog[t.id];
     return l && !l.rejected && l.status !== 'missed';
   }).length;
-  const total = todayTasks.length;
+  const total = activeTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
@@ -182,9 +184,17 @@ export default function DashboardScreen(): React.ReactElement | null {
             .map((t, idx) => {
               const entry = tLog[t.id];
               const isRej = entry && entry.rejected;
-              const status = isRej
-                ? 'rejected'
-                : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+              const isPreview = !isTaskActiveToday(t);
+              const baseStatus = getTaskStatus(
+                t,
+                null,
+                ctx.cfg ? ctx.cfg.bedtime : undefined
+              );
+              const status = isPreview
+                ? 'upcoming'
+                : isRej && baseStatus !== 'missed'
+                  ? 'rejected'
+                  : baseStatus;
               const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
               return (
                 <div
@@ -208,7 +218,12 @@ export default function DashboardScreen(): React.ReactElement | null {
                     )}
                   </div>
                   <Badge status={status} />
-                  {status !== 'missed' && (
+                  {isPreview && (
+                    <span className='text-[10px] font-bold text-qmuted bg-qslate/10 rounded-badge px-3 py-2'>
+                      Tomorrow
+                    </span>
+                  )}
+                  {!isPreview && status !== 'missed' && (
                     <button
                       onClick={() => {
                         startCapture(t.id);
@@ -231,10 +246,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                 </div>
               );
             })}
-          {todayTasks.filter(t => {
-            const l = tLog[t.id];
-            return !l || l.rejected;
-          }).length === 0 && (
+          {total > 0 && done === total && (
             <div className='text-center p-5 text-qteal font-semibold text-lg animate-confetti'>
               <FontAwesomeIcon
                 icon={faPartyHorn}

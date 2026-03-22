@@ -27,6 +27,7 @@ import {
   getWeekStart,
   isPastBedtime,
   isTaskActiveToday,
+  isTaskVisibleToday,
 } from '../utils.ts';
 import {
   getConfig as fsGetConfig,
@@ -75,6 +76,7 @@ interface AppContextValue {
   currentChild: Child | null;
   currentUserData: UserData | null;
   todayTasks: import('../types.ts').Task[];
+  activeTasks: import('../types.ts').Task[];
   tLog: Record<string, any>;
   pendingCount: number;
 
@@ -420,6 +422,7 @@ export function AppProvider(props: {
             windowEnd: t.windowEnd,
             daily: t.daily,
             dueDay: t.dueDay,
+            createdAt: t.createdAt,
           });
         });
 
@@ -579,6 +582,8 @@ export function AppProvider(props: {
         let changed = false;
         tasks.forEach(t => {
           const entry = updated.taskLog[d][t.id];
+          // Skip tasks created today — don't penalize for late-added missions
+          if (t.createdAt === d) return;
           if (!entry || entry.rejected) {
             const tc = tierCfg(t.tier);
             updated.taskLog[d][t.id] = {
@@ -633,7 +638,8 @@ export function AppProvider(props: {
     curUser && curUser !== 'parent' ? allU[curUser] || null : null;
   const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
-  const todayTasks = uTasks.filter(isTaskActiveToday);
+  const activeTasks = uTasks.filter(isTaskActiveToday);
+  const todayTasks = uTasks.filter(t => isTaskVisibleToday(t, cfg?.bedtime));
   const d = getToday();
   const tLog =
     currentUserData && currentUserData.taskLog && currentUserData.taskLog[d]
@@ -661,6 +667,7 @@ export function AppProvider(props: {
     currentChild,
     currentUserData,
     todayTasks,
+    activeTasks,
     tLog,
     pendingCount,
     setScreen,
