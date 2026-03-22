@@ -150,6 +150,14 @@ export async function saveParentMember(
   if (data.parentPin != null) clean.parentPin = data.parentPin;
   if (data.parentName != null) clean.parentName = data.parentName;
   if (data.familyId != null) clean.familyId = data.familyId;
+  // If no familyId in the update, read the existing doc to include it
+  // so the security rule (familyId must not change) can evaluate correctly
+  if (!clean.familyId) {
+    const snap = await getDoc(doc(db, 'parentMembers', uid));
+    if (snap.exists()) {
+      clean.familyId = snap.data().familyId;
+    }
+  }
   await setDoc(doc(db, 'parentMembers', uid), clean, { merge: true });
 }
 
