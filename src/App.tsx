@@ -263,6 +263,7 @@ function AppRouter() {
 
   const [parentPin, setParentPin] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
   useEffect(() => {
@@ -427,22 +428,27 @@ function AppRouter() {
           </div>
           <div className='flex flex-col gap-3 w-full max-w-[260px]'>
             <button
+              disabled={verifyLoading}
               onClick={async () => {
+                setVerifyLoading(true);
                 try {
                   const ok = await auth.doSendVerification();
                   setResendStatus(ok ? 'Email sent!' : 'Failed to send');
                 } catch {
                   setResendStatus('Failed to send');
+                } finally {
+                  setVerifyLoading(false);
                 }
               }}
               className='btn-primary'
             >
-              Resend Verification Email
+              {verifyLoading ? 'Sending...' : 'Resend Verification Email'}
             </button>
             <div className='text-qteal text-[13px] text-center min-h-[20px]'>{resendStatus}</div>
             <button
               onClick={() => {
                 auth.doRefreshVerification();
+                setResendStatus('Checking verification status...');
               }}
               className='btn-ghost'
             >
