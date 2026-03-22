@@ -123,6 +123,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     if (!ud.taskLog[d]) ud.taskLog[d] = {};
     const task = (deps.cfg.tasks[uid] || []).find(t => t.id === taskId);
     if (!task) return;
+    if (!isTaskActiveToday(task)) return;
     const ex = ud.taskLog[d][taskId];
     if (ex && !ex.rejected) return;
     const now = nowMin();

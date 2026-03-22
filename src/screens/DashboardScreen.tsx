@@ -12,6 +12,7 @@ import {
   getLevelTitle,
   getXpProgress,
   getStreakMultiplier,
+  isTaskActiveToday,
 } from '../utils.ts';
 
 export default function DashboardScreen(): React.ReactElement | null {
@@ -209,7 +210,12 @@ export default function DashboardScreen(): React.ReactElement | null {
                     )}
                   </div>
                   <Badge status={status} />
-                  {status !== 'missed' && (
+                  {!isTaskActiveToday(t) && (
+                    <span className='text-[10px] font-bold text-qmuted bg-qslate/10 rounded-badge px-3 py-2'>
+                      Tomorrow
+                    </span>
+                  )}
+                  {isTaskActiveToday(t) && status !== 'missed' && (
                     <button
                       onClick={() => {
                         startCapture(t.id);
