@@ -174,12 +174,12 @@ export default function TasksScreen(): React.ReactElement | null {
                   View photo proof
                 </button>
               )}
-              {!isTaskActiveToday(t) && !isDone && !isMissed && (
+              {isPreview && !isDone && !isMissed && (
                 <div className='w-full text-center text-[12px] font-bold text-qmuted bg-qslate/10 rounded-badge py-2.5 mt-3'>
                   Tomorrow's Mission
                 </div>
               )}
-              {isTaskActiveToday(t) && !isDone && !isMissed && status !== 'missed' && (
+              {!isPreview && !isDone && !isMissed && status !== 'missed' && (
                 <button
                   onClick={() => {
                     startCapture(t.id);
