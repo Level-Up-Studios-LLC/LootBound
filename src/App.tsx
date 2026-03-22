@@ -345,6 +345,21 @@ function AppRouter() {
     }
   }, [auth.authUser]);
 
+  // Handle parent auto-verify transitions outside render
+  useEffect(() => {
+    if (role !== 'parent' || !auth.authUser || parentPin === null) return;
+
+    if (auth.justSignedIn && !parentVerified) {
+      auth.clearJustSignedIn();
+      setParentVerified(true);
+      return;
+    }
+
+    if (!parentVerified && !auth.justSignedIn && !parentPin) {
+      setParentVerified(true);
+    }
+  }, [role, auth.authUser, auth.justSignedIn, parentPin, parentVerified]);
+
   // Handle Firebase action URLs (password reset, email verification)
   if (actionParams && actionParams.mode === 'verifyEmail') {
     return (
@@ -404,10 +419,8 @@ function AppRouter() {
       return <LoadingScreen />;
     }
 
-    // Fresh sign-in/sign-up → skip PIN, go straight to dashboard
+    // Fresh sign-in/sign-up transition in progress
     if (auth.justSignedIn && !parentVerified) {
-      auth.clearJustSignedIn();
-      setParentVerified(true);
       return <LoadingScreen />;
     }
 
@@ -433,8 +446,7 @@ function AppRouter() {
         );
       }
 
-      // No PIN set — auto-verify immediately (no flash)
-      setParentVerified(true);
+      // No PIN set — auto-verify handled by effect above
       return <LoadingScreen />;
     }
 

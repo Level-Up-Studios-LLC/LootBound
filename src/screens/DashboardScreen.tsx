@@ -213,12 +213,12 @@ export default function DashboardScreen(): React.ReactElement | null {
                     )}
                   </div>
                   <Badge status={status} />
-                  {!isTaskActiveToday(t) && (
+                  {isPreview && (
                     <span className='text-[10px] font-bold text-qmuted bg-qslate/10 rounded-badge px-3 py-2'>
                       Tomorrow
                     </span>
                   )}
-                  {isTaskActiveToday(t) && status !== 'missed' && (
+                  {!isPreview && status !== 'missed' && (
                     <button
                       onClick={() => {
                         startCapture(t.id);
