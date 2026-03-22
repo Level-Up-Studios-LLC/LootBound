@@ -7,7 +7,16 @@ Sentry.init({
   dsn,
   environment: (import.meta.env.VITE_SENTRY_ENV as string) || 'development',
   enabled: !!dsn && !userDisabled,
-  integrations: [Sentry.browserTracingIntegration()],
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: true,
+      maskAllInputs: true,
+      blockAllMedia: false,
+    }),
+  ],
   tracesSampleRate: 0.2,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
   sendDefaultPii: false,
 });

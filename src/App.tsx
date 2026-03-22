@@ -17,6 +17,7 @@ import {
 import {
   signInAnonymousKid,
   getCurrentUid,
+  hasPasswordProvider,
   applyVerificationCode,
 } from './services/auth.ts';
 import { getStorage, setStorage, removeStorage } from './services/platform.ts';
@@ -261,8 +262,14 @@ function AppRouter() {
   };
 
   const [parentPin, setParentPin] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [verifyAction, setVerifyAction] = useState<'send' | 'check' | null>(null);
   const [showCreatePin, setShowCreatePin] = useState(false);
   const [initDone, setInitDone] = useState(false);
+  useEffect(() => {
+    setResendStatus(null);
+    setVerifyAction(null);
+  }, [role, auth.authUser?.uid, auth.authUser?.emailVerified]);
   const [storedKid, setStoredKid] = useState<string | null | undefined>(
     undefined
   );
@@ -400,6 +407,95 @@ function AppRouter() {
             setRole(null);
           }}
         />
+      );
+    }
+
+    // Email verification gate — block unverified email+password users
+    if (
+      hasPasswordProvider() &&
+      !auth.authUser.emailVerified
+    ) {
+      return (
+        <div className='page-wrapper page-centered'>
+          <div className='text-5xl mb-5'>
+            <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
+          </div>
+          <div className='font-display text-2xl font-bold mb-3 text-qslate'>
+            Verify Your Email
+          </div>
+          <div className='text-sm text-qmuted text-center mb-6 max-w-[300px]'>
+            We sent a verification link to <strong>{auth.authUser.email}</strong>.
+            Please check your inbox and click the link to continue.
+          </div>
+          <div className='flex flex-col gap-3 w-full max-w-[260px]'>
+            <button
+              disabled={verifyAction !== null}
+              onClick={async () => {
+                setVerifyAction('send');
+                try {
+                  const ok = await auth.doSendVerification();
+                  setResendStatus(ok ? 'Email sent!' : 'Failed to send');
+                } catch {
+                  setResendStatus('Failed to send');
+                } finally {
+                  setVerifyAction(null);
+                }
+              }}
+              className='btn-primary'
+            >
+              {verifyAction === 'send' ? 'Sending...' : 'Resend Verification Email'}
+            </button>
+            <div
+              role='status'
+              aria-live='polite'
+              aria-atomic='true'
+              className='text-qteal text-[13px] text-center min-h-[20px]'
+            >
+              {resendStatus}
+            </div>
+            <button
+              disabled={verifyAction !== null}
+              onClick={async () => {
+                setResendStatus('Checking verification status...');
+                setVerifyAction('check');
+                try {
+                  const verified = await auth.doRefreshVerification();
+                  if (!verified) {
+                    setResendStatus('Not verified yet. Please check your inbox.');
+                  } else {
+                    setResendStatus('Email verified! Redirecting...');
+                  }
+                } catch {
+                  setResendStatus('Could not check verification status. Please try again.');
+                } finally {
+                  setVerifyAction(null);
+                }
+              }}
+              className='btn-ghost'
+            >
+              {verifyAction === 'check' ? 'Checking...' : "I've Verified My Email"}
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await auth.doSignOut();
+                  auth.clearJustSignedIn();
+                  setParentVerified(false);
+                  setParentPin(null);
+                  setShowCreatePin(false);
+                  setVerifyAction(null);
+                  setResendStatus(null);
+                  setRole(null);
+                } catch {
+                  setResendStatus('Sign out failed. Please try again.');
+                }
+              }}
+              className='btn-ghost text-qmuted'
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
       );
     }
 
