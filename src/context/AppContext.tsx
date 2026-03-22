@@ -76,6 +76,7 @@ interface AppContextValue {
   currentChild: Child | null;
   currentUserData: UserData | null;
   todayTasks: import('../types.ts').Task[];
+  activeTasks: import('../types.ts').Task[];
   tLog: Record<string, any>;
   pendingCount: number;
 
@@ -637,6 +638,7 @@ export function AppProvider(props: {
     curUser && curUser !== 'parent' ? allU[curUser] || null : null;
   const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
+  const activeTasks = uTasks.filter(isTaskActiveToday);
   const todayTasks = uTasks.filter(t => isTaskVisibleToday(t, cfg?.bedtime));
   const d = getToday();
   const tLog =
@@ -665,6 +667,7 @@ export function AppProvider(props: {
     currentChild,
     currentUserData,
     todayTasks,
+    activeTasks,
     tLog,
     pendingCount,
     setScreen,

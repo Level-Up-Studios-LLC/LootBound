@@ -19,17 +19,18 @@ export default function DashboardScreen(): React.ReactElement | null {
   const ch = ctx.currentChild;
   const ud = ctx.currentUserData;
   const todayTasks = ctx.todayTasks;
+  const activeTasks = ctx.activeTasks;
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
 
   if (!ch || !ud) return null;
 
-  const done = todayTasks.filter(t => {
+  const done = activeTasks.filter(t => {
     const l = tLog[t.id];
     return l && !l.rejected && l.status !== 'missed';
   }).length;
-  const total = todayTasks.length;
+  const total = activeTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
