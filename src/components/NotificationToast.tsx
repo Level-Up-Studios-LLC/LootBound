@@ -1,4 +1,4 @@
-import { useTransition, animated, config } from '@react-spring/web';
+import { useTransition, animated, config, to } from '@react-spring/web';
 import type { Notification } from '../types.ts';
 
 interface NotificationToastProps {
@@ -33,9 +33,9 @@ export default function NotificationToast(p: NotificationToastProps) {
         }
         style={{
           opacity: style.opacity,
-          transform: style.y.to(
-            (y) =>
-              `translateX(-50%) translateY(${y}px) scale(${style.scale.get()})`
+          transform: to(
+            [style.y, style.scale],
+            (y, s) => `translateX(-50%) translateY(${y}px) scale(${s})`
           ),
         }}
       >

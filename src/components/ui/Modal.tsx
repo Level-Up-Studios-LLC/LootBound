@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSpring, animated, config } from '@react-spring/web';
+import { useSpring, animated, config, to } from '@react-spring/web';
 
 interface ModalProps {
   title: string;
@@ -32,8 +32,9 @@ export default function Modal(props: ModalProps): React.ReactElement {
         }
         style={{
           opacity: cardSpring.opacity,
-          transform: cardSpring.y.to(
-            y => `translateY(${y}px) scale(${cardSpring.scale.get()})`
+          transform: to(
+            [cardSpring.y, cardSpring.scale],
+            (y, s) => `translateY(${y}px) scale(${s})`
           ),
         }}
       >

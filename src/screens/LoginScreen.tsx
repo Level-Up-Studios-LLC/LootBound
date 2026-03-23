@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTrail, useSpring, useTransition, animated, config } from '@react-spring/web';
+import { useTrail, useSpring, useTransition, animated, config, to } from '@react-spring/web';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -185,8 +185,9 @@ export default function LoginScreen(
             <animated.div
               className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl'
               style={{
-                transform: style.scale.to(
-                  s => `scale(${s}) translateY(${style.y.get()}px)`
+                transform: to(
+                  [style.scale, style.y],
+                  (s, y) => `scale(${s}) translateY(${y}px)`
                 ),
               }}
               role='dialog'

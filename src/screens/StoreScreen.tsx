@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTrail, useSpring, useTransition, animated, config } from '@react-spring/web';
+import { useTrail, useSpring, useTransition, animated, config, to } from '@react-spring/web';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV } from '../constants.ts';
@@ -197,8 +197,10 @@ export default function StoreScreen(): React.ReactElement | null {
               <animated.div
                 className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto'
                 style={{
-                  transform: style.scale
-                    .to(s => `scale(${s}) translateY(${style.y.get()}px)`),
+                  transform: to(
+                    [style.scale, style.y],
+                    (s, y) => `scale(${s}) translateY(${y}px)`
+                  ),
                 }}
               >
                 <div

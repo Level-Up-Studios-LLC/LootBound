@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSpring, animated, config } from '@react-spring/web';
+import { useSpring, animated, config, to } from '@react-spring/web';
 
 interface ConfirmDialogProps {
   title: string;
@@ -51,8 +51,9 @@ export default function ConfirmDialog(
         }
         style={{
           opacity: cardSpring.opacity,
-          transform: cardSpring.y.to(
-            y => `translateY(${y}px) scale(${cardSpring.scale.get()})`
+          transform: to(
+            [cardSpring.y, cardSpring.scale],
+            (y, s) => `translateY(${y}px) scale(${s})`
           ),
         }}
       >
