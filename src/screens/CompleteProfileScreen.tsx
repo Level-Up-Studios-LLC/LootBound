@@ -198,6 +198,8 @@ export default function CompleteProfileScreen(
       const googlePhoto = firebaseAuth.currentUser?.photoURL;
       if (googlePhoto) {
         memberData.parentPhotoURL = googlePhoto;
+      } else if (props.authUser.email) {
+        memberData.parentPhotoURL = getGravatarUrl(props.authUser.email);
       }
       if (pin) {
         memberData.parentPin = pin;

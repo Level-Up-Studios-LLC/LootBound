@@ -24,7 +24,9 @@ export default function AdminScreen(): React.ReactElement {
     if (!uid) return;
     return onParentMemberSnapshot(uid, member => {
       setMyName(member && member.parentName ? member.parentName : undefined);
-      setMyPhoto(member && member.parentPhotoURL ? member.parentPhotoURL : undefined);
+      setMyPhoto(
+        member && member.parentPhotoURL ? member.parentPhotoURL : undefined
+      );
     });
   }, []);
 
@@ -70,12 +72,22 @@ export default function AdminScreen(): React.ReactElement {
               />
             ) : myName ? (
               <div className='w-9 h-9 rounded-full bg-qteal/20 flex items-center justify-center font-display font-bold text-qteal text-sm shrink-0'>
-                {myName[0].toUpperCase()}
+                {(() => {
+                  const parts = myName.trim().split(/\s+/);
+                  return parts.length >= 2
+                    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                    : myName.slice(0, 2).toUpperCase();
+                })()}
               </div>
             ) : null}
             <div>
               <div className='font-display text-xl font-bold text-qslate leading-tight'>
                 {myName || 'Parent Dashboard'}
+                {myName && (
+                  <span className='text-[10px] font-bold text-qmuted ml-1.5'>
+                    ({getCurrentUid() === ctx.familyId ? 'Owner' : 'Member'})
+                  </span>
+                )}
               </div>
               <div className='text-[12px] text-qmuted'>
                 {new Date().toLocaleDateString('en-US', {

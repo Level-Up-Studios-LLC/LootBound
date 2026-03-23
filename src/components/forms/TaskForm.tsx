@@ -61,7 +61,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           })}
         </select>
       </div>
-      <div className='grid grid-cols-2 gap-3'>
+      <div className='grid grid-cols-2 gap-3 [&_input]:min-w-0'>
         <div>
           <label
             htmlFor='tf-start'

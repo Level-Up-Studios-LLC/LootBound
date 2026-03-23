@@ -194,7 +194,8 @@ export async function startGoogleSignIn(): Promise<void> {
  * Returns the family code if a new family was created, null otherwise.
  */
 export async function handleGoogleRedirectResult(): Promise<{
-  familyCode: string;
+  isNew: boolean;
+  familyCode?: string;
   photoURL?: string;
 } | null> {
   const result = await getRedirectResult(auth);
@@ -206,7 +207,7 @@ export async function handleGoogleRedirectResult(): Promise<{
   // Check if this user already has a parentMembers mapping
   // (returning user, or email/password account that was auto-linked with Google)
   const snap = await getDoc(doc(db, 'parentMembers', uid));
-  if (snap.exists()) return null;
+  if (snap.exists()) return { isNew: false };
 
   // New user — create family
   await setDoc(
@@ -216,7 +217,7 @@ export async function handleGoogleRedirectResult(): Promise<{
   );
   const code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
-  return { familyCode: code, photoURL: user.photoURL ?? undefined };
+  return { isNew: true, familyCode: code, photoURL: user.photoURL ?? undefined };
 }
 
 export async function signOutFamily(): Promise<void> {

@@ -49,7 +49,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
 
   return (
     <div>
-      <div className='text-xs text-qmuted bg-qmint rounded-card p-3 mb-2'>
+      <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
         Missions are recurring. Daily missions repeat every day, weekly missions
         on their assigned day.
       </div>

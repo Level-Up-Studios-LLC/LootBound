@@ -423,7 +423,10 @@ function AppRouter() {
     }
 
     // New user needs profile completion
-    if (auth.isNewUser && auth.lastFamilyCode) {
+    if (auth.isNewUser) {
+      if (!auth.lastFamilyCode) {
+        return <LoadingScreen />;
+      }
       return (
         <CompleteProfileScreen
           authUser={auth.authUser}

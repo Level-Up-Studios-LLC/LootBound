@@ -79,9 +79,11 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     handleGoogleRedirectResult()
       .then(result => {
         if (result) {
-          setLastFamilyCode(result.familyCode);
           setJustSignedIn(true);
-          setIsNewUser(true);
+          if (result.isNew && result.familyCode) {
+            setLastFamilyCode(result.familyCode);
+            setIsNewUser(true);
+          }
         }
       })
       .catch((err: any) => {
