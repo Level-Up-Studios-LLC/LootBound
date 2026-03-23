@@ -7,7 +7,7 @@
  * in the foreground.
  */
 
-var SOUND_KEYS = ['success', 'error', 'approval', 'levelup', 'streak'] as const;
+var SOUND_KEYS = ['success', 'error', 'approval', 'levelup', 'streak', 'victory'] as const;
 export type SoundKey = (typeof SOUND_KEYS)[number];
 
 var SOUND_URLS: Record<SoundKey, string> = {
@@ -16,6 +16,7 @@ var SOUND_URLS: Record<SoundKey, string> = {
   approval: '/sounds/approval.mp3',
   levelup: '/sounds/levelup.mp3',
   streak: '/sounds/streak.mp3',
+  victory: '/sounds/victory.mp3',
 };
 
 var audioElements: Record<string, HTMLAudioElement> = {};

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTrail, useSpring, animated, config } from '@react-spring/web';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faCamera, faChevronRight, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -39,6 +40,30 @@ export default function TasksScreen(): React.ReactElement | null {
     return timeToMin(a.windowStart) - timeToMin(b.windowStart);
   });
 
+  const sortedTomorrow = tomorrowTasks
+    .slice()
+    .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart));
+
+  // Staggered entrance for today's mission cards
+  const taskTrail = useTrail(sorted.length, {
+    from: { opacity: 0, y: 16 },
+    to: { opacity: 1, y: 0 },
+    config: config.gentle,
+  });
+
+  // Chevron rotation spring
+  const chevronSpring = useSpring({
+    rotate: previewOpen ? 90 : 0,
+    config: config.stiff,
+  });
+
+  // Staggered entrance for tomorrow preview cards
+  const tomorrowTrail = useTrail(sortedTomorrow.length, {
+    from: { opacity: 0, y: 12 },
+    to: previewOpen ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 },
+    config: config.gentle,
+  });
+
   return (
     <div className='pb-20'>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
@@ -64,7 +89,8 @@ export default function TasksScreen(): React.ReactElement | null {
             description='Enjoy your free time. Check back tomorrow for new missions!'
           />
         )}
-        {sorted.map((t, idx) => {
+        {taskTrail.map((spring, idx) => {
+          const t = sorted[idx];
           const entry = tLog[t.id];
           const isRej = entry && entry.rejected;
           const isDone = entry && !entry.rejected && entry.status !== 'missed';
@@ -93,25 +119,21 @@ export default function TasksScreen(): React.ReactElement | null {
               ? 0
               : tierCfgFn(t.tier).xp;
 
-          let animClass = '';
-          if (isDone) {
-            if (status === 'early') animClass = 'animate-confetti';
-            else if (status === 'ontime') animClass = 'animate-check';
-            else animClass = 'animate-shake';
-          }
-
           const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
           const dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
 
           return (
-            <div
+            <animated.div
               key={t.id}
               className={
                 (isDone || isMissed ? dimBg : cardBg) +
-                ' rounded-btn p-4 transition-all ' +
-                animClass
+                ' rounded-btn p-4'
               }
-              style={{ borderLeft: `3px solid ${sl.color}` }}
+              style={{
+                borderLeft: `3px solid ${sl.color}`,
+                opacity: spring.opacity,
+                transform: spring.y.to(v => `translateY(${v}px)`),
+              }}
             >
               <div className='flex justify-between items-start'>
                 <div>
@@ -213,7 +235,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   Missed. Coins deducted.
                 </div>
               )}
-            </div>
+            </animated.div>
           );
         })}
         {tomorrowTasks.length > 0 && (
@@ -221,23 +243,33 @@ export default function TasksScreen(): React.ReactElement | null {
             onClick={() => setPreviewOpen(v => !v)}
             className='flex items-center justify-center gap-2 text-[13px] text-qmuted font-semibold font-body bg-transparent border-none cursor-pointer py-3 mt-2 hover:text-qslate transition-colors'
           >
-            <FontAwesomeIcon
-              icon={faChevronRight}
-              style={FA_ICON_STYLE}
-              className={'text-[10px] transition-transform duration-200' + (previewOpen ? ' rotate-90' : '')}
-            />
+            <animated.span
+              style={{
+                display: 'inline-block',
+                transform: chevronSpring.rotate.to(v => `rotate(${v}deg)`),
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faChevronRight}
+                style={FA_ICON_STYLE}
+                className='text-[10px]'
+              />
+            </animated.span>
             Preview tomorrow's missions
           </button>
         )}
         {previewOpen && tomorrowTasks.length > 0 && (
-          <div className='flex flex-col gap-2 animate-slide-up'>
-            {tomorrowTasks
-              .slice()
-              .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
-              .map(t => (
-                <div
+          <div className='flex flex-col gap-2'>
+            {tomorrowTrail.map((spring, i) => {
+              const t = sortedTomorrow[i];
+              return (
+                <animated.div
                   key={t.id}
                   className='bg-qslate/5 rounded-btn p-3 flex justify-between items-center'
+                  style={{
+                    opacity: spring.opacity,
+                    transform: spring.y.to(v => `translateY(${v}px)`),
+                  }}
                 >
                   <div>
                     <div className='text-sm font-semibold text-qmuted flex items-center gap-1.5'>
@@ -259,8 +291,9 @@ export default function TasksScreen(): React.ReactElement | null {
                   <div className='text-[11px] text-qmuted font-semibold'>
                     {tp(t.tier)} coins
                   </div>
-                </div>
-              ))}
+                </animated.div>
+              );
+            })}
           </div>
         )}
       </div>

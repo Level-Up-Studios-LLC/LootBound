@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTrail, useSpring, animated, config } from '@react-spring/web';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFire, faTrophy, faMedal } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -32,7 +33,6 @@ function countPerfectDays(
     if (dt < weekStart || dt.charAt(0) === '_') continue;
     const log = ud.taskLog[dt];
     if (!log) continue;
-    // Filter tasks to only those active on this date
     const dow = new Date(dt + 'T12:00:00').getDay();
     const activeTasks = tasks.filter(t => {
       if (t.daily) return true;
@@ -75,12 +75,34 @@ export default function ScoresScreen(): React.ReactElement | null {
     const lt = getLevelTitle(ud.level || 1);
     const sMult = getStreakMultiplier(ud.streak || 0);
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const profileSpring = useSpring({
+      from: { opacity: 0, scale: 0.9 },
+      to: { opacity: 1, scale: 1 },
+      config: config.wobbly,
+    });
+
+    const SOLO_STAT_COUNT = 5;
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const statTrail = useTrail(SOLO_STAT_COUNT, {
+      from: { opacity: 0, y: 16 },
+      to: { opacity: 1, y: 0 },
+      config: config.gentle,
+      delay: 150,
+    });
+
     return (
       <div className='p-4 pb-20'>
         <div className='font-display text-2xl font-bold mb-4 text-qslate'>
           My Stats
         </div>
-        <div className='bg-qmint rounded-card p-5 mb-4 text-center animate-slide-up'>
+        <animated.div
+          className='bg-qmint rounded-card p-5 mb-4 text-center'
+          style={{
+            opacity: profileSpring.opacity,
+            transform: profileSpring.scale.to(v => `scale(${v})`),
+          }}
+        >
           <div className='text-[40px] mb-1'>{ch.avatar}</div>
           <div className='font-display text-xl font-bold text-qslate'>
             {ch.name}
@@ -88,23 +110,41 @@ export default function ScoresScreen(): React.ReactElement | null {
           <div className='font-bold text-sm' style={{ color: lt.color }}>
             Lv.{ud.level || 1} {lt.title}
           </div>
-        </div>
+        </animated.div>
         <div className='grid grid-cols-2 gap-3 mb-4'>
-          <div className='bg-qyellow rounded-btn p-4 text-center'>
+          <animated.div
+            className='bg-qyellow rounded-btn p-4 text-center'
+            style={{
+              opacity: statTrail[0].opacity,
+              transform: statTrail[0].y.to(v => `translateY(${v}px)`),
+            }}
+          >
             <div className='font-display text-2xl font-bold text-qslate'>
               {(ud.points || 0).toLocaleString()}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>COINS</div>
-          </div>
-          <div className='bg-qmint rounded-btn p-4 text-center'>
+          </animated.div>
+          <animated.div
+            className='bg-qmint rounded-btn p-4 text-center'
+            style={{
+              opacity: statTrail[1].opacity,
+              transform: statTrail[1].y.to(v => `translateY(${v}px)`),
+            }}
+          >
             <div className='font-display text-2xl font-bold text-qslate'>
               {myDone}/{myTasks.length}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>TODAY</div>
-          </div>
+          </animated.div>
         </div>
         <div className='grid grid-cols-3 gap-3 mb-4'>
-          <div className='bg-qyellow rounded-btn p-4 text-center'>
+          <animated.div
+            className='bg-qyellow rounded-btn p-4 text-center'
+            style={{
+              opacity: statTrail[2].opacity,
+              transform: statTrail[2].y.to(v => `translateY(${v}px)`),
+            }}
+          >
             <div className='font-display text-xl font-bold text-qslate'>
               <FontAwesomeIcon
                 icon={faFire}
@@ -114,21 +154,33 @@ export default function ScoresScreen(): React.ReactElement | null {
               {ud.streak || 0}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>STREAK</div>
-          </div>
-          <div className='bg-qmint rounded-btn p-4 text-center'>
+          </animated.div>
+          <animated.div
+            className='bg-qmint rounded-btn p-4 text-center'
+            style={{
+              opacity: statTrail[3].opacity,
+              transform: statTrail[3].y.to(v => `translateY(${v}px)`),
+            }}
+          >
             <div className='font-display text-xl font-bold text-qslate'>
               {ud.bestStreak || 0}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>BEST</div>
-          </div>
-          <div className='bg-qyellow rounded-btn p-4 text-center'>
+          </animated.div>
+          <animated.div
+            className='bg-qyellow rounded-btn p-4 text-center'
+            style={{
+              opacity: statTrail[4].opacity,
+              transform: statTrail[4].y.to(v => `translateY(${v}px)`),
+            }}
+          >
             <div className='font-display text-xl font-bold text-qslate'>
               {myPerfect}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>
               PERFECT DAYS
             </div>
-          </div>
+          </animated.div>
         </div>
         {sMult > 1 && (
           <div className='bg-qmint rounded-btn p-3 mb-4 text-center text-[13px] text-qmuted font-semibold'>
@@ -190,7 +242,6 @@ export default function ScoresScreen(): React.ReactElement | null {
   }
 
   // Multi-kid: leaderboard with top adventurer highlight
-  // Calculate perfect days per child this week
   const perfects: Record<string, number> = {};
   let topPerfect = 0;
   let topIds: string[] = [];
@@ -208,14 +259,19 @@ export default function ScoresScreen(): React.ReactElement | null {
   });
 
   const sorted = children.slice().sort((a, b) => {
-    // Primary sort: perfect days (desc)
     const pdDiff = (perfects[b.id] || 0) - (perfects[a.id] || 0);
     if (pdDiff !== 0) return pdDiff;
-    // Secondary: coins (desc)
     return (
       ((allU[b.id] || ({} as UserData)).points || 0) -
       ((allU[a.id] || ({} as UserData)).points || 0)
     );
+  });
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const leaderTrail = useTrail(sorted.length, {
+    from: { opacity: 0, x: -20 },
+    to: { opacity: 1, x: 0 },
+    config: config.gentle,
   });
 
   return (
@@ -226,7 +282,8 @@ export default function ScoresScreen(): React.ReactElement | null {
         </div>
       </div>
       <div className='px-4 pt-3 flex flex-col gap-4'>
-        {sorted.map((c, idx) => {
+        {leaderTrail.map((spring, idx) => {
+          const c = sorted[idx];
           const udata = allU[c.id] || freshUser();
           const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
           const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
@@ -240,19 +297,19 @@ export default function ScoresScreen(): React.ReactElement | null {
               : 'bg-qyellow';
           const lt = getLevelTitle(udata.level || 1);
           return (
-            <div
+            <animated.div
               key={c.id}
-              className={
-                'rounded-card p-4 transition-all animate-slide-up ' + cardBg
-              }
-              style={
-                isTop
+              className={'rounded-card p-4 ' + cardBg}
+              style={{
+                ...(isTop
                   ? {
                       border: '2px solid #eab308',
                       boxShadow: '0 0 12px rgba(234,179,8,0.2)',
                     }
-                  : {}
-              }
+                  : {}),
+                opacity: spring.opacity,
+                transform: spring.x.to(v => `translateX(${v}px)`),
+              }}
             >
               {isTop && (
                 <div
@@ -310,7 +367,7 @@ export default function ScoresScreen(): React.ReactElement | null {
                   );
                 })}
               </div>
-            </div>
+            </animated.div>
           );
         })}
       </div>

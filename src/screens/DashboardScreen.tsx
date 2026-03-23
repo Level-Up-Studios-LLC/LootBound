@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { useTrail, useSpring, animated, config } from '@react-spring/web';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faFire, faPartyHorn, faCheck, faCoins } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -15,92 +16,69 @@ import {
 } from '../utils.ts';
 import { playSound } from '../services/notificationSound.ts';
 
+// --- Confetti ---
 const CONFETTI_COLORS = ['#4ac7a8', '#ffe08a', '#ff8c94', '#8b7ec8', '#5ec4d4', '#e6a817'];
-const CONFETTI_COUNT = 60;
+const CONFETTI_COUNT = 35;
 
-function ConfettiCanvas(): React.ReactElement {
-  const ref = useRef<HTMLCanvasElement>(null);
+interface ConfettiPiece {
+  x: number;
+  w: number;
+  h: number;
+  color: string;
+  drift: number;
+  spin: number;
+}
 
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    const pieces: {
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-      color: string;
-      vy: number;
-      vx: number;
-      rot: number;
-      rv: number;
-      opacity: number;
-    }[] = [];
-
-    for (let i = 0; i < CONFETTI_COUNT; i++) {
-      pieces.push({
-        x: Math.random() * canvas.width,
-        y: -10 - Math.random() * canvas.height * 0.5,
+function Confetti(): React.ReactElement {
+  const pieces = useMemo<ConfettiPiece[]>(
+    () =>
+      Array.from({ length: CONFETTI_COUNT }, () => ({
+        x: Math.random() * 100,
         w: 4 + Math.random() * 6,
         h: 6 + Math.random() * 10,
         color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-        vy: 1.5 + Math.random() * 3,
-        vx: (Math.random() - 0.5) * 2,
-        rot: Math.random() * Math.PI * 2,
-        rv: (Math.random() - 0.5) * 0.15,
-        opacity: 1,
-      });
-    }
+        drift: (Math.random() - 0.5) * 60,
+        spin: Math.random() * 720 - 360,
+      })),
+    []
+  );
 
-    let frame: number;
-    let elapsed = 0;
-    const duration = 3000;
-    const startTime = performance.now();
-
-    function draw(now: number) {
-      elapsed = now - startTime;
-      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
-
-      for (const p of pieces) {
-        p.y += p.vy;
-        p.x += p.vx;
-        p.rot += p.rv;
-        if (elapsed > duration * 0.6) {
-          p.opacity = Math.max(0, p.opacity - 0.02);
-        }
-
-        ctx!.save();
-        ctx!.translate(p.x, p.y);
-        ctx!.rotate(p.rot);
-        ctx!.globalAlpha = p.opacity;
-        ctx!.fillStyle = p.color;
-        ctx!.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx!.restore();
-      }
-
-      if (elapsed < duration) {
-        frame = requestAnimationFrame(draw);
-      }
-    }
-
-    frame = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(frame);
-  }, []);
+  const trail = useTrail(CONFETTI_COUNT, {
+    from: { y: -20, opacity: 1, rotate: 0 },
+    to: { y: 110, opacity: 0, rotate: 360 },
+    config: { tension: 30, friction: 14, clamp: true },
+    trail: 40,
+  });
 
   return (
-    <canvas
-      ref={ref}
-      className='fixed inset-0 pointer-events-none'
-      style={{ zIndex: 200, width: '100%', height: '100%' }}
-    />
+    <div className='fixed inset-0 pointer-events-none overflow-hidden' style={{ zIndex: 200 }}>
+      {trail.map((spring, i) => {
+        const p = pieces[i];
+        return (
+          <animated.div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${p.x}%`,
+              width: p.w,
+              height: p.h,
+              backgroundColor: p.color,
+              borderRadius: 2,
+              top: spring.y.to(v => `${v}%`),
+              opacity: spring.opacity,
+              transform: spring.rotate.to(
+                v => `translateX(${(v / 360) * p.drift}px) rotate(${v * (p.spin / 360)}deg)`
+              ),
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }
+
+// --- Stat cards data ---
+const STAT_CARDS = ['today', 'streak', 'done'] as const;
 
 export default function DashboardScreen(): React.ReactElement | null {
   const ctx = useAppContext();
@@ -126,22 +104,73 @@ export default function DashboardScreen(): React.ReactElement | null {
   useEffect(() => {
     if (allDone && !soundPlayed.current) {
       soundPlayed.current = true;
-      const prefs = ctx.cfg
-        ? ctx.cfg.notificationPrefs || {}
-        : {};
+      const prefs = ctx.cfg ? ctx.cfg.notificationPrefs || {} : {};
       if ((prefs as Record<string, boolean>).soundEnabled !== false) {
-        playSound('success');
+        playSound('victory');
       }
     }
   }, [allDone]);
 
+  // --- Animations ---
+  const headerSpring = useSpring({
+    from: { opacity: 0, y: -10 },
+    to: { opacity: 1, y: 0 },
+    config: config.gentle,
+  });
+
+  const xpSpring = useSpring({
+    from: { opacity: 0, scale: 0.95 },
+    to: { opacity: 1, scale: 1 },
+    config: config.wobbly,
+    delay: 100,
+  });
+
+  const statTrail = useTrail(STAT_CARDS.length, {
+    from: { opacity: 0, y: 20 },
+    to: { opacity: 1, y: 0 },
+    config: config.gentle,
+    delay: 200,
+  });
+
+  const upNextTasks = activeTasks
+    .filter(t => {
+      const l = tLog[t.id];
+      return !l || l.rejected;
+    })
+    .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
+    .slice(0, 4);
+
+  const taskTrail = useTrail(upNextTasks.length, {
+    from: { opacity: 0, x: -20 },
+    to: { opacity: 1, x: 0 },
+    config: config.gentle,
+    delay: 350,
+  });
+
+  const celebrationSpring = useSpring({
+    from: { opacity: 0, scale: 0.5 },
+    to: allDone ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 },
+    config: config.wobbly,
+  });
+
+  const lvl = ud.level || 1;
+  const lt = getLevelTitle(lvl);
+  const xpProg = getXpProgress(ud.xp || 0, lvl);
+  const sMult = getStreakMultiplier(ud.streak || 0);
+
   return (
     <div className='pb-20'>
-      {allDone && <ConfettiCanvas />}
+      {allDone && <Confetti />}
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
-        <div className='flex justify-between items-center'>
+        <animated.div
+          className='flex justify-between items-center'
+          style={{
+            opacity: headerSpring.opacity,
+            transform: headerSpring.y.to(v => `translateY(${v}px)`),
+          }}
+        >
           <div>
-            <div className='font-display text-[22px] font-bold animate-fade-in'>
+            <div className='font-display text-[22px] font-bold'>
               Hey {ch.name} {ch.avatar}
             </div>
             <div className='text-[12px] text-qmuted'>
@@ -162,7 +191,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               {(ud.points || 0).toLocaleString()}
             </span>
           </div>
-        </div>
+        </animated.div>
         {bedLock && (
           <div
             className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'
@@ -191,156 +220,178 @@ export default function DashboardScreen(): React.ReactElement | null {
         )}
       </div>
       <div className='px-4 pt-4'>
-        {(() => {
-          const lvl = ud.level || 1;
-          const lt = getLevelTitle(lvl);
-          const xpProg = getXpProgress(ud.xp || 0, lvl);
-          const sMult = getStreakMultiplier(ud.streak || 0);
-          return (
-            <div className='bg-qmint rounded-btn p-4 mb-5'>
-              <div className='flex justify-between items-center mb-2'>
-                <div
-                  className='font-display font-bold text-sm'
-                  style={{ color: lt.color }}
-                >
-                  Lv.{lvl} {lt.title}
-                </div>
-                <div className='text-[11px] text-qmuted font-bold'>
-                  {lvl >= 20
-                    ? 'MAX'
-                    : `${xpProg.current} / ${xpProg.needed} XP`}
-                </div>
-              </div>
-              <div className='h-2.5 bg-qmint-dim rounded-sm'>
-                <div
-                  className='h-full rounded-sm transition-all duration-500'
-                  style={{
-                    width: `${xpProg.pct}%`,
-                    background: ch.color,
-                  }}
-                />
-              </div>
-              {sMult > 1 && (
-                <div className='text-[11px] text-qmuted mt-1.5 font-semibold'>
-                  <FontAwesomeIcon
-                    icon={faFire}
-                    style={FA_ICON_STYLE}
-                    className='mr-1'
-                  />
-                  {sMult}x XP streak bonus
-                </div>
-              )}
+        <animated.div
+          className='bg-qmint rounded-btn p-4 mb-5'
+          style={{
+            opacity: xpSpring.opacity,
+            transform: xpSpring.scale.to(v => `scale(${v})`),
+          }}
+        >
+          <div className='flex justify-between items-center mb-2'>
+            <div
+              className='font-display font-bold text-sm'
+              style={{ color: lt.color }}
+            >
+              Lv.{lvl} {lt.title}
             </div>
-          );
-        })()}
-        <div className='grid grid-cols-3 gap-3.5 mb-6'>
-          <div className='bg-qmint rounded-btn p-4'>
-            <div className='font-display text-[22px] font-bold text-qslate'>
-              {pct}%
-            </div>
-            <div className='text-xs text-qmuted'>Today</div>
-            <div className='h-1 bg-qmint-dim rounded-sm mt-1.5'>
-              <div
-                className='h-full rounded-sm transition-all duration-500'
-                style={{
-                  width: `${pct}%`,
-                  background: ch.color,
-                }}
-              />
+            <div className='text-[11px] text-qmuted font-bold'>
+              {lvl >= 20
+                ? 'MAX'
+                : `${xpProg.current} / ${xpProg.needed} XP`}
             </div>
           </div>
-          <div className='bg-qyellow rounded-btn p-4'>
-            <div className='font-display text-[22px] font-bold text-qslate animate-float'>
+          <div className='h-2.5 bg-qmint-dim rounded-sm'>
+            <div
+              className='h-full rounded-sm transition-all duration-500'
+              style={{
+                width: `${xpProg.pct}%`,
+                background: ch.color,
+              }}
+            />
+          </div>
+          {sMult > 1 && (
+            <div className='text-[11px] text-qmuted mt-1.5 font-semibold'>
               <FontAwesomeIcon
                 icon={faFire}
                 style={FA_ICON_STYLE}
-                className='mr-1 text-base'
+                className='mr-1'
               />
-              {ud.streak || 0}
+              {sMult}x XP streak bonus
             </div>
-            <div className='text-xs text-qmuted'>Streak</div>
-            <div className='text-[11px] text-qmuted mt-0.5'>
-              Best: {ud.bestStreak || 0}
-            </div>
-          </div>
-          <div className='bg-qmint rounded-btn p-4'>
-            <div className='font-display text-[22px] font-bold text-qslate'>
-              {done}/{total}
-            </div>
-            <div className='text-xs text-qmuted'>Done</div>
-          </div>
+          )}
+        </animated.div>
+        <div className='grid grid-cols-3 gap-3.5 mb-6'>
+          {statTrail.map((spring, i) => {
+            const card = STAT_CARDS[i];
+            return (
+              <animated.div
+                key={card}
+                className={
+                  (card === 'streak' ? 'bg-qyellow' : 'bg-qmint') +
+                  ' rounded-btn p-4'
+                }
+                style={{
+                  opacity: spring.opacity,
+                  transform: spring.y.to(v => `translateY(${v}px)`),
+                }}
+              >
+                {card === 'today' && (
+                  <>
+                    <div className='font-display text-[22px] font-bold text-qslate'>
+                      {pct}%
+                    </div>
+                    <div className='text-xs text-qmuted'>Today</div>
+                    <div className='h-1 bg-qmint-dim rounded-sm mt-1.5'>
+                      <div
+                        className='h-full rounded-sm transition-all duration-500'
+                        style={{
+                          width: `${pct}%`,
+                          background: ch.color,
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+                {card === 'streak' && (
+                  <>
+                    <div className='font-display text-[22px] font-bold text-qslate animate-float'>
+                      <FontAwesomeIcon
+                        icon={faFire}
+                        style={FA_ICON_STYLE}
+                        className='mr-1 text-base'
+                      />
+                      {ud.streak || 0}
+                    </div>
+                    <div className='text-xs text-qmuted'>Streak</div>
+                    <div className='text-[11px] text-qmuted mt-0.5'>
+                      Best: {ud.bestStreak || 0}
+                    </div>
+                  </>
+                )}
+                {card === 'done' && (
+                  <>
+                    <div className='font-display text-[22px] font-bold text-qslate'>
+                      {done}/{total}
+                    </div>
+                    <div className='text-xs text-qmuted'>Done</div>
+                  </>
+                )}
+              </animated.div>
+            );
+          })}
         </div>
         <div className='font-display text-lg font-semibold mb-3 mt-5 text-qslate'>
           Up Next
         </div>
         <div className='flex flex-col gap-3'>
-          {activeTasks
-            .filter(t => {
-              const l = tLog[t.id];
-              return !l || l.rejected;
-            })
-            .sort((a, b) => {
-              return timeToMin(a.windowStart) - timeToMin(b.windowStart);
-            })
-            .slice(0, 4)
-            .map((t, idx) => {
-              const entry = tLog[t.id];
-              const isRej = entry && entry.rejected;
-              const baseStatus = getTaskStatus(
-                t,
-                null,
-                ctx.cfg ? ctx.cfg.bedtime : undefined
-              );
-              const status =
-                isRej && baseStatus !== 'missed' ? 'rejected' : baseStatus;
-              const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
-              return (
-                <div
-                  key={t.id}
-                  className={
-                    'flex items-center gap-3 rounded-btn p-4 animate-slide-up transition-colors ' +
-                    cardBg
-                  }
-                >
-                  <div className='flex-1'>
-                    <div className='text-sm font-semibold text-qslate'>
-                      {t.name}
-                    </div>
-                    <div className='text-[11px] text-qmuted'>
-                      {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
-                    </div>
-                    {isRej && (
-                      <div className='text-[11px] text-qpink'>
-                        Parent requested redo
-                      </div>
-                    )}
+          {taskTrail.map((spring, idx) => {
+            const t = upNextTasks[idx];
+            const entry = tLog[t.id];
+            const isRej = entry && entry.rejected;
+            const baseStatus = getTaskStatus(
+              t,
+              null,
+              ctx.cfg ? ctx.cfg.bedtime : undefined
+            );
+            const status =
+              isRej && baseStatus !== 'missed' ? 'rejected' : baseStatus;
+            const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+            return (
+              <animated.div
+                key={t.id}
+                className={
+                  'flex items-center gap-3 rounded-btn p-4 ' + cardBg
+                }
+                style={{
+                  opacity: spring.opacity,
+                  transform: spring.x.to(v => `translateX(${v}px)`),
+                }}
+              >
+                <div className='flex-1'>
+                  <div className='text-sm font-semibold text-qslate'>
+                    {t.name}
                   </div>
-                  <Badge status={status} />
-                  {status !== 'missed' && (
-                    <button
-                      onClick={() => {
-                        startCapture(t.id);
-                      }}
-                      className={
-                        'text-xs py-2 px-4 rounded-badge cursor-pointer font-body font-bold text-white transition-all hover:scale-105 active:scale-95 border-none ' +
-                        (isRej ? 'bg-qcoral' : 'bg-qteal')
-                      }
-                    >
-                      {isRej ? (
-                        'Redo'
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faCheck} className='mr-1' />
-                          Done
-                        </>
-                      )}
-                    </button>
+                  <div className='text-[11px] text-qmuted'>
+                    {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
+                  </div>
+                  {isRej && (
+                    <div className='text-[11px] text-qpink'>
+                      Parent requested redo
+                    </div>
                   )}
                 </div>
-              );
-            })}
+                <Badge status={status} />
+                {status !== 'missed' && (
+                  <button
+                    onClick={() => {
+                      startCapture(t.id);
+                    }}
+                    className={
+                      'text-xs py-2 px-4 rounded-badge cursor-pointer font-body font-bold text-white transition-all hover:scale-105 active:scale-95 border-none ' +
+                      (isRej ? 'bg-qcoral' : 'bg-qteal')
+                    }
+                  >
+                    {isRej ? (
+                      'Redo'
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faCheck} className='mr-1' />
+                        Done
+                      </>
+                    )}
+                  </button>
+                )}
+              </animated.div>
+            );
+          })}
           {allDone && (
-            <div className='text-center p-6 animate-confetti'>
+            <animated.div
+              className='text-center p-6'
+              style={{
+                opacity: celebrationSpring.opacity,
+                transform: celebrationSpring.scale.to(v => `scale(${v})`),
+              }}
+            >
               <FontAwesomeIcon
                 icon={faPartyHorn}
                 style={FA_ICON_STYLE}
@@ -352,7 +403,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               <div className='text-sm text-qmuted mt-1'>
                 Great job, {ch.name}!
               </div>
-            </div>
+            </animated.div>
           )}
         </div>
       </div>
