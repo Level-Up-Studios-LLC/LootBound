@@ -91,6 +91,24 @@ export function isTaskVisibleToday(task: Task, bedtime?: number): boolean {
   return false;
 }
 
+/**
+ * Check if a task should be displayed as a tomorrow preview.
+ * Daily tasks are previews after bedtime; weekly tasks are previews when
+ * their dueDay matches tomorrow (already past bedtime via isTaskVisibleToday).
+ */
+export function isTaskPreview(task: Task, bedtime?: number): boolean {
+  if (isPastBedtime(bedtime)) {
+    // Daily tasks are always active tomorrow, so they're previews after bedtime
+    if (task.daily) return true;
+    // Weekly tasks scheduled for tomorrow
+    if (task.dueDay != null) {
+      const tomorrowDow = (todayDow() + 1) % 7;
+      return task.dueDay === tomorrowDow && !isTaskActiveToday(task);
+    }
+  }
+  return !isTaskActiveToday(task);
+}
+
 export function slugify(s: string): string {
   return `${s.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now().toString(36)}`;
 }

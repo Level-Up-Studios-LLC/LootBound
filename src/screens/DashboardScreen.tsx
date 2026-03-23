@@ -12,7 +12,7 @@ import {
   getLevelTitle,
   getXpProgress,
   getStreakMultiplier,
-  isTaskActiveToday,
+  isTaskPreview,
 } from '../utils.ts';
 
 export default function DashboardScreen(): React.ReactElement | null {
@@ -175,6 +175,8 @@ export default function DashboardScreen(): React.ReactElement | null {
           {todayTasks
             .filter(t => {
               const l = tLog[t.id];
+              // Show tomorrow previews regardless of today's completion status
+              if (isTaskPreview(t, ctx.cfg?.bedtime)) return true;
               return !l || l.rejected;
             })
             .sort((a, b) => {
@@ -184,7 +186,7 @@ export default function DashboardScreen(): React.ReactElement | null {
             .map((t, idx) => {
               const entry = tLog[t.id];
               const isRej = entry && entry.rejected;
-              const isPreview = !isTaskActiveToday(t);
+              const isPreview = isTaskPreview(t, ctx.cfg?.bedtime);
               const baseStatus = getTaskStatus(
                 t,
                 null,
