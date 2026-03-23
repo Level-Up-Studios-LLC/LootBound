@@ -83,7 +83,7 @@ export function isTaskActiveTomorrow(task: Task): boolean {
     const tomorrowDow = (todayDow() + 1) % 7;
     return task.dueDay === tomorrowDow;
   }
-  return true;
+  return false;
 }
 
 export function slugify(s: string): string {

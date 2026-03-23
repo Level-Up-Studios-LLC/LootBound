@@ -151,7 +151,7 @@ interface CompleteProfileScreenProps {
 
 export default function CompleteProfileScreen(
   props: CompleteProfileScreenProps
-): React.ReactElement {
+): React.ReactElement | null {
   const [parentName, setParentName] = useState(
     firebaseAuth.currentUser?.displayName ?? ''
   );
@@ -247,9 +247,13 @@ export default function CompleteProfileScreen(
     if (e.key === 'Enter' && !busy) handleSubmit();
   };
 
-  // Phase 2: Family code display
+  // Phase 2: Family code display (skip for users who joined an existing family)
   if (done) {
     const joined = joinCode.trim().length === 6;
+    if (joined) {
+      props.onComplete();
+      return null;
+    }
     return (
       <div className='page-wrapper page-centered'>
         <div className='text-5xl mb-5'>

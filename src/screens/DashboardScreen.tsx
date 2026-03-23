@@ -98,7 +98,7 @@ export default function DashboardScreen(): React.ReactElement | null {
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
-  const soundPlayed = useRef(false);
+  const mountedRef = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   if (!ch || !ud) return null;
@@ -111,10 +111,13 @@ export default function DashboardScreen(): React.ReactElement | null {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const allDone = total > 0 && done === total;
 
-  // Play victory sound once when all missions complete
+  // Play victory sound only when all missions transition to complete (not on mount)
   useEffect(() => {
-    if (allDone && !soundPlayed.current) {
-      soundPlayed.current = true;
+    if (mountedRef.current) {
+      mountedRef.current = false;
+      return;
+    }
+    if (allDone) {
       const prefs = ctx.cfg ? ctx.cfg.notificationPrefs || {} : {};
       if ((prefs as Record<string, boolean>).soundEnabled !== false) {
         playSound('victory');

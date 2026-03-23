@@ -185,9 +185,10 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Approval threshold coins'
-            value={cfg.approvalThreshold ?? 300}
+            value={(cfg.approvalThreshold ?? 300) || ''}
+            placeholder='300'
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const v = Number(e.target.value);
+              const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
                 ...cfg,
                 approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
@@ -271,9 +272,10 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Mission cooldown seconds'
-            value={cfg.cooldown != null ? cfg.cooldown : 60}
+            value={(cfg.cooldown != null ? cfg.cooldown : 60) || ''}
+            placeholder='60'
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const v = Number(e.target.value);
+              const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
                 ...cfg,
                 cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,

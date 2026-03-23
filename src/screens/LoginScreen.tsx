@@ -95,7 +95,7 @@ export default function LoginScreen(
   useGSAP(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
     tl.from('.login-title', { opacity: 0, y: -20, duration: 0.4 });
-    tl.from('.login-profile', { opacity: 0, scale: 0.85, duration: 0.35, stagger: 0.08 }, '-=0.2');
+    tl.fromTo('.login-profile', { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.35, stagger: 0.08 }, '-=0.2');
   }, { scope: containerRef });
 
   // Modal enter animation

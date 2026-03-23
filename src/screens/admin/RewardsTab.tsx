@@ -4,9 +4,12 @@ import { faPlus, faPenToSquare, faTrashCan, faGift } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
+import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import RewardForm from '../../components/forms/RewardForm.tsx';
 import type { Reward } from '../../types.ts';
+
+const SKIP_CONFIRM_KEY = 'lb-skip-delete-loot';
 
 const SAMPLE_REWARDS = [
   {
@@ -64,6 +67,7 @@ const SAMPLE_REWARDS = [
 export default function RewardsTab(): React.ReactElement {
   const [addReward, setAddReward] = useState<Reward | null>(null);
   const [editReward, setEditReward] = useState<Reward | null>(null);
+  const [deleteReward, setDeleteReward] = useState<Reward | null>(null);
 
   const ctx = useAppContext();
   const cfg = ctx.cfg;
@@ -167,10 +171,13 @@ export default function RewardsTab(): React.ReactElement {
               </button>
               <button
                 onClick={() => {
-                  ctx.saveCfg({
-                    ...cfg!,
-                    rewards: rewards.filter(x => x.id !== r.id),
-                  });
+                  try {
+                    if (localStorage.getItem(SKIP_CONFIRM_KEY)) {
+                      ctx.saveCfg({ ...cfg!, rewards: rewards.filter(x => x.id !== r.id) });
+                      return;
+                    }
+                  } catch (_e) {}
+                  setDeleteReward(r);
                 }}
                 className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
               >
@@ -214,6 +221,20 @@ export default function RewardsTab(): React.ReactElement {
             }}
           />
         </Modal>
+      )}
+
+      {deleteReward && (
+        <ConfirmDialog
+          title={`Delete "${deleteReward.name}"?`}
+          message='This loot item will be permanently removed.'
+          confirmLabel='Delete'
+          dontAskAgainKey={SKIP_CONFIRM_KEY}
+          onConfirm={() => {
+            ctx.saveCfg({ ...cfg!, rewards: rewards.filter(x => x.id !== deleteReward.id) });
+            setDeleteReward(null);
+          }}
+          onCancel={() => setDeleteReward(null)}
+        />
       )}
     </div>
   );

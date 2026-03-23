@@ -12,12 +12,14 @@ interface ConfirmDialogProps {
   children?: React.ReactNode;
   requiredText?: string;
   requiredTextLabel?: string;
+  dontAskAgainKey?: string;
 }
 
 export default function ConfirmDialog(
   props: ConfirmDialogProps
 ): React.ReactElement {
   const [typed, setTyped] = useState('');
+  const [dontAsk, setDontAsk] = useState(false);
 
   const confirmed =
     !props.requiredText ||
@@ -73,6 +75,17 @@ export default function ConfirmDialog(
           )}
           {props.children}
         </div>
+        {props.dontAskAgainKey && (
+          <label className='flex items-center gap-2 mb-4 cursor-pointer'>
+            <input
+              type='checkbox'
+              checked={dontAsk}
+              onChange={(e) => setDontAsk(e.target.checked)}
+              className='w-4 h-4 accent-qteal'
+            />
+            <span className='text-[12px] text-qmuted'>Don't ask me again</span>
+          </label>
+        )}
         <div className='flex gap-3 justify-end'>
           <button
             onClick={props.onCancel}
@@ -83,7 +96,11 @@ export default function ConfirmDialog(
           {props.confirmLabel && (
             <button
               onClick={() => {
-                if (confirmed) props.onConfirm();
+                if (!confirmed) return;
+                if (dontAsk && props.dontAskAgainKey) {
+                  try { localStorage.setItem(props.dontAskAgainKey, '1'); } catch (_e) {}
+                }
+                props.onConfirm();
               }}
               disabled={!confirmed}
               className={

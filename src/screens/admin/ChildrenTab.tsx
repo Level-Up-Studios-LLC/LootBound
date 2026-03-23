@@ -150,6 +150,12 @@ export default function ChildrenTab(): React.ReactElement {
                 </button>
                 <button
                   onClick={() => {
+                    try {
+                      if (localStorage.getItem('lb-skip-delete-child')) {
+                        ctx.doRemoveChild(c.id);
+                        return;
+                      }
+                    } catch (_e) {}
                     setRemoveChild(c);
                   }}
                   className='bg-qred-dim text-qred rounded-[6px] px-2 py-[3px] text-[11px] font-bold border-none cursor-pointer font-body flex items-center gap-1'
@@ -237,6 +243,7 @@ export default function ChildrenTab(): React.ReactElement {
           message={`This permanently removes ${removeChild.name} from LootBound, including all their coins, missions, streaks, and history.`}
           warning='This action cannot be undone.'
           confirmLabel='Remove'
+          dontAskAgainKey='lb-skip-delete-child'
           onConfirm={() => {
             ctx.doRemoveChild(removeChild!.id);
             setRemoveChild(null);

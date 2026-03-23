@@ -15,9 +15,12 @@ import {
 } from '../../constants.ts';
 import { fmtTime, getToday } from '../../utils.ts';
 import Modal from '../../components/ui/Modal.tsx';
+import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import TaskForm from '../../components/forms/TaskForm.tsx';
 import type { Task } from '../../types.ts';
+
+const SKIP_CONFIRM_KEY = 'lb-skip-delete-mission';
 
 interface TasksTabProps {
   onSwitchTab: (tab: string) => void;
@@ -28,6 +31,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
     null
   );
   const [addTask, setAddTask] = useState<(Task & { uid: string }) | null>(null);
+  const [deleteTask, setDeleteTask] = useState<{ task: Task; childId: string } | null>(null);
 
   const ctx = useAppContext();
   const children = ctx.children;
@@ -117,9 +121,15 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     </button>
                     <button
                       onClick={() => {
-                        const nt: Record<string, Task[]> = { ...cfg!.tasks };
-                        nt[c.id] = nt[c.id].filter(x => x.id !== t.id);
-                        ctx.saveCfg({ ...cfg!, tasks: nt });
+                        try {
+                          if (localStorage.getItem(SKIP_CONFIRM_KEY)) {
+                            const nt: Record<string, Task[]> = { ...cfg!.tasks };
+                            nt[c.id] = nt[c.id].filter(x => x.id !== t.id);
+                            ctx.saveCfg({ ...cfg!, tasks: nt });
+                            return;
+                          }
+                        } catch (_e) {}
+                        setDeleteTask({ task: t, childId: c.id });
                       }}
                       className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
                     >
@@ -180,6 +190,22 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
             }}
           />
         </Modal>
+      )}
+
+      {deleteTask && (
+        <ConfirmDialog
+          title={`Delete "${deleteTask.task.name}"?`}
+          message='This mission will be permanently removed.'
+          confirmLabel='Delete'
+          dontAskAgainKey={SKIP_CONFIRM_KEY}
+          onConfirm={() => {
+            const nt: Record<string, Task[]> = { ...cfg!.tasks };
+            nt[deleteTask.childId] = nt[deleteTask.childId].filter(x => x.id !== deleteTask.task.id);
+            ctx.saveCfg({ ...cfg!, tasks: nt });
+            setDeleteTask(null);
+          }}
+          onCancel={() => setDeleteTask(null)}
+        />
       )}
     </div>
   );
