@@ -39,6 +39,7 @@ import {
   registerFamilyCode,
   lookupFamilyCode,
 } from './familyCode.ts';
+import { removeStorage } from './platform.ts';
 
 export interface AuthUser {
   uid: string;
@@ -213,7 +214,6 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
 }
 
 export async function signOutFamily(): Promise<void> {
-  var { removeStorage } = await import('./platform.ts');
   await removeStorage('qb-parent-session');
   await removeStorage('qb-kid-session');
   return signOut(auth);
