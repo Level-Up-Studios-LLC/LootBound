@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTrail, useSpring, animated, config } from '@react-spring/web';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faFire, faPartyHorn, faCheck, faCoins } from '../fa.ts';
@@ -16,64 +16,83 @@ import {
 } from '../utils.ts';
 import { playSound } from '../services/notificationSound.ts';
 
-// --- Confetti ---
+// --- Canvas confetti (avoids React Spring trail overhead) ---
 const CONFETTI_COLORS = ['#4ac7a8', '#ffe08a', '#ff8c94', '#8b7ec8', '#5ec4d4', '#e6a817'];
-const CONFETTI_COUNT = 35;
-
-interface ConfettiPiece {
-  x: number;
-  w: number;
-  h: number;
-  color: string;
-  drift: number;
-  spin: number;
-}
+const CONFETTI_COUNT = 50;
 
 function Confetti(): React.ReactElement {
-  const pieces = useMemo<ConfettiPiece[]>(
-    () =>
-      Array.from({ length: CONFETTI_COUNT }, () => ({
-        x: Math.random() * 100,
+  const ref = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const pieces: {
+      x: number; y: number; w: number; h: number;
+      color: string; vy: number; vx: number;
+      rot: number; rv: number; opacity: number;
+    }[] = [];
+
+    for (let i = 0; i < CONFETTI_COUNT; i++) {
+      pieces.push({
+        x: Math.random() * canvas.width,
+        y: -10 - Math.random() * canvas.height * 0.5,
         w: 4 + Math.random() * 6,
         h: 6 + Math.random() * 10,
         color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-        drift: (Math.random() - 0.5) * 60,
-        spin: Math.random() * 720 - 360,
-      })),
-    []
-  );
+        vy: 1.5 + Math.random() * 3,
+        vx: (Math.random() - 0.5) * 2,
+        rot: Math.random() * Math.PI * 2,
+        rv: (Math.random() - 0.5) * 0.15,
+        opacity: 1,
+      });
+    }
 
-  const trail = useTrail(CONFETTI_COUNT, {
-    from: { y: -20, opacity: 1, rotate: 0 },
-    to: { y: 110, opacity: 0, rotate: 360 },
-    config: { tension: 30, friction: 14, clamp: true },
-    trail: 40,
-  });
+    let frame: number;
+    const duration = 3000;
+    const startTime = performance.now();
+
+    function draw(now: number) {
+      const elapsed = now - startTime;
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+
+      for (const p of pieces) {
+        p.y += p.vy;
+        p.x += p.vx;
+        p.rot += p.rv;
+        if (elapsed > duration * 0.6) {
+          p.opacity = Math.max(0, p.opacity - 0.02);
+        }
+
+        ctx!.save();
+        ctx!.translate(p.x, p.y);
+        ctx!.rotate(p.rot);
+        ctx!.globalAlpha = p.opacity;
+        ctx!.fillStyle = p.color;
+        ctx!.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx!.restore();
+      }
+
+      if (elapsed < duration) {
+        frame = requestAnimationFrame(draw);
+      }
+    }
+
+    frame = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
-    <div className='fixed inset-0 pointer-events-none overflow-hidden' style={{ zIndex: 200 }}>
-      {trail.map((spring, i) => {
-        const p = pieces[i];
-        return (
-          <animated.div
-            key={i}
-            style={{
-              position: 'absolute',
-              left: `${p.x}%`,
-              width: p.w,
-              height: p.h,
-              backgroundColor: p.color,
-              borderRadius: 2,
-              top: spring.y.to(v => `${v}%`),
-              opacity: spring.opacity,
-              transform: spring.rotate.to(
-                v => `translateX(${(v / 360) * p.drift}px) rotate(${v * (p.spin / 360)}deg)`
-              ),
-            }}
-          />
-        );
-      })}
-    </div>
+    <canvas
+      ref={ref}
+      className='fixed inset-0 pointer-events-none'
+      style={{ zIndex: 200, width: '100%', height: '100%' }}
+    />
   );
 }
 
