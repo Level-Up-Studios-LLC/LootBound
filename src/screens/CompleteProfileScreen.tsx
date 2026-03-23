@@ -8,6 +8,7 @@ import { switchToExistingFamily, getCurrentUid } from '../services/auth.ts';
 import { saveParentMember, saveConfig } from '../services/firestoreStorage.ts';
 import PasswordInput from '../components/ui/PasswordInput.tsx';
 import { auth as firebaseAuth } from '../services/firebase.ts';
+import { copyToClipboard } from '../services/platform.ts';
 
 const REFERRAL_OPTIONS = [
   'Friend or family',
@@ -162,6 +163,7 @@ export default function CompleteProfileScreen(
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [finalCode, setFinalCode] = useState(props.familyCode);
+  const [copied, setCopied] = useState(false);
 
   const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -260,10 +262,23 @@ export default function CompleteProfileScreen(
             : "Share this code with your kids' devices so they can connect to your family"}
         </div>
 
-        <div className='bg-qmint rounded-card py-5 px-8 mb-8'>
+        <button
+          onClick={() => {
+            copyToClipboard(finalCode).then(ok => {
+              if (ok) {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }
+            });
+          }}
+          className='bg-qmint rounded-card py-5 px-8 mb-2 border-none cursor-pointer w-full hover:opacity-90 transition-opacity'
+        >
           <div className='font-display text-4xl font-bold text-qteal tracking-[8px] text-center'>
             {finalCode}
           </div>
+        </button>
+        <div className='text-[12px] text-qdim text-center mb-6'>
+          {copied ? 'Copied!' : 'Tap to copy'}
         </div>
 
         <div className='text-[13px] text-qdim text-center mb-8 max-w-[300px]'>
@@ -296,11 +311,11 @@ export default function CompleteProfileScreen(
 
         <div>
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-            Name
+            Full Name
           </label>
           <input
             type='text'
-            placeholder='Your first name'
+            placeholder='Your full name'
             value={parentName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setParentName(e.target.value);

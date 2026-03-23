@@ -145,7 +145,7 @@ export default function SettingsTab(): React.ReactElement {
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update({ ...cfg, tierConfig: n });
                   }}
-                  className='quest-input w-[60px]! text-center'
+                  className='quest-input w-[72px]! text-center'
                 />
                 <span className='text-[11px] text-qmuted'>coins</span>
                 <input
@@ -162,7 +162,7 @@ export default function SettingsTab(): React.ReactElement {
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update({ ...cfg, tierConfig: n });
                   }}
-                  className='quest-input w-[60px]! text-center'
+                  className='quest-input w-[72px]! text-center'
                 />
                 <span className='text-[11px] text-qmuted'>XP</span>
               </div>
@@ -341,12 +341,6 @@ export default function SettingsTab(): React.ReactElement {
               );
             });
           })()}
-        </div>
-      </div>
-      <div className='bg-qmint rounded-card p-4 mb-4'>
-        <div className='text-xs text-qmuted'>
-          Missions are recurring. Daily repeats every day, weekly on assigned
-          day.
         </div>
       </div>
       {/* Error Reporting */}

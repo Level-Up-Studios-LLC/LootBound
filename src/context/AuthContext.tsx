@@ -147,13 +147,14 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     password: string
   ): Promise<string | null> => {
     setAuthError(null);
+    setIsNewUser(true);
     try {
       const result = await signUpFamily(email, password);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
-      setIsNewUser(true);
       return result.user.familyId;
     } catch (err: any) {
+      setIsNewUser(false);
       setAuthError(mapError(err));
       return null;
     }

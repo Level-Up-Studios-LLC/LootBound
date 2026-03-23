@@ -452,12 +452,12 @@ export async function switchToExistingFamily(
   const familyId = await lookupFamilyCode(joinCode);
   if (!familyId) throw { code: 'auth/invalid-family-code' };
 
-  // Update parentMembers to point to joined family
-  await setDoc(doc(db, 'parentMembers', uid), { familyId }, { merge: true });
-
-  // Clean up auto-generated family code and empty family doc
+  // Clean up orphaned docs while we're still the owner
   await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
   await deleteDoc(doc(db, 'families', uid));
+
+  // Update parentMembers to point to joined family
+  await setDoc(doc(db, 'parentMembers', uid), { familyId }, { merge: true });
 
   return joinCode;
 }

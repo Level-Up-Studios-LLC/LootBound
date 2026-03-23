@@ -58,12 +58,14 @@ export default function AccountTab(): React.ReactElement | null {
 
   const [myName, setMyName] = useState<string | undefined>(undefined);
   const [myPin, setMyPin] = useState('');
+  const [myPhoto, setMyPhoto] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!currentUid) return;
     return onParentMemberSnapshot(currentUid, member => {
       setMyName(member && member.parentName ? member.parentName : undefined);
       setMyPin(member && member.parentPin ? member.parentPin : '');
+      setMyPhoto(member && member.parentPhotoURL ? member.parentPhotoURL : undefined);
     });
   }, [currentUid]);
 
@@ -366,12 +368,21 @@ export default function AccountTab(): React.ReactElement | null {
           Account
         </div>
         <div className='flex items-center gap-3 mb-3'>
-          <div
-            className='w-[44px] h-[44px] rounded-full flex items-center justify-center font-display font-bold text-white text-base shrink-0'
-            style={{ backgroundColor: '#4AC7A8' }}
-          >
-            {getInitials(myName, auth.authUser ? auth.authUser.email : '')}
-          </div>
+          {myPhoto ? (
+            <img
+              src={myPhoto}
+              alt=''
+              className='w-[44px] h-[44px] rounded-full object-cover shrink-0'
+              referrerPolicy='no-referrer'
+            />
+          ) : (
+            <div
+              className='w-[44px] h-[44px] rounded-full flex items-center justify-center font-display font-bold text-white text-base shrink-0'
+              style={{ backgroundColor: '#4AC7A8' }}
+            >
+              {getInitials(myName, auth.authUser ? auth.authUser.email : '')}
+            </div>
+          )}
           <div className='flex-1 min-w-0'>
             {editing ? (
               <div className='flex flex-col gap-2'>
@@ -466,7 +477,7 @@ export default function AccountTab(): React.ReactElement | null {
             )}
           </div>
         </div>
-        <div className='flex justify-between items-center'>
+        <div className='flex justify-between items-center pl-[56px]'>
           <span className='text-[13px] text-qmuted'>Family Code</span>
           <button
             onClick={() => {
