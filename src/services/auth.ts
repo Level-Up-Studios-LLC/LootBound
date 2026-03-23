@@ -32,7 +32,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebase.ts';
 import {
   generateFamilyCode,
@@ -45,6 +45,7 @@ export interface AuthUser {
   familyId: string;
   email: string;
   emailVerified: boolean;
+  photoURL?: string;
 }
 
 const appActionCodeSettings = () => {
@@ -105,6 +106,7 @@ export async function signUpFamily(
       familyId,
       email: cred.user.email ?? email,
       emailVerified: false,
+      photoURL: cred.user.photoURL ?? undefined,
     },
     familyCode: code,
   };
@@ -145,6 +147,7 @@ export async function joinFamilyByCode(
       familyId,
       email: cred.user.email ?? email,
       emailVerified: false,
+      photoURL: cred.user.photoURL ?? undefined,
     },
     familyCode: code,
   };
@@ -165,6 +168,7 @@ export async function signInFamily(
     familyId,
     email: cred.user.email ?? email,
     emailVerified: cred.user.emailVerified,
+    photoURL: cred.user.photoURL ?? undefined,
   };
 }
 
@@ -189,7 +193,10 @@ export async function startGoogleSignIn(): Promise<void> {
  *
  * Returns the family code if a new family was created, null otherwise.
  */
-export async function handleGoogleRedirectResult(): Promise<string | null> {
+export async function handleGoogleRedirectResult(): Promise<{
+  familyCode: string;
+  photoURL?: string;
+} | null> {
   const result = await getRedirectResult(auth);
   if (!result) return null;
 
@@ -209,7 +216,7 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
   );
   const code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
-  return code;
+  return { familyCode: code, photoURL: user.photoURL ?? undefined };
 }
 
 export async function signOutFamily(): Promise<void> {
@@ -238,6 +245,7 @@ export function onAuthChange(
             familyId,
             email: user.email ?? '',
             emailVerified: user.emailVerified,
+            photoURL: user.photoURL ?? undefined,
           });
         })
         .catch(err => {
@@ -430,6 +438,28 @@ export function hasPasswordProvider(): boolean {
   const user = auth.currentUser;
   if (!user) return false;
   return user.providerData.some(p => p.providerId === 'password');
+}
+
+/**
+ * Switch a newly registered user to an existing family by join code.
+ * Cleans up the auto-generated family code and family doc.
+ */
+export async function switchToExistingFamily(
+  uid: string,
+  joinCode: string,
+  oldFamilyCode: string
+): Promise<string> {
+  const familyId = await lookupFamilyCode(joinCode);
+  if (!familyId) throw { code: 'auth/invalid-family-code' };
+
+  // Update parentMembers to point to joined family
+  await setDoc(doc(db, 'parentMembers', uid), { familyId }, { merge: true });
+
+  // Clean up auto-generated family code and empty family doc
+  await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
+  await deleteDoc(doc(db, 'families', uid));
+
+  return joinCode;
 }
 
 /** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */

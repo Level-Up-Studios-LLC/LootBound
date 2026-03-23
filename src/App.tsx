@@ -31,7 +31,7 @@ import TasksScreen from './screens/TasksScreen.tsx';
 import ScoresScreen from './screens/ScoresScreen.tsx';
 import StoreScreen from './screens/StoreScreen.tsx';
 import AdminScreen from './screens/admin/AdminScreen.tsx';
-
+import CompleteProfileScreen from './screens/CompleteProfileScreen.tsx';
 import ResetPasswordScreen from './screens/ResetPasswordScreen.tsx';
 
 const SESSION_KEY_PARENT = 'qb-parent-session';
@@ -417,6 +417,20 @@ function AppRouter() {
         <AuthScreen
           onBack={() => {
             setRole(null);
+          }}
+        />
+      );
+    }
+
+    // New user needs profile completion
+    if (auth.isNewUser && auth.lastFamilyCode) {
+      return (
+        <CompleteProfileScreen
+          authUser={auth.authUser}
+          familyCode={auth.lastFamilyCode}
+          onComplete={() => {
+            auth.clearIsNewUser();
+            auth.clearLastFamilyCode();
           }}
         />
       );

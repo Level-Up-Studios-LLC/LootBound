@@ -133,6 +133,7 @@ export interface ParentMember {
   familyId: string;
   parentPin?: string;
   parentName?: string;
+  parentPhotoURL?: string;
 }
 
 export async function getParentMember(
@@ -151,6 +152,7 @@ export async function saveParentMember(
   if (data.parentPin != null) clean.parentPin = data.parentPin;
   if (data.parentName != null) clean.parentName = data.parentName;
   if (data.familyId != null) clean.familyId = data.familyId;
+  if (data.parentPhotoURL != null) clean.parentPhotoURL = data.parentPhotoURL;
   try {
     await setDoc(doc(db, 'parentMembers', uid), clean, { merge: true });
   } catch (err) {

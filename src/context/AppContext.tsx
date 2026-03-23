@@ -319,7 +319,7 @@ export function AppProvider(props: {
 
         const needsSeed = !fc && fsChildren.length === 0;
         if (needsSeed) {
-          // Re-read config in case CreatePinPrompt wrote parentPin
+          // Re-read config in case profile setup wrote parentPin
           // between our initial read and now
           const freshCfg = await fsGetConfig(familyId);
           const defConfig = {
