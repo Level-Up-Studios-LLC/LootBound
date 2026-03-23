@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBed, faCamera, faGamepadModern } from '../fa.ts';
+import { faBed, faCamera, faChevronRight, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import {
   KID_NAV,
@@ -12,23 +12,25 @@ import {
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
-import { getTaskStatus, fmtTime, timeToMin, isTaskActiveToday } from '../utils.ts';
+import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
   const ctx = useAppContext();
   const ch = ctx.currentChild;
   const ud = ctx.currentUserData;
-  const todayTasks = ctx.todayTasks;
+  const activeTasks = ctx.activeTasks;
+  const tomorrowTasks = ctx.tomorrowTasks;
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
   const setViewPhoto = ctx.setViewPhoto;
   const tp = ctx.tp;
   const tierCfgFn = ctx.tierCfg;
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   if (!ch || !ud) return null;
 
-  const sorted = todayTasks.slice().sort((a, b) => {
+  const sorted = activeTasks.slice().sort((a, b) => {
     const al = tLog[a.id],
       bl = tLog[b.id];
     const ac = al && !al.rejected && al.status !== 'missed',
@@ -55,7 +57,7 @@ export default function TasksScreen(): React.ReactElement | null {
         )}
       </div>
       <div className='px-4 pt-3 flex flex-col gap-3'>
-        {todayTasks.length === 0 && (
+        {activeTasks.length === 0 && (
           <EmptyState
             icon={faGamepadModern}
             title='No missions today!'
@@ -68,16 +70,13 @@ export default function TasksScreen(): React.ReactElement | null {
           const isDone = entry && !entry.rejected && entry.status !== 'missed';
           const isMissed =
             entry && entry.status === 'missed' && !entry.rejected;
-          const isPreview = !isTaskActiveToday(t);
-          const status = isPreview
-            ? 'upcoming'
-            : isDone
-              ? entry.status
-              : isMissed
-                ? 'missed'
-                : isRej
-                  ? 'rejected'
-                  : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+          const status = isDone
+            ? entry.status
+            : isMissed
+              ? 'missed'
+              : isRej
+                ? 'rejected'
+                : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
           const sl = SL[status] || {
             text: '',
             color: '#64748b',
@@ -174,12 +173,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   View photo proof
                 </button>
               )}
-              {isPreview && !isDone && !isMissed && (
-                <div className='w-full text-center text-[12px] font-bold text-qmuted bg-qslate/10 rounded-badge py-2.5 mt-3'>
-                  Tomorrow's Mission
-                </div>
-              )}
-              {!isPreview && !isDone && !isMissed && status !== 'missed' && (
+              {!isDone && !isMissed && status !== 'missed' && (
                 <button
                   onClick={() => {
                     startCapture(t.id);
@@ -222,6 +216,53 @@ export default function TasksScreen(): React.ReactElement | null {
             </div>
           );
         })}
+        {tomorrowTasks.length > 0 && (
+          <button
+            onClick={() => setPreviewOpen(v => !v)}
+            className='flex items-center justify-center gap-2 text-[13px] text-qmuted font-semibold font-body bg-transparent border-none cursor-pointer py-3 mt-2 hover:text-qslate transition-colors'
+          >
+            <FontAwesomeIcon
+              icon={faChevronRight}
+              style={FA_ICON_STYLE}
+              className={'text-[10px] transition-transform duration-200' + (previewOpen ? ' rotate-90' : '')}
+            />
+            Preview tomorrow's missions
+          </button>
+        )}
+        {previewOpen && tomorrowTasks.length > 0 && (
+          <div className='flex flex-col gap-2 animate-slide-up'>
+            {tomorrowTasks
+              .slice()
+              .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
+              .map(t => (
+                <div
+                  key={t.id}
+                  className='bg-qslate/5 rounded-btn p-3 flex justify-between items-center'
+                >
+                  <div>
+                    <div className='text-sm font-semibold text-qmuted flex items-center gap-1.5'>
+                      <span
+                        className='text-[10px] font-bold px-1.5 py-0.5 rounded-badge'
+                        style={{
+                          color: TIER_COLORS[t.tier] || '#6b7280',
+                          background: (TIER_COLORS[t.tier] || '#6b7280') + '18',
+                        }}
+                      >
+                        {t.tier}
+                      </span>
+                      {t.name}
+                    </div>
+                    <div className='text-[11px] text-qdim'>
+                      {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
+                    </div>
+                  </div>
+                  <div className='text-[11px] text-qmuted font-semibold'>
+                    {tp(t.tier)} coins
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
       <BNav tabs={KID_NAV} />
     </div>

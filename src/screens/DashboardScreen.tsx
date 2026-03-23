@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faFire, faPartyHorn, faCheck, faCoins } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -12,18 +12,105 @@ import {
   getLevelTitle,
   getXpProgress,
   getStreakMultiplier,
-  isTaskActiveToday,
 } from '../utils.ts';
+import { playSound } from '../services/notificationSound.ts';
+
+const CONFETTI_COLORS = ['#4ac7a8', '#ffe08a', '#ff8c94', '#8b7ec8', '#5ec4d4', '#e6a817'];
+const CONFETTI_COUNT = 60;
+
+function ConfettiCanvas(): React.ReactElement {
+  const ref = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const pieces: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      color: string;
+      vy: number;
+      vx: number;
+      rot: number;
+      rv: number;
+      opacity: number;
+    }[] = [];
+
+    for (let i = 0; i < CONFETTI_COUNT; i++) {
+      pieces.push({
+        x: Math.random() * canvas.width,
+        y: -10 - Math.random() * canvas.height * 0.5,
+        w: 4 + Math.random() * 6,
+        h: 6 + Math.random() * 10,
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+        vy: 1.5 + Math.random() * 3,
+        vx: (Math.random() - 0.5) * 2,
+        rot: Math.random() * Math.PI * 2,
+        rv: (Math.random() - 0.5) * 0.15,
+        opacity: 1,
+      });
+    }
+
+    let frame: number;
+    let elapsed = 0;
+    const duration = 3000;
+    const startTime = performance.now();
+
+    function draw(now: number) {
+      elapsed = now - startTime;
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+
+      for (const p of pieces) {
+        p.y += p.vy;
+        p.x += p.vx;
+        p.rot += p.rv;
+        if (elapsed > duration * 0.6) {
+          p.opacity = Math.max(0, p.opacity - 0.02);
+        }
+
+        ctx!.save();
+        ctx!.translate(p.x, p.y);
+        ctx!.rotate(p.rot);
+        ctx!.globalAlpha = p.opacity;
+        ctx!.fillStyle = p.color;
+        ctx!.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx!.restore();
+      }
+
+      if (elapsed < duration) {
+        frame = requestAnimationFrame(draw);
+      }
+    }
+
+    frame = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <canvas
+      ref={ref}
+      className='fixed inset-0 pointer-events-none'
+      style={{ zIndex: 200, width: '100%', height: '100%' }}
+    />
+  );
+}
 
 export default function DashboardScreen(): React.ReactElement | null {
   const ctx = useAppContext();
   const ch = ctx.currentChild;
   const ud = ctx.currentUserData;
-  const todayTasks = ctx.todayTasks;
   const activeTasks = ctx.activeTasks;
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
+  const soundPlayed = useRef(false);
 
   if (!ch || !ud) return null;
 
@@ -33,9 +120,24 @@ export default function DashboardScreen(): React.ReactElement | null {
   }).length;
   const total = activeTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = total > 0 && done === total;
+
+  // Play victory sound once when all missions complete
+  useEffect(() => {
+    if (allDone && !soundPlayed.current) {
+      soundPlayed.current = true;
+      const prefs = ctx.cfg
+        ? ctx.cfg.notificationPrefs || {}
+        : {};
+      if ((prefs as Record<string, boolean>).soundEnabled !== false) {
+        playSound('success');
+      }
+    }
+  }, [allDone]);
 
   return (
     <div className='pb-20'>
+      {allDone && <ConfettiCanvas />}
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center'>
           <div>
@@ -172,7 +274,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           Up Next
         </div>
         <div className='flex flex-col gap-3'>
-          {todayTasks
+          {activeTasks
             .filter(t => {
               const l = tLog[t.id];
               return !l || l.rejected;
@@ -184,17 +286,13 @@ export default function DashboardScreen(): React.ReactElement | null {
             .map((t, idx) => {
               const entry = tLog[t.id];
               const isRej = entry && entry.rejected;
-              const isPreview = !isTaskActiveToday(t);
               const baseStatus = getTaskStatus(
                 t,
                 null,
                 ctx.cfg ? ctx.cfg.bedtime : undefined
               );
-              const status = isPreview
-                ? 'upcoming'
-                : isRej && baseStatus !== 'missed'
-                  ? 'rejected'
-                  : baseStatus;
+              const status =
+                isRej && baseStatus !== 'missed' ? 'rejected' : baseStatus;
               const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
               return (
                 <div
@@ -218,12 +316,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                     )}
                   </div>
                   <Badge status={status} />
-                  {isPreview && (
-                    <span className='text-[10px] font-bold text-qmuted bg-qslate/10 rounded-badge px-3 py-2'>
-                      Tomorrow
-                    </span>
-                  )}
-                  {!isPreview && status !== 'missed' && (
+                  {status !== 'missed' && (
                     <button
                       onClick={() => {
                         startCapture(t.id);
@@ -246,14 +339,19 @@ export default function DashboardScreen(): React.ReactElement | null {
                 </div>
               );
             })}
-          {total > 0 && done === total && (
-            <div className='text-center p-5 text-qteal font-semibold text-lg animate-confetti'>
+          {allDone && (
+            <div className='text-center p-6 animate-confetti'>
               <FontAwesomeIcon
                 icon={faPartyHorn}
                 style={FA_ICON_STYLE}
-                className='mr-2'
+                className='text-3xl text-qteal mb-2'
               />
-              All done for today!
+              <div className='font-display text-lg font-bold text-qteal'>
+                All done for today!
+              </div>
+              <div className='text-sm text-qmuted mt-1'>
+                Great job, {ch.name}!
+              </div>
             </div>
           )}
         </div>
