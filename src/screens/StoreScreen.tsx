@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useTrail, useSpring, useTransition, animated, config, to } from '@react-spring/web';
+import { useSpring, useTransition, animated, config, to } from '@react-spring/web';
+import { useStagger } from '../hooks/useStagger.ts';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV } from '../constants.ts';
@@ -33,11 +34,11 @@ export default function StoreScreen(): React.ReactElement | null {
   });
 
   // Reward card grid stagger
-  const rewardTrail = useTrail(rewards.length, {
+  const rewardTrail = useStagger(rewards.length, {
     from: { opacity: 0, scale: 0.9 },
     to: { opacity: 1, scale: 1 },
     config: config.wobbly,
-    delay: 100,
+    baseDelay: 100,
   });
 
   // Confirm modal transition

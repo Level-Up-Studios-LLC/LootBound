@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useTrail, useSpring, animated, config } from '@react-spring/web';
+import { useSpring, animated, config } from '@react-spring/web';
+import { useStagger } from '../hooks/useStagger.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faCamera, faChevronRight, faGamepadModern } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -45,7 +46,7 @@ export default function TasksScreen(): React.ReactElement | null {
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart));
 
   // Staggered entrance for today's mission cards
-  const taskTrail = useTrail(sorted.length, {
+  const taskTrail = useStagger(sorted.length, {
     from: { opacity: 0, y: 16 },
     to: { opacity: 1, y: 0 },
     config: config.gentle,
@@ -58,7 +59,7 @@ export default function TasksScreen(): React.ReactElement | null {
   });
 
   // Staggered entrance for tomorrow preview cards
-  const tomorrowTrail = useTrail(sortedTomorrow.length, {
+  const tomorrowTrail = useStagger(sortedTomorrow.length, {
     from: { opacity: 0, y: 12 },
     to: previewOpen ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 },
     config: config.gentle,

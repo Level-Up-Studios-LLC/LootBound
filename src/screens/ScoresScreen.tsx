@@ -1,5 +1,6 @@
 import React from 'react';
-import { useTrail, useSpring, animated, config } from '@react-spring/web';
+import { useSpring, animated, config } from '@react-spring/web';
+import { useStagger } from '../hooks/useStagger.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFire, faTrophy, faMedal } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -84,11 +85,11 @@ export default function ScoresScreen(): React.ReactElement | null {
 
     const SOLO_STAT_COUNT = 5;
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const statTrail = useTrail(SOLO_STAT_COUNT, {
+    const statTrail = useStagger(SOLO_STAT_COUNT, {
       from: { opacity: 0, y: 16 },
       to: { opacity: 1, y: 0 },
       config: config.gentle,
-      delay: 150,
+      baseDelay: 150,
     });
 
     return (
@@ -268,7 +269,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   });
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const leaderTrail = useTrail(sorted.length, {
+  const leaderTrail = useStagger(sorted.length, {
     from: { opacity: 0, x: -20 },
     to: { opacity: 1, x: 0 },
     config: config.gentle,

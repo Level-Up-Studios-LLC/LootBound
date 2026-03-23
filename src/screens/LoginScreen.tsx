@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useTrail, useSpring, useTransition, animated, config, to } from '@react-spring/web';
+import { useSpring, useTransition, animated, config, to } from '@react-spring/web';
+import { useStagger } from '../hooks/useStagger.ts';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -95,11 +96,11 @@ export default function LoginScreen(
   });
 
   // Profile card stagger
-  const profileTrail = useTrail(children.length, {
+  const profileTrail = useStagger(children.length, {
     from: { opacity: 0, scale: 0.85 },
     to: { opacity: 1, scale: 1 },
     config: config.wobbly,
-    delay: 200,
+    baseDelay: 200,
   });
 
   // PIN modal transition (enter PIN or create PIN)

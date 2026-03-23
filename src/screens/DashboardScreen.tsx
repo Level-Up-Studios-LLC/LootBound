@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { useTrail, useSpring, animated, config } from '@react-spring/web';
+import { useSpring, animated, config } from '@react-spring/web';
+import { useStagger } from '../hooks/useStagger.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faFire, faPartyHorn, faCheck, faCoins } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -144,11 +145,11 @@ export default function DashboardScreen(): React.ReactElement | null {
     delay: 100,
   });
 
-  const statTrail = useTrail(STAT_CARDS.length, {
+  const statTrail = useStagger(STAT_CARDS.length, {
     from: { opacity: 0, y: 20 },
     to: { opacity: 1, y: 0 },
     config: config.gentle,
-    delay: 200,
+    baseDelay: 200,
   });
 
   const upNextTasks = activeTasks
@@ -159,11 +160,11 @@ export default function DashboardScreen(): React.ReactElement | null {
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
     .slice(0, 4);
 
-  const taskTrail = useTrail(upNextTasks.length, {
+  const taskTrail = useStagger(upNextTasks.length, {
     from: { opacity: 0, x: -20 },
     to: { opacity: 1, x: 0 },
     config: config.gentle,
-    delay: 350,
+    baseDelay: 350,
   });
 
   const celebrationSpring = useSpring({
