@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSpring, animated, config } from '@react-spring/web';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FA_ICON_STYLE } from '../../constants.ts';
 
@@ -12,20 +11,8 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState(props: EmptyStateProps): React.ReactElement {
-  const spring = useSpring({
-    from: { opacity: 0, y: 16 },
-    to: { opacity: 1, y: 0 },
-    config: config.gentle,
-  });
-
   return (
-    <animated.div
-      className='text-center py-10 px-5 text-qmuted'
-      style={{
-        opacity: spring.opacity,
-        transform: spring.y.to(v => `translateY(${v}px)`),
-      }}
-    >
+    <div className='text-center py-10 px-5 text-qmuted animate-fade-in'>
       <div className='text-[32px] mb-3'>
         <FontAwesomeIcon icon={props.icon} style={FA_ICON_STYLE} />
       </div>
@@ -43,6 +30,6 @@ export default function EmptyState(props: EmptyStateProps): React.ReactElement {
           </button>
         </div>
       )}
-    </animated.div>
+    </div>
   );
 }

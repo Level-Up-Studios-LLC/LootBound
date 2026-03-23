@@ -1,6 +1,6 @@
-import React from 'react';
-import { useSpring, animated, config } from '@react-spring/web';
-import { useStagger } from '../hooks/useStagger.ts';
+import React, { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFire, faTrophy, faMedal } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -64,6 +64,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   const ud = ctx.currentUserData;
   const d = getToday();
   const ws = getWeekStart(cfg ? cfg.weeklyResetDay : undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   if (!ch || !ud || !cfg) return null;
 
@@ -77,33 +78,18 @@ export default function ScoresScreen(): React.ReactElement | null {
     const sMult = getStreakMultiplier(ud.streak || 0);
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const profileSpring = useSpring({
-      from: { opacity: 0, scale: 0.9 },
-      to: { opacity: 1, scale: 1 },
-      config: config.wobbly,
-    });
-
-    const SOLO_STAT_COUNT = 5;
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const statTrail = useStagger(SOLO_STAT_COUNT, {
-      from: { opacity: 0, y: 16 },
-      to: { opacity: 1, y: 0 },
-      config: config.gentle,
-      baseDelay: 150,
-    });
+    useGSAP(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
+      tl.from('.scores-stat', { opacity: 0, y: 16, duration: 0.3, stagger: 0.06 }, '-=0.2');
+    }, { scope: containerRef });
 
     return (
-      <div className='p-4 pb-20'>
+      <div className='p-4 pb-20' ref={containerRef}>
         <div className='font-display text-2xl font-bold mb-4 text-qslate'>
           My Stats
         </div>
-        <animated.div
-          className='bg-qmint rounded-card p-5 mb-4 text-center'
-          style={{
-            opacity: profileSpring.opacity,
-            transform: profileSpring.scale.to(v => `scale(${v})`),
-          }}
-        >
+        <div className='bg-qmint rounded-card p-5 mb-4 text-center scores-profile'>
           <div className='text-[40px] mb-1'>{ch.avatar}</div>
           <div className='font-display text-xl font-bold text-qslate'>
             {ch.name}
@@ -111,41 +97,23 @@ export default function ScoresScreen(): React.ReactElement | null {
           <div className='font-bold text-sm' style={{ color: lt.color }}>
             Lv.{ud.level || 1} {lt.title}
           </div>
-        </animated.div>
+        </div>
         <div className='grid grid-cols-2 gap-3 mb-4'>
-          <animated.div
-            className='bg-qyellow rounded-btn p-4 text-center'
-            style={{
-              opacity: statTrail[0].opacity,
-              transform: statTrail[0].y.to(v => `translateY(${v}px)`),
-            }}
-          >
+          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-2xl font-bold text-qslate'>
               {(ud.points || 0).toLocaleString()}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>COINS</div>
-          </animated.div>
-          <animated.div
-            className='bg-qmint rounded-btn p-4 text-center'
-            style={{
-              opacity: statTrail[1].opacity,
-              transform: statTrail[1].y.to(v => `translateY(${v}px)`),
-            }}
-          >
+          </div>
+          <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-2xl font-bold text-qslate'>
               {myDone}/{myTasks.length}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>TODAY</div>
-          </animated.div>
+          </div>
         </div>
         <div className='grid grid-cols-3 gap-3 mb-4'>
-          <animated.div
-            className='bg-qyellow rounded-btn p-4 text-center'
-            style={{
-              opacity: statTrail[2].opacity,
-              transform: statTrail[2].y.to(v => `translateY(${v}px)`),
-            }}
-          >
+          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-xl font-bold text-qslate'>
               <FontAwesomeIcon
                 icon={faFire}
@@ -155,33 +123,21 @@ export default function ScoresScreen(): React.ReactElement | null {
               {ud.streak || 0}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>STREAK</div>
-          </animated.div>
-          <animated.div
-            className='bg-qmint rounded-btn p-4 text-center'
-            style={{
-              opacity: statTrail[3].opacity,
-              transform: statTrail[3].y.to(v => `translateY(${v}px)`),
-            }}
-          >
+          </div>
+          <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-xl font-bold text-qslate'>
               {ud.bestStreak || 0}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>BEST</div>
-          </animated.div>
-          <animated.div
-            className='bg-qyellow rounded-btn p-4 text-center'
-            style={{
-              opacity: statTrail[4].opacity,
-              transform: statTrail[4].y.to(v => `translateY(${v}px)`),
-            }}
-          >
+          </div>
+          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-xl font-bold text-qslate'>
               {myPerfect}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>
               PERFECT DAYS
             </div>
-          </animated.div>
+          </div>
         </div>
         {sMult > 1 && (
           <div className='bg-qmint rounded-btn p-3 mb-4 text-center text-[13px] text-qmuted font-semibold'>
@@ -206,35 +162,33 @@ export default function ScoresScreen(): React.ReactElement | null {
                 [15, '+150 coins', ud.bestStreak >= 15],
                 [30, '+300 coins', ud.bestStreak >= 30],
               ] as [number, string, boolean][]
-            ).map(m => {
-              return (
-                <div
-                  key={m[0]}
+            ).map(m => (
+              <div
+                key={m[0]}
+                className={
+                  'flex justify-between items-center rounded-badge px-3 py-2 ' +
+                  (m[2] ? 'bg-qteal-dim' : 'bg-qbg')
+                }
+              >
+                <span
                   className={
-                    'flex justify-between items-center rounded-badge px-3 py-2 ' +
-                    (m[2] ? 'bg-qteal-dim' : 'bg-qbg')
+                    'text-[13px] font-semibold ' +
+                    (m[2] ? 'text-qteal' : 'text-qmuted')
                   }
                 >
-                  <span
-                    className={
-                      'text-[13px] font-semibold ' +
-                      (m[2] ? 'text-qteal' : 'text-qmuted')
-                    }
-                  >
-                    {m[0]}-day streak
-                  </span>
-                  <span
-                    className={
-                      'text-[13px] font-bold ' +
-                      (m[2] ? 'text-qteal' : 'text-qmuted')
-                    }
-                  >
-                    {m[2] ? '✓ ' : ''}
-                    {m[1]}
-                  </span>
-                </div>
-              );
-            })}
+                  {m[0]}-day streak
+                </span>
+                <span
+                  className={
+                    'text-[13px] font-bold ' +
+                    (m[2] ? 'text-qteal' : 'text-qmuted')
+                  }
+                >
+                  {m[2] ? '✓ ' : ''}
+                  {m[1]}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
         <BNav tabs={KID_NAV} />
@@ -242,7 +196,7 @@ export default function ScoresScreen(): React.ReactElement | null {
     );
   }
 
-  // Multi-kid: leaderboard with top adventurer highlight
+  // Multi-kid: leaderboard
   const perfects: Record<string, number> = {};
   let topPerfect = 0;
   let topIds: string[] = [];
@@ -269,22 +223,21 @@ export default function ScoresScreen(): React.ReactElement | null {
   });
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const leaderTrail = useStagger(sorted.length, {
-    from: { opacity: 0, x: -20 },
-    to: { opacity: 1, x: 0 },
-    config: config.gentle,
-  });
+  useGSAP(() => {
+    gsap.from('.leader-card', {
+      opacity: 0, x: -20, duration: 0.35, stagger: 0.08, ease: 'power2.out',
+    });
+  }, { scope: containerRef });
 
   return (
-    <div className='pb-20'>
+    <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='font-display text-2xl font-bold text-qslate'>
           Leaderboard
         </div>
       </div>
       <div className='px-4 pt-3 flex flex-col gap-4'>
-        {leaderTrail.map((spring, idx) => {
-          const c = sorted[idx];
+        {sorted.map((c, idx) => {
           const udata = allU[c.id] || freshUser();
           const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
           const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
@@ -298,19 +251,17 @@ export default function ScoresScreen(): React.ReactElement | null {
               : 'bg-qyellow';
           const lt = getLevelTitle(udata.level || 1);
           return (
-            <animated.div
+            <div
               key={c.id}
-              className={'rounded-card p-4 ' + cardBg}
-              style={{
-                ...(isTop
+              className={'rounded-card p-4 leader-card ' + cardBg}
+              style={
+                isTop
                   ? {
                       border: '2px solid #eab308',
                       boxShadow: '0 0 12px rgba(234,179,8,0.2)',
                     }
-                  : {}),
-                opacity: spring.opacity,
-                transform: spring.x.to(v => `translateX(${v}px)`),
-              }}
+                  : {}
+              }
             >
               {isTop && (
                 <div
@@ -352,23 +303,21 @@ export default function ScoresScreen(): React.ReactElement | null {
                     [udata.streak || 0, 'Streak'],
                     [udata.bestStreak || 0, 'Best'],
                   ] as [string | number, string][]
-                ).map(s => {
-                  return (
-                    <div
-                      key={s[1]}
-                      className='rounded-badge p-2.5 text-center bg-qbg'
-                    >
-                      <div className='font-display text-base font-bold text-qslate'>
-                        {s[0]}
-                      </div>
-                      <div className='text-[9px] text-qmuted font-bold'>
-                        {s[1]}
-                      </div>
+                ).map(s => (
+                  <div
+                    key={s[1]}
+                    className='rounded-badge p-2.5 text-center bg-qbg'
+                  >
+                    <div className='font-display text-base font-bold text-qslate'>
+                      {s[0]}
                     </div>
-                  );
-                })}
+                    <div className='text-[9px] text-qmuted font-bold'>
+                      {s[1]}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </animated.div>
+            </div>
           );
         })}
       </div>

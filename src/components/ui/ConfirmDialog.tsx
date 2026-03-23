@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useSpring, animated, config, to } from '@react-spring/web';
 
 interface ConfirmDialogProps {
   title: string;
@@ -24,38 +23,18 @@ export default function ConfirmDialog(
     !props.requiredText ||
     typed.trim().toLowerCase() === props.requiredText.trim().toLowerCase();
 
-  const overlaySpring = useSpring({
-    from: { opacity: 0 },
-    to: { opacity: 1 },
-    config: config.stiff,
-  });
-
-  const cardSpring = useSpring({
-    from: { opacity: 0, y: 30, scale: 0.9 },
-    to: { opacity: 1, y: 0, scale: 1 },
-    config: config.stiff,
-  });
-
   return (
-    <animated.div
-      className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
-      style={{ opacity: overlaySpring.opacity }}
+    <div
+      className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5 animate-fade-in'
       role='dialog'
       aria-modal='true'
       aria-labelledby='confirm-dialog-title'
     >
-      <animated.div
+      <div
         className={
           (props.bgColor || 'bg-white') +
-          ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg'
+          ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg animate-slide-up'
         }
-        style={{
-          opacity: cardSpring.opacity,
-          transform: to(
-            [cardSpring.y, cardSpring.scale],
-            (y, s) => `translateY(${y}px) scale(${s})`
-          ),
-        }}
       >
         <div
           id='confirm-dialog-title'
@@ -117,7 +96,7 @@ export default function ConfirmDialog(
             </button>
           )}
         </div>
-      </animated.div>
-    </animated.div>
+      </div>
+    </div>
   );
 }

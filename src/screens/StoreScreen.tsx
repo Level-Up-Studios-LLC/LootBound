@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useSpring, useTransition, animated, config, to } from '@react-spring/web';
-import { useStagger } from '../hooks/useStagger.ts';
+import React, { useRef, useState, useEffect } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV } from '../constants.ts';
@@ -11,6 +11,8 @@ import type { Reward } from '../types.ts';
 export default function StoreScreen(): React.ReactElement | null {
   const [confirmR, setConfirmR] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const ctx = useAppContext();
   const ch = ctx.currentChild;
@@ -26,47 +28,37 @@ export default function StoreScreen(): React.ReactElement | null {
   const rewards = (cfg!.rewards || []).filter(r => r.active);
   const pendingR = ud.pendingRedemptions || [];
 
-  // Balance bar entrance
-  const balanceSpring = useSpring({
-    from: { opacity: 0, y: -10 },
-    to: { opacity: 1, y: 0 },
-    config: config.gentle,
-  });
+  // Entrance animations
+  useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.store-balance', { opacity: 0, y: -10, duration: 0.35 });
+    tl.from('.store-reward', { opacity: 0, scale: 0.9, duration: 0.35, stagger: 0.06 }, '-=0.15');
+  }, { scope: containerRef });
 
-  // Reward card grid stagger
-  const rewardTrail = useStagger(rewards.length, {
-    from: { opacity: 0, scale: 0.9 },
-    to: { opacity: 1, scale: 1 },
-    config: config.wobbly,
-    baseDelay: 100,
-  });
-
-  // Confirm modal transition
-  const modalTransition = useTransition(confirmR, {
-    from: { opacity: 0, scale: 0.85, y: 30 },
-    enter: { opacity: 1, scale: 1, y: 0 },
-    leave: { opacity: 0, scale: 0.85, y: 30 },
-    config: config.stiff,
-  });
+  // Modal enter animation
+  useEffect(() => {
+    if (confirmR && modalRef.current) {
+      const overlay = modalRef.current;
+      const card = overlay.querySelector('.store-modal-card');
+      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+      if (card) {
+        gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
+      }
+    }
+  }, [confirmR]);
 
   return (
-    <div className='pb-20'>
+    <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='font-display text-2xl font-bold text-qslate mb-3'>
           Loot Shop
         </div>
-        <animated.div
-          className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full'
-          style={{
-            opacity: balanceSpring.opacity,
-            transform: balanceSpring.y.to(v => `translateY(${v}px)`),
-          }}
-        >
+        <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full store-balance'>
           <span className='font-semibold text-qslate'>Balance:</span>
           <span className='font-display text-[22px] font-bold text-qslate'>
             {(ud.points || 0).toLocaleString()} coins
           </span>
-        </animated.div>
+        </div>
       </div>
       <div className='px-4 pt-3'>
         {pendingR.length > 0 && (
@@ -74,25 +66,22 @@ export default function StoreScreen(): React.ReactElement | null {
             <div className='text-sm font-bold text-qslate mb-2'>
               Pending Approval
             </div>
-            {pendingR.map(p => {
-              return (
-                <div
-                  key={`${p.rewardId}-${p.requestedAt}`}
-                  className='flex justify-between bg-qyellow-dim rounded-badge px-3 py-2 mb-1 text-[13px]'
-                >
-                  <span>
-                    {p.icon} {p.name}
-                  </span>
-                  <span className='text-qslate'>{p.cost} coins</span>
-                  <span className='text-[11px] text-qmuted'>Waiting...</span>
-                </div>
-              );
-            })}
+            {pendingR.map(p => (
+              <div
+                key={`${p.rewardId}-${p.requestedAt}`}
+                className='flex justify-between bg-qyellow-dim rounded-badge px-3 py-2 mb-1 text-[13px]'
+              >
+                <span>
+                  {p.icon} {p.name}
+                </span>
+                <span className='text-qslate'>{p.cost} coins</span>
+                <span className='text-[11px] text-qmuted'>Waiting...</span>
+              </div>
+            ))}
           </div>
         )}
         <div className='grid grid-cols-2 gap-3.5'>
-          {rewardTrail.map((spring, idx) => {
-            const r = rewards[idx];
+          {rewards.map((r, idx) => {
             const check = canRedeem(curUser!, r);
             const can = check.ok;
             const na = needsApproval(r);
@@ -112,16 +101,12 @@ export default function StoreScreen(): React.ReactElement | null {
             const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
             const dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
             return (
-              <animated.div
+              <div
                 key={r.id}
                 className={
                   (can ? cardBg : dimBg) +
-                  ' rounded-btn p-5 flex flex-col items-center gap-2 text-center'
+                  ' rounded-btn p-5 flex flex-col items-center gap-2 text-center store-reward'
                 }
-                style={{
-                  opacity: spring.opacity,
-                  transform: spring.scale.to(v => `scale(${v})`),
-                }}
               >
                 <div className='text-[32px] animate-float'>{r.icon}</div>
                 <div className='text-[13px] font-semibold leading-tight text-qslate'>
@@ -154,7 +139,7 @@ export default function StoreScreen(): React.ReactElement | null {
                       : 'Redeem'
                     : check.reason || 'Need more coins'}
                 </button>
-              </animated.div>
+              </div>
             );
           })}
         </div>
@@ -185,84 +170,73 @@ export default function StoreScreen(): React.ReactElement | null {
               })}
           </div>
         )}
-        {modalTransition((style, item) =>
-          item ? (
-            <animated.div
-              className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
-              style={{ opacity: style.opacity }}
-              role='dialog'
-              aria-modal='true'
-              aria-labelledby='confirmR-title'
-              aria-describedby='confirmR-desc'
-            >
-              <animated.div
-                className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto'
-                style={{
-                  transform: to(
-                    [style.scale, style.y],
-                    (s, y) => `scale(${s}) translateY(${y}px)`
-                  ),
-                }}
+        {confirmR && (
+          <div
+            ref={modalRef}
+            className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
+            style={{ opacity: 0 }}
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='confirmR-title'
+            aria-describedby='confirmR-desc'
+          >
+            <div className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto store-modal-card'>
+              <div
+                id='confirmR-title'
+                className='font-display text-xl font-bold mb-4'
               >
-                <div
-                  id='confirmR-title'
-                  className='font-display text-xl font-bold mb-4'
-                >
-                  {needsApproval(item) ? 'Request Approval?' : 'Redeem?'}
+                {needsApproval(confirmR) ? 'Request Approval?' : 'Redeem?'}
+              </div>
+              <div
+                id='confirmR-desc'
+                className='flex flex-col items-center gap-2 mb-5'
+              >
+                <div className='text-[32px]'>{confirmR.icon}</div>
+                <div className='text-base font-semibold'>{confirmR.name}</div>
+                <div className='text-qteal text-lg font-bold'>
+                  {confirmR.cost} coins
                 </div>
-                <div
-                  id='confirmR-desc'
-                  className='flex flex-col items-center gap-2 mb-5'
-                >
-                  <div className='text-[32px]'>{item.icon}</div>
-                  <div className='text-base font-semibold'>{item.name}</div>
-                  <div className='text-qteal text-lg font-bold'>
-                    {item.cost} coins
+                {needsApproval(confirmR) && (
+                  <div className='text-xs text-qorange'>
+                    Requires parent approval.
                   </div>
-                  {needsApproval(item) && (
-                    <div className='text-xs text-qorange'>
-                      Requires parent approval.
-                    </div>
-                  )}
-                </div>
-                <div className='flex gap-3 justify-end'>
-                  <button
-                    onClick={() => {
+                )}
+              </div>
+              <div className='flex gap-3 justify-end'>
+                <button
+                  onClick={() => setConfirmR(null)}
+                  className='btn-secondary rounded-badge px-5 py-2 font-semibold border-none cursor-pointer font-body transition-colors'
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={redeeming}
+                  onClick={async () => {
+                    if (redeeming) return;
+                    setRedeeming(true);
+                    try {
+                      await requestRedemption(confirmR!);
                       setConfirmR(null);
-                    }}
-                    className='btn-secondary rounded-badge px-5 py-2 font-semibold border-none cursor-pointer font-body transition-colors'
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    disabled={redeeming}
-                    onClick={async () => {
-                      if (redeeming) return;
-                      setRedeeming(true);
-                      try {
-                        await requestRedemption(item);
-                        setConfirmR(null);
-                      } catch (err) {
-                        console.error('Redemption failed:', err);
-                        Sentry.captureException(err, {
-                          tags: { action: 'redemption' },
-                        });
-                      } finally {
-                        setRedeeming(false);
-                      }
-                    }}
-                    className='btn-primary rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body hover:brightness-110 transition-all disabled:opacity-60'
-                  >
-                    {redeeming
-                      ? 'Processing...'
-                      : needsApproval(item)
-                        ? 'Request'
-                        : 'Confirm'}
-                  </button>
-                </div>
-              </animated.div>
-            </animated.div>
-          ) : null
+                    } catch (err) {
+                      console.error('Redemption failed:', err);
+                      Sentry.captureException(err, {
+                        tags: { action: 'redemption' },
+                      });
+                    } finally {
+                      setRedeeming(false);
+                    }
+                  }}
+                  className='btn-primary rounded-badge px-5 py-2 font-bold border-none cursor-pointer font-body hover:brightness-110 transition-all disabled:opacity-60'
+                >
+                  {redeeming
+                    ? 'Processing...'
+                    : needsApproval(confirmR)
+                      ? 'Request'
+                      : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       <BNav tabs={KID_NAV} />

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useSpring, useTransition, animated, config, to } from '@react-spring/web';
-import { useStagger } from '../hooks/useStagger.ts';
+import React, { useRef, useState, useEffect } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -22,6 +22,9 @@ export default function LoginScreen(
   const [createPin, setCreatePin] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const errRef = useRef<HTMLDivElement>(null);
 
   const ctx = useAppContext();
   const children = ctx.children;
@@ -88,65 +91,54 @@ export default function LoginScreen(
     ctx.notify('PIN created!');
   };
 
-  // Title entrance
-  const titleSpring = useSpring({
-    from: { opacity: 0, y: -20 },
-    to: { opacity: 1, y: 0 },
-    config: config.gentle,
-  });
+  // Entrance animations
+  useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.login-title', { opacity: 0, y: -20, duration: 0.4 });
+    tl.from('.login-profile', { opacity: 0, scale: 0.85, duration: 0.35, stagger: 0.08 }, '-=0.2');
+  }, { scope: containerRef });
 
-  // Profile card stagger
-  const profileTrail = useStagger(children.length, {
-    from: { opacity: 0, scale: 0.85 },
-    to: { opacity: 1, scale: 1 },
-    config: config.wobbly,
-    baseDelay: 200,
-  });
-
-  // PIN modal transition (enter PIN or create PIN)
-  const modalTransition = useTransition(pinTarget, {
-    from: { opacity: 0, scale: 0.85, y: 30 },
-    enter: { opacity: 1, scale: 1, y: 0 },
-    leave: { opacity: 0, scale: 0.85, y: 30 },
-    config: config.stiff,
-  });
+  // Modal enter animation
+  useEffect(() => {
+    if (pinTarget && modalRef.current) {
+      const overlay = modalRef.current;
+      const card = overlay.querySelector('.login-modal-card');
+      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+      if (card) {
+        gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
+      }
+    }
+  }, [pinTarget]);
 
   // Error shake
-  const errSpring = useSpring({
-    x: pinErr ? 1 : 0,
-    config: { tension: 300, friction: 10, clamp: true },
-  });
+  useEffect(() => {
+    if (pinErr && errRef.current) {
+      gsap.fromTo(errRef.current,
+        { x: -6 },
+        { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' }
+      );
+    }
+  }, [pinErr]);
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen p-6'>
-      <animated.div
-        className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4'
-        style={{
-          opacity: titleSpring.opacity,
-          transform: titleSpring.y.to(v => `translateY(${v}px)`),
-        }}
-      >
+    <div className='flex flex-col items-center justify-center min-h-screen p-6' ref={containerRef}>
+      <div className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title'>
         LOOTBOUND
-      </animated.div>
+      </div>
       <div className='text-base text-qmuted mb-5'>Choose your profile</div>
       <div className='flex gap-5 flex-wrap justify-center mb-10'>
-        {profileTrail.map((spring, idx) => {
-          const c = children[idx];
+        {children.map((c, idx) => {
           const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
           return (
-            <animated.button
+            <button
               key={c.id}
               onClick={() => {
                 doKidLogin(c.id);
               }}
               className={
-                'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer border-none ' +
+                'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer border-none transition-all hover:scale-105 active:scale-95 login-profile ' +
                 cardBg
               }
-              style={{
-                opacity: spring.opacity,
-                transform: spring.scale.to(v => `scale(${v})`),
-              }}
             >
               <div className='text-[40px] animate-float'>{c.avatar}</div>
               <div className='font-display text-lg font-semibold'>{c.name}</div>
@@ -160,7 +152,7 @@ export default function LoginScreen(
                   PIN protected
                 </div>
               )}
-            </animated.button>
+            </button>
           );
         })}
       </div>
@@ -172,25 +164,19 @@ export default function LoginScreen(
       )}
 
       {/* PIN modal (enter or create) */}
-      {modalTransition((style, target) => {
-        if (!target) return null;
-        const targetChild = ctx.getChild(target);
+      {pinTarget && (() => {
+        const targetChild = ctx.getChild(pinTarget);
         if (!targetChild) return null;
         const isCreate = createPin;
 
         return (
-          <animated.div
+          <div
+            ref={modalRef}
             className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5'
-            style={{ opacity: style.opacity }}
+            style={{ opacity: 0 }}
           >
-            <animated.div
-              className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl'
-              style={{
-                transform: to(
-                  [style.scale, style.y],
-                  (s, y) => `scale(${s}) translateY(${y}px)`
-                ),
-              }}
+            <div
+              className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl login-modal-card'
               role='dialog'
               aria-label={
                 isCreate
@@ -257,16 +243,9 @@ export default function LoginScreen(
               )}
 
               {pinErr && (
-                <animated.div
-                  className='text-qcoral text-[13px]'
-                  style={{
-                    transform: errSpring.x.to(
-                      v => `translateX(${Math.sin(v * Math.PI * 4) * 6}px)`
-                    ),
-                  }}
-                >
+                <div ref={errRef} className='text-qcoral text-[13px]'>
                   {pinErr}
-                </animated.div>
+                </div>
               )}
 
               {isCreate ? (
@@ -294,10 +273,10 @@ export default function LoginScreen(
               >
                 Cancel
               </button>
-            </animated.div>
-          </animated.div>
+            </div>
+          </div>
         );
-      })}
+      })()}
 
       {props.onSwitchFamily && (
         <button onClick={props.onSwitchFamily} className='btn-ghost mt-5'>
