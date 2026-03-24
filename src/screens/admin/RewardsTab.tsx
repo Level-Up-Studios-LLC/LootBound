@@ -74,6 +74,10 @@ export default function RewardsTab(): React.ReactElement {
   if (!cfg) return <div />;
   const rewards = cfg.rewards || [];
 
+  const removeReward = (rewardId: string) => {
+    ctx.saveCfg({ ...cfg, rewards: rewards.filter(x => x.id !== rewardId) });
+  };
+
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
@@ -173,7 +177,7 @@ export default function RewardsTab(): React.ReactElement {
                 onClick={() => {
                   try {
                     if (localStorage.getItem(SKIP_CONFIRM_KEY)) {
-                      ctx.saveCfg({ ...cfg!, rewards: rewards.filter(x => x.id !== r.id) });
+                      removeReward(r.id);
                       return;
                     }
                   } catch (_e) {}
@@ -230,7 +234,7 @@ export default function RewardsTab(): React.ReactElement {
           confirmLabel='Delete'
           dontAskAgainKey={SKIP_CONFIRM_KEY}
           onConfirm={() => {
-            ctx.saveCfg({ ...cfg!, rewards: rewards.filter(x => x.id !== deleteReward.id) });
+            removeReward(deleteReward.id);
             setDeleteReward(null);
           }}
           onCancel={() => setDeleteReward(null)}

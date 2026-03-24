@@ -37,6 +37,12 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
   const children = ctx.children;
   const cfg = ctx.cfg;
 
+  const removeTask = (childId: string, taskId: string) => {
+    const nt: Record<string, Task[]> = { ...cfg!.tasks };
+    nt[childId] = nt[childId].filter(x => x.id !== taskId);
+    ctx.saveCfg({ ...cfg!, tasks: nt });
+  };
+
   if (children.length === 0) {
     return (
       <EmptyState
@@ -123,9 +129,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       onClick={() => {
                         try {
                           if (localStorage.getItem(SKIP_CONFIRM_KEY)) {
-                            const nt: Record<string, Task[]> = { ...cfg!.tasks };
-                            nt[c.id] = nt[c.id].filter(x => x.id !== t.id);
-                            ctx.saveCfg({ ...cfg!, tasks: nt });
+                            removeTask(c.id, t.id);
                             return;
                           }
                         } catch (_e) {}
@@ -199,9 +203,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           confirmLabel='Delete'
           dontAskAgainKey={SKIP_CONFIRM_KEY}
           onConfirm={() => {
-            const nt: Record<string, Task[]> = { ...cfg!.tasks };
-            nt[deleteTask.childId] = nt[deleteTask.childId].filter(x => x.id !== deleteTask.task.id);
-            ctx.saveCfg({ ...cfg!, tasks: nt });
+            removeTask(deleteTask.childId, deleteTask.task.id);
             setDeleteTask(null);
           }}
           onCancel={() => setDeleteTask(null)}
