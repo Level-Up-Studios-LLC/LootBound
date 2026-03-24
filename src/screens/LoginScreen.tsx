@@ -90,12 +90,16 @@ export default function LoginScreen(
     ctx.notify('PIN created!');
   };
 
+  const prefersReducedMotion = typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // Entrance animations
   useGSAP(() => {
+    if (prefersReducedMotion) return;
     const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
     tl.from('.login-title', { opacity: 0, y: -20, duration: 0.4 });
     tl.fromTo('.login-profile', { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.35, stagger: 0.08 }, '-=0.2');
-  }, { scope: containerRef });
+  }, { scope: containerRef, dependencies: [prefersReducedMotion] });
 
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
@@ -104,18 +108,23 @@ export default function LoginScreen(
     if (pinTarget && modalRef.current) {
       const overlay = modalRef.current;
       const card = overlay.querySelector('.login-modal-card');
-      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
-      if (card) {
-        gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
+      if (prefersReducedMotion) {
+        gsap.set(overlay, { opacity: 1 });
+      } else {
+        gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+        if (card) {
+          gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
+        }
       }
     } else if (!pinTarget && prevFocusRef.current) {
       prevFocusRef.current.focus();
       prevFocusRef.current = null;
     }
-  }, [pinTarget]);
+  }, [pinTarget, prefersReducedMotion]);
 
   // Error shake
   useEffect(() => {
+    if (prefersReducedMotion) return;
     if (pinErr && errRef.current) {
       gsap.fromTo(errRef.current,
         { x: -6 },

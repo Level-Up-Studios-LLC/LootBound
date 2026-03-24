@@ -119,9 +119,12 @@ export default function CompleteProfileScreen(
         // Only save Gravatar URL if the image actually exists
         const gravatarUrl = getGravatarUrl(props.authUser.email);
         try {
-          const res = await fetch(gravatarUrl, { method: 'HEAD' });
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 3000);
+          const res = await fetch(gravatarUrl, { method: 'HEAD', signal: ctrl.signal });
+          clearTimeout(timer);
           if (res.ok) memberData.parentPhotoURL = gravatarUrl;
-        } catch (_e) { /* Gravatar unreachable — skip */ }
+        } catch (_e) { /* Gravatar unreachable or timed out — skip */ }
       }
       if (pin) {
         memberData.parentPin = pin;

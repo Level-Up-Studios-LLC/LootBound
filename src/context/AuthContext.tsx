@@ -230,6 +230,8 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   const doSignOut = async () => {
     setAuthError(null);
     setLastFamilyCode(null);
+    setJustSignedIn(false);
+    setIsNewUser(false);
     try {
       await signOutFamily();
     } catch (err: any) {

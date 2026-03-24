@@ -203,7 +203,9 @@ export async function handleGoogleRedirectResult(): Promise<{
     result = await getRedirectResult(auth);
   } catch (err: any) {
     if (err.code === 'auth/account-exists-with-different-credential') {
-      throw { code: err.code, message: 'An account with this email already exists. Please sign in with your original method first.' };
+      const e = new Error('An account with this email already exists. Please sign in with your original method first.');
+      (e as any).code = err.code;
+      throw e;
     }
     throw err;
   }
