@@ -83,7 +83,8 @@ export function isTaskActiveTomorrow(task: Task): boolean {
     const tomorrowDow = (todayDow() + 1) % 7;
     return task.dueDay === tomorrowDow;
   }
-  return false;
+  // Tasks with no schedule are always active (same as isTaskActiveToday)
+  return true;
 }
 
 export function slugify(s: string): string {

@@ -194,6 +194,9 @@ export default function CompleteProfileScreen(
               if (ok) {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
+              } else {
+                setCopied(false);
+                setError('Could not copy. Long-press the code to copy manually.');
               }
             });
           }}
