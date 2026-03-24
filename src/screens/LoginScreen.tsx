@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
@@ -77,7 +76,6 @@ export default function LoginScreen(
       await fsSaveChild(ctx.familyId, pinTarget, { pin: newPin });
     } catch (err) {
       console.error('Failed to save PIN:', err);
-      Sentry.captureException(err, { tags: { action: 'save-kid-pin' } });
       setPinErr('Could not save PIN. Please try again.');
       return;
     }
@@ -127,7 +125,8 @@ export default function LoginScreen(
   }, [pinErr]);
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen p-6' ref={containerRef}>
+    <>
+    <div className='flex flex-col items-center justify-center min-h-screen p-6' ref={containerRef} aria-hidden={!!pinTarget}>
       <div className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title'>
         LOOTBOUND
       </div>
@@ -169,8 +168,15 @@ export default function LoginScreen(
         </div>
       )}
 
-      {/* PIN modal (enter or create) */}
-      {pinTarget && (() => {
+      {props.onSwitchFamily && (
+        <button onClick={props.onSwitchFamily} className='btn-ghost mt-5'>
+          Switch Family
+        </button>
+      )}
+    </div>
+
+    {/* PIN modal (enter or create) */}
+    {pinTarget && (() => {
         const targetChild = ctx.getChild(pinTarget);
         if (!targetChild) return null;
         const isCreate = createPin;
@@ -216,6 +222,7 @@ export default function LoginScreen(
                   <PasswordInput
                     maxLength={4}
                     placeholder='New PIN'
+                    aria-label='New PIN'
                     value={newPin}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setNewPin(e.target.value.replace(/[^0-9]/g, ''));
@@ -227,6 +234,7 @@ export default function LoginScreen(
                   <PasswordInput
                     maxLength={4}
                     placeholder='Confirm PIN'
+                    aria-label='Confirm PIN'
                     value={confirmPin}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
@@ -242,6 +250,7 @@ export default function LoginScreen(
                 <div className='flex gap-2'>
                   <PasswordInput
                     maxLength={4}
+                    aria-label='Enter PIN'
                     value={kpin}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setKpin(e.target.value.replace(/[^0-9]/g, ''));
@@ -294,12 +303,6 @@ export default function LoginScreen(
           </div>
         );
       })()}
-
-      {props.onSwitchFamily && (
-        <button onClick={props.onSwitchFamily} className='btn-ghost mt-5'>
-          Switch Family
-        </button>
-      )}
-    </div>
+    </>
   );
 }

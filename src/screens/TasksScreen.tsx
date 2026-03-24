@@ -33,6 +33,14 @@ export default function TasksScreen(): React.ReactElement | null {
   const chevronRef = useRef<HTMLSpanElement>(null);
   const tomorrowRef = useRef<HTMLDivElement>(null);
 
+  // Entrance animations — must be above early return to satisfy Rules of Hooks
+  useGSAP(() => {
+    if (!ch || !ud) return;
+    gsap.from('.task-card', {
+      opacity: 0, y: 16, duration: 0.35, stagger: 0.06, ease: 'power2.out',
+    });
+  }, { scope: containerRef, dependencies: [ch, ud] });
+
   if (!ch || !ud) return null;
 
   const sorted = activeTasks.slice().sort((a, b) => {
@@ -47,13 +55,6 @@ export default function TasksScreen(): React.ReactElement | null {
   const sortedTomorrow = tomorrowTasks
     .slice()
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart));
-
-  // Entrance animations
-  useGSAP(() => {
-    gsap.from('.task-card', {
-      opacity: 0, y: 16, duration: 0.35, stagger: 0.06, ease: 'power2.out',
-    });
-  }, { scope: containerRef });
 
   // Chevron + tomorrow preview toggle
   const togglePreview = () => {
@@ -248,6 +249,7 @@ export default function TasksScreen(): React.ReactElement | null {
           <button
             onClick={togglePreview}
             aria-expanded={previewOpen}
+            aria-controls='tomorrow-preview'
             className='flex items-center justify-center gap-2 text-[13px] text-qmuted font-semibold font-body bg-transparent border-none cursor-pointer py-3 mt-2 hover:text-qslate transition-colors'
           >
             <span ref={chevronRef} style={{ display: 'inline-block' }}>
@@ -261,7 +263,7 @@ export default function TasksScreen(): React.ReactElement | null {
           </button>
         )}
         {previewOpen && tomorrowTasks.length > 0 && (
-          <div className='flex flex-col gap-2' ref={tomorrowRef}>
+          <div id='tomorrow-preview' role='region' className='flex flex-col gap-2' ref={tomorrowRef}>
             {sortedTomorrow.map(t => (
               <div
                 key={t.id}
