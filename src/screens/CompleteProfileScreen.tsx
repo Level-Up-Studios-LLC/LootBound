@@ -97,6 +97,11 @@ export default function CompleteProfileScreen(
       setError('PINs do not match');
       return;
     }
+    const join = joinCode.trim();
+    if (join && join.length !== 6) {
+      setError('Family code must be 6 characters');
+      return;
+    }
 
     setBusy(true);
     try {

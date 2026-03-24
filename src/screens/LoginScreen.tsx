@@ -31,6 +31,7 @@ export default function LoginScreen(
   const doKidLogin = (uid: string): void => {
     const ch = ctx.getChild(uid);
     if (!ch) return;
+    prevFocusRef.current = document.activeElement as HTMLElement;
     if (ch.pin) {
       setPinTarget(uid);
       setCreatePin(false);
@@ -98,10 +99,9 @@ export default function LoginScreen(
 
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
-  // Modal enter animation + focus management
+  // Modal enter animation + focus restore
   useEffect(() => {
     if (pinTarget && modalRef.current) {
-      prevFocusRef.current = document.activeElement as HTMLElement;
       const overlay = modalRef.current;
       const card = overlay.querySelector('.login-modal-card');
       gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });

@@ -91,7 +91,12 @@ export default function ConfirmDialog(
                   setTyped(e.target.value);
                 }}
                 onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && confirmed) props.onConfirm();
+                  if (e.key === 'Enter' && confirmed) {
+                    if (dontAsk && props.dontAskAgainKey) {
+                      try { localStorage.setItem(props.dontAskAgainKey, '1'); } catch (_e) {}
+                    }
+                    props.onConfirm();
+                  }
                 }}
                 className='quest-input'
                 autoFocus

@@ -223,7 +223,7 @@ export default function ChildrenTab(): React.ReactElement {
                 return {
                   ...c,
                   name: editChildForm.name,
-                  age: Number(editChildForm.age) || c.age,
+                  age: (() => { const parsed = Number(editChildForm.age); return Number.isNaN(parsed) ? c.age : parsed; })(),
                   avatar: editChildForm.avatar,
                   color: editChildForm.color,
                 };

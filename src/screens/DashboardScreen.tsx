@@ -21,10 +21,13 @@ import { playSound } from '../services/notificationSound.ts';
 const CONFETTI_COLORS = ['#4ac7a8', '#ffe08a', '#ff8c94', '#8b7ec8', '#5ec4d4', '#e6a817'];
 const CONFETTI_COUNT = 50;
 
-function Confetti(): React.ReactElement {
+function Confetti(): React.ReactElement | null {
   const ref = useRef<HTMLCanvasElement>(null);
+  const prefersReduced = typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
+    if (prefersReduced) return;
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -89,7 +92,9 @@ function Confetti(): React.ReactElement {
       cancelAnimationFrame(frame);
       tl.kill();
     };
-  }, []);
+  }, [prefersReduced]);
+
+  if (prefersReduced) return null;
 
   return (
     <canvas
@@ -165,6 +170,8 @@ export default function DashboardScreen(): React.ReactElement | null {
   const upNextTasks = activeTasks
     .filter(t => {
       const l = tLog[t.id];
+      if (l && !l.rejected && l.status !== 'missed') return false; // completed
+      if (getTaskStatus(t, null, ctx.cfg?.bedtime) === 'missed') return false;
       return !l || l.rejected;
     })
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
