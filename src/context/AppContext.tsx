@@ -639,7 +639,7 @@ export function AppProvider(props: {
   const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
   const activeTasks = uTasks.filter(isTaskActiveToday);
-  const tomorrowTasks = uTasks.filter(isTaskActiveTomorrow);
+  const tomorrowTasks = uTasks.filter(t => !isTaskActiveToday(t) && isTaskActiveTomorrow(t));
   const d = getToday();
   const tLog =
     currentUserData && currentUserData.taskLog && currentUserData.taskLog[d]

@@ -256,9 +256,14 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   const refreshAuthUser = async () => {
     const uid = getCurrentUid();
     if (!uid || !authUser) return;
-    const familyId = await resolveFamilyId(uid);
-    if (familyId !== authUser.familyId) {
-      setAuthUser({ ...authUser, familyId });
+    try {
+      const familyId = await resolveFamilyId(uid);
+      if (familyId !== authUser.familyId) {
+        setAuthUser({ ...authUser, familyId });
+      }
+    } catch (err) {
+      console.error('Failed to refresh familyId:', err);
+      Sentry.captureException(err, { tags: { action: 'refresh-auth-user' } });
     }
   };
 

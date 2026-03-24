@@ -637,7 +637,7 @@ export interface InAppNotificationDoc {
   childName?: string;
   targetRole: string;
   read: boolean;
-  createdAt: Timestamp | number;
+  createdAt: Timestamp;
 }
 
 export async function saveNotification(

@@ -46,8 +46,7 @@ function ProfilePicture(props: {
     );
   }
 
-  // Default to initials — Gravatar is only checked server-side during save
-  // to avoid sending third-party requests without user consent
+  // Default to initials when no provider photo is available
   const initial = (props.name || props.email || '?')[0].toUpperCase();
   return (
     <div className='w-20 h-20 rounded-full bg-qteal/20 flex items-center justify-center text-3xl font-bold text-qteal border-2 border-qteal/30'>
@@ -141,7 +140,7 @@ export default function CompleteProfileScreen(
       }
 
       // Save referral to own family config (not when joining existing)
-      if (referral && !joinCode.trim()) {
+      if (referral && joinCode.trim().length !== 6) {
         await saveConfig(uid, { referralSource: referral });
       }
 
@@ -164,7 +163,7 @@ export default function CompleteProfileScreen(
   const joined = done && joinCode.trim().length === 6;
   useEffect(() => {
     if (joined) props.onComplete();
-  }, [joined]);
+  }, [joined, props.onComplete]);
 
   // Phase 2: Family code display (skip for users who joined an existing family)
   if (done) {
@@ -229,10 +228,11 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label htmlFor='cp-name' className='block text-qslate font-semibold mb-1 tracking-wide'>
             Full Name
           </label>
           <input
+            id='cp-name'
             type='text'
             placeholder='Your full name'
             value={parentName}
@@ -248,10 +248,11 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label htmlFor='cp-email' className='block text-qslate font-semibold mb-1 tracking-wide'>
             Email
           </label>
           <input
+            id='cp-email'
             type='email'
             value={props.authUser.email}
             readOnly
@@ -260,10 +261,11 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label htmlFor='cp-family-code' className='block text-qslate font-semibold mb-1 tracking-wide'>
             Family Code
           </label>
           <input
+            id='cp-family-code'
             type='text'
             placeholder='e.g. ABC123'
             value={joinCode}
@@ -280,10 +282,12 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label htmlFor='cp-pin' className='block text-qslate font-semibold mb-1 tracking-wide'>
             Parent PIN
           </label>
           <PasswordInput
+            id='cp-pin'
+            aria-label='Parent PIN'
             maxLength={6}
             inputMode='numeric'
             placeholder='4+ digit PIN'
@@ -297,6 +301,8 @@ export default function CompleteProfileScreen(
           />
           {pin && (
             <PasswordInput
+              id='cp-pin-confirm'
+              aria-label='Confirm PIN'
               maxLength={6}
               inputMode='numeric'
               placeholder='Confirm PIN'
@@ -315,10 +321,11 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label htmlFor='cp-referral' className='block text-qslate font-semibold mb-1 tracking-wide'>
             How did you hear about us?
           </label>
           <select
+            id='cp-referral'
             value={referral}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setReferral(e.target.value);
