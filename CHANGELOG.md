@@ -2,8 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Unified registration flow with CompleteProfileScreen (Google + email/password in one step)
+- GSAP animations across all kid-facing screens (dashboard, missions, leaderboard, loot shop, login)
+- Web Audio API sound synthesis replacing MP3 placeholders (success, error, approval, level-up, streak)
+- Victory celebration sound on completing all daily missions
+- Confetti canvas celebration and collapsible next-day mission preview on dashboard
+- Confirm dialogs with "Don't ask me again" option for mission, loot, and child deletion
+- Edit child dialog in Children management tab
+- Parent profile photo support (Google photoURL, Gravatar fallback)
+- Admin header redesign with profile avatar, name, Owner/Member role badge, and date display
+- Family code tappable to copy with hint text on profile completion
+
+### Fixed
+- Number fields not clearable when value is zero (reward cost, tier coins/XP, threshold, cooldown)
+- Firebase permission error when joining an existing family (Firestore rules too restrictive on parentMembers)
+- Email verification screen flashing before profile completion (isNewUser timing guard)
+- Sound effects not playing (empty 4-byte MP3 placeholders replaced with Web Audio API synthesis)
+- Victory sound replaying on every dashboard visit (now only on incomplete→complete transition)
+- Kid profile cards not visible (GSAP fromTo opacity fix)
+- Tomorrow's preview showing wrong weekly tasks (isTaskPreview logic)
+- Task form time inputs overflowing on narrow screens (switched to CSS grid)
+- React 19 stack overflow caused by React Spring circular observer (migrated to GSAP)
+- Error message color too light for readability (darkened qcoral for WCAG AA compliance)
+
+### Changed
+- Replaced React Spring with GSAP for all animations (React 19 compatibility)
+- Simplified AuthScreen by moving profile setup to CompleteProfileScreen
+- Removed CreatePinPrompt screen (PIN creation integrated into CompleteProfileScreen)
+- Admin header no longer shows family code banner (moved to Account page)
+- Settings sections reordered with alternating mint/yellow colors
+- Tier coin/XP input fields widened from 60px to 72px
 
 ## [1.5.0] - 2026-03-22
 
