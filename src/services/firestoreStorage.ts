@@ -645,20 +645,30 @@ export async function saveNotification(
   notifId: string,
   data: Record<string, any>
 ): Promise<void> {
-  await setDoc(doc(db, 'families', familyId, 'notifications', notifId), data, {
-    merge: true,
-  });
+  try {
+    await setDoc(doc(db, 'families', familyId, 'notifications', notifId), data, {
+      merge: true,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-notification' } });
+    throw err;
+  }
 }
 
 export async function writeNotification(
   familyId: string,
   data: Omit<InAppNotificationDoc, 'read' | 'createdAt'>
 ): Promise<string> {
-  const ref = await addDoc(
-    collection(db, 'families', familyId, 'notifications'),
-    { ...data, read: false, createdAt: serverTimestamp() }
-  );
-  return ref.id;
+  try {
+    const ref = await addDoc(
+      collection(db, 'families', familyId, 'notifications'),
+      { ...data, read: false, createdAt: serverTimestamp() }
+    );
+    return ref.id;
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'write-notification' } });
+    throw err;
+  }
 }
 
 export async function markNotificationRead(
@@ -694,23 +704,28 @@ export function onNotificationsSnapshot(
 }
 
 export async function cleanupOldNotifications(familyId: string): Promise<void> {
-  const BATCH_LIMIT = 500;
-  const cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const q = query(
-    collection(db, 'families', familyId, 'notifications'),
-    where('createdAt', '<', cutoffTs)
-  );
-  const snap = await getDocs(q);
-  const refs: import('firebase/firestore').DocumentReference[] = [];
-  snap.forEach(d => {
-    refs.push(d.ref);
-  });
-  for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
-    const chunk = refs.slice(start, start + BATCH_LIMIT);
-    const batch = writeBatch(db);
-    for (let j = 0; j < chunk.length; j++) {
-      batch.delete(chunk[j]);
+  try {
+    const BATCH_LIMIT = 500;
+    const cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const q = query(
+      collection(db, 'families', familyId, 'notifications'),
+      where('createdAt', '<', cutoffTs)
+    );
+    const snap = await getDocs(q);
+    const refs: import('firebase/firestore').DocumentReference[] = [];
+    snap.forEach(d => {
+      refs.push(d.ref);
+    });
+    for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
+      const chunk = refs.slice(start, start + BATCH_LIMIT);
+      const batch = writeBatch(db);
+      for (let j = 0; j < chunk.length; j++) {
+        batch.delete(chunk[j]);
+      }
+      await batch.commit();
     }
-    await batch.commit();
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'cleanup-old-notifications' } });
+    throw err;
   }
 }

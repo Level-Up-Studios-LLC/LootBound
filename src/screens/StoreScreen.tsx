@@ -191,7 +191,7 @@ export default function StoreScreen(): React.ReactElement | null {
             onKeyDown={(e: React.KeyboardEvent) => {
               if (e.key === 'Escape') { setConfirmR(null); return; }
               if (e.key !== 'Tab' || !modalRef.current) return;
-              const focusable = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+              const focusable = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
               if (focusable.length === 0) return;
               const first = focusable[0];
               const last = focusable[focusable.length - 1];

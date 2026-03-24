@@ -33,7 +33,6 @@ function ProfilePicture(props: {
   email: string;
   name: string;
 }) {
-  const [gravatarFailed, setGravatarFailed] = useState(false);
   const googlePhoto = firebaseAuth.currentUser?.photoURL;
 
   if (googlePhoto) {
@@ -47,17 +46,8 @@ function ProfilePicture(props: {
     );
   }
 
-  if (!gravatarFailed && props.email) {
-    return (
-      <img
-        src={getGravatarUrl(props.email)}
-        alt='Profile'
-        className='w-20 h-20 rounded-full object-cover border-2 border-qteal/30'
-        onError={() => setGravatarFailed(true)}
-      />
-    );
-  }
-
+  // Default to initials — Gravatar is only checked server-side during save
+  // to avoid sending third-party requests without user consent
   const initial = (props.name || props.email || '?')[0].toUpperCase();
   return (
     <div className='w-20 h-20 rounded-full bg-qteal/20 flex items-center justify-center text-3xl font-bold text-qteal border-2 border-qteal/30'>

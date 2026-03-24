@@ -49,7 +49,7 @@ export default function ConfirmDialog(
       onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === 'Escape') { props.onCancel(); return; }
         if (e.key !== 'Tab' || !overlayRef.current) return;
-        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];

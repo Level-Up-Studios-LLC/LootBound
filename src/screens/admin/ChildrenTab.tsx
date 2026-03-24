@@ -12,6 +12,10 @@ import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
+function getSkipKey() {
+  return `lb-skip-delete-child:${getCurrentUid() || 'anon'}`;
+}
+
 export default function ChildrenTab(): React.ReactElement {
   const [kidPinEdit, setKidPinEdit] = useState<KidPinEditState>({ uid: null, val: '' });
   const [addChildForm, setAddChildForm] = useState<AddChildFormData | null>(null);
@@ -152,7 +156,7 @@ export default function ChildrenTab(): React.ReactElement {
                 <button
                   onClick={() => {
                     try {
-                      if (localStorage.getItem(`lb-skip-delete-child:${getCurrentUid() || 'anon'}`) === '1') {
+                      if (localStorage.getItem(getSkipKey()) === '1') {
                         ctx.doRemoveChild(c.id);
                         return;
                       }
@@ -244,7 +248,7 @@ export default function ChildrenTab(): React.ReactElement {
           message={`This permanently removes ${removeChild.name} from LootBound, including all their coins, missions, streaks, and history.`}
           warning='This action cannot be undone.'
           confirmLabel='Remove'
-          dontAskAgainKey={`lb-skip-delete-child:${getCurrentUid() || 'anon'}`}
+          dontAskAgainKey={getSkipKey()}
           onConfirm={() => {
             ctx.doRemoveChild(removeChild!.id);
             setRemoveChild(null);

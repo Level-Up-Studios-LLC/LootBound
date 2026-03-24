@@ -140,7 +140,7 @@ export default function DashboardScreen(): React.ReactElement | null {
         playSound('victory');
       }
     }
-  }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs]);
+  }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs?.soundEnabled]);
 
   // GSAP entrance animations
   useGSAP(() => {
@@ -335,6 +335,8 @@ export default function DashboardScreen(): React.ReactElement | null {
                 <Badge status={status} />
                 {status !== 'missed' && (
                   <button
+                    type='button'
+                    aria-label={isRej ? `Redo ${t.name}` : `Mark ${t.name} as done`}
                     onClick={() => {
                       startCapture(t.id);
                     }}
