@@ -418,70 +418,70 @@ export async function deleteFamily(
   _currentUid: string
 ): Promise<void> {
   try {
-  // Read family code — check config doc first, then query familyCodes collection
-  const configSnap = await getDoc(doc(db, 'families', familyId));
-  let familyCode =
-    configSnap.exists() && configSnap.data().familyCode
-      ? configSnap.data().familyCode
-      : null;
+    // Read family code — check config doc first, then query familyCodes collection
+    const configSnap = await getDoc(doc(db, 'families', familyId));
+    let familyCode =
+      configSnap.exists() && configSnap.data().familyCode
+        ? configSnap.data().familyCode
+        : null;
 
-  if (!familyCode) {
-    const codeQuery = query(
-      collection(db, 'familyCodes'),
+    if (!familyCode) {
+      const codeQuery = query(
+        collection(db, 'familyCodes'),
+        where('familyId', '==', familyId)
+      );
+      const codeSnap = await getDocs(codeQuery);
+      if (!codeSnap.empty) {
+        familyCode = codeSnap.docs[0].id;
+      }
+    }
+
+    // Collect all document refs to delete
+    const refs: import('firebase/firestore').DocumentReference[] = [];
+
+    // Subcollection docs
+    const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
+    for (let i = 0; i < subs.length; i++) {
+      const snap = await getDocs(collection(db, 'families', familyId, subs[i]));
+      snap.forEach(d => {
+        refs.push(d.ref);
+      });
+    }
+
+    // Family config doc
+    refs.push(doc(db, 'families', familyId));
+
+    // Delete all parent member mappings for this family.
+    // The family owner (uid == familyId) has permission to delete
+    // other members' docs via security rules.
+    const memberQuery = query(
+      collection(db, 'parentMembers'),
       where('familyId', '==', familyId)
     );
-    const codeSnap = await getDocs(codeQuery);
-    if (!codeSnap.empty) {
-      familyCode = codeSnap.docs[0].id;
-    }
-  }
-
-  // Collect all document refs to delete
-  const refs: import('firebase/firestore').DocumentReference[] = [];
-
-  // Subcollection docs
-  const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
-  for (let i = 0; i < subs.length; i++) {
-    const snap = await getDocs(collection(db, 'families', familyId, subs[i]));
-    snap.forEach(d => {
+    const memberSnap = await getDocs(memberQuery);
+    memberSnap.forEach(d => {
       refs.push(d.ref);
     });
-  }
-
-  // Family config doc
-  refs.push(doc(db, 'families', familyId));
-
-  // Delete all parent member mappings for this family.
-  // The family owner (uid == familyId) has permission to delete
-  // other members' docs via security rules.
-  const memberQuery = query(
-    collection(db, 'parentMembers'),
-    where('familyId', '==', familyId)
-  );
-  const memberSnap = await getDocs(memberQuery);
-  memberSnap.forEach(d => {
-    refs.push(d.ref);
-  });
-  // Also include the current user's doc in case the query missed it
-  if (_currentUid && !memberSnap.docs.some(d => d.id === _currentUid)) {
-    refs.push(doc(db, 'parentMembers', _currentUid));
-  }
-
-  // Family code mapping
-  if (familyCode) {
-    refs.push(doc(db, 'familyCodes', familyCode));
-  }
-
-  // Commit in chunks of 500 (Firestore batch limit)
-  const BATCH_LIMIT = 500;
-  for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
-    const chunk = refs.slice(start, start + BATCH_LIMIT);
-    const batch = writeBatch(db);
-    for (let j = 0; j < chunk.length; j++) {
-      batch.delete(chunk[j]);
+    // Also include the current user's doc in case the query missed it
+    if (_currentUid && !memberSnap.docs.some(d => d.id === _currentUid)) {
+      refs.push(doc(db, 'parentMembers', _currentUid));
     }
-    await batch.commit();
-  }
+
+    // Family code mapping
+    if (familyCode) {
+      refs.push(doc(db, 'familyCodes', familyCode));
+    }
+
+    // Commit in chunks of 500 (Firestore batch limit)
+    const BATCH_LIMIT = 500;
+    for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
+      const chunk = refs.slice(start, start + BATCH_LIMIT);
+      const batch = writeBatch(db);
+      for (let j = 0; j < chunk.length; j++) {
+        batch.delete(chunk[j]);
+      }
+      await batch.commit();
+    }
   } catch (err) {
     Sentry.captureException(err, { tags: { action: 'delete-family' } });
     throw err;

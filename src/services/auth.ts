@@ -191,7 +191,8 @@ export async function startGoogleSignIn(): Promise<void> {
  * the same UID. So the existing parentMembers mapping is preserved
  * and this function returns null (returning user).
  *
- * Returns the family code if a new family was created, null otherwise.
+ * Returns { isNew, familyCode?, photoURL? } for new users, { isNew: false } for
+ * returning users, or null if no redirect result was pending.
  */
 export async function handleGoogleRedirectResult(): Promise<{
   isNew: boolean;
