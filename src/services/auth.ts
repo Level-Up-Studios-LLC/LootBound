@@ -462,9 +462,17 @@ export async function switchToExistingFamily(
   await deleteDoc(memberRef);
   await setDoc(memberRef, { ...existingData, familyId });
 
-  // Clean up orphaned docs after switch is persisted
-  await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
-  await deleteDoc(doc(db, 'families', uid));
+  // Best-effort cleanup after switch is persisted
+  try {
+    await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
+  } catch (err) {
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'switch-family-cleanup-code' } });
+  }
+  try {
+    await deleteDoc(doc(db, 'families', uid));
+  } catch (err) {
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'switch-family-cleanup-doc' } });
+  }
 
   return joinCode;
 }

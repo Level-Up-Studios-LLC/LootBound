@@ -100,7 +100,8 @@ export default function DashboardScreen(): React.ReactElement | null {
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
-  const mountedRef = useRef(true);
+  const soundPlayedRef = useRef(false);
+  const lastChildIdRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const done = activeTasks.filter(t => {
@@ -111,20 +112,27 @@ export default function DashboardScreen(): React.ReactElement | null {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const allDone = total > 0 && done === total;
 
-  // Play victory sound only when all missions transition to complete (not on mount)
+  // Play victory sound only on a real incomplete→complete transition
   useEffect(() => {
     if (!ch || !ud) return;
-    if (mountedRef.current) {
-      mountedRef.current = false;
+    // Reset tracking when child changes
+    if (lastChildIdRef.current !== ch.id) {
+      lastChildIdRef.current = ch.id;
+      soundPlayedRef.current = allDone;
       return;
     }
-    if (allDone) {
+    if (!allDone) {
+      soundPlayedRef.current = false;
+      return;
+    }
+    if (!soundPlayedRef.current) {
+      soundPlayedRef.current = true;
       const prefs = ctx.cfg ? ctx.cfg.notificationPrefs || {} : {};
       if ((prefs as Record<string, boolean>).soundEnabled !== false) {
         playSound('victory');
       }
     }
-  }, [allDone, ch, ud]);
+  }, [allDone, ch?.id, ctx.cfg?.notificationPrefs]);
 
   // GSAP entrance animations
   useGSAP(() => {
