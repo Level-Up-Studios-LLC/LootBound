@@ -122,7 +122,7 @@ export async function joinFamilyByCode(
   code: string
 ): Promise<{ user: AuthUser; familyCode: string }> {
   const familyId = await lookupFamilyCode(code);
-  if (!familyId) throw { code: 'auth/invalid-family-code' };
+  if (!familyId) { const e = new Error('Invalid family code'); (e as any).code = 'auth/invalid-family-code'; throw e; }
 
   const cred = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -462,8 +462,8 @@ export async function switchToExistingFamily(
   oldFamilyCode: string
 ): Promise<string> {
   const familyId = await lookupFamilyCode(joinCode);
-  if (!familyId) throw { code: 'auth/invalid-family-code' };
-  if (familyId === uid) throw { code: 'auth/invalid-family-code' };
+  if (!familyId) { const e = new Error('Invalid family code'); (e as any).code = 'auth/invalid-family-code'; throw e; }
+  if (familyId === uid) { const e = new Error('Cannot join own family'); (e as any).code = 'auth/invalid-family-code'; throw e; }
 
   // Atomically delete and recreate parentMembers with new familyId
   // (Firestore rules block familyId changes via update for security)

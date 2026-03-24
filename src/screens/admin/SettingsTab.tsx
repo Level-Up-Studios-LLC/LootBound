@@ -135,7 +135,7 @@ export default function SettingsTab(): React.ReactElement {
                   type='number'
                   min={0}
                   aria-label={`${tier} coins`}
-                  value={tc.coins || ''}
+                  value={tc.coins ?? ''}
                   placeholder='0'
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const n: Record<string, TierConfig> = structuredClone(
@@ -153,7 +153,7 @@ export default function SettingsTab(): React.ReactElement {
                   type='number'
                   min={0}
                   aria-label={`${tier} XP`}
-                  value={tc.xp || ''}
+                  value={tc.xp ?? ''}
                   placeholder='0'
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const n: Record<string, TierConfig> = structuredClone(
@@ -185,8 +185,8 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Approval threshold coins'
-            value={(cfg.approvalThreshold ?? 300) || ''}
-            placeholder='300'
+            value={cfg.approvalThreshold ?? ''}
+            placeholder='0'
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
@@ -272,8 +272,8 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Mission cooldown seconds'
-            value={(cfg.cooldown != null ? cfg.cooldown : 60) || ''}
-            placeholder='60'
+            value={cfg.cooldown ?? ''}
+            placeholder='0'
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({

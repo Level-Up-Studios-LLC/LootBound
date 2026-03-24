@@ -60,7 +60,7 @@ function Confetti(): React.ReactElement | null {
     let frame: number;
     let running = true;
     function render() {
-      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+      ctx!.clearRect(0, 0, w, h);
       for (const p of pieces) {
         ctx!.save();
         ctx!.translate(p.x, p.y);

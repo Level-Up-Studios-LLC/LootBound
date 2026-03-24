@@ -23,17 +23,13 @@ export default function StoreScreen(): React.ReactElement | null {
   const needsApproval = ctx.needsApproval;
   const requestRedemption = ctx.requestRedemption;
 
-  if (!ch || !ud) return null;
-
-  const rewards = (cfg!.rewards || []).filter(r => r.active);
-  const pendingR = ud.pendingRedemptions || [];
-
-  // Entrance animations
+  // Entrance animations — must be above early return for Rules of Hooks
   useGSAP(() => {
+    if (!ch || !ud) return;
     const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
     tl.from('.store-balance', { opacity: 0, y: -10, duration: 0.35 });
     tl.from('.store-reward', { opacity: 0, scale: 0.9, duration: 0.35, stagger: 0.06 }, '-=0.15');
-  }, { scope: containerRef });
+  }, { scope: containerRef, dependencies: [ch, ud] });
 
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
@@ -55,6 +51,11 @@ export default function StoreScreen(): React.ReactElement | null {
       prevFocusRef.current = null;
     }
   }, [confirmR]);
+
+  if (!ch || !ud) return null;
+
+  const rewards = (cfg!.rewards || []).filter(r => r.active);
+  const pendingR = ud.pendingRedemptions || [];
 
   return (
     <div className='pb-20' ref={containerRef}>

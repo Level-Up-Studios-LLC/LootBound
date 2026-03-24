@@ -69,7 +69,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         </label>
         <input
           type='number'
-          value={f.cost || ''}
+          value={f.cost ?? ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             const v = e.target.value === '' ? 0 : Number(e.target.value);
             u('cost', Number.isFinite(v) ? v : 0);

@@ -87,9 +87,10 @@ export function unlockAudio(): void {
     const silent = new Audio(SILENT_MP3);
     silent.volume = 0.01;
     silent.play().catch(() => {});
-    // Also resume AudioContext if suspended
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
+    // Create and/or resume AudioContext (may not exist yet if preloadSounds hasn't run)
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
   } catch (_e) {
     /* ignore */
