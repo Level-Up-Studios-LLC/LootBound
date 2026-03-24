@@ -65,24 +65,32 @@ export default function ScoresScreen(): React.ReactElement | null {
   const d = getToday();
   const ws = getWeekStart(cfg ? cfg.weeklyResetDay : undefined);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isSolo = children.length === 1;
+
+  // Single unconditional useGSAP call — animates whichever view renders
+  useGSAP(() => {
+    if (!ch || !ud || !cfg) return;
+    if (isSolo) {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
+      tl.from('.scores-stat', { opacity: 0, y: 16, duration: 0.3, stagger: 0.06 }, '-=0.2');
+    } else {
+      gsap.from('.leader-card', {
+        opacity: 0, x: -20, duration: 0.35, stagger: 0.08, ease: 'power2.out',
+      });
+    }
+  }, { scope: containerRef, dependencies: [ch, ud, cfg, isSolo] });
 
   if (!ch || !ud || !cfg) return null;
 
   // Solo kid: show personal stats instead of leaderboard
-  if (children.length === 1) {
+  if (isSolo) {
     const myTasks = (cfg!.tasks[ch.id] || []).filter(isTaskActiveToday);
     const myLog = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
     const myDone = myTasks.filter(t => isTaskDone(t, myLog)).length;
     const myPerfect = countPerfectDays(ud, cfg!.tasks[ch.id] || [], ws);
     const lt = getLevelTitle(ud.level || 1);
     const sMult = getStreakMultiplier(ud.streak || 0);
-
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useGSAP(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-      tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
-      tl.from('.scores-stat', { opacity: 0, y: 16, duration: 0.3, stagger: 0.06 }, '-=0.2');
-    }, { scope: containerRef });
 
     return (
       <div className='p-4 pb-20' ref={containerRef}>
@@ -221,13 +229,6 @@ export default function ScoresScreen(): React.ReactElement | null {
       ((allU[a.id] || ({} as UserData)).points || 0)
     );
   });
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useGSAP(() => {
-    gsap.from('.leader-card', {
-      opacity: 0, x: -20, duration: 0.35, stagger: 0.08, ease: 'power2.out',
-    });
-  }, { scope: containerRef });
 
   return (
     <div className='pb-20' ref={containerRef}>
