@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface ConfirmDialogProps {
   title: string;
@@ -20,17 +20,42 @@ export default function ConfirmDialog(
 ): React.ReactElement {
   const [typed, setTyped] = useState('');
   const [dontAsk, setDontAsk] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   const confirmed =
     !props.requiredText ||
     typed.trim().toLowerCase() === props.requiredText.trim().toLowerCase();
 
+  // Focus management: save previous focus, auto-focus first element, restore on unmount
+  useEffect(() => {
+    prevFocusRef.current = document.activeElement as HTMLElement;
+    if (overlayRef.current) {
+      const first = overlayRef.current.querySelector<HTMLElement>('input, button');
+      if (first) first.focus();
+    }
+    return () => {
+      if (prevFocusRef.current) prevFocusRef.current.focus();
+    };
+  }, []);
+
   return (
     <div
+      ref={overlayRef}
       className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5 animate-fade-in'
       role='dialog'
       aria-modal='true'
       aria-labelledby='confirm-dialog-title'
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') { props.onCancel(); return; }
+        if (e.key !== 'Tab' || !overlayRef.current) return;
+        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }}
     >
       <div
         className={

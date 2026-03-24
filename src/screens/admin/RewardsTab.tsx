@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare, faTrashCan, faGift } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
+import { getCurrentUid } from '../../services/auth.ts';
 import { altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -9,7 +10,9 @@ import EmptyState from '../../components/ui/EmptyState.tsx';
 import RewardForm from '../../components/forms/RewardForm.tsx';
 import type { Reward } from '../../types.ts';
 
-const SKIP_CONFIRM_KEY = 'lb-skip-delete-loot';
+function getSkipKey() {
+  return `lb-skip-delete-loot:${getCurrentUid() || 'anon'}`;
+}
 
 const SAMPLE_REWARDS = [
   {
@@ -176,7 +179,7 @@ export default function RewardsTab(): React.ReactElement {
               <button
                 onClick={() => {
                   try {
-                    if (localStorage.getItem(SKIP_CONFIRM_KEY) === '1') {
+                    if (localStorage.getItem(getSkipKey()) === '1') {
                       removeReward(r.id);
                       return;
                     }
@@ -232,7 +235,7 @@ export default function RewardsTab(): React.ReactElement {
           title={`Delete "${deleteReward.name}"?`}
           message='This loot item will be permanently removed.'
           confirmLabel='Delete'
-          dontAskAgainKey={SKIP_CONFIRM_KEY}
+          dontAskAgainKey={getSkipKey()}
           onConfirm={() => {
             removeReward(deleteReward.id);
             setDeleteReward(null);

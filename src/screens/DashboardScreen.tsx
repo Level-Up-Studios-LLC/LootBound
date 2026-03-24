@@ -153,7 +153,7 @@ export default function DashboardScreen(): React.ReactElement | null {
     if (allDone) {
       tl.from('.dash-celebrate', { opacity: 0, scale: 0.5, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.1');
     }
-  }, { scope: containerRef, dependencies: [allDone, ch, ud], revertOnUpdate: true });
+  }, { scope: containerRef, dependencies: [allDone, ch?.id, !!ud], revertOnUpdate: true });
 
   if (!ch || !ud) return null;
 

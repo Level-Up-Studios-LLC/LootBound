@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faKey, faUserPlus, faTrashCan, faChildren, faPenToSquare } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
+import { getCurrentUid } from '../../services/auth.ts';
 import { AVATARS, COLORS, altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -151,7 +152,7 @@ export default function ChildrenTab(): React.ReactElement {
                 <button
                   onClick={() => {
                     try {
-                      if (localStorage.getItem('lb-skip-delete-child')) {
+                      if (localStorage.getItem(`lb-skip-delete-child:${getCurrentUid() || 'anon'}`) === '1') {
                         ctx.doRemoveChild(c.id);
                         return;
                       }
@@ -243,7 +244,7 @@ export default function ChildrenTab(): React.ReactElement {
           message={`This permanently removes ${removeChild.name} from LootBound, including all their coins, missions, streaks, and history.`}
           warning='This action cannot be undone.'
           confirmLabel='Remove'
-          dontAskAgainKey='lb-skip-delete-child'
+          dontAskAgainKey={`lb-skip-delete-child:${getCurrentUid() || 'anon'}`}
           onConfirm={() => {
             ctx.doRemoveChild(removeChild!.id);
             setRemoveChild(null);

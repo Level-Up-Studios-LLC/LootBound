@@ -7,6 +7,7 @@ import {
   faClipboardList,
 } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
+import { getCurrentUid } from '../../services/auth.ts';
 import {
   DEF_TIER_CONFIG,
   DAYS_SHORT,
@@ -20,7 +21,9 @@ import EmptyState from '../../components/ui/EmptyState.tsx';
 import TaskForm from '../../components/forms/TaskForm.tsx';
 import type { Task } from '../../types.ts';
 
-const SKIP_CONFIRM_KEY = 'lb-skip-delete-mission';
+function getSkipKey() {
+  return `lb-skip-delete-mission:${getCurrentUid() || 'anon'}`;
+}
 
 interface TasksTabProps {
   onSwitchTab: (tab: string) => void;
@@ -128,7 +131,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     <button
                       onClick={() => {
                         try {
-                          if (localStorage.getItem(SKIP_CONFIRM_KEY) === '1') {
+                          if (localStorage.getItem(getSkipKey()) === '1') {
                             removeTask(c.id, t.id);
                             return;
                           }
@@ -201,7 +204,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           title={`Delete "${deleteTask.task.name}"?`}
           message='This mission will be permanently removed.'
           confirmLabel='Delete'
-          dontAskAgainKey={SKIP_CONFIRM_KEY}
+          dontAskAgainKey={getSkipKey()}
           onConfirm={() => {
             removeTask(deleteTask.childId, deleteTask.task.id);
             setDeleteTask(null);
