@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.6.0] - 2026-03-23
+## [Unreleased]
 
 ### Added
 - Unified registration flow with CompleteProfileScreen (Google + email/password in one step)
@@ -18,7 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parent profile photo support (Google photoURL, Gravatar fallback)
 - Admin header redesign with profile avatar, name, Owner/Member role badge, and date display
 - Family code tappable to copy with hint text on profile completion
-- Sentry instrumentation on all Firestore writes, snapshot listeners, and auth retry paths
 
 ### Fixed
 - Number fields not clearable when value is zero (reward cost, tier coins/XP, threshold, cooldown)
@@ -27,10 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sound effects not playing (empty 4-byte MP3 placeholders replaced with Web Audio API synthesis)
 - Victory sound replaying on every dashboard visit (now only on incomplete→complete transition)
 - Kid profile cards not visible (GSAP fromTo opacity fix)
-- Tomorrow's preview showing wrong weekly tasks (isTaskActiveTomorrow logic)
+- Tomorrow's preview showing wrong weekly tasks (isTaskPreview logic)
 - Task form time inputs overflowing on narrow screens (switched to CSS grid)
 - React 19 stack overflow caused by React Spring circular observer (migrated to GSAP)
-- Error message color too light for readability (darkened qcoral from #ff8c94 to #e05260)
+- Error message color too light for readability (darkened qcoral for WCAG AA compliance)
 
 ### Changed
 - Replaced React Spring with GSAP for all animations (React 19 compatibility)
