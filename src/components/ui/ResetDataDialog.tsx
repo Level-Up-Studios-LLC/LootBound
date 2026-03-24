@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { ResetOptions } from '../../types.ts';
 
 interface ResetDataDialogProps {
-  onConfirm: (opts: ResetOptions) => void;
+  onConfirm: (opts: ResetOptions) => void | Promise<void>;
   onCancel: () => void;
 }
 
@@ -17,15 +17,26 @@ const CATEGORIES: { key: keyof ResetOptions; label: string; desc: string }[] = [
 export default function ResetDataDialog(props: ResetDataDialogProps): React.ReactElement {
   const [opts, setOpts] = useState<ResetOptions>({});
   const [typed, setTyped] = useState('');
+  const [busy, setBusy] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
   const anySelected = CATEGORIES.some(c => opts[c.key]);
   const allSelected = CATEGORIES.every(c => opts[c.key]);
-  const confirmed = anySelected && typed.trim().toUpperCase() === 'RESET';
+  const confirmed = anySelected && typed.trim().toUpperCase() === 'RESET' && !busy;
 
   const toggleCategory = (key: keyof ResetOptions) => {
     setOpts(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmed || busy) return;
+    setBusy(true);
+    try {
+      await props.onConfirm(opts);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const toggleAll = () => {
@@ -46,7 +57,9 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
       if (first) first.focus();
     }
     return () => {
-      if (prevFocusRef.current) prevFocusRef.current.focus();
+      if (prevFocusRef.current && document.body.contains(prevFocusRef.current)) {
+        prevFocusRef.current.focus();
+      }
     };
   }, []);
 
@@ -123,7 +136,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
             value={typed}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTyped(e.target.value)}
             onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' && confirmed) props.onConfirm(opts);
+              if (e.key === 'Enter') handleConfirm();
             }}
             className='quest-input'
             autoComplete='off'
@@ -139,14 +152,14 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
             Cancel
           </button>
           <button
-            onClick={() => { if (confirmed) props.onConfirm(opts); }}
+            onClick={handleConfirm}
             disabled={!confirmed}
             className={
               'bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none font-body' +
               (confirmed ? ' cursor-pointer' : ' opacity-40 cursor-not-allowed')
             }
           >
-            Reset
+            {busy ? 'Resetting...' : 'Reset'}
           </button>
         </div>
       </div>

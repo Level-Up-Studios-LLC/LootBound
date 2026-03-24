@@ -658,9 +658,9 @@ export default function AccountTab(): React.ReactElement | null {
       )}
       {showResetConfirm && (
         <ResetDataDialog
-          onConfirm={(opts) => {
+          onConfirm={async (opts) => {
+            await ctx.resetData(opts);
             setShowResetConfirm(false);
-            ctx.resetData(opts);
           }}
           onCancel={() => {
             setShowResetConfirm(false);

@@ -117,7 +117,7 @@ export function useChildActions(deps: ChildActionsDeps) {
   };
 
   const resetData = async (opts: ResetOptions) => {
-    const children = deps.cfg ? deps.cfg.children : [];
+    const children = deps.cfg?.children || [];
     const allSelected = opts.coins && opts.xpLevels && opts.streaks && opts.taskHistory && opts.redemptions;
 
     // If everything selected, delegate to full reset (uses replaceChildData)
