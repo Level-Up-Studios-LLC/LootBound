@@ -162,7 +162,12 @@ export async function saveParentMember(
 }
 
 export async function deleteParentMember(uid: string): Promise<void> {
-  await deleteDoc(doc(db, 'parentMembers', uid));
+  try {
+    await deleteDoc(doc(db, 'parentMembers', uid));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-parent-member' } });
+    throw err;
+  }
 }
 
 export function onParentMemberSnapshot(
@@ -235,7 +240,12 @@ export async function deleteChild(
   familyId: string,
   childId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'children', childId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'children', childId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-child' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -288,7 +298,12 @@ export async function deleteTask(
   familyId: string,
   taskId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'tasks', taskId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'tasks', taskId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-task' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -325,7 +340,12 @@ export async function deleteReward(
   familyId: string,
   rewardId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'rewards', rewardId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'rewards', rewardId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-reward' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -381,7 +401,12 @@ export async function deleteChildData(
   familyId: string,
   childId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'childData', childId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'childData', childId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-child-data' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------

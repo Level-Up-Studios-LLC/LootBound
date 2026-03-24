@@ -55,6 +55,7 @@ function Confetti(): React.ReactElement {
 
     // GSAP animates the JS objects; we render them to canvas via onUpdate
     let frame: number;
+    let running = true;
     function render() {
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       for (const p of pieces) {
@@ -66,12 +67,12 @@ function Confetti(): React.ReactElement {
         ctx!.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
         ctx!.restore();
       }
-      frame = requestAnimationFrame(render);
+      if (running) frame = requestAnimationFrame(render);
     }
     frame = requestAnimationFrame(render);
 
     const tl = gsap.timeline({
-      onComplete: () => { cancelAnimationFrame(frame); },
+      onComplete: () => { running = false; cancelAnimationFrame(frame); },
     });
     tl.to(pieces, {
       y: (i: number) => pieces[i].targetY,
@@ -84,6 +85,7 @@ function Confetti(): React.ReactElement {
     tl.to(pieces, { opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=1');
 
     return () => {
+      running = false;
       cancelAnimationFrame(frame);
       tl.kill();
     };
