@@ -247,6 +247,7 @@ export default function TasksScreen(): React.ReactElement | null {
         {tomorrowTasks.length > 0 && (
           <button
             onClick={togglePreview}
+            aria-expanded={previewOpen}
             className='flex items-center justify-center gap-2 text-[13px] text-qmuted font-semibold font-body bg-transparent border-none cursor-pointer py-3 mt-2 hover:text-qslate transition-colors'
           >
             <span ref={chevronRef} style={{ display: 'inline-block' }}>

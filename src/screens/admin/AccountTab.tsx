@@ -374,6 +374,7 @@ export default function AccountTab(): React.ReactElement | null {
               alt=''
               className='w-[44px] h-[44px] rounded-full object-cover shrink-0'
               referrerPolicy='no-referrer'
+              onError={() => setMyPhoto(undefined)}
             />
           ) : (
             <div

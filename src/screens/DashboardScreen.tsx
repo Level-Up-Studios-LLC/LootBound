@@ -101,8 +101,6 @@ export default function DashboardScreen(): React.ReactElement | null {
   const mountedRef = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  if (!ch || !ud) return null;
-
   const done = activeTasks.filter(t => {
     const l = tLog[t.id];
     return l && !l.rejected && l.status !== 'missed';
@@ -113,6 +111,7 @@ export default function DashboardScreen(): React.ReactElement | null {
 
   // Play victory sound only when all missions transition to complete (not on mount)
   useEffect(() => {
+    if (!ch || !ud) return;
     if (mountedRef.current) {
       mountedRef.current = false;
       return;
@@ -123,10 +122,11 @@ export default function DashboardScreen(): React.ReactElement | null {
         playSound('victory');
       }
     }
-  }, [allDone]);
+  }, [allDone, ch, ud]);
 
   // GSAP entrance animations
   useGSAP(() => {
+    if (!ch || !ud) return;
     const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
     tl.from('.dash-header', { opacity: 0, y: -10, duration: 0.4 });
     tl.from('.dash-xp', { opacity: 0, scale: 0.95, duration: 0.4 }, '-=0.2');
@@ -135,7 +135,9 @@ export default function DashboardScreen(): React.ReactElement | null {
     if (allDone) {
       tl.from('.dash-celebrate', { opacity: 0, scale: 0.5, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.1');
     }
-  }, { scope: containerRef, dependencies: [allDone] });
+  }, { scope: containerRef, dependencies: [allDone, ch, ud] });
+
+  if (!ch || !ud) return null;
 
   const lvl = ud.level || 1;
   const lt = getLevelTitle(lvl);

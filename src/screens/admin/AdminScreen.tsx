@@ -69,6 +69,7 @@ export default function AdminScreen(): React.ReactElement {
                 alt=''
                 className='w-9 h-9 rounded-full object-cover shrink-0'
                 referrerPolicy='no-referrer'
+                onError={() => setMyPhoto(undefined)}
               />
             ) : myName ? (
               <div className='w-9 h-9 rounded-full bg-qteal/20 flex items-center justify-center font-display font-bold text-qteal text-sm shrink-0'>

@@ -458,7 +458,7 @@ export async function deleteFamily(
     await batch.commit();
   }
   } catch (err) {
-    Sentry.captureException(err, { tags: { action: 'delete-family-batch' } });
+    Sentry.captureException(err, { tags: { action: 'delete-family' } });
     throw err;
   }
 }
