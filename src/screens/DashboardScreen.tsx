@@ -140,7 +140,7 @@ export default function DashboardScreen(): React.ReactElement | null {
         playSound('victory');
       }
     }
-  }, [allDone, ch?.id, ctx.cfg?.notificationPrefs]);
+  }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs]);
 
   // GSAP entrance animations
   useGSAP(() => {
