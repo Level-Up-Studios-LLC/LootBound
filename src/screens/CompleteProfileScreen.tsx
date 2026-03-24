@@ -9,6 +9,7 @@ import { saveParentMember, saveConfig } from '../services/firestoreStorage.ts';
 import PasswordInput from '../components/ui/PasswordInput.tsx';
 import { auth as firebaseAuth } from '../services/firebase.ts';
 import { copyToClipboard } from '../services/platform.ts';
+import { md5 } from '../utils.ts';
 
 const REFERRAL_OPTIONS = [
   'Friend or family',
@@ -21,8 +22,6 @@ const REFERRAL_OPTIONS = [
   'School or teacher',
   'Other',
 ];
-
-import { md5 } from '../utils.ts';
 
 function getGravatarUrl(email: string, size = 120): string {
   const hash = md5(email.trim().toLowerCase());
@@ -123,7 +122,12 @@ export default function CompleteProfileScreen(
       if (googlePhoto) {
         memberData.parentPhotoURL = googlePhoto;
       } else if (props.authUser.email) {
-        memberData.parentPhotoURL = getGravatarUrl(props.authUser.email);
+        // Only save Gravatar URL if the image actually exists
+        const gravatarUrl = getGravatarUrl(props.authUser.email);
+        try {
+          const res = await fetch(gravatarUrl, { method: 'HEAD' });
+          if (res.ok) memberData.parentPhotoURL = gravatarUrl;
+        } catch (_e) { /* Gravatar unreachable — skip */ }
       }
       if (pin) {
         memberData.parentPin = pin;
