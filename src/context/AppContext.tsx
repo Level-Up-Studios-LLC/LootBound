@@ -105,6 +105,7 @@ interface AppContextValue {
   denyPending: (uid: string, idx: number) => Promise<void>;
   addBonus: (uid: string, pts: number) => Promise<void>;
   resetAll: () => Promise<void>;
+  resetData: (opts: import('../types.ts').ResetOptions) => Promise<void>;
   doAddChild: (form: AddChildFormData) => Promise<void>;
   doRemoveChild: (id: string) => Promise<void>;
   getChild: (id: string) => Child | null;
@@ -690,6 +691,7 @@ export function AppProvider(props: {
     denyPending: approvalActions.denyPending,
     addBonus: childActions.addBonus,
     resetAll: childActions.resetAll,
+    resetData: childActions.resetData,
     doAddChild: childActions.doAddChild,
     doRemoveChild: childActions.doRemoveChild,
     getChild,

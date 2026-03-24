@@ -75,6 +75,14 @@ export interface UserData {
   lastTaskTime: number;
 }
 
+export interface ResetOptions {
+  coins?: boolean;
+  xpLevels?: boolean;
+  streaks?: boolean;
+  taskHistory?: boolean;
+  redemptions?: boolean;
+}
+
 export interface TierConfig {
   coins: number;
   xp: number;

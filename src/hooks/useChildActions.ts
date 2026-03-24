@@ -1,9 +1,10 @@
 import * as Sentry from '@sentry/react';
-import type { Config, UserData, Child, AddChildFormData } from '../types.ts';
+import type { Config, UserData, Child, AddChildFormData, ResetOptions } from '../types.ts';
 import { freshUser, slugify } from '../utils.ts';
 import {
   deleteChildData as fsDeleteChildData,
   replaceChildData,
+  saveChildData as fsSaveChildData,
 } from '../services/firestoreStorage.ts';
 import {
   deleteAllChildPhotos,
@@ -115,10 +116,60 @@ export function useChildActions(deps: ChildActionsDeps) {
     }
   };
 
+  const resetData = async (opts: ResetOptions) => {
+    const children = deps.cfg ? deps.cfg.children : [];
+    const allSelected = opts.coins && opts.xpLevels && opts.streaks && opts.taskHistory && opts.redemptions;
+
+    // If everything selected, delegate to full reset (uses replaceChildData)
+    if (allSelected) return resetAll();
+
+    // Delete photos only if clearing task history
+    if (opts.taskHistory) {
+      deleteAllFamilyPhotos(deps.familyId).catch(err => {
+        console.warn('Photo cleanup failed during selective reset:', err);
+        Sentry.captureException(err, { tags: { action: 'reset-data-photo-cleanup' } });
+      });
+    }
+
+    // Build partial update based on selected options
+    const update: Partial<UserData> = {};
+    if (opts.coins) update.points = 0;
+    if (opts.xpLevels) { update.xp = 0; update.level = 1; }
+    if (opts.streaks) {
+      update.streak = 0;
+      update.bestStreak = 0;
+      update.missedDaysThisWeek = 0;
+      update.lastPerfectDate = null;
+    }
+    if (opts.taskHistory) { update.taskLog = {}; update.lastTaskTime = 0; }
+    if (opts.redemptions) { update.redemptions = []; update.pendingRedemptions = []; }
+
+    const promises: Promise<void>[] = [];
+    for (let i = 0; i < children.length; i++) {
+      promises.push(fsSaveChildData(deps.familyId, children[i].id, update));
+    }
+
+    try {
+      await Promise.all(promises);
+      deps.setAllU(prev => {
+        const next = { ...prev };
+        for (let i = 0; i < children.length; i++) {
+          next[children[i].id] = { ...next[children[i].id], ...update } as UserData;
+        }
+        return next;
+      });
+      deps.notify('Selected data reset');
+    } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'reset-data-selective' } });
+      deps.notify('Data reset failed — please try again', 'error');
+    }
+  };
+
   return {
     doAddChild,
     doRemoveChild,
     addBonus,
     resetAll,
+    resetData,
   };
 }

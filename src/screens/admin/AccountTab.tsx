@@ -37,6 +37,7 @@ import {
 import { deleteAllFamilyPhotos } from '../../services/photoStorage.ts';
 import { copyToClipboard } from '../../services/platform.ts';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
+import ResetDataDialog from '../../components/ui/ResetDataDialog.tsx';
 import { faPenToSquare } from '../../fa.ts';
 
 const getInitials = (name: string | undefined, email: string): string => {
@@ -634,16 +635,16 @@ export default function AccountTab(): React.ReactElement | null {
         </div>
       </div>
 
-      {/* Reset All Data — owner only */}
+      {/* Reset Data — owner only */}
       {isOwner && (
         <div className='bg-qyellow rounded-card p-4 mb-4'>
           <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
             <FontAwesomeIcon icon={faRotate} style={FA_ICON_STYLE} />
-            Reset All Data
+            Reset Data
           </div>
           <div className='text-[13px] text-qmuted mb-2'>
-            Clears all coins, streaks, and history for all children. Tasks,
-            rewards, and children profiles will remain.
+            Selectively reset coins, streaks, history, or other data for all
+            children. Tasks, rewards, and profiles will remain.
           </div>
           <button
             onClick={() => {
@@ -651,21 +652,15 @@ export default function AccountTab(): React.ReactElement | null {
             }}
             className='bg-qcoral text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
           >
-            Reset Everything
+            Reset Data
           </button>
         </div>
       )}
       {showResetConfirm && (
-        <ConfirmDialog
-          title='Reset All Data?'
-          message='This will permanently erase all coins, streaks, mission history, redemption logs, and uploaded photos for every child. Tasks, rewards, and children profiles will remain.'
-          warning='This action cannot be undone.'
-          requiredText='RESET'
-          confirmLabel='Reset'
-          confirmColor='bg-qcoral'
-          onConfirm={() => {
+        <ResetDataDialog
+          onConfirm={(opts) => {
             setShowResetConfirm(false);
-            ctx.resetAll();
+            ctx.resetData(opts);
           }}
           onCancel={() => {
             setShowResetConfirm(false);
