@@ -12,6 +12,8 @@ import {
   resetPassword,
   sendVerification,
   refreshEmailVerified,
+  resolveFamilyId,
+  getCurrentUid,
 } from '../services/auth.ts';
 
 interface AuthContextValue {
@@ -37,6 +39,7 @@ interface AuthContextValue {
   clearLastFamilyCode: () => void;
   clearJustSignedIn: () => void;
   clearIsNewUser: () => void;
+  refreshAuthUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -250,6 +253,15 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     setIsNewUser(false);
   };
 
+  const refreshAuthUser = async () => {
+    const uid = getCurrentUid();
+    if (!uid || !authUser) return;
+    const familyId = await resolveFamilyId(uid);
+    if (familyId !== authUser.familyId) {
+      setAuthUser({ ...authUser, familyId });
+    }
+  };
+
   const value: AuthContextValue = {
     authUser,
     authLoading,
@@ -269,6 +281,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     clearLastFamilyCode,
     clearJustSignedIn,
     clearIsNewUser,
+    refreshAuthUser,
   };
 
   return (

@@ -60,7 +60,7 @@ const appActionCodeSettings = () => {
  * Resolve the familyId for a given auth UID.
  * Checks /parentMembers/{uid} first, falls back to uid.
  */
-async function resolveFamilyId(uid: string): Promise<string> {
+export async function resolveFamilyId(uid: string): Promise<string> {
   const snap = await getDoc(doc(db, 'parentMembers', uid));
   if (snap.exists()) {
     const data = snap.data();

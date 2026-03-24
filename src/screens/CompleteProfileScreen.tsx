@@ -33,7 +33,7 @@ function ProfilePicture(props: {
   email: string;
   name: string;
 }) {
-  const googlePhoto = firebaseAuth.currentUser?.photoURL;
+  const googlePhoto = props.photoURL || firebaseAuth.currentUser?.photoURL;
 
   if (googlePhoto) {
     return (

@@ -431,7 +431,8 @@ function AppRouter() {
         <CompleteProfileScreen
           authUser={auth.authUser}
           familyCode={auth.lastFamilyCode}
-          onComplete={() => {
+          onComplete={async () => {
+            await auth.refreshAuthUser();
             auth.clearIsNewUser();
             auth.clearLastFamilyCode();
           }}
