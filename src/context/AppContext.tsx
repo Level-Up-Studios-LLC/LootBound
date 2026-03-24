@@ -59,6 +59,7 @@ import {
 } from '../services/notificationSound.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
 import { cleanupOldNotifications } from '../services/firestoreStorage.ts';
+import { generateFamilyCode, registerFamilyCode } from '../services/familyCode.ts';
 
 interface AppContextValue {
   familyId: string;
@@ -402,9 +403,8 @@ export function AppProvider(props: {
         }
 
         if (fc && !(fc as any).familyCode) {
-          const genCode = await import('../services/familyCode.ts');
-          const code = await genCode.generateFamilyCode();
-          await genCode.registerFamilyCode(code, familyId);
+          const code = await generateFamilyCode();
+          await registerFamilyCode(code, familyId);
           (fc as any).familyCode = code;
           // Persist family code on the config doc so deleteFamily can find it
           await fsSaveConfig(familyId, { familyCode: code } as any);
