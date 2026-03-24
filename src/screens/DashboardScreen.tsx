@@ -120,13 +120,13 @@ export default function DashboardScreen(): React.ReactElement | null {
 
   // Play victory sound only on a real incomplete→complete transition
   useEffect(() => {
-    if (!ch || !ud) return;
-    // Reset tracking when child changes
-    if (lastChildIdRef.current !== ch.id) {
+    // Reset tracking when child changes (before ud guard)
+    if (ch && lastChildIdRef.current !== ch.id) {
       lastChildIdRef.current = ch.id;
       soundPlayedRef.current = allDone;
       return;
     }
+    if (!ch || !ud) return;
     if (!allDone) {
       soundPlayedRef.current = false;
       return;
@@ -151,7 +151,7 @@ export default function DashboardScreen(): React.ReactElement | null {
     if (allDone) {
       tl.from('.dash-celebrate', { opacity: 0, scale: 0.5, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.1');
     }
-  }, { scope: containerRef, dependencies: [allDone, ch, ud] });
+  }, { scope: containerRef, dependencies: [allDone, ch, ud], revertOnUpdate: true });
 
   if (!ch || !ud) return null;
 
