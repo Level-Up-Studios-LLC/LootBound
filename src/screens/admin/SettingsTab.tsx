@@ -135,8 +135,8 @@ export default function SettingsTab(): React.ReactElement {
                   type='number'
                   min={0}
                   aria-label={`${tier} coins`}
+                  value={tc.coins ?? ''}
                   placeholder='0'
-                  value={tc.coins || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const n: Record<string, TierConfig> = structuredClone(
                       cfg.tierConfig || DEF_TIER_CONFIG
@@ -153,8 +153,8 @@ export default function SettingsTab(): React.ReactElement {
                   type='number'
                   min={0}
                   aria-label={`${tier} XP`}
+                  value={tc.xp ?? ''}
                   placeholder='0'
-                  value={tc.xp || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const n: Record<string, TierConfig> = structuredClone(
                       cfg.tierConfig || DEF_TIER_CONFIG
@@ -185,8 +185,8 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Approval threshold coins'
+            value={cfg.approvalThreshold ?? ''}
             placeholder='0'
-            value={cfg.approvalThreshold || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
@@ -272,8 +272,8 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Mission cooldown seconds'
+            value={cfg.cooldown ?? ''}
             placeholder='0'
-            value={cfg.cooldown || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
@@ -347,14 +347,8 @@ export default function SettingsTab(): React.ReactElement {
           })()}
         </div>
       </div>
-      <div className='bg-qmint rounded-card p-4 mb-4'>
-        <div className='text-xs text-qmuted'>
-          Missions are recurring. Daily repeats every day, weekly on assigned
-          day.
-        </div>
-      </div>
       {/* Error Reporting */}
-      <div className='bg-qyellow rounded-card p-4 mb-4'>
+      <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faBug} style={FA_ICON_STYLE} />
           Error Reporting
@@ -385,7 +379,7 @@ export default function SettingsTab(): React.ReactElement {
         </label>
       </div>
 
-      <div className='bg-qmint rounded-card p-4 mb-4'>
+      <div className='bg-qyellow rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCommentDots} style={FA_ICON_STYLE} />
           Feedback

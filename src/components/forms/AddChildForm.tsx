@@ -7,6 +7,7 @@ interface AddChildFormProps {
   onChange: (form: AddChildFormData) => void;
   onSave: () => void;
   onCancel: () => void;
+  saveLabel?: string;
 }
 
 export default function AddChildForm(
@@ -95,7 +96,7 @@ export default function AddChildForm(
           }}
           className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
         >
-          Add
+          {props.saveLabel || 'Add'}
         </button>
       </div>
     </div>

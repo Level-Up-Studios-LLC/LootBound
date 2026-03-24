@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBed, faFire, faPartyHorn, faCheck, faCoins } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -12,20 +14,108 @@ import {
   getLevelTitle,
   getXpProgress,
   getStreakMultiplier,
-  isTaskPreview,
 } from '../utils.ts';
+import { playSound } from '../services/notificationSound.ts';
+
+// --- GSAP + Canvas confetti ---
+const CONFETTI_COLORS = ['#4ac7a8', '#ffe08a', '#ff8c94', '#8b7ec8', '#5ec4d4', '#e6a817'];
+const CONFETTI_COUNT = 50;
+
+function Confetti(): React.ReactElement | null {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const prefersReduced = typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  useEffect(() => {
+    if (prefersReduced) return;
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+
+    const pieces = Array.from({ length: CONFETTI_COUNT }, () => ({
+      x: Math.random() * w,
+      y: -10 - Math.random() * 40,
+      w: 4 + Math.random() * 6,
+      h: 6 + Math.random() * 10,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      rot: Math.random() * Math.PI * 2,
+      opacity: 1,
+      // Targets for GSAP
+      targetY: h + 40 + Math.random() * 100,
+      drift: (Math.random() - 0.5) * 120,
+      spin: (Math.random() - 0.5) * 8,
+    }));
+
+    // GSAP animates the JS objects; we render them to canvas via onUpdate
+    let frame: number;
+    let running = true;
+    function render() {
+      ctx!.clearRect(0, 0, w, h);
+      for (const p of pieces) {
+        ctx!.save();
+        ctx!.translate(p.x, p.y);
+        ctx!.rotate(p.rot);
+        ctx!.globalAlpha = p.opacity;
+        ctx!.fillStyle = p.color;
+        ctx!.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx!.restore();
+      }
+      if (running) frame = requestAnimationFrame(render);
+    }
+    frame = requestAnimationFrame(render);
+
+    const tl = gsap.timeline({
+      onComplete: () => { running = false; cancelAnimationFrame(frame); },
+    });
+    tl.to(pieces, {
+      y: (i: number) => pieces[i].targetY,
+      x: (i: number) => pieces[i].x + pieces[i].drift,
+      rot: (i: number) => pieces[i].rot + pieces[i].spin,
+      duration: 2.5,
+      ease: 'power1.in',
+      stagger: { each: 0.03, from: 'random' },
+    });
+    tl.to(pieces, { opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=1');
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(frame);
+      tl.kill();
+    };
+  }, [prefersReduced]);
+
+  if (prefersReduced) return null;
+
+  return (
+    <canvas
+      ref={ref}
+      className='fixed inset-0 pointer-events-none'
+      style={{ zIndex: 200, width: '100%', height: '100%' }}
+    />
+  );
+}
 
 export default function DashboardScreen(): React.ReactElement | null {
   const ctx = useAppContext();
   const ch = ctx.currentChild;
   const ud = ctx.currentUserData;
-  const todayTasks = ctx.todayTasks;
   const activeTasks = ctx.activeTasks;
   const tLog = ctx.tLog;
   const bedLock = ctx.bedLock;
   const startCapture = ctx.startCapture;
-
-  if (!ch || !ud) return null;
+  const soundPlayedRef = useRef(false);
+  const lastChildIdRef = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const done = activeTasks.filter(t => {
     const l = tLog[t.id];
@@ -33,13 +123,67 @@ export default function DashboardScreen(): React.ReactElement | null {
   }).length;
   const total = activeTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = total > 0 && done === total;
+
+  // Play victory sound only on a real incomplete→complete transition
+  useEffect(() => {
+    // Reset tracking when child changes (before ud guard)
+    if (ch && lastChildIdRef.current !== ch.id) {
+      lastChildIdRef.current = ch.id;
+      soundPlayedRef.current = allDone;
+      return;
+    }
+    if (!ch || !ud) return;
+    if (!allDone) {
+      soundPlayedRef.current = false;
+      return;
+    }
+    if (!soundPlayedRef.current) {
+      soundPlayedRef.current = true;
+      const prefs = ctx.cfg ? ctx.cfg.notificationPrefs || {} : {};
+      if ((prefs as Record<string, boolean>).soundEnabled !== false) {
+        playSound('victory');
+      }
+    }
+  }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs?.soundEnabled]);
+
+  // GSAP entrance animations
+  useGSAP(() => {
+    if (!ch || !ud) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.dash-header', { opacity: 0, y: -10, duration: 0.4 });
+    tl.from('.dash-xp', { opacity: 0, scale: 0.95, duration: 0.4 }, '-=0.2');
+    tl.from('.dash-stat', { opacity: 0, y: 20, duration: 0.35, stagger: 0.08 }, '-=0.2');
+    tl.from('.dash-task', { opacity: 0, x: -20, duration: 0.35, stagger: 0.08 }, '-=0.2');
+    if (allDone) {
+      tl.from('.dash-celebrate', { opacity: 0, scale: 0.5, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.1');
+    }
+  }, { scope: containerRef, dependencies: [allDone, ch?.id, !!ud], revertOnUpdate: true });
+
+  if (!ch || !ud) return null;
+
+  const lvl = ud.level || 1;
+  const lt = getLevelTitle(lvl);
+  const xpProg = getXpProgress(ud.xp || 0, lvl);
+  const sMult = getStreakMultiplier(ud.streak || 0);
+
+  const upNextTasks = activeTasks
+    .filter(t => {
+      const l = tLog[t.id];
+      if (l && !l.rejected && l.status !== 'missed') return false; // completed
+      if (getTaskStatus(t, null, ctx.cfg?.bedtime) === 'missed') return false;
+      return !l || l.rejected;
+    })
+    .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
+    .slice(0, 4);
 
   return (
-    <div className='pb-20'>
+    <div className='pb-20' ref={containerRef}>
+      {allDone && <Confetti />}
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
-        <div className='flex justify-between items-center'>
+        <div className='flex justify-between items-center dash-header'>
           <div>
-            <div className='font-display text-[22px] font-bold animate-fade-in'>
+            <div className='font-display text-[22px] font-bold'>
               Hey {ch.name} {ch.avatar}
             </div>
             <div className='text-[12px] text-qmuted'>
@@ -89,50 +233,42 @@ export default function DashboardScreen(): React.ReactElement | null {
         )}
       </div>
       <div className='px-4 pt-4'>
-        {(() => {
-          const lvl = ud.level || 1;
-          const lt = getLevelTitle(lvl);
-          const xpProg = getXpProgress(ud.xp || 0, lvl);
-          const sMult = getStreakMultiplier(ud.streak || 0);
-          return (
-            <div className='bg-qmint rounded-btn p-4 mb-5'>
-              <div className='flex justify-between items-center mb-2'>
-                <div
-                  className='font-display font-bold text-sm'
-                  style={{ color: lt.color }}
-                >
-                  Lv.{lvl} {lt.title}
-                </div>
-                <div className='text-[11px] text-qmuted font-bold'>
-                  {lvl >= 20
-                    ? 'MAX'
-                    : `${xpProg.current} / ${xpProg.needed} XP`}
-                </div>
-              </div>
-              <div className='h-2.5 bg-qmint-dim rounded-sm'>
-                <div
-                  className='h-full rounded-sm transition-all duration-500'
-                  style={{
-                    width: `${xpProg.pct}%`,
-                    background: ch.color,
-                  }}
-                />
-              </div>
-              {sMult > 1 && (
-                <div className='text-[11px] text-qmuted mt-1.5 font-semibold'>
-                  <FontAwesomeIcon
-                    icon={faFire}
-                    style={FA_ICON_STYLE}
-                    className='mr-1'
-                  />
-                  {sMult}x XP streak bonus
-                </div>
-              )}
+        <div className='bg-qmint rounded-btn p-4 mb-5 dash-xp'>
+          <div className='flex justify-between items-center mb-2'>
+            <div
+              className='font-display font-bold text-sm'
+              style={{ color: lt.color }}
+            >
+              Lv.{lvl} {lt.title}
             </div>
-          );
-        })()}
+            <div className='text-[11px] text-qmuted font-bold'>
+              {lvl >= 20
+                ? 'MAX'
+                : `${xpProg.current} / ${xpProg.needed} XP`}
+            </div>
+          </div>
+          <div className='h-2.5 bg-qmint-dim rounded-sm'>
+            <div
+              className='h-full rounded-sm transition-all duration-500'
+              style={{
+                width: `${xpProg.pct}%`,
+                background: ch.color,
+              }}
+            />
+          </div>
+          {sMult > 1 && (
+            <div className='text-[11px] text-qmuted mt-1.5 font-semibold'>
+              <FontAwesomeIcon
+                icon={faFire}
+                style={FA_ICON_STYLE}
+                className='mr-1'
+              />
+              {sMult}x XP streak bonus
+            </div>
+          )}
+        </div>
         <div className='grid grid-cols-3 gap-3.5 mb-6'>
-          <div className='bg-qmint rounded-btn p-4'>
+          <div className='bg-qmint rounded-btn p-4 dash-stat'>
             <div className='font-display text-[22px] font-bold text-qslate'>
               {pct}%
             </div>
@@ -147,7 +283,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               />
             </div>
           </div>
-          <div className='bg-qyellow rounded-btn p-4'>
+          <div className='bg-qyellow rounded-btn p-4 dash-stat'>
             <div className='font-display text-[22px] font-bold text-qslate animate-float'>
               <FontAwesomeIcon
                 icon={faFire}
@@ -161,7 +297,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               Best: {ud.bestStreak || 0}
             </div>
           </div>
-          <div className='bg-qmint rounded-btn p-4'>
+          <div className='bg-qmint rounded-btn p-4 dash-stat'>
             <div className='font-display text-[22px] font-bold text-qslate'>
               {done}/{total}
             </div>
@@ -172,90 +308,76 @@ export default function DashboardScreen(): React.ReactElement | null {
           Up Next
         </div>
         <div className='flex flex-col gap-3'>
-          {todayTasks
-            .filter(t => {
-              const l = tLog[t.id];
-              // Show tomorrow previews regardless of today's completion status
-              if (isTaskPreview(t, ctx.cfg?.bedtime)) return true;
-              return !l || l.rejected;
-            })
-            .sort((a, b) => {
-              return timeToMin(a.windowStart) - timeToMin(b.windowStart);
-            })
-            .slice(0, 4)
-            .map((t, idx) => {
-              const entry = tLog[t.id];
-              const isRej = entry && entry.rejected;
-              const isPreview = isTaskPreview(t, ctx.cfg?.bedtime);
-              const baseStatus = getTaskStatus(
-                t,
-                null,
-                ctx.cfg ? ctx.cfg.bedtime : undefined
-              );
-              const status = isPreview
-                ? 'upcoming'
-                : isRej && baseStatus !== 'missed'
-                  ? 'rejected'
-                  : baseStatus;
-              const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
-              return (
-                <div
-                  key={t.id}
-                  className={
-                    'flex items-center gap-3 rounded-btn p-4 animate-slide-up transition-colors ' +
-                    cardBg
-                  }
-                >
-                  <div className='flex-1'>
-                    <div className='text-sm font-semibold text-qslate'>
-                      {t.name}
-                    </div>
-                    <div className='text-[11px] text-qmuted'>
-                      {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
-                    </div>
-                    {isRej && (
-                      <div className='text-[11px] text-qpink'>
-                        Parent requested redo
-                      </div>
-                    )}
+          {upNextTasks.map((t, idx) => {
+            const entry = tLog[t.id];
+            const isRej = entry && entry.rejected;
+            const baseStatus = getTaskStatus(
+              t,
+              null,
+              ctx.cfg ? ctx.cfg.bedtime : undefined
+            );
+            const status =
+              isRej && baseStatus !== 'missed' ? 'rejected' : baseStatus;
+            const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
+            return (
+              <div
+                key={t.id}
+                className={
+                  'flex items-center gap-3 rounded-btn p-4 dash-task ' + cardBg
+                }
+              >
+                <div className='flex-1'>
+                  <div className='text-sm font-semibold text-qslate'>
+                    {t.name}
                   </div>
-                  <Badge status={status} />
-                  {isPreview && (
-                    <span className='text-[10px] font-bold text-qmuted bg-qslate/10 rounded-badge px-3 py-2'>
-                      Tomorrow
-                    </span>
-                  )}
-                  {!isPreview && status !== 'missed' && (
-                    <button
-                      onClick={() => {
-                        startCapture(t.id);
-                      }}
-                      className={
-                        'text-xs py-2 px-4 rounded-badge cursor-pointer font-body font-bold text-white transition-all hover:scale-105 active:scale-95 border-none ' +
-                        (isRej ? 'bg-qcoral' : 'bg-qteal')
-                      }
-                    >
-                      {isRej ? (
-                        'Redo'
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faCheck} className='mr-1' />
-                          Done
-                        </>
-                      )}
-                    </button>
+                  <div className='text-[11px] text-qmuted'>
+                    {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
+                  </div>
+                  {isRej && (
+                    <div className='text-[11px] text-qpink'>
+                      Parent requested redo
+                    </div>
                   )}
                 </div>
-              );
-            })}
-          {total > 0 && done === total && (
-            <div className='text-center p-5 text-qteal font-semibold text-lg animate-confetti'>
+                <Badge status={status} />
+                {status !== 'missed' && (
+                  <button
+                    type='button'
+                    aria-label={isRej ? `Redo ${t.name}` : `Mark ${t.name} as done`}
+                    onClick={() => {
+                      startCapture(t.id);
+                    }}
+                    className={
+                      'text-xs py-2 px-4 rounded-badge cursor-pointer font-body font-bold text-white transition-all hover:scale-105 active:scale-95 border-none ' +
+                      (isRej ? 'bg-qcoral' : 'bg-qteal')
+                    }
+                  >
+                    {isRej ? (
+                      'Redo'
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faCheck} className='mr-1' />
+                        Done
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          {allDone && (
+            <div className='text-center p-6 dash-celebrate'>
               <FontAwesomeIcon
                 icon={faPartyHorn}
                 style={FA_ICON_STYLE}
-                className='mr-2'
+                className='text-3xl text-qteal mb-2'
               />
-              All done for today!
+              <div className='font-display text-lg font-bold text-qteal'>
+                All done for today!
+              </div>
+              <div className='text-sm text-qmuted mt-1'>
+                Great job, {ch.name}!
+              </div>
             </div>
           )}
         </div>

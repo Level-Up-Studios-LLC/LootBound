@@ -12,7 +12,7 @@ interface EmptyStateProps {
 
 export default function EmptyState(props: EmptyStateProps): React.ReactElement {
   return (
-    <div className='text-center py-10 px-5 text-qmuted'>
+    <div className='text-center py-10 px-5 text-qmuted animate-fade-in'>
       <div className='text-[32px] mb-3'>
         <FontAwesomeIcon icon={props.icon} style={FA_ICON_STYLE} />
       </div>

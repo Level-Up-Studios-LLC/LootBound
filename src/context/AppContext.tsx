@@ -27,7 +27,7 @@ import {
   getWeekStart,
   isPastBedtime,
   isTaskActiveToday,
-  isTaskVisibleToday,
+  isTaskActiveTomorrow,
 } from '../utils.ts';
 import {
   getConfig as fsGetConfig,
@@ -76,8 +76,8 @@ interface AppContextValue {
   children: Child[];
   currentChild: Child | null;
   currentUserData: UserData | null;
-  todayTasks: import('../types.ts').Task[];
   activeTasks: import('../types.ts').Task[];
+  tomorrowTasks: import('../types.ts').Task[];
   tLog: Record<string, any>;
   pendingCount: number;
 
@@ -320,7 +320,7 @@ export function AppProvider(props: {
 
         const needsSeed = !fc && fsChildren.length === 0;
         if (needsSeed) {
-          // Re-read config in case CreatePinPrompt wrote parentPin
+          // Re-read config in case profile setup wrote parentPin
           // between our initial read and now
           const freshCfg = await fsGetConfig(familyId);
           const defConfig = {
@@ -639,7 +639,7 @@ export function AppProvider(props: {
   const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
   const activeTasks = uTasks.filter(isTaskActiveToday);
-  const todayTasks = uTasks.filter(t => isTaskVisibleToday(t, cfg?.bedtime));
+  const tomorrowTasks = uTasks.filter(t => !isTaskActiveToday(t) && isTaskActiveTomorrow(t));
   const d = getToday();
   const tLog =
     currentUserData && currentUserData.taskLog && currentUserData.taskLog[d]
@@ -666,8 +666,8 @@ export function AppProvider(props: {
     children,
     currentChild,
     currentUserData,
-    todayTasks,
     activeTasks,
+    tomorrowTasks,
     tLog,
     pendingCount,
     setScreen,

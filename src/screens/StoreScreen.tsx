@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV } from '../constants.ts';
@@ -9,6 +11,8 @@ import type { Reward } from '../types.ts';
 export default function StoreScreen(): React.ReactElement | null {
   const [confirmR, setConfirmR] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const ctx = useAppContext();
   const ch = ctx.currentChild;
@@ -19,18 +23,47 @@ export default function StoreScreen(): React.ReactElement | null {
   const needsApproval = ctx.needsApproval;
   const requestRedemption = ctx.requestRedemption;
 
+  // Entrance animations — must be above early return for Rules of Hooks
+  useGSAP(() => {
+    if (!ch || !ud) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.store-balance', { opacity: 0, y: -10, duration: 0.35 });
+    tl.from('.store-reward', { opacity: 0, scale: 0.9, duration: 0.35, stagger: 0.06 }, '-=0.15');
+  }, { scope: containerRef, dependencies: [ch, ud] });
+
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  // Modal enter animation + focus management
+  useEffect(() => {
+    if (confirmR && modalRef.current) {
+      prevFocusRef.current = document.activeElement as HTMLElement;
+      const overlay = modalRef.current;
+      const card = overlay.querySelector('.store-modal-card');
+      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+      if (card) {
+        gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
+      }
+      // Focus first button in modal
+      const firstBtn = overlay.querySelector<HTMLElement>('button');
+      if (firstBtn) firstBtn.focus();
+    } else if (!confirmR && prevFocusRef.current) {
+      prevFocusRef.current.focus();
+      prevFocusRef.current = null;
+    }
+  }, [confirmR]);
+
   if (!ch || !ud) return null;
 
   const rewards = (cfg!.rewards || []).filter(r => r.active);
   const pendingR = ud.pendingRedemptions || [];
 
   return (
-    <div className='pb-20'>
+    <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='font-display text-2xl font-bold text-qslate mb-3'>
           Loot Shop
         </div>
-        <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full'>
+        <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full store-balance'>
           <span className='font-semibold text-qslate'>Balance:</span>
           <span className='font-display text-[22px] font-bold text-qslate'>
             {(ud.points || 0).toLocaleString()} coins
@@ -43,20 +76,18 @@ export default function StoreScreen(): React.ReactElement | null {
             <div className='text-sm font-bold text-qslate mb-2'>
               Pending Approval
             </div>
-            {pendingR.map(p => {
-              return (
-                <div
-                  key={`${p.rewardId}-${p.requestedAt}`}
-                  className='flex justify-between bg-qyellow-dim rounded-badge px-3 py-2 mb-1 text-[13px] animate-fade-in'
-                >
-                  <span>
-                    {p.icon} {p.name}
-                  </span>
-                  <span className='text-qslate'>{p.cost} coins</span>
-                  <span className='text-[11px] text-qmuted'>Waiting...</span>
-                </div>
-              );
-            })}
+            {pendingR.map(p => (
+              <div
+                key={`${p.rewardId}-${p.requestedAt}`}
+                className='flex justify-between bg-qyellow-dim rounded-badge px-3 py-2 mb-1 text-[13px]'
+              >
+                <span>
+                  {p.icon} {p.name}
+                </span>
+                <span className='text-qslate'>{p.cost} coins</span>
+                <span className='text-[11px] text-qmuted'>Waiting...</span>
+              </div>
+            ))}
           </div>
         )}
         <div className='grid grid-cols-2 gap-3.5'>
@@ -84,7 +115,7 @@ export default function StoreScreen(): React.ReactElement | null {
                 key={r.id}
                 className={
                   (can ? cardBg : dimBg) +
-                  ' rounded-btn p-5 flex flex-col items-center gap-2 text-center transition-all'
+                  ' rounded-btn p-5 flex flex-col items-center gap-2 text-center store-reward'
                 }
               >
                 <div className='text-[32px] animate-float'>{r.icon}</div>
@@ -151,13 +182,25 @@ export default function StoreScreen(): React.ReactElement | null {
         )}
         {confirmR && (
           <div
+            ref={modalRef}
             className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
+            style={{ opacity: 0 }}
             role='dialog'
             aria-modal='true'
             aria-labelledby='confirmR-title'
             aria-describedby='confirmR-desc'
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Escape') { setConfirmR(null); return; }
+              if (e.key !== 'Tab' || !modalRef.current) return;
+              const focusable = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
+              if (focusable.length === 0) return;
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+              else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }}
           >
-            <div className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto animate-slide-up'>
+            <div className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto store-modal-card'>
               <div
                 id='confirmR-title'
                 className='font-display text-xl font-bold mb-4'
@@ -181,9 +224,7 @@ export default function StoreScreen(): React.ReactElement | null {
               </div>
               <div className='flex gap-3 justify-end'>
                 <button
-                  onClick={() => {
-                    setConfirmR(null);
-                  }}
+                  onClick={() => setConfirmR(null)}
                   className='btn-secondary rounded-badge px-5 py-2 font-semibold border-none cursor-pointer font-body transition-colors'
                 >
                   Cancel

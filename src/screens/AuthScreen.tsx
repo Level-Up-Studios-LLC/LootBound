@@ -3,21 +3,7 @@ import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPartyHorn, faAngleLeft, faArrowLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
-import { saveConfig, saveParentMember } from '../services/firestoreStorage.ts';
 import PasswordInput from '../components/ui/PasswordInput.tsx';
-import { getCurrentUid } from '../services/auth.ts';
-
-const REFERRAL_OPTIONS = [
-  'Friend or family',
-  'Social media',
-  'Search engine',
-  'App store',
-  'Blog or article',
-  'YouTube',
-  'Podcast',
-  'School or teacher',
-  'Other',
-];
 
 interface AuthScreenProps {
   onBack: () => void;
@@ -28,14 +14,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [joinCode, setJoinCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [localErr, setLocalErr] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
   const [showReset, setShowReset] = useState(false);
-  const [parentName, setParentName] = useState('');
-  const [referral, setReferral] = useState('');
 
   const auth = useAuthContext();
 
@@ -43,28 +25,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     setStep(1);
     setLocalErr(null);
-    setJoinCode('');
-    setParentName('');
-    setReferral('');
     setPass('');
-    setConfirm('');
     setShowReset(false);
     setResetSent(false);
     auth.clearAuthError();
-  };
-
-  const handleSignupStep1 = () => {
-    setLocalErr(null);
-    auth.clearAuthError();
-    if (!email.trim()) {
-      setLocalErr('Email is required');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setLocalErr('Enter a valid email address');
-      return;
-    }
-    setStep(2);
   };
 
   const handleResetPassword = async () => {
@@ -83,7 +47,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSigninSubmit = async () => {
     setLocalErr(null);
     auth.clearAuthError();
 
@@ -95,92 +59,49 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
       setLocalErr('Password is required');
       return;
     }
-    if (mode === 'signup' && pass !== confirm) {
-      setLocalErr('Passwords do not match');
+
+    setBusy(true);
+    await auth.doSignIn(email.trim(), pass);
+    setBusy(false);
+  };
+
+  const handleSignupSubmit = async () => {
+    setLocalErr(null);
+    auth.clearAuthError();
+
+    if (!email.trim()) {
+      setLocalErr('Email is required');
       return;
     }
-    if (mode === 'signup' && pass.length < 6) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setLocalErr('Enter a valid email address');
+      return;
+    }
+    if (!pass) {
+      setLocalErr('Password is required');
+      return;
+    }
+    if (pass.length < 6) {
       setLocalErr('Password must be at least 6 characters');
       return;
     }
 
     setBusy(true);
-    let familyId: string | null = null;
-    if (mode === 'signin') {
-      await auth.doSignIn(email.trim(), pass);
-    } else if (joinCode.trim()) {
-      familyId = await auth.doJoinFamily(email.trim(), pass, joinCode.trim());
-    } else {
-      familyId = await auth.doSignUp(email.trim(), pass);
-    }
-    // Save parent name to per-parent doc, referral to family doc
-    if (mode === 'signup' && familyId) {
-      try {
-        const uid = getCurrentUid();
-        if (uid && parentName.trim()) {
-          await saveParentMember(uid, { parentName: parentName.trim() });
-        }
-        if (referral) {
-          await saveConfig(familyId, { referralSource: referral });
-        }
-      } catch (_e) {
-        // Non-critical — don't block signup
-      }
-    }
+    await auth.doSignUp(email.trim(), pass);
     setBusy(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !busy) {
-      if (mode === 'signup' && step === 1) {
-        handleSignupStep1();
+      if (mode === 'signin' && step === 1) {
+        handleSigninStep1();
+      } else if (mode === 'signin' && step === 2) {
+        handleSigninSubmit();
       } else {
-        handleSubmit();
+        handleSignupSubmit();
       }
     }
   };
-
-  const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (val.length <= 6) setJoinCode(val);
-  };
-
-  // Show family code after successful signup
-  if (auth.lastFamilyCode && auth.authUser) {
-    return (
-      <div className='page-wrapper page-centered'>
-        <div className='text-5xl mb-5'>
-          <FontAwesomeIcon icon={faPartyHorn} style={FA_ICON_STYLE} />
-        </div>
-        <div className='font-display text-2xl font-bold mb-3'>
-          Family Created!
-        </div>
-        <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
-          Share this code with your kids' devices so they can connect to your
-          family
-        </div>
-
-        <div className='bg-qmint rounded-card py-5 px-8 mb-8'>
-          <div className='font-display text-4xl font-bold text-qteal tracking-[8px] text-center'>
-            {auth.lastFamilyCode}
-          </div>
-        </div>
-
-        <div className='text-[13px] text-qdim text-center mb-8 max-w-[300px]'>
-          You can also find this code later in Settings
-        </div>
-
-        <button
-          onClick={() => {
-            auth.clearLastFamilyCode();
-          }}
-          className='btn-primary'
-        >
-          Get Started
-        </button>
-      </div>
-    );
-  }
 
   // Password reset view
   if (showReset) {
@@ -415,7 +336,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           )}
 
           <button
-            onClick={handleSubmit}
+            onClick={handleSigninSubmit}
             disabled={busy}
             className='btn-primary w-full mt-2 disabled:opacity-60 disabled:cursor-not-allowed'
           >
@@ -452,121 +373,32 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
     );
   }
 
-  // --- Sign Up Step 1: Email + Google ---
-  if (mode === 'signup' && step === 1) {
-    return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
-          LOOTBOUND
-        </div>
-        <div className='text-sm text-qmuted mb-5'>
-          Create a new family account
-        </div>
-
-        <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
-          <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-              Email
-            </label>
-            <input
-              type='email'
-              placeholder='family@example.com'
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setEmail(e.target.value);
-                setLocalErr(null);
-              }}
-              onKeyDown={handleKeyDown}
-              className='quest-input'
-              autoComplete='email'
-              autoFocus
-            />
-          </div>
-
-          {error && (
-            <div className='text-qcoral text-[13px] text-center py-1.5'>
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={handleSignupStep1}
-            className='btn-primary w-full mt-2'
-          >
-            Continue
-          </button>
-
-          <div className='flex items-center gap-3'>
-            <div className='flex-1 h-px bg-qslate/20'></div>
-            <span className='text-xs text-qmuted'>or</span>
-            <div className='flex-1 h-px bg-qslate/20'></div>
-          </div>
-
-          <button
-            onClick={() => {
-              if (!busy) auth.doGoogleSignIn();
-            }}
-            disabled={busy}
-            className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-5 py-2.5 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors'
-          >
-            <svg width='18' height='18' viewBox='0 0 48 48'>
-              <path
-                fill='#EA4335'
-                d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'
-              />
-              <path
-                fill='#4285F4'
-                d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'
-              />
-              <path
-                fill='#FBBC05'
-                d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z'
-              />
-              <path
-                fill='#34A853'
-                d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'
-              />
-            </svg>
-            Continue with Google
-          </button>
-
-          <button onClick={switchMode} disabled={busy} className='btn-ghost'>
-            Already have an account? Sign in
-          </button>
-
-          <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
-            <FontAwesomeIcon icon={faAngleLeft} />
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Sign Up Step 2: Name, Password, Family Code, Referral ---
+  // --- Sign Up: Single step — Email + Password + Google ---
   return (
     <div className='page-wrapper page-centered'>
       <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
       </div>
-      <div className='text-sm text-qmuted mb-1'>Almost there!</div>
-      <div className='text-xs text-qmuted mb-5'>{email}</div>
+      <div className='text-sm text-qmuted mb-5'>
+        Create a new family account
+      </div>
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
         <div>
           <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-            First Name
+            Email
           </label>
           <input
-            type='text'
-            placeholder='Your first name'
-            value={parentName}
+            type='email'
+            placeholder='family@example.com'
+            value={email}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setParentName(e.target.value);
+              setEmail(e.target.value);
+              setLocalErr(null);
             }}
             onKeyDown={handleKeyDown}
             className='quest-input'
-            autoComplete='given-name'
+            autoComplete='email'
             autoFocus
           />
         </div>
@@ -587,64 +419,6 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           />
         </div>
 
-        <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-            Confirm Password
-          </label>
-          <PasswordInput
-            placeholder='Confirm password'
-            value={confirm}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setConfirm(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            className='quest-input'
-            autoComplete='new-password'
-          />
-        </div>
-
-        <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-            Family Code
-          </label>
-          <input
-            type='text'
-            placeholder='e.g. ABC123'
-            value={joinCode}
-            onChange={handleJoinCodeChange}
-            onKeyDown={handleKeyDown}
-            maxLength={6}
-            autoCapitalize='characters'
-            autoComplete='off'
-            className='quest-input tracking-[4px] font-semibold'
-          />
-          <span className='text-qmuted text-xs font-normal'>
-            (optional — enter to join an existing family)
-          </span>
-        </div>
-
-        <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
-            How did you hear about us?
-          </label>
-          <select
-            value={referral}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              setReferral(e.target.value);
-            }}
-            className='quest-input'
-          >
-            <option value=''>Select one (optional)</option>
-            {REFERRAL_OPTIONS.map(o => {
-              return (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-
         {error && (
           <div className='text-qcoral text-[13px] text-center py-1.5'>
             {error}
@@ -652,27 +426,53 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         )}
 
         <button
-          onClick={handleSubmit}
+          onClick={handleSignupSubmit}
           disabled={busy}
           className='btn-primary w-full mt-2 disabled:opacity-60 disabled:cursor-not-allowed'
         >
-          {busy
-            ? 'Please wait...'
-            : joinCode.trim()
-              ? 'Join Family'
-              : 'Create Family'}
+          {busy ? 'Please wait...' : 'Create Account'}
         </button>
+
+        <div className='flex items-center gap-3'>
+          <div className='flex-1 h-px bg-qslate/20'></div>
+          <span className='text-xs text-qmuted'>or</span>
+          <div className='flex-1 h-px bg-qslate/20'></div>
+        </div>
 
         <button
           onClick={() => {
-            setStep(1);
-            setLocalErr(null);
-            auth.clearAuthError();
+            if (!busy) auth.doGoogleSignIn();
           }}
           disabled={busy}
-          className='btn-ghost'
+          className='w-full flex items-center justify-center gap-2 bg-white text-qslate font-semibold rounded-badge px-5 py-2.5 border border-qslate/20 cursor-pointer font-body disabled:opacity-60 hover:bg-gray-50 transition-colors'
         >
-          <FontAwesomeIcon icon={faArrowLeft} className='mr-1' />
+          <svg width='18' height='18' viewBox='0 0 48 48'>
+            <path
+              fill='#EA4335'
+              d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'
+            />
+            <path
+              fill='#4285F4'
+              d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'
+            />
+            <path
+              fill='#FBBC05'
+              d='M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z'
+            />
+            <path
+              fill='#34A853'
+              d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'
+            />
+          </svg>
+          Continue with Google
+        </button>
+
+        <button onClick={switchMode} disabled={busy} className='btn-ghost'>
+          Already have an account? Sign in
+        </button>
+
+        <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
+          <FontAwesomeIcon icon={faAngleLeft} />
           Back
         </button>
       </div>

@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFire, faTrophy, faMedal } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -32,7 +34,6 @@ function countPerfectDays(
     if (dt < weekStart || dt.charAt(0) === '_') continue;
     const log = ud.taskLog[dt];
     if (!log) continue;
-    // Filter tasks to only those active on this date
     const dow = new Date(dt + 'T12:00:00').getDay();
     const activeTasks = tasks.filter(t => {
       if (t.daily) return true;
@@ -63,11 +64,27 @@ export default function ScoresScreen(): React.ReactElement | null {
   const ud = ctx.currentUserData;
   const d = getToday();
   const ws = getWeekStart(cfg ? cfg.weeklyResetDay : undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isSolo = children.length === 1;
+
+  // Single unconditional useGSAP call — animates whichever view renders
+  useGSAP(() => {
+    if (!ch || !ud || !cfg) return;
+    if (isSolo) {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
+      tl.from('.scores-stat', { opacity: 0, y: 16, duration: 0.3, stagger: 0.06 }, '-=0.2');
+    } else {
+      gsap.from('.leader-card', {
+        opacity: 0, x: -20, duration: 0.35, stagger: 0.08, ease: 'power2.out',
+      });
+    }
+  }, { scope: containerRef, dependencies: [ch, ud, cfg, isSolo] });
 
   if (!ch || !ud || !cfg) return null;
 
   // Solo kid: show personal stats instead of leaderboard
-  if (children.length === 1) {
+  if (isSolo) {
     const myTasks = (cfg!.tasks[ch.id] || []).filter(isTaskActiveToday);
     const myLog = ud.taskLog && ud.taskLog[d] ? ud.taskLog[d] : {};
     const myDone = myTasks.filter(t => isTaskDone(t, myLog)).length;
@@ -76,11 +93,11 @@ export default function ScoresScreen(): React.ReactElement | null {
     const sMult = getStreakMultiplier(ud.streak || 0);
 
     return (
-      <div className='p-4 pb-20'>
+      <div className='p-4 pb-20' ref={containerRef}>
         <div className='font-display text-2xl font-bold mb-4 text-qslate'>
           My Stats
         </div>
-        <div className='bg-qmint rounded-card p-5 mb-4 text-center animate-slide-up'>
+        <div className='bg-qmint rounded-card p-5 mb-4 text-center scores-profile'>
           <div className='text-[40px] mb-1'>{ch.avatar}</div>
           <div className='font-display text-xl font-bold text-qslate'>
             {ch.name}
@@ -90,13 +107,13 @@ export default function ScoresScreen(): React.ReactElement | null {
           </div>
         </div>
         <div className='grid grid-cols-2 gap-3 mb-4'>
-          <div className='bg-qyellow rounded-btn p-4 text-center'>
+          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-2xl font-bold text-qslate'>
               {(ud.points || 0).toLocaleString()}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>COINS</div>
           </div>
-          <div className='bg-qmint rounded-btn p-4 text-center'>
+          <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-2xl font-bold text-qslate'>
               {myDone}/{myTasks.length}
             </div>
@@ -104,7 +121,7 @@ export default function ScoresScreen(): React.ReactElement | null {
           </div>
         </div>
         <div className='grid grid-cols-3 gap-3 mb-4'>
-          <div className='bg-qyellow rounded-btn p-4 text-center'>
+          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-xl font-bold text-qslate'>
               <FontAwesomeIcon
                 icon={faFire}
@@ -115,13 +132,13 @@ export default function ScoresScreen(): React.ReactElement | null {
             </div>
             <div className='text-[10px] text-qmuted font-bold'>STREAK</div>
           </div>
-          <div className='bg-qmint rounded-btn p-4 text-center'>
+          <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-xl font-bold text-qslate'>
               {ud.bestStreak || 0}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>BEST</div>
           </div>
-          <div className='bg-qyellow rounded-btn p-4 text-center'>
+          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-xl font-bold text-qslate'>
               {myPerfect}
             </div>
@@ -153,35 +170,33 @@ export default function ScoresScreen(): React.ReactElement | null {
                 [15, '+150 coins', ud.bestStreak >= 15],
                 [30, '+300 coins', ud.bestStreak >= 30],
               ] as [number, string, boolean][]
-            ).map(m => {
-              return (
-                <div
-                  key={m[0]}
+            ).map(m => (
+              <div
+                key={m[0]}
+                className={
+                  'flex justify-between items-center rounded-badge px-3 py-2 ' +
+                  (m[2] ? 'bg-qteal-dim' : 'bg-qbg')
+                }
+              >
+                <span
                   className={
-                    'flex justify-between items-center rounded-badge px-3 py-2 ' +
-                    (m[2] ? 'bg-qteal-dim' : 'bg-qbg')
+                    'text-[13px] font-semibold ' +
+                    (m[2] ? 'text-qteal' : 'text-qmuted')
                   }
                 >
-                  <span
-                    className={
-                      'text-[13px] font-semibold ' +
-                      (m[2] ? 'text-qteal' : 'text-qmuted')
-                    }
-                  >
-                    {m[0]}-day streak
-                  </span>
-                  <span
-                    className={
-                      'text-[13px] font-bold ' +
-                      (m[2] ? 'text-qteal' : 'text-qmuted')
-                    }
-                  >
-                    {m[2] ? '✓ ' : ''}
-                    {m[1]}
-                  </span>
-                </div>
-              );
-            })}
+                  {m[0]}-day streak
+                </span>
+                <span
+                  className={
+                    'text-[13px] font-bold ' +
+                    (m[2] ? 'text-qteal' : 'text-qmuted')
+                  }
+                >
+                  {m[2] ? '✓ ' : ''}
+                  {m[1]}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
         <BNav tabs={KID_NAV} />
@@ -189,8 +204,7 @@ export default function ScoresScreen(): React.ReactElement | null {
     );
   }
 
-  // Multi-kid: leaderboard with top adventurer highlight
-  // Calculate perfect days per child this week
+  // Multi-kid: leaderboard
   const perfects: Record<string, number> = {};
   let topPerfect = 0;
   let topIds: string[] = [];
@@ -208,10 +222,8 @@ export default function ScoresScreen(): React.ReactElement | null {
   });
 
   const sorted = children.slice().sort((a, b) => {
-    // Primary sort: perfect days (desc)
     const pdDiff = (perfects[b.id] || 0) - (perfects[a.id] || 0);
     if (pdDiff !== 0) return pdDiff;
-    // Secondary: coins (desc)
     return (
       ((allU[b.id] || ({} as UserData)).points || 0) -
       ((allU[a.id] || ({} as UserData)).points || 0)
@@ -219,7 +231,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   });
 
   return (
-    <div className='pb-20'>
+    <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='font-display text-2xl font-bold text-qslate'>
           Leaderboard
@@ -242,9 +254,7 @@ export default function ScoresScreen(): React.ReactElement | null {
           return (
             <div
               key={c.id}
-              className={
-                'rounded-card p-4 transition-all animate-slide-up ' + cardBg
-              }
+              className={'rounded-card p-4 leader-card ' + cardBg}
               style={
                 isTop
                   ? {
@@ -294,21 +304,19 @@ export default function ScoresScreen(): React.ReactElement | null {
                     [udata.streak || 0, 'Streak'],
                     [udata.bestStreak || 0, 'Best'],
                   ] as [string | number, string][]
-                ).map(s => {
-                  return (
-                    <div
-                      key={s[1]}
-                      className='rounded-badge p-2.5 text-center bg-qbg'
-                    >
-                      <div className='font-display text-base font-bold text-qslate'>
-                        {s[0]}
-                      </div>
-                      <div className='text-[9px] text-qmuted font-bold'>
-                        {s[1]}
-                      </div>
+                ).map(s => (
+                  <div
+                    key={s[1]}
+                    className='rounded-badge p-2.5 text-center bg-qbg'
+                  >
+                    <div className='font-display text-base font-bold text-qslate'>
+                      {s[0]}
                     </div>
-                  );
-                })}
+                    <div className='text-[9px] text-qmuted font-bold'>
+                      {s[1]}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           );

@@ -12,6 +12,8 @@ import {
   resetPassword,
   sendVerification,
   refreshEmailVerified,
+  resolveFamilyId,
+  getCurrentUid,
 } from '../services/auth.ts';
 
 interface AuthContextValue {
@@ -20,6 +22,7 @@ interface AuthContextValue {
   authError: string | null;
   lastFamilyCode: string | null;
   justSignedIn: boolean;
+  isNewUser: boolean;
   doSignIn: (email: string, password: string) => Promise<void>;
   doSignUp: (email: string, password: string) => Promise<string | null>;
   doJoinFamily: (
@@ -35,6 +38,8 @@ interface AuthContextValue {
   clearAuthError: () => void;
   clearLastFamilyCode: () => void;
   clearJustSignedIn: () => void;
+  clearIsNewUser: () => void;
+  refreshAuthUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -51,6 +56,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [lastFamilyCode, setLastFamilyCode] = useState<string | null>(null);
   const [justSignedIn, setJustSignedIn] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Wait for Google redirect result before listening to auth state.
   // Without this, onAuthStateChanged fires with null before the
@@ -74,10 +80,13 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     };
 
     handleGoogleRedirectResult()
-      .then(code => {
-        if (code) {
-          setLastFamilyCode(code);
+      .then(result => {
+        if (result) {
           setJustSignedIn(true);
+          if (result.isNew && result.familyCode) {
+            setLastFamilyCode(result.familyCode);
+            setIsNewUser(true);
+          }
         }
       })
       .catch((err: any) => {
@@ -143,12 +152,14 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     password: string
   ): Promise<string | null> => {
     setAuthError(null);
+    setIsNewUser(true);
     try {
       const result = await signUpFamily(email, password);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
       return result.user.familyId;
     } catch (err: any) {
+      setIsNewUser(false);
       setAuthError(mapError(err));
       return null;
     }
@@ -164,6 +175,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       const result = await joinFamilyByCode(email, password, code);
       setLastFamilyCode(result.familyCode);
       setJustSignedIn(true);
+      setIsNewUser(true);
       return result.user.familyId;
     } catch (err: any) {
       setAuthError(mapError(err));
@@ -217,6 +229,9 @@ export function AuthProvider(props: { children: React.ReactNode }) {
 
   const doSignOut = async () => {
     setAuthError(null);
+    setLastFamilyCode(null);
+    setJustSignedIn(false);
+    setIsNewUser(false);
     try {
       await signOutFamily();
     } catch (err: any) {
@@ -236,12 +251,31 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     setJustSignedIn(false);
   };
 
+  const clearIsNewUser = () => {
+    setIsNewUser(false);
+  };
+
+  const refreshAuthUser = async () => {
+    const uid = getCurrentUid();
+    if (!uid || !authUser) return;
+    try {
+      const familyId = await resolveFamilyId(uid);
+      if (familyId !== authUser.familyId) {
+        setAuthUser({ ...authUser, familyId });
+      }
+    } catch (err) {
+      console.error('Failed to refresh familyId:', err);
+      Sentry.captureException(err, { tags: { action: 'refresh-auth-user' } });
+    }
+  };
+
   const value: AuthContextValue = {
     authUser,
     authLoading,
     authError,
     lastFamilyCode,
     justSignedIn,
+    isNewUser,
     doSignIn,
     doSignUp,
     doJoinFamily,
@@ -253,6 +287,8 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     clearAuthError,
     clearLastFamilyCode,
     clearJustSignedIn,
+    clearIsNewUser,
+    refreshAuthUser,
   };
 
   return (
