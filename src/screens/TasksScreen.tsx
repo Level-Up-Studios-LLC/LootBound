@@ -12,7 +12,7 @@ import {
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
-import { getTaskStatus, fmtTime, timeToMin, isTaskActiveToday } from '../utils.ts';
+import { getTaskStatus, fmtTime, timeToMin, isTaskActiveToday, isTaskPreview } from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
   const ctx = useAppContext();
@@ -177,6 +177,11 @@ export default function TasksScreen(): React.ReactElement | null {
               {isPreview && !isDone && !isMissed && (
                 <div className='w-full text-center text-[12px] font-bold text-qmuted bg-qslate/10 rounded-badge py-2.5 mt-3'>
                   Tomorrow's Mission
+                </div>
+              )}
+              {!isPreview && (isDone || isMissed) && isTaskPreview(t, ctx.cfg?.bedtime) && (
+                <div className='text-[11px] text-qmuted text-center mt-2'>
+                  Repeats tomorrow
                 </div>
               )}
               {!isPreview && !isDone && !isMissed && status !== 'missed' && (
