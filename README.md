@@ -58,7 +58,6 @@ Dev server starts at **http://localhost:3000**.
 - **🏠 Dashboard (HQ)** — Today's progress, active streak, coin balance, XP bar with level + title, upcoming missions, and next-day mission preview after bedtime
 - **🎯 Missions** — Daily mission list with tier badges (S through F), status indicators, time windows, coin + XP breakdowns, and badge count on nav tab
 - **📸 Photo Proof** — Camera capture on completion (camera-only on mobile to prevent gallery uploads)
-- **✨ Animations** — Smooth animations across all screens (staggered lists, celebrations, transitions)
 - **🏆 Leaderboard** — Rankings by perfect days with "Top Adventurer" highlight, level titles, and streaks
 - **🛒 Loot Shop** — Browse and redeem rewards, view limits, track pending approvals and history
 - **🔥 Streaks** — Perfect days build streaks with escalating bonuses and XP multipliers (up to 2.0x)
