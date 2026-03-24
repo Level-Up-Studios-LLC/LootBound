@@ -58,6 +58,7 @@ Dev server starts at **http://localhost:3000**.
 - **🏠 Dashboard (HQ)** — Today's progress, active streak, coin balance, XP bar with level + title, upcoming missions, and next-day mission preview after bedtime
 - **🎯 Missions** — Daily mission list with tier badges (S through F), status indicators, time windows, coin + XP breakdowns, and badge count on nav tab
 - **📸 Photo Proof** — Camera capture on completion (camera-only on mobile to prevent gallery uploads)
+- **✨ Animations** — GSAP-powered animations across all screens (staggered lists, celebrations, transitions)
 - **🏆 Leaderboard** — Rankings by perfect days with "Top Adventurer" highlight, level titles, and streaks
 - **🛒 Loot Shop** — Browse and redeem rewards, view limits, track pending approvals and history
 - **🔥 Streaks** — Perfect days build streaks with escalating bonuses and XP multipliers (up to 2.0x)
@@ -71,8 +72,8 @@ Dev server starts at **http://localhost:3000**.
 - **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins and XP, XP cannot go below 0), badge count on nav tab
 - **📋 Mission Management** — Add, edit, delete missions per child with tier (S-F), time windows, and scheduling
 - **🎁 Loot Management** — Full CRUD for rewards with cost, icon, limits, and approval flags
-- **👶 Children Management** — Add/remove children, manage profiles and PINs, view purchase history
-- **👤 Account** — Editable name and email, initials avatar, Owner/Member role badge, PIN management, password change (or set for Google users), email verification
+- **👶 Children Management** — Add/edit/remove children, manage profiles and PINs, view purchase history
+- **👤 Account** — Editable name and email, profile photo (Google/Gravatar/initials), Owner/Member role badge, PIN management, password change (or set for Google users), email verification
 - **⚙️ Settings** — Tier coin/XP values, approval threshold, bedtime, weekly reset day, cooldown, notification sound preferences, error reporting toggle (with debounced auto-save)
 - **💬 Feedback** — Links to Canny.io board for feature requests and voting
 - **🔐 Multi-parent support** — Each parent has their own PIN, name, and role. Owners can delete the family; members can leave.
@@ -179,7 +180,7 @@ Formula: `Math.min(Math.floor(level * 1.32), 25)` percent bonus on coins earned 
 ## 🔐 Auth Flow
 
 1. **🎭 Role Selection** — User chooses "I'm a Parent" or "I'm a Kid"
-2. **👨‍💼 Parent Flow** — Sign up or sign in with email/password or Google. Email verification required for email/password users. Optional PIN creation for quick access on return visits. Parents can join an existing family with a family code.
+2. **👨‍💼 Parent Flow** — Sign up or sign in with email/password or Google. Unified profile completion screen (name, family code, PIN). Email verification required for email/password users. Parents can join an existing family with a family code.
 3. **👦 Kid Flow** — Enter a 6-character family code to access profiles. Select a profile and enter or create a PIN. Code is persisted locally.
 
 ---
@@ -288,8 +289,8 @@ LootBound/
       LoginScreen.tsx           # Child profile selection
       KidCodeScreen.tsx         # Kid family code entry
       AuthScreen.tsx            # Parent auth (login/signup with Google)
+      CompleteProfileScreen.tsx # Unified profile setup (name, family code, PIN)
       ParentPinScreen.tsx       # Parent PIN verification
-      CreatePinPrompt.tsx       # PIN setup prompt
       ResetPasswordScreen.tsx   # Branded password reset page
       DashboardScreen.tsx       # Kid HQ with XP bar
       TasksScreen.tsx           # Kid missions list
