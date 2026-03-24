@@ -135,34 +135,36 @@ export default function SettingsTab(): React.ReactElement {
                   type='number'
                   min={0}
                   aria-label={`${tier} coins`}
-                  value={tc.coins}
+                  placeholder='0'
+                  value={tc.coins || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const n: Record<string, TierConfig> = structuredClone(
                       cfg.tierConfig || DEF_TIER_CONFIG
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    const v = Number(e.target.value);
+                    const v = e.target.value === '' ? 0 : Number(e.target.value);
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update({ ...cfg, tierConfig: n });
                   }}
-                  className='quest-input w-[60px]! text-center'
+                  className='quest-input w-[72px]! text-center'
                 />
                 <span className='text-[11px] text-qmuted'>coins</span>
                 <input
                   type='number'
                   min={0}
                   aria-label={`${tier} XP`}
-                  value={tc.xp}
+                  placeholder='0'
+                  value={tc.xp || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const n: Record<string, TierConfig> = structuredClone(
                       cfg.tierConfig || DEF_TIER_CONFIG
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    const v = Number(e.target.value);
+                    const v = e.target.value === '' ? 0 : Number(e.target.value);
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update({ ...cfg, tierConfig: n });
                   }}
-                  className='quest-input w-[60px]! text-center'
+                  className='quest-input w-[72px]! text-center'
                 />
                 <span className='text-[11px] text-qmuted'>XP</span>
               </div>
@@ -183,9 +185,10 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Approval threshold coins'
-            value={cfg.approvalThreshold ?? 300}
+            placeholder='0'
+            value={cfg.approvalThreshold || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const v = Number(e.target.value);
+              const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
                 ...cfg,
                 approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
@@ -269,9 +272,10 @@ export default function SettingsTab(): React.ReactElement {
             type='number'
             min={0}
             aria-label='Mission cooldown seconds'
-            value={cfg.cooldown != null ? cfg.cooldown : 60}
+            placeholder='0'
+            value={cfg.cooldown || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const v = Number(e.target.value);
+              const v = e.target.value === '' ? 0 : Number(e.target.value);
               update({
                 ...cfg,
                 cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,

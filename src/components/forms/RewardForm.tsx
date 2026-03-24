@@ -69,9 +69,11 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         </label>
         <input
           type='number'
-          value={f.cost}
+          min={0}
+          placeholder='0'
+          value={f.cost || ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            u('cost', Number(e.target.value));
+            u('cost', e.target.value === '' ? 0 : Number(e.target.value));
           }}
           className='quest-input'
         />
