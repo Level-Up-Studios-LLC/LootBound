@@ -176,7 +176,7 @@ export default function RewardsTab(): React.ReactElement {
               <button
                 onClick={() => {
                   try {
-                    if (localStorage.getItem(SKIP_CONFIRM_KEY)) {
+                    if (localStorage.getItem(SKIP_CONFIRM_KEY) === '1') {
                       removeReward(r.id);
                       return;
                     }

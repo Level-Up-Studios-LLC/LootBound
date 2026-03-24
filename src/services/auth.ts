@@ -198,14 +198,22 @@ export async function handleGoogleRedirectResult(): Promise<{
   familyCode?: string;
   photoURL?: string;
 } | null> {
-  const result = await getRedirectResult(auth);
+  let result;
+  try {
+    result = await getRedirectResult(auth);
+  } catch (err: any) {
+    if (err.code === 'auth/account-exists-with-different-credential') {
+      throw { code: err.code, message: 'An account with this email already exists. Please sign in with your original method first.' };
+    }
+    throw err;
+  }
   if (!result) return null;
 
   const user = result.user;
   const uid = user.uid;
 
   // Check if this user already has a parentMembers mapping
-  // (returning user, or email/password account that was auto-linked with Google)
+  // (returning user, or auto-linked email/password + Google account)
   const snap = await getDoc(doc(db, 'parentMembers', uid));
   if (snap.exists()) return { isNew: false };
 
@@ -457,12 +465,17 @@ export async function switchToExistingFamily(
   // Atomically delete and recreate parentMembers with new familyId
   // (Firestore rules block familyId changes via update for security)
   const memberRef = doc(db, 'parentMembers', uid);
-  await runTransaction(db, async (txn) => {
-    const snap = await txn.get(memberRef);
-    const existing = snap.exists() ? snap.data() : {};
-    txn.delete(memberRef);
-    txn.set(memberRef, { ...existing, familyId });
-  });
+  try {
+    await runTransaction(db, async (txn) => {
+      const snap = await txn.get(memberRef);
+      const existing = snap.exists() ? snap.data() : {};
+      txn.delete(memberRef);
+      txn.set(memberRef, { ...existing, familyId });
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'switch-family-transaction' }, extra: { uid, familyId } });
+    throw err;
+  }
 
   // Best-effort cleanup after switch is persisted
   try {

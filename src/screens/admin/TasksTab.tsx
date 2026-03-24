@@ -128,7 +128,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     <button
                       onClick={() => {
                         try {
-                          if (localStorage.getItem(SKIP_CONFIRM_KEY)) {
+                          if (localStorage.getItem(SKIP_CONFIRM_KEY) === '1') {
                             removeTask(c.id, t.id);
                             return;
                           }

@@ -30,11 +30,17 @@ function Confetti(): React.ReactElement {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
 
     const pieces = Array.from({ length: CONFETTI_COUNT }, () => ({
-      x: Math.random() * canvas.width,
+      x: Math.random() * w,
       y: -10 - Math.random() * 40,
       w: 4 + Math.random() * 6,
       h: 6 + Math.random() * 10,
@@ -42,7 +48,7 @@ function Confetti(): React.ReactElement {
       rot: Math.random() * Math.PI * 2,
       opacity: 1,
       // Targets for GSAP
-      targetY: canvas.height + 40 + Math.random() * 100,
+      targetY: h + 40 + Math.random() * 100,
       drift: (Math.random() - 0.5) * 120,
       spin: (Math.random() - 0.5) * 8,
     }));
