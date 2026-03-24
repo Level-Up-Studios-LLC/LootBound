@@ -98,15 +98,21 @@ export default function LoginScreen(
     tl.fromTo('.login-profile', { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.35, stagger: 0.08 }, '-=0.2');
   }, { scope: containerRef });
 
-  // Modal enter animation
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  // Modal enter animation + focus management
   useEffect(() => {
     if (pinTarget && modalRef.current) {
+      prevFocusRef.current = document.activeElement as HTMLElement;
       const overlay = modalRef.current;
       const card = overlay.querySelector('.login-modal-card');
       gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
       if (card) {
         gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
       }
+    } else if (!pinTarget && prevFocusRef.current) {
+      prevFocusRef.current.focus();
+      prevFocusRef.current = null;
     }
   }, [pinTarget]);
 
@@ -174,6 +180,16 @@ export default function LoginScreen(
             ref={modalRef}
             className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5'
             style={{ opacity: 0 }}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Escape') { setPinTarget(null); setCreatePin(false); setPinErr(''); return; }
+              if (e.key !== 'Tab' || !modalRef.current) return;
+              const focusable = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+              if (focusable.length === 0) return;
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+              else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }}
           >
             <div
               className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl login-modal-card'

@@ -422,7 +422,7 @@ export default function CompleteProfileScreen(
         </div>
 
         {error && (
-          <div className='text-qcoral text-[13px] text-center py-1.5'>
+          <div role='alert' className='text-qcoral text-[13px] text-center py-1.5'>
             {error}
           </div>
         )}

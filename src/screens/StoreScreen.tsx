@@ -35,15 +35,24 @@ export default function StoreScreen(): React.ReactElement | null {
     tl.from('.store-reward', { opacity: 0, scale: 0.9, duration: 0.35, stagger: 0.06 }, '-=0.15');
   }, { scope: containerRef });
 
-  // Modal enter animation
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  // Modal enter animation + focus management
   useEffect(() => {
     if (confirmR && modalRef.current) {
+      prevFocusRef.current = document.activeElement as HTMLElement;
       const overlay = modalRef.current;
       const card = overlay.querySelector('.store-modal-card');
       gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
       if (card) {
         gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
       }
+      // Focus first button in modal
+      const firstBtn = overlay.querySelector<HTMLElement>('button');
+      if (firstBtn) firstBtn.focus();
+    } else if (!confirmR && prevFocusRef.current) {
+      prevFocusRef.current.focus();
+      prevFocusRef.current = null;
     }
   }, [confirmR]);
 
@@ -179,6 +188,16 @@ export default function StoreScreen(): React.ReactElement | null {
             aria-modal='true'
             aria-labelledby='confirmR-title'
             aria-describedby='confirmR-desc'
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Escape') { setConfirmR(null); return; }
+              if (e.key !== 'Tab' || !modalRef.current) return;
+              const focusable = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+              if (focusable.length === 0) return;
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+              else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }}
           >
             <div className='bg-white rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto store-modal-card'>
               <div
