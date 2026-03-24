@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface ConfirmDialogProps {
   title: string;
@@ -12,28 +12,55 @@ interface ConfirmDialogProps {
   children?: React.ReactNode;
   requiredText?: string;
   requiredTextLabel?: string;
+  dontAskAgainKey?: string;
 }
 
 export default function ConfirmDialog(
   props: ConfirmDialogProps
 ): React.ReactElement {
   const [typed, setTyped] = useState('');
+  const [dontAsk, setDontAsk] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   const confirmed =
     !props.requiredText ||
     typed.trim().toLowerCase() === props.requiredText.trim().toLowerCase();
 
+  // Focus management: save previous focus, auto-focus first element, restore on unmount
+  useEffect(() => {
+    prevFocusRef.current = document.activeElement as HTMLElement;
+    if (overlayRef.current) {
+      const first = overlayRef.current.querySelector<HTMLElement>('input, button');
+      if (first) first.focus();
+    }
+    return () => {
+      if (prevFocusRef.current) prevFocusRef.current.focus();
+    };
+  }, []);
+
   return (
     <div
-      className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5'
+      ref={overlayRef}
+      className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5 animate-fade-in'
       role='dialog'
       aria-modal='true'
       aria-labelledby='confirm-dialog-title'
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') { props.onCancel(); return; }
+        if (e.key !== 'Tab' || !overlayRef.current) return;
+        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }}
     >
       <div
         className={
           (props.bgColor || 'bg-white') +
-          ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg'
+          ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg animate-slide-up'
         }
       >
         <div
@@ -64,7 +91,12 @@ export default function ConfirmDialog(
                   setTyped(e.target.value);
                 }}
                 onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && confirmed) props.onConfirm();
+                  if (e.key === 'Enter' && confirmed) {
+                    if (dontAsk && props.dontAskAgainKey) {
+                      try { localStorage.setItem(props.dontAskAgainKey, '1'); } catch (_e) {}
+                    }
+                    props.onConfirm();
+                  }
                 }}
                 className='quest-input'
                 autoFocus
@@ -73,6 +105,17 @@ export default function ConfirmDialog(
           )}
           {props.children}
         </div>
+        {props.dontAskAgainKey && (
+          <label className='flex items-center gap-2 mb-4 cursor-pointer'>
+            <input
+              type='checkbox'
+              checked={dontAsk}
+              onChange={(e) => setDontAsk(e.target.checked)}
+              className='w-4 h-4 accent-qteal'
+            />
+            <span className='text-[12px] text-qmuted'>Don't ask me again</span>
+          </label>
+        )}
         <div className='flex gap-3 justify-end'>
           <button
             onClick={props.onCancel}
@@ -83,7 +126,11 @@ export default function ConfirmDialog(
           {props.confirmLabel && (
             <button
               onClick={() => {
-                if (confirmed) props.onConfirm();
+                if (!confirmed) return;
+                if (dontAsk && props.dontAskAgainKey) {
+                  try { localStorage.setItem(props.dontAskAgainKey, '1'); } catch (_e) {}
+                }
+                props.onConfirm();
               }}
               disabled={!confirmed}
               className={

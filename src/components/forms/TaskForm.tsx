@@ -61,8 +61,8 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           })}
         </select>
       </div>
-      <div className='flex gap-3'>
-        <div className='w-1/2'>
+      <div className='grid grid-cols-2 gap-3'>
+        <div className='min-w-0'>
           <label
             htmlFor='tf-start'
             className='text-qslate text-sm font-semibold mb-1 block'
@@ -79,7 +79,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
             className='quest-input'
           />
         </div>
-        <div className='w-1/2'>
+        <div className='min-w-0'>
           <label
             htmlFor='tf-end'
             className='text-qslate text-sm font-semibold mb-1 block'

@@ -32,19 +32,21 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { auth, db } from './firebase.ts';
 import {
   generateFamilyCode,
   registerFamilyCode,
   lookupFamilyCode,
 } from './familyCode.ts';
+import { removeStorage } from './platform.ts';
 
 export interface AuthUser {
   uid: string;
   familyId: string;
   email: string;
   emailVerified: boolean;
+  photoURL?: string;
 }
 
 const appActionCodeSettings = () => {
@@ -59,7 +61,7 @@ const appActionCodeSettings = () => {
  * Resolve the familyId for a given auth UID.
  * Checks /parentMembers/{uid} first, falls back to uid.
  */
-async function resolveFamilyId(uid: string): Promise<string> {
+export async function resolveFamilyId(uid: string): Promise<string> {
   const snap = await getDoc(doc(db, 'parentMembers', uid));
   if (snap.exists()) {
     const data = snap.data();
@@ -105,6 +107,7 @@ export async function signUpFamily(
       familyId,
       email: cred.user.email ?? email,
       emailVerified: false,
+      photoURL: cred.user.photoURL ?? undefined,
     },
     familyCode: code,
   };
@@ -120,7 +123,7 @@ export async function joinFamilyByCode(
   code: string
 ): Promise<{ user: AuthUser; familyCode: string }> {
   const familyId = await lookupFamilyCode(code);
-  if (!familyId) throw { code: 'auth/invalid-family-code' };
+  if (!familyId) { const e = new Error('Invalid family code'); (e as any).code = 'auth/invalid-family-code'; throw e; }
 
   const cred = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -145,6 +148,7 @@ export async function joinFamilyByCode(
       familyId,
       email: cred.user.email ?? email,
       emailVerified: false,
+      photoURL: cred.user.photoURL ?? undefined,
     },
     familyCode: code,
   };
@@ -165,6 +169,7 @@ export async function signInFamily(
     familyId,
     email: cred.user.email ?? email,
     emailVerified: cred.user.emailVerified,
+    photoURL: cred.user.photoURL ?? undefined,
   };
 }
 
@@ -187,19 +192,34 @@ export async function startGoogleSignIn(): Promise<void> {
  * the same UID. So the existing parentMembers mapping is preserved
  * and this function returns null (returning user).
  *
- * Returns the family code if a new family was created, null otherwise.
+ * Returns { isNew, familyCode?, photoURL? } for new users, { isNew: false } for
+ * returning users, or null if no redirect result was pending.
  */
-export async function handleGoogleRedirectResult(): Promise<string | null> {
-  const result = await getRedirectResult(auth);
+export async function handleGoogleRedirectResult(): Promise<{
+  isNew: boolean;
+  familyCode?: string;
+  photoURL?: string;
+} | null> {
+  let result;
+  try {
+    result = await getRedirectResult(auth);
+  } catch (err: any) {
+    if (err.code === 'auth/account-exists-with-different-credential') {
+      const e = new Error('An account with this email already exists. Please sign in with your original method first.');
+      (e as any).code = err.code;
+      throw e;
+    }
+    throw err;
+  }
   if (!result) return null;
 
   const user = result.user;
   const uid = user.uid;
 
   // Check if this user already has a parentMembers mapping
-  // (returning user, or email/password account that was auto-linked with Google)
+  // (returning user, or auto-linked email/password + Google account)
   const snap = await getDoc(doc(db, 'parentMembers', uid));
-  if (snap.exists()) return null;
+  if (snap.exists()) return { isNew: false };
 
   // New user — create family
   await setDoc(
@@ -209,11 +229,10 @@ export async function handleGoogleRedirectResult(): Promise<string | null> {
   );
   const code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
-  return code;
+  return { isNew: true, familyCode: code, photoURL: user.photoURL ?? undefined };
 }
 
 export async function signOutFamily(): Promise<void> {
-  var { removeStorage } = await import('./platform.ts');
   await removeStorage('qb-parent-session');
   await removeStorage('qb-kid-session');
   return signOut(auth);
@@ -238,6 +257,7 @@ export function onAuthChange(
             familyId,
             email: user.email ?? '',
             emailVerified: user.emailVerified,
+            photoURL: user.photoURL ?? undefined,
           });
         })
         .catch(err => {
@@ -398,9 +418,14 @@ export async function deleteAuthAccount(password?: string): Promise<void> {
   } catch (err: any) {
     if (err.code === 'auth/requires-recent-login') {
       if (!password || !user.email) throw err;
-      const cred = EmailAuthProvider.credential(user.email, password);
-      await reauthenticateWithCredential(user, cred);
-      await user.delete();
+      try {
+        const cred = EmailAuthProvider.credential(user.email, password);
+        await reauthenticateWithCredential(user, cred);
+        await user.delete();
+      } catch (retryErr) {
+        Sentry.captureException(retryErr, { tags: { action: 'delete-auth-retry' } });
+        throw retryErr;
+      }
     } else {
       throw err;
     }
@@ -425,6 +450,49 @@ export function hasPasswordProvider(): boolean {
   const user = auth.currentUser;
   if (!user) return false;
   return user.providerData.some(p => p.providerId === 'password');
+}
+
+/**
+ * Switch a newly registered user to an existing family by join code.
+ * Cleans up the auto-generated family code and family doc.
+ */
+export async function switchToExistingFamily(
+  uid: string,
+  joinCode: string,
+  oldFamilyCode: string
+): Promise<string> {
+  const familyId = await lookupFamilyCode(joinCode);
+  if (!familyId) { const e = new Error('Invalid family code'); (e as any).code = 'auth/invalid-family-code'; throw e; }
+  if (familyId === uid) { const e = new Error('Cannot join own family'); (e as any).code = 'auth/invalid-family-code'; throw e; }
+
+  // Atomically delete and recreate parentMembers with new familyId
+  // (Firestore rules block familyId changes via update for security)
+  const memberRef = doc(db, 'parentMembers', uid);
+  try {
+    await runTransaction(db, async (txn) => {
+      const snap = await txn.get(memberRef);
+      const existing = snap.exists() ? snap.data() : {};
+      txn.delete(memberRef);
+      txn.set(memberRef, { ...existing, familyId });
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'switch-family-transaction' }, extra: { uid, familyId } });
+    throw err;
+  }
+
+  // Best-effort cleanup after switch is persisted
+  try {
+    await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
+  } catch (err) {
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'switch-family-cleanup-code' } });
+  }
+  try {
+    await deleteDoc(doc(db, 'families', uid));
+  } catch (err) {
+    Sentry.captureException(err, { level: 'warning', tags: { action: 'switch-family-cleanup-doc' } });
+  }
+
+  return joinCode;
 }
 
 /** @deprecated Use getCurrentUid — familyId resolution requires async lookup via resolveFamilyId. */

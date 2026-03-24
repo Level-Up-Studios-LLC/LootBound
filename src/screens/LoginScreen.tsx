@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import * as Sentry from '@sentry/react';
+import React, { useRef, useState, useEffect } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
@@ -20,6 +21,9 @@ export default function LoginScreen(
   const [createPin, setCreatePin] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const errRef = useRef<HTMLDivElement>(null);
 
   const ctx = useAppContext();
   const children = ctx.children;
@@ -27,13 +31,13 @@ export default function LoginScreen(
   const doKidLogin = (uid: string): void => {
     const ch = ctx.getChild(uid);
     if (!ch) return;
+    prevFocusRef.current = document.activeElement as HTMLElement;
     if (ch.pin) {
       setPinTarget(uid);
       setCreatePin(false);
       setKpin('');
       setPinErr('');
     } else {
-      // No PIN set — prompt to create one
       setPinTarget(uid);
       setCreatePin(true);
       setNewPin('');
@@ -66,8 +70,6 @@ export default function LoginScreen(
       setPinErr('PINs do not match');
       return;
     }
-    // Save PIN directly to the child's Firestore doc (kids are anonymous
-    // and don't have parent-level write access to the full config)
     if (!pinTarget) return;
     const ch = ctx.getChild(pinTarget);
     if (!ch || !ctx.familyId) return;
@@ -75,7 +77,6 @@ export default function LoginScreen(
       await fsSaveChild(ctx.familyId, pinTarget, { pin: newPin });
     } catch (err) {
       console.error('Failed to save PIN:', err);
-      Sentry.captureException(err, { tags: { action: 'save-kid-pin' } });
       setPinErr('Could not save PIN. Please try again.');
       return;
     }
@@ -89,9 +90,53 @@ export default function LoginScreen(
     ctx.notify('PIN created!');
   };
 
+  const prefersReducedMotion = typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Entrance animations
+  useGSAP(() => {
+    if (prefersReducedMotion) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.login-title', { opacity: 0, y: -20, duration: 0.4 });
+    tl.fromTo('.login-profile', { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.35, stagger: 0.08 }, '-=0.2');
+  }, { scope: containerRef, dependencies: [prefersReducedMotion] });
+
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  // Modal enter animation + focus restore
+  useEffect(() => {
+    if (pinTarget && modalRef.current) {
+      const overlay = modalRef.current;
+      const card = overlay.querySelector('.login-modal-card');
+      if (prefersReducedMotion) {
+        gsap.set(overlay, { opacity: 1 });
+      } else {
+        gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+        if (card) {
+          gsap.fromTo(card, { scale: 0.85, y: 30 }, { scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' });
+        }
+      }
+    } else if (!pinTarget && prevFocusRef.current) {
+      prevFocusRef.current.focus();
+      prevFocusRef.current = null;
+    }
+  }, [pinTarget, prefersReducedMotion]);
+
+  // Error shake
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    if (pinErr && errRef.current) {
+      gsap.fromTo(errRef.current,
+        { x: -6 },
+        { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' }
+      );
+    }
+  }, [pinErr]);
+
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen p-6'>
-      <div className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 animate-fade-in'>
+    <>
+    <div className='flex flex-col items-center justify-center min-h-screen p-6' ref={containerRef} aria-hidden={!!pinTarget}>
+      <div className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title'>
         LOOTBOUND
       </div>
       <div className='text-base text-qmuted mb-5'>Choose your profile</div>
@@ -105,7 +150,7 @@ export default function LoginScreen(
                 doKidLogin(c.id);
               }}
               className={
-                'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 ' +
+                'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer border-none transition-all hover:scale-105 active:scale-95 login-profile ' +
                 cardBg
               }
             >
@@ -132,134 +177,141 @@ export default function LoginScreen(
         </div>
       )}
 
-      {/* PIN entry modal for existing PIN */}
-      {pinTarget && !createPin && (() => {
-        const targetChild = ctx.getChild(pinTarget);
-        if (!targetChild) return null;
-        return (
-        <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={`Enter PIN for ${targetChild.name}`}>
-            <div className='text-[32px] mb-1'>
-              {targetChild.avatar}
-            </div>
-            <div className='text-sm text-qmuted'>
-              Enter PIN for {targetChild.name}
-            </div>
-            <div className='flex gap-2'>
-              <PasswordInput
-                maxLength={4}
-                value={kpin}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setKpin(e.target.value.replace(/[^0-9]/g, ''));
-                  setPinErr('');
-                }}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.key === 'Enter') submitKidPin();
-                }}
-                className='quest-input w-[100px] text-center'
-                autoFocus
-              />
-              <button onClick={submitKidPin} className='btn-primary'>
-                Go
-              </button>
-            </div>
-            {pinErr && (
-              <div className='text-qcoral text-[13px] animate-shake'>
-                {pinErr}
-              </div>
-            )}
-            <button
-              onClick={() => {
-                setPinTarget(null);
-                setPinErr('');
-              }}
-              className='btn-ghost'
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                setPinTarget(null);
-                setPinErr('');
-              }}
-              className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
-            >
-              Forgot PIN? Ask a parent to reset it.
-            </button>
-          </div>
-        </div>
-        );
-      })()}
-
-      {/* PIN creation modal for first-time kids */}
-      {pinTarget && createPin && (() => {
-        const targetChild = ctx.getChild(pinTarget);
-        if (!targetChild) return null;
-        return (
-        <div className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5 animate-fade-in'>
-          <div className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl animate-slide-up' role='dialog' aria-label={`Create PIN for ${targetChild.name}`}>
-            <div className='text-[32px] mb-1'>
-              {targetChild.avatar}
-            </div>
-            <div className='text-sm text-qmuted'>
-              Create a PIN for {targetChild.name}
-            </div>
-            <div className='text-xs text-qdim'>
-              Choose a 4-digit PIN to protect your profile
-            </div>
-            <PasswordInput
-              maxLength={4}
-              placeholder='New PIN'
-              value={newPin}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setNewPin(e.target.value.replace(/[^0-9]/g, ''));
-                setPinErr('');
-              }}
-              className='quest-input w-[120px] text-center'
-              autoFocus
-            />
-            <PasswordInput
-              maxLength={4}
-              placeholder='Confirm PIN'
-              value={confirmPin}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
-                setPinErr('');
-              }}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter') submitCreatePin();
-              }}
-              className='quest-input w-[120px] text-center'
-            />
-            {pinErr && (
-              <div className='text-qcoral text-[13px] animate-shake'>
-                {pinErr}
-              </div>
-            )}
-            <button onClick={submitCreatePin} className='btn-primary'>
-              Set PIN
-            </button>
-            <button
-              onClick={() => {
-                setPinTarget(null);
-                setCreatePin(false);
-                setPinErr('');
-              }}
-              className='btn-ghost'
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-        );
-      })()}
-
-      {/* Switch family button for kid devices */}
       {props.onSwitchFamily && (
         <button onClick={props.onSwitchFamily} className='btn-ghost mt-5'>
           Switch Family
         </button>
       )}
     </div>
+
+    {/* PIN modal (enter or create) */}
+    {pinTarget && (() => {
+        const targetChild = ctx.getChild(pinTarget);
+        if (!targetChild) return null;
+        const isCreate = createPin;
+
+        return (
+          <div
+            ref={modalRef}
+            className='fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-5'
+            style={{ opacity: 0 }}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Escape') { setPinTarget(null); setCreatePin(false); setPinErr(''); return; }
+              if (e.key !== 'Tab' || !modalRef.current) return;
+              const focusable = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
+              if (focusable.length === 0) return;
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+              else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }}
+          >
+            <div
+              className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl login-modal-card'
+              role='dialog'
+              aria-modal='true'
+              aria-label={
+                isCreate
+                  ? `Create PIN for ${targetChild.name}`
+                  : `Enter PIN for ${targetChild.name}`
+              }
+            >
+              <div className='text-[32px] mb-1'>{targetChild.avatar}</div>
+              <div className='text-sm text-qmuted'>
+                {isCreate
+                  ? `Create a PIN for ${targetChild.name}`
+                  : `Enter PIN for ${targetChild.name}`}
+              </div>
+
+              {isCreate ? (
+                <>
+                  <div className='text-xs text-qdim'>
+                    Choose a 4-digit PIN to protect your profile
+                  </div>
+                  <PasswordInput
+                    maxLength={4}
+                    placeholder='New PIN'
+                    aria-label='New PIN'
+                    value={newPin}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setNewPin(e.target.value.replace(/[^0-9]/g, ''));
+                      setPinErr('');
+                    }}
+                    className='quest-input w-[120px] text-center'
+                    autoFocus
+                  />
+                  <PasswordInput
+                    maxLength={4}
+                    placeholder='Confirm PIN'
+                    aria-label='Confirm PIN'
+                    value={confirmPin}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setConfirmPin(e.target.value.replace(/[^0-9]/g, ''));
+                      setPinErr('');
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'Enter') submitCreatePin();
+                    }}
+                    className='quest-input w-[120px] text-center'
+                  />
+                </>
+              ) : (
+                <div className='flex gap-2'>
+                  <PasswordInput
+                    maxLength={4}
+                    aria-label='Enter PIN'
+                    value={kpin}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setKpin(e.target.value.replace(/[^0-9]/g, ''));
+                      setPinErr('');
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'Enter') submitKidPin();
+                    }}
+                    className='quest-input w-[100px] text-center'
+                    autoFocus
+                  />
+                  <button onClick={submitKidPin} className='btn-primary'>
+                    Go
+                  </button>
+                </div>
+              )}
+
+              {pinErr && (
+                <div ref={errRef} role='alert' className='text-qcoral text-[13px]'>
+                  {pinErr}
+                </div>
+              )}
+
+              {isCreate ? (
+                <button onClick={submitCreatePin} className='btn-primary'>
+                  Set PIN
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setPinTarget(null);
+                    setPinErr('');
+                  }}
+                  className='text-[11px] text-qdim bg-transparent border-none cursor-pointer font-body mt-1 hover:text-qmuted transition-colors'
+                >
+                  Forgot PIN? Ask a parent to reset it.
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setPinTarget(null);
+                  setCreatePin(false);
+                  setPinErr('');
+                }}
+                className='btn-ghost'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+    </>
   );
 }

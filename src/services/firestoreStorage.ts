@@ -31,6 +31,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
+import * as Sentry from '@sentry/react';
 import { db } from './firebase.ts';
 import type { UserData } from '../types.ts';
 
@@ -132,6 +133,7 @@ export interface ParentMember {
   familyId: string;
   parentPin?: string;
   parentName?: string;
+  parentPhotoURL?: string;
 }
 
 export async function getParentMember(
@@ -150,19 +152,34 @@ export async function saveParentMember(
   if (data.parentPin != null) clean.parentPin = data.parentPin;
   if (data.parentName != null) clean.parentName = data.parentName;
   if (data.familyId != null) clean.familyId = data.familyId;
-  await setDoc(doc(db, 'parentMembers', uid), clean, { merge: true });
+  if (data.parentPhotoURL != null) clean.parentPhotoURL = data.parentPhotoURL;
+  try {
+    await setDoc(doc(db, 'parentMembers', uid), clean, { merge: true });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-parent-member' } });
+    throw err;
+  }
 }
 
 export async function deleteParentMember(uid: string): Promise<void> {
-  await deleteDoc(doc(db, 'parentMembers', uid));
+  try {
+    await deleteDoc(doc(db, 'parentMembers', uid));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-parent-member' } });
+    throw err;
+  }
 }
 
 export function onParentMemberSnapshot(
   uid: string,
-  callback: (data: ParentMember | null) => void
+  callback: (data: ParentMember | null) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(doc(db, 'parentMembers', uid), snap => {
     callback(snap.exists() ? (snap.data() as ParentMember) : null);
+  }, err => {
+    Sentry.captureException(err, { tags: { action: 'snapshot-parent-member' } });
+    onError?.(err);
   });
 }
 
@@ -181,7 +198,12 @@ export async function saveConfig(
   familyId: string,
   data: Partial<FamilyConfig>
 ): Promise<void> {
-  await setDoc(doc(db, 'families', familyId), data, { merge: true });
+  try {
+    await setDoc(doc(db, 'families', familyId), data, { merge: true });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-config' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -204,16 +226,26 @@ export async function saveChild(
 ): Promise<void> {
   const clean: DocumentData = { ...data };
   delete clean.id;
-  await setDoc(doc(db, 'families', familyId, 'children', childId), clean, {
-    merge: true,
-  });
+  try {
+    await setDoc(doc(db, 'families', familyId, 'children', childId), clean, {
+      merge: true,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-child' } });
+    throw err;
+  }
 }
 
 export async function deleteChild(
   familyId: string,
   childId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'children', childId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'children', childId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-child' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -252,16 +284,26 @@ export async function saveTask(
 ): Promise<void> {
   const clean: DocumentData = { ...data };
   delete clean.id;
-  await setDoc(doc(db, 'families', familyId, 'tasks', taskId), clean, {
-    merge: true,
-  });
+  try {
+    await setDoc(doc(db, 'families', familyId, 'tasks', taskId), clean, {
+      merge: true,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-task' } });
+    throw err;
+  }
 }
 
 export async function deleteTask(
   familyId: string,
   taskId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'tasks', taskId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'tasks', taskId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-task' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -284,16 +326,26 @@ export async function saveReward(
 ): Promise<void> {
   const clean: DocumentData = { ...data };
   delete clean.id;
-  await setDoc(doc(db, 'families', familyId, 'rewards', rewardId), clean, {
-    merge: true,
-  });
+  try {
+    await setDoc(doc(db, 'families', familyId, 'rewards', rewardId), clean, {
+      merge: true,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-reward' } });
+    throw err;
+  }
 }
 
 export async function deleteReward(
   familyId: string,
   rewardId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'rewards', rewardId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'rewards', rewardId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-reward' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -315,9 +367,14 @@ export async function saveChildData(
   childId: string,
   data: Partial<ChildData>
 ): Promise<void> {
-  await setDoc(doc(db, 'families', familyId, 'childData', childId), data, {
-    merge: true,
-  });
+  try {
+    await setDoc(doc(db, 'families', familyId, 'childData', childId), data, {
+      merge: true,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-child-data' } });
+    throw err;
+  }
 }
 
 /**
@@ -329,17 +386,27 @@ export async function replaceChildData(
   childId: string,
   data: ChildData | UserData
 ): Promise<void> {
-  await setDoc(
-    doc(db, 'families', familyId, 'childData', childId),
-    data as DocumentData
-  );
+  try {
+    await setDoc(
+      doc(db, 'families', familyId, 'childData', childId),
+      data as DocumentData
+    );
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'replace-child-data' } });
+    throw err;
+  }
 }
 
 export async function deleteChildData(
   familyId: string,
   childId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, 'families', familyId, 'childData', childId));
+  try {
+    await deleteDoc(doc(db, 'families', familyId, 'childData', childId));
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-child-data' } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -350,69 +417,74 @@ export async function deleteFamily(
   familyId: string,
   _currentUid: string
 ): Promise<void> {
-  // Read family code — check config doc first, then query familyCodes collection
-  const configSnap = await getDoc(doc(db, 'families', familyId));
-  let familyCode =
-    configSnap.exists() && configSnap.data().familyCode
-      ? configSnap.data().familyCode
-      : null;
+  try {
+    // Read family code — check config doc first, then query familyCodes collection
+    const configSnap = await getDoc(doc(db, 'families', familyId));
+    let familyCode =
+      configSnap.exists() && configSnap.data().familyCode
+        ? configSnap.data().familyCode
+        : null;
 
-  if (!familyCode) {
-    const codeQuery = query(
-      collection(db, 'familyCodes'),
+    if (!familyCode) {
+      const codeQuery = query(
+        collection(db, 'familyCodes'),
+        where('familyId', '==', familyId)
+      );
+      const codeSnap = await getDocs(codeQuery);
+      if (!codeSnap.empty) {
+        familyCode = codeSnap.docs[0].id;
+      }
+    }
+
+    // Collect all document refs to delete
+    const refs: import('firebase/firestore').DocumentReference[] = [];
+
+    // Subcollection docs
+    const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
+    for (let i = 0; i < subs.length; i++) {
+      const snap = await getDocs(collection(db, 'families', familyId, subs[i]));
+      snap.forEach(d => {
+        refs.push(d.ref);
+      });
+    }
+
+    // Family config doc
+    refs.push(doc(db, 'families', familyId));
+
+    // Delete all parent member mappings for this family.
+    // The family owner (uid == familyId) has permission to delete
+    // other members' docs via security rules.
+    const memberQuery = query(
+      collection(db, 'parentMembers'),
       where('familyId', '==', familyId)
     );
-    const codeSnap = await getDocs(codeQuery);
-    if (!codeSnap.empty) {
-      familyCode = codeSnap.docs[0].id;
-    }
-  }
-
-  // Collect all document refs to delete
-  const refs: import('firebase/firestore').DocumentReference[] = [];
-
-  // Subcollection docs
-  const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
-  for (let i = 0; i < subs.length; i++) {
-    const snap = await getDocs(collection(db, 'families', familyId, subs[i]));
-    snap.forEach(d => {
+    const memberSnap = await getDocs(memberQuery);
+    memberSnap.forEach(d => {
       refs.push(d.ref);
     });
-  }
-
-  // Family config doc
-  refs.push(doc(db, 'families', familyId));
-
-  // Delete all parent member mappings for this family.
-  // The family owner (uid == familyId) has permission to delete
-  // other members' docs via security rules.
-  const memberQuery = query(
-    collection(db, 'parentMembers'),
-    where('familyId', '==', familyId)
-  );
-  const memberSnap = await getDocs(memberQuery);
-  memberSnap.forEach(d => {
-    refs.push(d.ref);
-  });
-  // Also include the current user's doc in case the query missed it
-  if (_currentUid && !memberSnap.docs.some(d => d.id === _currentUid)) {
-    refs.push(doc(db, 'parentMembers', _currentUid));
-  }
-
-  // Family code mapping
-  if (familyCode) {
-    refs.push(doc(db, 'familyCodes', familyCode));
-  }
-
-  // Commit in chunks of 500 (Firestore batch limit)
-  const BATCH_LIMIT = 500;
-  for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
-    const chunk = refs.slice(start, start + BATCH_LIMIT);
-    const batch = writeBatch(db);
-    for (let j = 0; j < chunk.length; j++) {
-      batch.delete(chunk[j]);
+    // Also include the current user's doc in case the query missed it
+    if (_currentUid && !memberSnap.docs.some(d => d.id === _currentUid)) {
+      refs.push(doc(db, 'parentMembers', _currentUid));
     }
-    await batch.commit();
+
+    // Family code mapping
+    if (familyCode) {
+      refs.push(doc(db, 'familyCodes', familyCode));
+    }
+
+    // Commit in chunks of 500 (Firestore batch limit)
+    const BATCH_LIMIT = 500;
+    for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
+      const chunk = refs.slice(start, start + BATCH_LIMIT);
+      const batch = writeBatch(db);
+      for (let j = 0; j < chunk.length; j++) {
+        batch.delete(chunk[j]);
+      }
+      await batch.commit();
+    }
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-family' } });
+    throw err;
   }
 }
 
@@ -473,16 +545,21 @@ export async function batchSeedFamily(
 
 export function onConfigSnapshot(
   familyId: string,
-  callback: (data: FamilyConfig | null) => void
+  callback: (data: FamilyConfig | null) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(doc(db, 'families', familyId), snap => {
     callback(snap.exists() ? (snap.data() as FamilyConfig) : null);
+  }, err => {
+    Sentry.captureException(err, { tags: { action: 'snapshot-config' } });
+    onError?.(err);
   });
 }
 
 export function onChildrenSnapshot(
   familyId: string,
-  callback: (list: ChildProfile[]) => void
+  callback: (list: ChildProfile[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(collection(db, 'families', familyId, 'children'), snap => {
     const list: ChildProfile[] = [];
@@ -490,12 +567,16 @@ export function onChildrenSnapshot(
       list.push({ id: d.id, ...d.data() } as ChildProfile);
     });
     callback(list);
+  }, err => {
+    Sentry.captureException(err, { tags: { action: 'snapshot-children' } });
+    onError?.(err);
   });
 }
 
 export function onTasksSnapshot(
   familyId: string,
-  callback: (list: TaskDef[]) => void
+  callback: (list: TaskDef[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(collection(db, 'families', familyId, 'tasks'), snap => {
     const list: TaskDef[] = [];
@@ -503,12 +584,16 @@ export function onTasksSnapshot(
       list.push({ id: d.id, ...d.data() } as TaskDef);
     });
     callback(list);
+  }, err => {
+    Sentry.captureException(err, { tags: { action: 'snapshot-tasks' } });
+    onError?.(err);
   });
 }
 
 export function onRewardsSnapshot(
   familyId: string,
-  callback: (list: RewardDef[]) => void
+  callback: (list: RewardDef[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(collection(db, 'families', familyId, 'rewards'), snap => {
     const list: RewardDef[] = [];
@@ -516,18 +601,26 @@ export function onRewardsSnapshot(
       list.push({ id: d.id, ...d.data() } as RewardDef);
     });
     callback(list);
+  }, err => {
+    Sentry.captureException(err, { tags: { action: 'snapshot-rewards' } });
+    onError?.(err);
   });
 }
 
 export function onChildDataSnapshot(
   familyId: string,
   childId: string,
-  callback: (data: ChildData | null) => void
+  callback: (data: ChildData | null) => void,
+  onError?: (err: Error) => void
 ): () => void {
   return onSnapshot(
     doc(db, 'families', familyId, 'childData', childId),
     snap => {
       callback(snap.exists() ? (snap.data() as ChildData) : null);
+    },
+    err => {
+      Sentry.captureException(err, { tags: { action: 'snapshot-child-data', childId } });
+      onError?.(err);
     }
   );
 }
@@ -544,7 +637,7 @@ export interface InAppNotificationDoc {
   childName?: string;
   targetRole: string;
   read: boolean;
-  createdAt: Timestamp | number;
+  createdAt: Timestamp | null;
 }
 
 export async function saveNotification(
@@ -552,20 +645,30 @@ export async function saveNotification(
   notifId: string,
   data: Record<string, any>
 ): Promise<void> {
-  await setDoc(doc(db, 'families', familyId, 'notifications', notifId), data, {
-    merge: true,
-  });
+  try {
+    await setDoc(doc(db, 'families', familyId, 'notifications', notifId), data, {
+      merge: true,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-notification' } });
+    throw err;
+  }
 }
 
 export async function writeNotification(
   familyId: string,
   data: Omit<InAppNotificationDoc, 'read' | 'createdAt'>
 ): Promise<string> {
-  const ref = await addDoc(
-    collection(db, 'families', familyId, 'notifications'),
-    { ...data, read: false, createdAt: serverTimestamp() }
-  );
-  return ref.id;
+  try {
+    const ref = await addDoc(
+      collection(db, 'families', familyId, 'notifications'),
+      { ...data, read: false, createdAt: serverTimestamp() }
+    );
+    return ref.id;
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'write-notification' } });
+    throw err;
+  }
 }
 
 export async function markNotificationRead(
@@ -577,7 +680,8 @@ export async function markNotificationRead(
 
 export function onNotificationsSnapshot(
   familyId: string,
-  callback: (list: (InAppNotificationDoc & { id: string })[]) => void
+  callback: (list: (InAppNotificationDoc & { id: string })[]) => void,
+  onError?: (err: Error) => void
 ): () => void {
   const q = query(
     collection(db, 'families', familyId, 'notifications'),
@@ -593,27 +697,35 @@ export function onNotificationsSnapshot(
       });
     });
     callback(list);
+  }, err => {
+    Sentry.captureException(err, { tags: { action: 'snapshot-notifications' } });
+    onError?.(err);
   });
 }
 
 export async function cleanupOldNotifications(familyId: string): Promise<void> {
-  const BATCH_LIMIT = 500;
-  const cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const q = query(
-    collection(db, 'families', familyId, 'notifications'),
-    where('createdAt', '<', cutoffTs)
-  );
-  const snap = await getDocs(q);
-  const refs: import('firebase/firestore').DocumentReference[] = [];
-  snap.forEach(d => {
-    refs.push(d.ref);
-  });
-  for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
-    const chunk = refs.slice(start, start + BATCH_LIMIT);
-    const batch = writeBatch(db);
-    for (let j = 0; j < chunk.length; j++) {
-      batch.delete(chunk[j]);
+  try {
+    const BATCH_LIMIT = 500;
+    const cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const q = query(
+      collection(db, 'families', familyId, 'notifications'),
+      where('createdAt', '<', cutoffTs)
+    );
+    const snap = await getDocs(q);
+    const refs: import('firebase/firestore').DocumentReference[] = [];
+    snap.forEach(d => {
+      refs.push(d.ref);
+    });
+    for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
+      const chunk = refs.slice(start, start + BATCH_LIMIT);
+      const batch = writeBatch(db);
+      for (let j = 0; j < chunk.length; j++) {
+        batch.delete(chunk[j]);
+      }
+      await batch.commit();
     }
-    await batch.commit();
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'cleanup-old-notifications' } });
+    throw err;
   }
 }

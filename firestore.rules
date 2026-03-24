@@ -99,7 +99,14 @@ service cloud.firestore {
         request.auth.uid == uid ||
         resource.data.familyId == request.auth.uid
       );
-      allow create: if request.auth != null && request.auth.uid == uid;
+      // TODO: Move family joins to a Cloud Function for proper joinCode validation.
+      // The exists() check is a stopgap — it prevents arbitrary familyId values
+      // but doesn't verify the user has a valid join code.
+      allow create: if request.auth != null && request.auth.uid == uid &&
+        (
+          request.resource.data.familyId == uid ||
+          exists(/databases/$(database)/documents/families/$(request.resource.data.familyId))
+        );
       allow update: if request.auth != null && request.auth.uid == uid &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['familyId']);
       allow delete: if request.auth != null && (

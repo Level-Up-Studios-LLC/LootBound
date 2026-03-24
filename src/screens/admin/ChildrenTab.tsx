@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faKey, faUserPlus, faTrashCan, faChildren } from '../../fa.ts';
+import { faXmark, faKey, faUserPlus, faTrashCan, faChildren, faPenToSquare } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
+import { getCurrentUid } from '../../services/auth.ts';
 import { AVATARS, COLORS, altBg } from '../../constants.ts';
 import Modal from '../../components/ui/Modal.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
@@ -11,9 +12,15 @@ import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
 
+function getSkipKey() {
+  return `lb-skip-delete-child:${getCurrentUid() || 'anon'}`;
+}
+
 export default function ChildrenTab(): React.ReactElement {
   const [kidPinEdit, setKidPinEdit] = useState<KidPinEditState>({ uid: null, val: '' });
   const [addChildForm, setAddChildForm] = useState<AddChildFormData | null>(null);
+  const [editChild, setEditChild] = useState<Child | null>(null);
+  const [editChildForm, setEditChildForm] = useState<AddChildFormData | null>(null);
   const [removeChild, setRemoveChild] = useState<Child | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -133,6 +140,27 @@ export default function ChildrenTab(): React.ReactElement {
                 )}
                 <button
                   onClick={() => {
+                    setEditChild(c);
+                    setEditChildForm({
+                      name: c.name,
+                      age: String(c.age),
+                      avatar: c.avatar,
+                      color: c.color,
+                    });
+                  }}
+                  className='bg-qblue-dim text-qblue rounded-[6px] px-2 py-[3px] text-[11px] font-semibold border-none cursor-pointer font-body flex items-center gap-1'
+                >
+                  <FontAwesomeIcon icon={faPenToSquare} />
+                  <span className='sr-only'>Edit</span>
+                </button>
+                <button
+                  onClick={() => {
+                    try {
+                      if (localStorage.getItem(getSkipKey()) === '1') {
+                        ctx.doRemoveChild(c.id);
+                        return;
+                      }
+                    } catch (_e) {}
                     setRemoveChild(c);
                   }}
                   className='bg-qred-dim text-qred rounded-[6px] px-2 py-[3px] text-[11px] font-bold border-none cursor-pointer font-body flex items-center gap-1'
@@ -181,12 +209,46 @@ export default function ChildrenTab(): React.ReactElement {
         </Modal>
       )}
 
+      {editChild && editChildForm && (
+        <Modal title='Edit Child'>
+          <AddChildForm
+            form={editChildForm}
+            onChange={(f) => {
+              setEditChildForm(f);
+            }}
+            onSave={() => {
+              if (!editChildForm || !editChild || !cfg) return;
+              const updated = cfg.children.map(c => {
+                if (c.id !== editChild.id) return c;
+                return {
+                  ...c,
+                  name: editChildForm.name,
+                  age: (() => { const parsed = Number(editChildForm.age); return Number.isNaN(parsed) ? c.age : parsed; })(),
+                  avatar: editChildForm.avatar,
+                  color: editChildForm.color,
+                };
+              });
+              ctx.saveCfg({ ...cfg, children: updated });
+              ctx.notify(`${editChildForm.name} updated!`);
+              setEditChild(null);
+              setEditChildForm(null);
+            }}
+            onCancel={() => {
+              setEditChild(null);
+              setEditChildForm(null);
+            }}
+            saveLabel='Save'
+          />
+        </Modal>
+      )}
+
       {removeChild && (
         <ConfirmDialog
           title={`Remove ${removeChild.name}?`}
           message={`This permanently removes ${removeChild.name} from LootBound, including all their coins, missions, streaks, and history.`}
           warning='This action cannot be undone.'
           confirmLabel='Remove'
+          dontAskAgainKey={getSkipKey()}
           onConfirm={() => {
             ctx.doRemoveChild(removeChild!.id);
             setRemoveChild(null);

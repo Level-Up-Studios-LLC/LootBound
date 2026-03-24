@@ -1,8 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
-  plugins: [react()],
+  build: {
+    sourcemap: true,
+    chunkSizeWarningLimit: 1500,
+  },
+  plugins: [
+    react(),
+    tailwindcss(),
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG || 'level-up-studios',
+      project: process.env.SENTRY_PROJECT || 'lootbound',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      disable: !process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
   server: {
     port: 3000,
     open: true,
