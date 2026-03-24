@@ -178,6 +178,7 @@ export default function LoginScreen(
             <div
               className='flex flex-col items-center gap-3 bg-white p-6 rounded-card w-full max-w-[300px] shadow-xl login-modal-card'
               role='dialog'
+              aria-modal='true'
               aria-label={
                 isCreate
                   ? `Create PIN for ${targetChild.name}`
@@ -243,7 +244,7 @@ export default function LoginScreen(
               )}
 
               {pinErr && (
-                <div ref={errRef} className='text-qcoral text-[13px]'>
+                <div ref={errRef} role='alert' className='text-qcoral text-[13px]'>
                   {pinErr}
                 </div>
               )}

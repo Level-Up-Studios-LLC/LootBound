@@ -105,13 +105,14 @@ export default function TasksScreen(): React.ReactElement | null {
           const isDone = entry && !entry.rejected && entry.status !== 'missed';
           const isMissed =
             entry && entry.status === 'missed' && !entry.rejected;
+          const baseStatus = getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
           const status = isDone
             ? entry.status
             : isMissed
               ? 'missed'
               : isRej
-                ? 'rejected'
-                : getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+                ? (baseStatus === 'missed' ? 'missed' : 'rejected')
+                : baseStatus;
           const sl = SL[status] || {
             text: '',
             color: '#64748b',
