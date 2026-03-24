@@ -64,7 +64,9 @@ function Confetti(): React.ReactElement {
     }
     frame = requestAnimationFrame(render);
 
-    const tl = gsap.timeline();
+    const tl = gsap.timeline({
+      onComplete: () => { cancelAnimationFrame(frame); },
+    });
     tl.to(pieces, {
       y: (i: number) => pieces[i].targetY,
       x: (i: number) => pieces[i].x + pieces[i].drift,

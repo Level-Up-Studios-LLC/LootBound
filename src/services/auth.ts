@@ -452,13 +452,19 @@ export async function switchToExistingFamily(
 ): Promise<string> {
   const familyId = await lookupFamilyCode(joinCode);
   if (!familyId) throw { code: 'auth/invalid-family-code' };
+  if (familyId === uid) throw { code: 'auth/invalid-family-code' };
 
-  // Clean up orphaned docs while we're still the owner
+  // Read existing parentMembers data, then delete and recreate with new familyId
+  // (Firestore rules block familyId changes via update for security)
+  const memberRef = doc(db, 'parentMembers', uid);
+  const memberSnap = await getDoc(memberRef);
+  const existingData = memberSnap.exists() ? memberSnap.data() : {};
+  await deleteDoc(memberRef);
+  await setDoc(memberRef, { ...existingData, familyId });
+
+  // Clean up orphaned docs after switch is persisted
   await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
   await deleteDoc(doc(db, 'families', uid));
-
-  // Update parentMembers to point to joined family
-  await setDoc(doc(db, 'parentMembers', uid), { familyId }, { merge: true });
 
   return joinCode;
 }

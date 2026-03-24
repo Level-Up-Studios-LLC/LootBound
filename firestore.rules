@@ -100,7 +100,8 @@ service cloud.firestore {
         resource.data.familyId == request.auth.uid
       );
       allow create: if request.auth != null && request.auth.uid == uid;
-      allow update: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['familyId']);
       allow delete: if request.auth != null && (
         request.auth.uid == uid ||
         resource.data.familyId == request.auth.uid
