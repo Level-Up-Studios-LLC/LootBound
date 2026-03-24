@@ -39,7 +39,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
 
   const removeTask = (childId: string, taskId: string) => {
     const nt: Record<string, Task[]> = { ...cfg!.tasks };
-    nt[childId] = nt[childId].filter(x => x.id !== taskId);
+    nt[childId] = (nt[childId] || []).filter(x => x.id !== taskId);
     ctx.saveCfg({ ...cfg!, tasks: nt });
   };
 

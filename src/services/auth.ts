@@ -32,7 +32,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { auth, db } from './firebase.ts';
 import {
   generateFamilyCode,
@@ -454,13 +454,15 @@ export async function switchToExistingFamily(
   if (!familyId) throw { code: 'auth/invalid-family-code' };
   if (familyId === uid) throw { code: 'auth/invalid-family-code' };
 
-  // Read existing parentMembers data, then delete and recreate with new familyId
+  // Atomically delete and recreate parentMembers with new familyId
   // (Firestore rules block familyId changes via update for security)
   const memberRef = doc(db, 'parentMembers', uid);
-  const memberSnap = await getDoc(memberRef);
-  const existingData = memberSnap.exists() ? memberSnap.data() : {};
-  await deleteDoc(memberRef);
-  await setDoc(memberRef, { ...existingData, familyId });
+  await runTransaction(db, async (txn) => {
+    const snap = await txn.get(memberRef);
+    const existing = snap.exists() ? snap.data() : {};
+    txn.delete(memberRef);
+    txn.set(memberRef, { ...existing, familyId });
+  });
 
   // Best-effort cleanup after switch is persisted
   try {

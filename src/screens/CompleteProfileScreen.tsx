@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPartyHorn } from '../fa.ts';
@@ -166,12 +166,15 @@ export default function CompleteProfileScreen(
     if (e.key === 'Enter' && !busy) handleSubmit();
   };
 
+  // Redirect joined users via useEffect instead of render-time side effect
+  const joined = done && joinCode.trim().length === 6;
+  useEffect(() => {
+    if (joined) props.onComplete();
+  }, [joined]);
+
   // Phase 2: Family code display (skip for users who joined an existing family)
   if (done) {
-    if (joinCode.trim().length === 6) {
-      props.onComplete();
-      return null;
-    }
+    if (joined) return null;
     return (
       <div className='page-wrapper page-centered'>
         <div className='text-5xl mb-5'>
