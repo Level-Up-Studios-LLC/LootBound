@@ -48,7 +48,7 @@ React Spring v10 has a circular priority bug with React 19 — `useTrail` and `u
 
 ## Project Structure
 
-```
+```text
 src/
   App.tsx                    # Root component, screen routing
   main.tsx                   # Entry point, Sentry init
@@ -104,7 +104,6 @@ src/
       Modal.tsx               # Base modal component
       PasswordInput.tsx       # Password field with eye toggle
       PurchasesToggle.tsx     # Store purchases toggle
-      ResetDataDialog.tsx     # Selective data reset with category checkboxes
 
   hooks/
     useApprovalActions.ts     # Approval/rejection logic
@@ -155,7 +154,7 @@ src/
 
 - All Firestore write/delete helpers instrumented with Sentry try/catch
 - Real-time sync via onSnapshot listeners with Sentry error callbacks
-- All auth error throws use Error instances with code property
+- Auth errors that cross system boundaries attach a `.code` property; internal guard throws (e.g. "Not signed in") use plain Error instances
 - Skip-confirm localStorage keys scoped to user UID
 - PIN stored as plaintext — needs hashing (future security task)
 - Firestore rules exists() check on parentMembers is a stopgap — needs Cloud Function for proper joinCode validation
@@ -167,7 +166,7 @@ src/
 - **FontAwesome icons** — must be imported in `src/fa.ts` and added to `library.add()`
 - **TypeScript only** — all source files must be `.ts`/`.tsx`. Never create `.js`/`.jsx` files anywhere (including root config files like `vite.config.ts`)
 - **Post-feature cleanup** — after completing a major change or feature, scan for and remove dead code, unused imports, orphaned files, and leftover artifacts before committing
-- **Firestore writes** — always use `{ merge: true }` via `fsSaveConfig`/`fsSaveChild` etc.
+- **Firestore writes** — always use `{ merge: true }` via the adapter helpers (`saveConfig`, `saveChild`, `saveTask`, `saveReward`, `saveChildData`). `replaceChildData` intentionally does **not** merge (used for reset flows).
 - **Accessibility** — always implement a11y recommendations (focus traps, aria attributes, WCAG compliance). The app targets all devices. Never dismiss a11y based on device assumptions.
 - **prefers-reduced-motion** — respected in Confetti, LoginScreen, and DashboardScreen animations
 - **Focus traps** — include `a[href]` selector across all modals (ConfirmDialog, LoginScreen, StoreScreen, ResetDataDialog)
@@ -225,9 +224,9 @@ Follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/). Categori
 - **Leveling and streaks** — XP-based level progression with streak tracking
 - **Reward store** — Parents set up rewards; kids redeem with earned coins
 - **Multi-child support** — Multiple children per family with individual progress
-- **Parent admin panel** — 7-tab admin (Overview, Children, Tasks, Rewards, Approvals, Review, Settings, Account)
+- **Parent admin panel** — 8-tab admin (Overview, Children, Tasks, Rewards, Approvals, Review, Settings, Account)
 - **In-app notifications** — Cross-device Firestore notifications with Web Audio sounds
-- **Selective data reset** — Reset specific categories (coins, XP/levels, streaks, task history, redemptions)
+- **Data reset** — Parent-only control to reset family progress and rewards from the Account tab
 - **Google + email/password auth** — Unified registration flow via CompleteProfileScreen
 - **Family code system** — Join existing families or create new ones
 - **Photo proof** — Kids can attach photos to completed tasks
