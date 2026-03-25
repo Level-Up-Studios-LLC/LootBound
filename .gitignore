@@ -51,3 +51,4 @@ firebase-debug.log
 *.tsbuildinfo
 *.tgz
 .turbo/
+.mcp.json
