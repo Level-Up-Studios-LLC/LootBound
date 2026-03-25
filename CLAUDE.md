@@ -193,7 +193,7 @@ GitHub repo: https://github.com/Level-Up-Studios-LLC/LootBound.git
 
 ### Git Workflow
 
-- Always merge `main` into working branches before starting new work: `git merge origin/main --no-edit`
+- Always sync `main` into working branches before starting new work: `git fetch origin && git merge origin/main --no-edit`
 - Use `git merge`, not `git rebase`, for syncing branches
 - Production bugs (Sentry errors) go on `hotfix` branch, not directly on main
 - Always commit, push, and create a PR after completing changes
