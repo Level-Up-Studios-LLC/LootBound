@@ -140,7 +140,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
             value={typed}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTyped(e.target.value)}
             onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter') handleConfirm();
+              if (e.key === 'Enter') { e.preventDefault(); handleConfirm(); }
             }}
             className='quest-input'
             autoComplete='off'
