@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
 import type { Config, UserData, Child, AddChildFormData, ResetOptions } from '../types.ts';
+import type { ChildData } from '../services/firestoreStorage.ts';
 import { freshUser, slugify } from '../utils.ts';
 import {
   deleteChildData as fsDeleteChildData,
@@ -113,6 +114,7 @@ export function useChildActions(deps: ChildActionsDeps) {
     } catch (err) {
       Sentry.captureException(err, { tags: { action: 'reset-child-data' } });
       deps.notify('Data reset failed — please try again', 'error');
+      throw err;
     }
   };
 
@@ -124,7 +126,7 @@ export function useChildActions(deps: ChildActionsDeps) {
     if (allSelected) return resetAll();
 
     // Build partial update based on selected options
-    const update: Partial<UserData> = {};
+    const update: Partial<ChildData> = {};
     if (opts.coins) update.points = 0;
     if (opts.xpLevels) { update.xp = 0; update.level = 1; }
     if (opts.streaks) {
@@ -144,10 +146,12 @@ export function useChildActions(deps: ChildActionsDeps) {
     try {
       await Promise.all(promises);
       // Delete photos only after Firestore writes succeed
+      let photoCleanupFailed = false;
       if (opts.taskHistory) {
         try {
           await deleteAllFamilyPhotos(deps.familyId);
         } catch (err) {
+          photoCleanupFailed = true;
           console.warn('Photo cleanup failed during selective reset:', err);
           Sentry.captureException(err, { tags: { action: 'reset-data-photo-cleanup' } });
           deps.notify('Task history reset, but some photos could not be deleted', 'error');
@@ -162,7 +166,7 @@ export function useChildActions(deps: ChildActionsDeps) {
         }
         return next;
       });
-      deps.notify('Selected data reset');
+      if (!photoCleanupFailed) deps.notify('Selected data reset');
     } catch (err) {
       Sentry.captureException(err, { tags: { action: 'reset-data-selective' } });
       deps.notify('Data reset failed — please try again', 'error');
