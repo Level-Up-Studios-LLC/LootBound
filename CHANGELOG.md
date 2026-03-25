@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Admin header redesign with profile avatar, name, Owner/Member role badge, and date display
 - Family code tappable to copy with hint text on profile completion
 
+### Changed
+- Replaced React Spring with GSAP for all animations (React 19 compatibility)
+- Simplified AuthScreen by moving profile setup to CompleteProfileScreen
+- Removed CreatePinPrompt screen (PIN creation integrated into CompleteProfileScreen)
+- Admin header no longer shows family code banner (moved to Account page)
+- Settings sections reordered with alternating mint/yellow colors
+- Tier coin/XP input fields widened from 60px to 72px
+
 ### Fixed
 - Number fields not clearable when value is zero (reward cost, tier coins/XP, threshold, cooldown)
 - Firebase permission error when joining an existing family (Firestore rules too restrictive on parentMembers)
@@ -30,14 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task form time inputs overflowing on narrow screens (switched to CSS grid)
 - React 19 stack overflow caused by React Spring circular observer (migrated to GSAP)
 - Error message color too light for readability (darkened qcoral for WCAG AA compliance)
-
-### Changed
-- Replaced React Spring with GSAP for all animations (React 19 compatibility)
-- Simplified AuthScreen by moving profile setup to CompleteProfileScreen
-- Removed CreatePinPrompt screen (PIN creation integrated into CompleteProfileScreen)
-- Admin header no longer shows family code banner (moved to Account page)
-- Settings sections reordered with alternating mint/yellow colors
-- Tier coin/XP input fields widened from 60px to 72px
 
 ## [1.5.0] - 2026-03-22
 
