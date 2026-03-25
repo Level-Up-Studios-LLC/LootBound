@@ -89,7 +89,7 @@ export function useChildActions(deps: ChildActionsDeps) {
   };
 
   const resetAll = async () => {
-    const children = deps.cfg ? deps.cfg.children : [];
+    const children = deps.cfg?.children || [];
     // Delete all photos from Storage
     deleteAllFamilyPhotos(deps.familyId).catch(err => {
       console.warn('Photo cleanup failed during reset:', err);
@@ -162,6 +162,7 @@ export function useChildActions(deps: ChildActionsDeps) {
     } catch (err) {
       Sentry.captureException(err, { tags: { action: 'reset-data-selective' } });
       deps.notify('Data reset failed — please try again', 'error');
+      throw err;
     }
   };
 

@@ -659,8 +659,12 @@ export default function AccountTab(): React.ReactElement | null {
       {showResetConfirm && (
         <ResetDataDialog
           onConfirm={async (opts) => {
-            await ctx.resetData(opts);
-            setShowResetConfirm(false);
+            try {
+              await ctx.resetData(opts);
+              setShowResetConfirm(false);
+            } catch (_e) {
+              // Error already shown via notify + Sentry; keep dialog open
+            }
           }}
           onCancel={() => {
             setShowResetConfirm(false);

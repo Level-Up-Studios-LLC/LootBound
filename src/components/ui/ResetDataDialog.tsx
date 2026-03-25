@@ -8,7 +8,7 @@ interface ResetDataDialogProps {
 
 const CATEGORIES: { key: keyof ResetOptions; label: string; desc: string }[] = [
   { key: 'coins', label: 'Coin Balances', desc: 'Reset all coins to 0' },
-  { key: 'xpLevels', label: 'XP & Levels', desc: 'Reset XP and levels back to 1' },
+  { key: 'xpLevels', label: 'XP & Levels', desc: 'Reset XP to 0 and level back to 1' },
   { key: 'streaks', label: 'Streaks', desc: 'Clear all streak progress' },
   { key: 'taskHistory', label: 'Mission History', desc: 'Clear task logs and photo proof' },
   { key: 'redemptions', label: 'Redemption History', desc: 'Clear all redemption and pending records' },
@@ -71,7 +71,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
       aria-modal='true'
       aria-labelledby='reset-dialog-title'
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') { props.onCancel(); return; }
+        if (e.key === 'Escape') { if (!busy) props.onCancel(); return; }
         if (e.key !== 'Tab' || !overlayRef.current) return;
         const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
         if (focusable.length === 0) return;
@@ -147,7 +147,8 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
         <div className='flex gap-3 justify-end'>
           <button
             onClick={props.onCancel}
-            className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
+            disabled={busy}
+            className={'bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none font-body' + (busy ? ' opacity-40 cursor-not-allowed' : ' cursor-pointer')}
           >
             Cancel
           </button>
