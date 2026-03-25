@@ -123,14 +123,6 @@ export function useChildActions(deps: ChildActionsDeps) {
     // If everything selected, delegate to full reset (uses replaceChildData)
     if (allSelected) return resetAll();
 
-    // Delete photos only if clearing task history
-    if (opts.taskHistory) {
-      deleteAllFamilyPhotos(deps.familyId).catch(err => {
-        console.warn('Photo cleanup failed during selective reset:', err);
-        Sentry.captureException(err, { tags: { action: 'reset-data-photo-cleanup' } });
-      });
-    }
-
     // Build partial update based on selected options
     const update: Partial<UserData> = {};
     if (opts.coins) update.points = 0;
@@ -151,10 +143,22 @@ export function useChildActions(deps: ChildActionsDeps) {
 
     try {
       await Promise.all(promises);
+      // Delete photos only after Firestore writes succeed
+      if (opts.taskHistory) {
+        try {
+          await deleteAllFamilyPhotos(deps.familyId);
+        } catch (err) {
+          console.warn('Photo cleanup failed during selective reset:', err);
+          Sentry.captureException(err, { tags: { action: 'reset-data-photo-cleanup' } });
+          deps.notify('Task history reset, but some photos could not be deleted', 'error');
+        }
+      }
       deps.setAllU(prev => {
         const next = { ...prev };
         for (let i = 0; i < children.length; i++) {
-          next[children[i].id] = { ...next[children[i].id], ...update } as UserData;
+          const id = children[i].id;
+          if (!next[id]) continue;
+          next[id] = { ...next[id], ...update };
         }
         return next;
       });

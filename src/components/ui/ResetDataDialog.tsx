@@ -95,7 +95,8 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
             type='checkbox'
             checked={allSelected}
             onChange={toggleAll}
-            className='w-[18px] h-[18px] accent-qteal cursor-pointer'
+            disabled={busy}
+            className={'w-[18px] h-[18px] accent-qteal' + (busy ? ' cursor-not-allowed' : ' cursor-pointer')}
           />
           <span className='text-sm font-bold text-qslate'>Select All</span>
         </label>
@@ -108,7 +109,8 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
                 type='checkbox'
                 checked={!!opts[cat.key]}
                 onChange={() => toggleCategory(cat.key)}
-                className='w-[18px] h-[18px] accent-qteal cursor-pointer'
+                disabled={busy}
+                className={'w-[18px] h-[18px] accent-qteal' + (busy ? ' cursor-not-allowed' : ' cursor-pointer')}
               />
               <div>
                 <div className='text-[13px] font-semibold text-qslate'>{cat.label}</div>
@@ -140,6 +142,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
             }}
             className='quest-input'
             autoComplete='off'
+            disabled={busy}
           />
         </div>
 
