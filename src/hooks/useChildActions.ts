@@ -90,14 +90,11 @@ export function useChildActions(deps: ChildActionsDeps) {
   };
 
   const resetAll = async () => {
-    const children = deps.cfg?.children || [];
-    // Delete all photos from Storage
-    deleteAllFamilyPhotos(deps.familyId).catch(err => {
-      console.warn('Photo cleanup failed during reset:', err);
-      Sentry.captureException(err, {
-        tags: { action: 'reset-all-photo-cleanup' },
-      });
-    });
+    if (!deps.cfg) {
+      deps.notify('Data reset failed — please try again', 'error');
+      throw new Error('Cannot reset data before config has loaded');
+    }
+    const children = deps.cfg.children || [];
     // Use replaceChildData (no merge) so old taskLog entries are fully wiped.
     // Build reset state and fire Firestore writes in parallel.
     const resetUsers: Record<string, UserData> = {};
@@ -109,8 +106,20 @@ export function useChildActions(deps: ChildActionsDeps) {
     }
     try {
       await Promise.all(promises);
+      // Delete photos only after Firestore writes succeed
+      let photoCleanupFailed = false;
+      try {
+        await deleteAllFamilyPhotos(deps.familyId);
+      } catch (err) {
+        photoCleanupFailed = true;
+        console.warn('Photo cleanup failed during reset:', err);
+        Sentry.captureException(err, {
+          tags: { action: 'reset-all-photo-cleanup' },
+        });
+        deps.notify('All data reset, but some photos could not be deleted', 'error');
+      }
       deps.setAllU(() => resetUsers);
-      deps.notify('All data reset');
+      if (!photoCleanupFailed) deps.notify('All data reset');
     } catch (err) {
       Sentry.captureException(err, { tags: { action: 'reset-child-data' } });
       deps.notify('Data reset failed — please try again', 'error');
@@ -119,7 +128,11 @@ export function useChildActions(deps: ChildActionsDeps) {
   };
 
   const resetData = async (opts: ResetOptions) => {
-    const children = deps.cfg?.children || [];
+    if (!deps.cfg) {
+      deps.notify('Data reset failed — please try again', 'error');
+      throw new Error('Cannot reset data before config has loaded');
+    }
+    const children = deps.cfg.children || [];
     const allSelected = opts.coins && opts.xpLevels && opts.streaks && opts.taskHistory && opts.redemptions;
 
     // If everything selected, delegate to full reset (uses replaceChildData)
@@ -162,7 +175,12 @@ export function useChildActions(deps: ChildActionsDeps) {
         for (let i = 0; i < children.length; i++) {
           const id = children[i].id;
           if (!next[id]) continue;
-          next[id] = { ...next[id], ...update };
+          // Clone per child to avoid shared object/array references
+          const perChild: Partial<ChildData> = { ...update };
+          if (update.taskLog !== undefined) perChild.taskLog = {};
+          if (update.redemptions !== undefined) perChild.redemptions = [];
+          if (update.pendingRedemptions !== undefined) perChild.pendingRedemptions = [];
+          next[id] = { ...next[id], ...perChild };
         }
         return next;
       });

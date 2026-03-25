@@ -20,6 +20,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
   const [busy, setBusy] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
+  const mountedRef = useRef(true);
 
   const anySelected = CATEGORIES.some(c => opts[c.key]);
   const allSelected = CATEGORIES.every(c => opts[c.key]);
@@ -35,7 +36,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
     try {
       await props.onConfirm(opts);
     } finally {
-      setBusy(false);
+      if (mountedRef.current) setBusy(false);
     }
   };
 
@@ -57,6 +58,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
       if (first) first.focus();
     }
     return () => {
+      mountedRef.current = false;
       if (prevFocusRef.current && document.body.contains(prevFocusRef.current)) {
         prevFocusRef.current.focus();
       }
@@ -73,7 +75,7 @@ export default function ResetDataDialog(props: ResetDataDialogProps): React.Reac
       onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === 'Escape') { if (!busy) props.onCancel(); return; }
         if (e.key !== 'Tab' || !overlayRef.current) return;
-        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
+        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])');
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
