@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-03-25
+
 ### Added
+- Selective reset dialog with category checkboxes (coins, XP/levels, streaks, mission history, redemptions)
+- "Select All" toggle and typed "RESET" confirmation for destructive reset operations
+- Focus trap, Escape handling, and busy-state UX lockdown in reset dialog
 - Unified registration flow with CompleteProfileScreen (Google + email/password in one step)
 - GSAP animations across all kid-facing screens (dashboard, missions, leaderboard, loot shop, login)
 - Web Audio API sound synthesis replacing MP3 placeholders (success, error, approval, level-up, streak)
@@ -20,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Family code tappable to copy with hint text on profile completion
 
 ### Changed
+- Reset data flow now supports partial resets via merge writes, with full reset delegating to replaceChildData
+- Photo deletion sequenced after Firestore writes to prevent inconsistent state on failure
 - Replaced React Spring with GSAP for all animations (React 19 compatibility)
 - Simplified AuthScreen by moving profile setup to CompleteProfileScreen
 - Removed CreatePinPrompt screen (PIN creation integrated into CompleteProfileScreen)
