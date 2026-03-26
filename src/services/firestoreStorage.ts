@@ -33,7 +33,7 @@ import {
 } from 'firebase/firestore';
 import * as Sentry from '@sentry/react';
 import { db } from './firebase.ts';
-import type { UserData } from '../types.ts';
+import type { UserData, CoopRequest } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -93,6 +93,11 @@ export interface TaskLogEntry {
   photo: string | null;
   rejected: boolean;
   autoCutoff?: boolean;
+  coopRequestId?: string;
+  coopRole?: 'initiator' | 'partner';
+  coopPartnerId?: string;
+  coopPartnerCompleted?: boolean;
+  coopFailed?: boolean;
 }
 
 export interface Redemption {
@@ -240,6 +245,8 @@ export async function deleteChild(
   familyId: string,
   childId: string
 ): Promise<void> {
+  // TODO: Clean up coopRequests where this child is initiatorId or partnerId.
+  // These orphan until deleteFamily runs. Address in a future cleanup pass.
   try {
     await deleteDoc(doc(db, 'families', familyId, 'children', childId));
   } catch (err) {
@@ -440,7 +447,7 @@ export async function deleteFamily(
     const refs: import('firebase/firestore').DocumentReference[] = [];
 
     // Subcollection docs
-    const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications'];
+    const subs = ['children', 'tasks', 'rewards', 'childData', 'notifications', 'coopRequests'];
     for (let i = 0; i < subs.length; i++) {
       const snap = await getDocs(collection(db, 'families', familyId, subs[i]));
       snap.forEach(d => {
@@ -728,4 +735,67 @@ export async function cleanupOldNotifications(familyId: string): Promise<void> {
     Sentry.captureException(err, { tags: { action: 'cleanup-old-notifications' } });
     throw err;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Co-op requests
+// ---------------------------------------------------------------------------
+
+export async function saveCoopRequest(
+  familyId: string,
+  requestId: string,
+  data: Partial<Omit<CoopRequest, 'id'>>
+): Promise<void> {
+  try {
+    await setDoc(
+      doc(db, 'families', familyId, 'coopRequests', requestId),
+      data,
+      { merge: true }
+    );
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'save-coop-request' } });
+    throw err;
+  }
+}
+
+export async function deleteCoopRequest(
+  familyId: string,
+  requestId: string
+): Promise<void> {
+  try {
+    await deleteDoc(
+      doc(db, 'families', familyId, 'coopRequests', requestId)
+    );
+  } catch (err) {
+    Sentry.captureException(err, { tags: { action: 'delete-coop-request' } });
+    throw err;
+  }
+}
+
+export function onCoopRequestsSnapshot(
+  familyId: string,
+  callback: (list: CoopRequest[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const q = query(
+    collection(db, 'families', familyId, 'coopRequests'),
+    orderBy('createdAt', 'desc'),
+    limit(100)
+  );
+  return onSnapshot(
+    q,
+    snap => {
+      const list: CoopRequest[] = [];
+      snap.forEach(d => {
+        list.push({ id: d.id, ...d.data() } as CoopRequest);
+      });
+      callback(list);
+    },
+    err => {
+      Sentry.captureException(err, {
+        tags: { action: 'snapshot-coop-requests' },
+      });
+      onError?.(err);
+    }
+  );
 }

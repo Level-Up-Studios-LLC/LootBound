@@ -53,6 +53,11 @@ export interface TaskLogEntry {
   photo: string | null;
   rejected: boolean;
   autoCutoff?: boolean;
+  coopRequestId?: string;
+  coopRole?: 'initiator' | 'partner';
+  coopPartnerId?: string;
+  coopPartnerCompleted?: boolean;
+  coopFailed?: boolean;
 }
 
 export interface StatusLabel {
@@ -145,7 +150,16 @@ export interface InAppNotification {
     | 'loot_approved'
     | 'loot_denied'
     | 'level_up'
-    | 'streak';
+    | 'streak'
+    | 'coop_request'
+    | 'coop_accepted'
+    | 'coop_declined'
+    | 'coop_approved'
+    | 'coop_denied'
+    | 'coop_cancelled'
+    | 'coop_partner_done'
+    | 'coop_complete'
+    | 'coop_expired';
   title: string;
   body: string;
   childId?: string;
@@ -164,4 +178,37 @@ export interface NotificationPrefs {
   lootDenied: boolean;
   levelUp: boolean;
   streak: boolean;
+  coopUpdates: boolean;
+}
+
+export type CoopStatus =
+  | 'pending_partner'
+  | 'pending_parent'
+  | 'declined'
+  | 'approved'
+  | 'denied'
+  | 'cancelled'
+  | 'completed'
+  | 'expired';
+
+export interface CoopRequest {
+  id: string;
+  taskId: string;
+  initiatorId: string;
+  partnerId: string;
+  status: CoopStatus;
+  date: string; // YYYY-MM-DD
+  createdAt: number;
+  partnerRespondedAt: number | null;
+  parentResolvedAt: number | null;
+  completedAt: number | null;
+  windowStartOverride: string | null; // "HH:MM"
+  windowEndOverride: string | null; // "HH:MM"
+  coinOverride: number | null;
+  initiatorCompleted: boolean;
+  partnerCompleted: boolean;
+  taskName: string;
+  taskTier: string;
+  initiatorName: string;
+  partnerName: string;
 }
