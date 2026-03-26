@@ -56,7 +56,7 @@ service cloud.firestore {
       match /coopRequests/{requestId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated() &&
-          request.resource.data.keys().hasAll([
+          request.resource.data.keys().hasOnly([
             'taskId', 'initiatorId', 'partnerId', 'status', 'date',
             'createdAt', 'partnerRespondedAt', 'parentResolvedAt', 'completedAt',
             'windowStartOverride', 'windowEndOverride', 'coinOverride',
@@ -66,11 +66,19 @@ service cloud.firestore {
           request.resource.data.status == 'pending_partner' &&
           request.resource.data.initiatorCompleted == false &&
           request.resource.data.partnerCompleted == false;
+        // Parents can approve/deny and set override fields.
+        allow update: if isParent(familyId) &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'parentResolvedAt', 'coinOverride',
+                      'windowStartOverride', 'windowEndOverride']) &&
+          request.resource.data.status in ['approved', 'denied'];
+        // Any authenticated user can drive partner response, cancellation, and completion.
+        // The resulting status must not be a parent-only terminal state.
         allow update: if isAuthenticated() &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'partnerRespondedAt', 'parentResolvedAt',
-                      'completedAt', 'windowStartOverride', 'windowEndOverride',
-                      'coinOverride', 'initiatorCompleted', 'partnerCompleted']);
+            .hasOnly(['status', 'partnerRespondedAt', 'completedAt',
+                      'initiatorCompleted', 'partnerCompleted']) &&
+          !(request.resource.data.status in ['approved', 'denied']);
         allow delete: if isParent(familyId);
       }
 

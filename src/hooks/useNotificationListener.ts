@@ -31,8 +31,11 @@ function isEligible(
     (!childId || n.childId !== childId)
   )
     return false;
-  const typeKey = n.type.replace(/_([a-z])/g, (_: string, c: string) =>
-    c.toUpperCase()
+  // All coop_* notification types map to the single coopUpdates preference.
+  const typeKey = (
+    n.type.startsWith('coop_')
+      ? 'coopUpdates'
+      : n.type.replace(/_([a-z])/g, (_: string, c: string) => c.toUpperCase())
   ) as keyof NotificationPrefs;
   if (typeKey !== 'soundEnabled' && prefs[typeKey] === false) return false;
   return true;

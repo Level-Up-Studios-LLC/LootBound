@@ -245,6 +245,8 @@ export async function deleteChild(
   familyId: string,
   childId: string
 ): Promise<void> {
+  // TODO: Clean up coopRequests where this child is initiatorId or partnerId.
+  // These orphan until deleteFamily runs. Address in a future cleanup pass.
   try {
     await deleteDoc(doc(db, 'families', familyId, 'children', childId));
   } catch (err) {

@@ -9,7 +9,6 @@ import type {
   Task,
   CoopRequest,
   CoopStatus,
-  TierConfig,
 } from '../types.ts';
 
 interface UseCoopActionsParams {
@@ -17,7 +16,6 @@ interface UseCoopActionsParams {
   children: Child[];
   tasks: Record<string, Task[]>;
   coopRequests: CoopRequest[];
-  tierConfig: Record<string, TierConfig>;
   sendNotification: (data: {
     type: string;
     title: string;
@@ -408,6 +406,9 @@ export function useCoopActions(params: UseCoopActionsParams) {
     [familyId, coopRequests, children, sendNotification]
   );
 
+  // NOTE: markCoopComplete (approved → completed transition, setting
+  // initiatorCompleted/partnerCompleted/completedAt) is not yet implemented.
+  // Reserved for Phase 2 when kids can mark their individual completion.
   return {
     requestCoop,
     acceptCoop,
