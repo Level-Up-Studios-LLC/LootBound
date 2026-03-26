@@ -197,6 +197,7 @@ GitHub repo: https://github.com/Level-Up-Studios-LLC/LootBound.git
 - Use `git merge`, not `git rebase`, for syncing branches
 - Production bugs (Sentry errors) go on `hotfix` branch, not directly on main
 - Always commit, push, and create a PR after completing changes
+- Do not create draft PRs — always create regular PRs so automated workflows (code review) can trigger
 - Always deploy Firestore/Storage rules after modifying them
 - Do not include "Generated with Claude Code" in PR descriptions
 - Do not add `Co-Authored-By` lines to commit messages
