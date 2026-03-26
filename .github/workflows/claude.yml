@@ -6,12 +6,13 @@ on:
   pull_request_review_comment:
     types: [created]
   issues:
-    types: [opened, edited]
+    types: [opened]
   pull_request_review:
     types: [submitted]
 
 jobs:
   claude:
+    # Allowed roles for @claude triggers: OWNER, MEMBER, COLLABORATOR
     if: |
       (github.event_name == 'issue_comment' &&
         contains(github.event.comment.body, '@claude') &&
@@ -38,6 +39,7 @@ jobs:
       id-token: write
     steps:
       - name: Check actor write permission
+        if: github.event_name == 'issues'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -57,16 +59,5 @@ jobs:
         uses: anthropics/claude-code-action@673eb13aa77026be5c507eda12322c1a58b80f0b # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-
-          # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
-
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
-
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          # claude_args: '--allowed-tools Bash(gh pr:*)'
-
