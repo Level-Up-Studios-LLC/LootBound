@@ -53,6 +53,27 @@ service cloud.firestore {
         }
       }
 
+      match /coopRequests/{requestId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() &&
+          request.resource.data.keys().hasAll([
+            'taskId', 'initiatorId', 'partnerId', 'status', 'date',
+            'createdAt', 'partnerRespondedAt', 'parentResolvedAt', 'completedAt',
+            'windowStartOverride', 'windowEndOverride', 'coinOverride',
+            'initiatorCompleted', 'partnerCompleted',
+            'taskName', 'taskTier', 'initiatorName', 'partnerName'
+          ]) &&
+          request.resource.data.status == 'pending_partner' &&
+          request.resource.data.initiatorCompleted == false &&
+          request.resource.data.partnerCompleted == false;
+        allow update: if isAuthenticated() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'partnerRespondedAt', 'parentResolvedAt',
+                      'completedAt', 'windowStartOverride', 'windowEndOverride',
+                      'coinOverride', 'initiatorCompleted', 'partnerCompleted']);
+        allow delete: if isParent(familyId);
+      }
+
       match /notifications/{notifId} {
         // Both parents and kids need read/create (kids trigger notifications
         // for parents via task completions and loot requests).
@@ -63,7 +84,9 @@ service cloud.firestore {
           request.resource.data.keys().hasAll(['type', 'title', 'body', 'targetRole', 'read', 'createdAt']) &&
           request.resource.data.type in [
             'mission_complete', 'mission_rejected', 'loot_request',
-            'loot_approved', 'loot_denied', 'level_up', 'streak'
+            'loot_approved', 'loot_denied', 'level_up', 'streak',
+            'coop_request', 'coop_accepted', 'coop_declined', 'coop_approved',
+            'coop_denied', 'coop_cancelled', 'coop_partner_done', 'coop_complete', 'coop_expired'
           ] &&
           request.resource.data.targetRole in ['parent', 'kid'] &&
           request.resource.data.read == false &&

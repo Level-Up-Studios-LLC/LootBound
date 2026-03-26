@@ -121,6 +121,31 @@ export const SL: Record<string, StatusLabel> = {
   upcoming: { text: 'UPCOMING', color: '#a0a3b5', bg: 'rgba(160,163,181,0.1)' },
   overdue: { text: 'OVERDUE', color: '#e05a5a', bg: 'rgba(224,90,90,0.12)' },
   rejected: { text: 'REDO', color: '#FF8C94', bg: 'rgba(255,140,148,0.12)' },
+  coopPending: {
+    text: 'CO-OP PENDING',
+    color: '#5b9bd5',
+    bg: 'rgba(91,155,213,0.12)',
+  },
+  coopWaiting: {
+    text: 'WAITING',
+    color: '#8b7ec8',
+    bg: 'rgba(139,126,200,0.12)',
+  },
+  coopReady: {
+    text: 'CO-OP READY',
+    color: '#5ec4d4',
+    bg: 'rgba(94,196,212,0.12)',
+  },
+  coopComplete: {
+    text: 'CO-OP DONE',
+    color: '#4ac7a8',
+    bg: 'rgba(74,199,168,0.12)',
+  },
+  coopFailed: {
+    text: 'CO-OP MISSED',
+    color: '#e05a5a',
+    bg: 'rgba(224,90,90,0.12)',
+  },
 };
 
 export const FA_ICON_STYLE = {
@@ -142,6 +167,7 @@ export const DEF_NOTIFICATION_PREFS: NotificationPrefs = {
   lootDenied: true,
   levelUp: true,
   streak: true,
+  coopUpdates: true,
 };
 
 export const FEEDBACK_URL = 'https://lootbound.canny.io';
