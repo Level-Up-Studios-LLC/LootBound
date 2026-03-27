@@ -20,6 +20,17 @@ export default function ReviewTab(): React.ReactElement {
 
   if (!cfg) return <div />;
 
+  // Build set of initiator childId:taskId keys that belong to active/completed co-ops today
+  // so solo review excludes them (prevents double-counting with the co-op section)
+  const coopTaskKeys = new Set(
+    ctx.coopRequests
+      .filter(
+        r =>
+          r.date === d && (r.status === 'approved' || r.status === 'completed')
+      )
+      .map(r => `${r.initiatorId}:${r.taskId}`)
+  );
+
   // Solo review items
   const items: ReviewTaskItem[] = [];
   children.forEach(c => {
@@ -31,7 +42,7 @@ export default function ReviewTab(): React.ReactElement {
         entry &&
         !entry.rejected &&
         entry.status !== 'missed' &&
-        !entry.coopRequestId
+        !coopTaskKeys.has(`${c.id}:${t.id}`)
       )
         items.push({ uid: c.id, child: c, task: t, entry });
     });
@@ -189,8 +200,6 @@ function CoopReviewCard({
   const iLog = iData?.taskLog?.[d]?.[request.taskId];
   const pLog = pData?.taskLog?.[d]?.[`coop:${request.id}`];
 
-  const iStatus = iLog?.status ?? 'unknown';
-  const pStatus = pLog?.status ?? 'unknown';
   const iCoins = iLog?.points ?? 0;
   const pCoins = pLog?.points ?? 0;
   const iXp = iLog?.xp ?? 0;
@@ -229,7 +238,13 @@ function CoopReviewCard({
               Photo
             </button>
           )}
-          <Badge status={iStatus} />
+          {iLog ? (
+            <Badge status={iLog.status} />
+          ) : (
+            <span className='text-[10px] font-bold px-2.5 py-1 rounded-badge tracking-wide text-qmuted bg-qslate-dim'>
+              NO DATA
+            </span>
+          )}
         </div>
       </div>
       <div className='text-[11px] text-qmuted pl-7 mb-2'>
@@ -255,7 +270,13 @@ function CoopReviewCard({
               Photo
             </button>
           )}
-          <Badge status={pStatus} />
+          {pLog ? (
+            <Badge status={pLog.status} />
+          ) : (
+            <span className='text-[10px] font-bold px-2.5 py-1 rounded-badge tracking-wide text-qmuted bg-qslate-dim'>
+              NO DATA
+            </span>
+          )}
         </div>
       </div>
       <div className='text-[11px] text-qmuted pl-7'>
