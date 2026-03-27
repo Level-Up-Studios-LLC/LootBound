@@ -55,7 +55,9 @@ service cloud.firestore {
 
       match /coopRequests/{requestId} {
         allow read: if isAuthenticated();
-        allow create: if isAuthenticated() &&
+        // All co-op mutations restricted to parents until child Custom
+        // Token auth is implemented (kids lack verifiable identity today).
+        allow create: if isParent(familyId) &&
           request.resource.data.keys().hasOnly([
             'taskId', 'initiatorId', 'partnerId', 'status', 'date',
             'createdAt', 'partnerRespondedAt', 'parentResolvedAt', 'completedAt',
@@ -82,20 +84,20 @@ service cloud.firestore {
                       'windowStartOverride', 'windowEndOverride']) &&
           request.resource.data.status in ['approved', 'denied'];
         // Partner accept/decline: only from pending_partner.
-        allow update: if isAuthenticated() &&
+        allow update: if isParent(familyId) &&
           resource.data.status == 'pending_partner' &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status', 'partnerRespondedAt']) &&
           request.resource.data.status in ['pending_parent', 'declined'];
         // Cancellation: from any active status.
-        allow update: if isAuthenticated() &&
+        allow update: if isParent(familyId) &&
           resource.data.status in ['pending_partner', 'pending_parent', 'approved'] &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status']) &&
           request.resource.data.status == 'cancelled';
         // Completion tracking: only from approved. Flags are monotonic
         // (false→true only) and status=completed requires both true + completedAt set.
-        allow update: if isAuthenticated() &&
+        allow update: if isParent(familyId) &&
           resource.data.status == 'approved' &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status', 'completedAt', 'initiatorCompleted', 'partnerCompleted']) &&
