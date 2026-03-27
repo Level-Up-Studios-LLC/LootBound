@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import * as Sentry from '@sentry/react';
 import type {
   Config,
   Child,
@@ -120,10 +121,18 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
     });
 
     // --- Co-op requests listener ---
-    const unsubCoop = onCoopRequestsSnapshot(familyId, list => {
-      if (dead) return;
-      setCoopRequests(() => list);
-    });
+    const unsubCoop = onCoopRequestsSnapshot(
+      familyId,
+      list => {
+        if (dead) return;
+        setCoopRequests(() => list);
+      },
+      err => {
+        Sentry.captureException(err, {
+          tags: { action: 'sync-coop-requests' },
+        });
+      }
+    );
 
     // --- Per-child data listeners ---
     const attachChildDataListener = (childId: string) => {

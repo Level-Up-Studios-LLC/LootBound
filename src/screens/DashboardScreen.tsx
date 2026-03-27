@@ -159,10 +159,11 @@ export default function DashboardScreen(): React.ReactElement | null {
     }
   }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs?.soundEnabled]);
 
-  // GSAP entrance animations
+  // GSAP entrance animations (skipped when user prefers reduced motion)
   useGSAP(
     () => {
       if (!ch || !ud) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
       tl.from('.dash-header', { opacity: 0, y: -10, duration: 0.4 });
       tl.from('.dash-xp', { opacity: 0, scale: 0.95, duration: 0.4 }, '-=0.2');
