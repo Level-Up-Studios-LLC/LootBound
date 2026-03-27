@@ -34,12 +34,19 @@ export default function TasksScreen(): React.ReactElement | null {
   const tomorrowRef = useRef<HTMLDivElement>(null);
 
   // Entrance animations — must be above early return to satisfy Rules of Hooks
-  useGSAP(() => {
-    if (!ch || !ud) return;
-    gsap.from('.task-card', {
-      opacity: 0, y: 16, duration: 0.35, stagger: 0.06, ease: 'power2.out',
-    });
-  }, { scope: containerRef, dependencies: [ch, ud] });
+  useGSAP(
+    () => {
+      if (!ch || !ud) return;
+      gsap.from('.task-card', {
+        opacity: 0,
+        y: 16,
+        duration: 0.35,
+        stagger: 0.06,
+        ease: 'power2.out',
+      });
+    },
+    { scope: containerRef, dependencies: [ch, ud] }
+  );
 
   if (!ch || !ud) return null;
 
@@ -61,14 +68,22 @@ export default function TasksScreen(): React.ReactElement | null {
     const opening = !previewOpen;
     setPreviewOpen(opening);
     if (chevronRef.current) {
-      gsap.to(chevronRef.current, { rotation: opening ? 90 : 0, duration: 0.25, ease: 'power2.out' });
+      gsap.to(chevronRef.current, {
+        rotation: opening ? 90 : 0,
+        duration: 0.25,
+        ease: 'power2.out',
+      });
     }
     if (opening) {
       // Animate tomorrow cards after state update renders them
       requestAnimationFrame(() => {
         if (tomorrowRef.current) {
           gsap.from(tomorrowRef.current.children, {
-            opacity: 0, y: 12, duration: 0.3, stagger: 0.05, ease: 'power2.out',
+            opacity: 0,
+            y: 12,
+            duration: 0.3,
+            stagger: 0.05,
+            ease: 'power2.out',
           });
         }
       });
@@ -106,13 +121,19 @@ export default function TasksScreen(): React.ReactElement | null {
           const isDone = entry && !entry.rejected && entry.status !== 'missed';
           const isMissed =
             entry && entry.status === 'missed' && !entry.rejected;
-          const baseStatus = getTaskStatus(t, null, ctx.cfg ? ctx.cfg.bedtime : undefined);
+          const baseStatus = getTaskStatus(
+            t,
+            null,
+            ctx.cfg ? ctx.cfg.bedtime : undefined
+          );
           const status = isDone
             ? entry.status
             : isMissed
               ? 'missed'
               : isRej
-                ? (baseStatus === 'missed' ? 'missed' : 'rejected')
+                ? baseStatus === 'missed'
+                  ? 'missed'
+                  : 'rejected'
                 : baseStatus;
           const sl = SL[status] || {
             text: '',
@@ -263,7 +284,12 @@ export default function TasksScreen(): React.ReactElement | null {
           </button>
         )}
         {previewOpen && tomorrowTasks.length > 0 && (
-          <div id='tomorrow-preview' role='region' className='flex flex-col gap-2' ref={tomorrowRef}>
+          <div
+            id='tomorrow-preview'
+            role='region'
+            className='flex flex-col gap-2'
+            ref={tomorrowRef}
+          >
             {sortedTomorrow.map(t => (
               <div
                 key={t.id}

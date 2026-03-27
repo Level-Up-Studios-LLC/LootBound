@@ -1,7 +1,8 @@
 import * as Sentry from '@sentry/react';
 
 const dsn = import.meta.env.VITE_SENTRY_DSN as string;
-const userDisabled = localStorage.getItem('lootbound-sentry-enabled') === 'false';
+const userDisabled =
+  localStorage.getItem('lootbound-sentry-enabled') === 'false';
 
 Sentry.init({
   dsn,

@@ -18,12 +18,20 @@ import {
 import { playSound } from '../services/notificationSound.ts';
 
 // --- GSAP + Canvas confetti ---
-const CONFETTI_COLORS = ['#4ac7a8', '#ffe08a', '#ff8c94', '#8b7ec8', '#5ec4d4', '#e6a817'];
+const CONFETTI_COLORS = [
+  '#4ac7a8',
+  '#ffe08a',
+  '#ff8c94',
+  '#8b7ec8',
+  '#5ec4d4',
+  '#e6a817',
+];
 const CONFETTI_COUNT = 50;
 
 function Confetti(): React.ReactElement | null {
   const ref = useRef<HTMLCanvasElement>(null);
-  const prefersReduced = typeof window !== 'undefined' &&
+  const prefersReduced =
+    typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
@@ -47,7 +55,8 @@ function Confetti(): React.ReactElement | null {
       y: -10 - Math.random() * 40,
       w: 4 + Math.random() * 6,
       h: 6 + Math.random() * 10,
-      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      color:
+        CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
       rot: Math.random() * Math.PI * 2,
       opacity: 1,
       // Targets for GSAP
@@ -75,7 +84,10 @@ function Confetti(): React.ReactElement | null {
     frame = requestAnimationFrame(render);
 
     const tl = gsap.timeline({
-      onComplete: () => { running = false; cancelAnimationFrame(frame); },
+      onComplete: () => {
+        running = false;
+        cancelAnimationFrame(frame);
+      },
     });
     tl.to(pieces, {
       y: (i: number) => pieces[i].targetY,
@@ -148,17 +160,36 @@ export default function DashboardScreen(): React.ReactElement | null {
   }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs?.soundEnabled]);
 
   // GSAP entrance animations
-  useGSAP(() => {
-    if (!ch || !ud) return;
-    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-    tl.from('.dash-header', { opacity: 0, y: -10, duration: 0.4 });
-    tl.from('.dash-xp', { opacity: 0, scale: 0.95, duration: 0.4 }, '-=0.2');
-    tl.from('.dash-stat', { opacity: 0, y: 20, duration: 0.35, stagger: 0.08 }, '-=0.2');
-    tl.from('.dash-task', { opacity: 0, x: -20, duration: 0.35, stagger: 0.08 }, '-=0.2');
-    if (allDone) {
-      tl.from('.dash-celebrate', { opacity: 0, scale: 0.5, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.1');
+  useGSAP(
+    () => {
+      if (!ch || !ud) return;
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.dash-header', { opacity: 0, y: -10, duration: 0.4 });
+      tl.from('.dash-xp', { opacity: 0, scale: 0.95, duration: 0.4 }, '-=0.2');
+      tl.from(
+        '.dash-stat',
+        { opacity: 0, y: 20, duration: 0.35, stagger: 0.08 },
+        '-=0.2'
+      );
+      tl.from(
+        '.dash-task',
+        { opacity: 0, x: -20, duration: 0.35, stagger: 0.08 },
+        '-=0.2'
+      );
+      if (allDone) {
+        tl.from(
+          '.dash-celebrate',
+          { opacity: 0, scale: 0.5, duration: 0.5, ease: 'back.out(1.7)' },
+          '-=0.1'
+        );
+      }
+    },
+    {
+      scope: containerRef,
+      dependencies: [allDone, ch?.id, !!ud],
+      revertOnUpdate: true,
     }
-  }, { scope: containerRef, dependencies: [allDone, ch?.id, !!ud], revertOnUpdate: true });
+  );
 
   if (!ch || !ud) return null;
 
@@ -242,9 +273,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               Lv.{lvl} {lt.title}
             </div>
             <div className='text-[11px] text-qmuted font-bold'>
-              {lvl >= 20
-                ? 'MAX'
-                : `${xpProg.current} / ${xpProg.needed} XP`}
+              {lvl >= 20 ? 'MAX' : `${xpProg.current} / ${xpProg.needed} XP`}
             </div>
           </div>
           <div className='h-2.5 bg-qmint-dim rounded-sm'>
@@ -343,7 +372,9 @@ export default function DashboardScreen(): React.ReactElement | null {
                 {status !== 'missed' && (
                   <button
                     type='button'
-                    aria-label={isRej ? `Redo ${t.name}` : `Mark ${t.name} as done`}
+                    aria-label={
+                      isRej ? `Redo ${t.name}` : `Mark ${t.name} as done`
+                    }
                     onClick={() => {
                       startCapture(t.id);
                     }}

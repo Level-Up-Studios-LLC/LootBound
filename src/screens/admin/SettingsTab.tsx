@@ -23,7 +23,10 @@ import {
   FA_ICON_STYLE,
   FEEDBACK_URL,
 } from '../../constants.ts';
-import { getPersistentStorage, setPersistentStorage } from '../../services/platform.ts';
+import {
+  getPersistentStorage,
+  setPersistentStorage,
+} from '../../services/platform.ts';
 import type { Config, TierConfig, NotificationPrefs } from '../../types.ts';
 
 const SAVE_DELAY = 1500;
@@ -49,7 +52,7 @@ export default function SettingsTab(): React.ReactElement {
   // Load Sentry preference and apply to runtime client
   useEffect(() => {
     let cancelled = false;
-    getPersistentStorage('lootbound-sentry-enabled').then((val) => {
+    getPersistentStorage('lootbound-sentry-enabled').then(val => {
       if (cancelled) return;
       const enabled = val !== 'false';
       setSentryEnabled(enabled);
@@ -79,7 +82,9 @@ export default function SettingsTab(): React.ReactElement {
         if (localRef.current) {
           ctx.saveCfg(localRef.current).catch((err: unknown) => {
             console.error('Settings save failed on unmount:', err);
-            Sentry.captureException(err, { tags: { action: 'save-settings-unmount' } });
+            Sentry.captureException(err, {
+              tags: { action: 'save-settings-unmount' },
+            });
           });
         }
       }
@@ -142,7 +147,8 @@ export default function SettingsTab(): React.ReactElement {
                       cfg.tierConfig || DEF_TIER_CONFIG
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    const v = e.target.value === '' ? 0 : Number(e.target.value);
+                    const v =
+                      e.target.value === '' ? 0 : Number(e.target.value);
                     n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update({ ...cfg, tierConfig: n });
                   }}
@@ -160,7 +166,8 @@ export default function SettingsTab(): React.ReactElement {
                       cfg.tierConfig || DEF_TIER_CONFIG
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    const v = e.target.value === '' ? 0 : Number(e.target.value);
+                    const v =
+                      e.target.value === '' ? 0 : Number(e.target.value);
                     n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
                     update({ ...cfg, tierConfig: n });
                   }}
@@ -354,14 +361,14 @@ export default function SettingsTab(): React.ReactElement {
           Error Reporting
         </div>
         <div className='text-[13px] text-qmuted mb-2'>
-          Help us improve LootBound by automatically reporting errors.
-          No personal data is collected.
+          Help us improve LootBound by automatically reporting errors. No
+          personal data is collected.
         </div>
         <label className='flex items-center gap-3 cursor-pointer'>
           <input
             type='checkbox'
             checked={sentryEnabled}
-            onChange={(e) => {
+            onChange={e => {
               const enabled = e.target.checked;
               setSentryEnabled(enabled);
               applySentryEnabled(enabled);
@@ -369,7 +376,9 @@ export default function SettingsTab(): React.ReactElement {
                 'lootbound-sentry-enabled',
                 enabled ? 'true' : 'false'
               );
-              ctx.notify(enabled ? 'Error reporting enabled' : 'Error reporting disabled');
+              ctx.notify(
+                enabled ? 'Error reporting enabled' : 'Error reporting disabled'
+              );
             }}
             className='w-5 h-5 accent-qteal'
           />

@@ -4,12 +4,7 @@ import { doc, collection } from 'firebase/firestore';
 import { db } from '../services/firebase.ts';
 import { saveCoopRequest } from '../services/firestoreStorage.ts';
 import { getToday } from '../utils.ts';
-import type {
-  Child,
-  Task,
-  CoopRequest,
-  CoopStatus,
-} from '../types.ts';
+import type { Child, Task, CoopRequest, CoopStatus } from '../types.ts';
 
 interface UseCoopActionsParams {
   familyId: string;
@@ -34,13 +29,7 @@ const ACTIVE_STATUSES: CoopStatus[] = [
 ];
 
 export function useCoopActions(params: UseCoopActionsParams) {
-  const {
-    familyId,
-    children,
-    tasks,
-    coopRequests,
-    sendNotification,
-  } = params;
+  const { familyId, children, tasks, coopRequests, sendNotification } = params;
 
   // -------------------------------------------------------------------------
   // Helpers
@@ -84,7 +73,8 @@ export function useCoopActions(params: UseCoopActionsParams) {
     ): Promise<void> => {
       try {
         // Validate no self-co-op
-        if (initiatorId === partnerId) throw new Error('Cannot co-op with yourself');
+        if (initiatorId === partnerId)
+          throw new Error('Cannot co-op with yourself');
 
         // Validate partner exists
         const partner = children.find(c => c.id === partnerId);
@@ -101,13 +91,13 @@ export function useCoopActions(params: UseCoopActionsParams) {
           throw new Error('An active co-op already exists for this task today');
         }
         if (isTaskInActiveCoop(partnerId, taskId, today)) {
-          throw new Error('Partner already has an active co-op for this task today');
+          throw new Error(
+            'Partner already has an active co-op for this task today'
+          );
         }
 
         // Generate a Firestore auto-ID by creating a ref on the collection
-        const ref = doc(
-          collection(db, 'families', familyId, 'coopRequests')
-        );
+        const ref = doc(collection(db, 'families', familyId, 'coopRequests'));
         const requestId = ref.id;
 
         const initiatorName = getChildName(initiatorId);
@@ -144,7 +134,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: partnerId,
           childName: partnerName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
 
         // Notify parent (fire-and-forget)
         sendNotification({
@@ -152,7 +147,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           title: 'Co-op Request',
           body: `${initiatorName} invited ${partnerName} to co-op on ${task.name}`,
           targetRole: 'parent',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
       } catch (err) {
         Sentry.captureException(err, {
           tags: { action: 'coop-request' },
@@ -160,13 +160,7 @@ export function useCoopActions(params: UseCoopActionsParams) {
         throw err;
       }
     },
-    [
-      familyId,
-      children,
-      tasks,
-      isTaskInActiveCoop,
-      sendNotification,
-    ]
+    [familyId, children, tasks, isTaskInActiveCoop, sendNotification]
   );
 
   // -------------------------------------------------------------------------
@@ -178,7 +172,8 @@ export function useCoopActions(params: UseCoopActionsParams) {
       try {
         const req = findRequest(requestId);
         if (!req) throw new Error('Co-op request not found');
-        if (req.status !== 'pending_partner') throw new Error('Request is no longer pending partner response');
+        if (req.status !== 'pending_partner')
+          throw new Error('Request is no longer pending partner response');
 
         await saveCoopRequest(familyId, requestId, {
           status: 'pending_parent',
@@ -195,14 +190,24 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.initiatorId,
           childName: initiatorName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
 
         sendNotification({
           type: 'coop_accepted',
           title: 'Co-op Needs Approval',
           body: `${initiatorName} & ${partnerName} want to co-op on ${req.taskName}`,
           targetRole: 'parent',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
       } catch (err) {
         Sentry.captureException(err, {
           tags: { action: 'coop-accept' },
@@ -222,7 +227,8 @@ export function useCoopActions(params: UseCoopActionsParams) {
       try {
         const req = findRequest(requestId);
         if (!req) throw new Error('Co-op request not found');
-        if (req.status !== 'pending_partner') throw new Error('Request is no longer pending partner response');
+        if (req.status !== 'pending_partner')
+          throw new Error('Request is no longer pending partner response');
 
         await saveCoopRequest(familyId, requestId, {
           status: 'declined',
@@ -239,7 +245,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.initiatorId,
           childName: initiatorName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
       } catch (err) {
         Sentry.captureException(err, {
           tags: { action: 'coop-decline' },
@@ -266,7 +277,8 @@ export function useCoopActions(params: UseCoopActionsParams) {
       try {
         const req = findRequest(requestId);
         if (!req) throw new Error('Co-op request not found');
-        if (req.status !== 'pending_parent') throw new Error('Request is not pending parent approval');
+        if (req.status !== 'pending_parent')
+          throw new Error('Request is not pending parent approval');
 
         const updates: Partial<Omit<CoopRequest, 'id'>> = {
           status: 'approved',
@@ -295,7 +307,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.initiatorId,
           childName: initiatorName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
 
         sendNotification({
           type: 'coop_approved',
@@ -304,7 +321,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.partnerId,
           childName: partnerName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
       } catch (err) {
         Sentry.captureException(err, {
           tags: { action: 'coop-approve' },
@@ -324,7 +346,8 @@ export function useCoopActions(params: UseCoopActionsParams) {
       try {
         const req = findRequest(requestId);
         if (!req) throw new Error('Co-op request not found');
-        if (req.status !== 'pending_parent') throw new Error('Request is not pending parent approval');
+        if (req.status !== 'pending_parent')
+          throw new Error('Request is not pending parent approval');
 
         await saveCoopRequest(familyId, requestId, {
           status: 'denied',
@@ -341,7 +364,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.initiatorId,
           childName: initiatorName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
 
         sendNotification({
           type: 'coop_denied',
@@ -350,7 +378,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.partnerId,
           childName: partnerName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
       } catch (err) {
         Sentry.captureException(err, {
           tags: { action: 'coop-deny' },
@@ -370,7 +403,8 @@ export function useCoopActions(params: UseCoopActionsParams) {
       try {
         const req = findRequest(requestId);
         if (!req) throw new Error('Co-op request not found');
-        if (!ACTIVE_STATUSES.includes(req.status)) throw new Error('Request is no longer active');
+        if (!ACTIVE_STATUSES.includes(req.status))
+          throw new Error('Request is no longer active');
 
         await saveCoopRequest(familyId, requestId, {
           status: 'cancelled',
@@ -386,7 +420,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.initiatorId,
           childName: initiatorName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
 
         sendNotification({
           type: 'coop_cancelled',
@@ -395,7 +434,12 @@ export function useCoopActions(params: UseCoopActionsParams) {
           childId: req.partnerId,
           childName: partnerName,
           targetRole: 'kid',
-        }).catch(e => Sentry.captureException(e, { level: 'warning', tags: { action: 'coop-notification' } }));
+        }).catch(e =>
+          Sentry.captureException(e, {
+            level: 'warning',
+            tags: { action: 'coop-notification' },
+          })
+        );
       } catch (err) {
         Sentry.captureException(err, {
           tags: { action: 'coop-cancel' },

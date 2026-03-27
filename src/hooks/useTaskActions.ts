@@ -61,13 +61,13 @@ export function useTaskActions(deps: TaskActionsDeps) {
     setCapturing(taskId);
     if (isNative()) {
       nativeCapturePhoto()
-        .then((photo) => {
+        .then(photo => {
           if (photo) {
             doComplete(taskId, photo)
               .then(() => {
                 setCapturing(null);
               })
-              .catch((err) => {
+              .catch(err => {
                 console.error('doComplete failed:', err);
                 setCapturing(null);
               });
@@ -75,7 +75,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
             setCapturing(null);
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.error('nativeCapturePhoto failed:', err);
           setCapturing(null);
         });
@@ -96,14 +96,14 @@ export function useTaskActions(deps: TaskActionsDeps) {
       return;
     }
     resizeImg(file, 800)
-      .then((photo) => {
+      .then(photo => {
         return doComplete(capturing!, photo);
       })
       .then(() => {
         setCapturing(null);
         if (fileRef.current) fileRef.current.value = '';
       })
-      .catch((err) => {
+      .catch(err => {
         console.warn('Photo capture failed:', err);
         setCapturing(null);
         if (fileRef.current) fileRef.current.value = '';
@@ -230,9 +230,12 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'parent',
-    }).catch((err) => {
+    }).catch(err => {
       console.warn('Notification failed (mission_complete):', err);
-      Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'mission_complete' } });
+      Sentry.captureException(err, {
+        level: 'warning',
+        tags: { action: 'notification-write', type: 'mission_complete' },
+      });
     });
     if (ud.level > oldLevel) {
       const title = getLevelTitle(ud.level);
@@ -247,9 +250,12 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => {
+      }).catch(err => {
         console.warn('Notification failed (level_up):', err);
-        Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'level_up' } });
+        Sentry.captureException(err, {
+          level: 'warning',
+          tags: { action: 'notification-write', type: 'level_up' },
+        });
       });
     }
     // Streak notifications
@@ -268,9 +274,12 @@ export function useTaskActions(deps: TaskActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => {
+      }).catch(err => {
         console.warn('Notification failed (streak):', err);
-        Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'streak' } });
+        Sentry.captureException(err, {
+          level: 'warning',
+          tags: { action: 'notification-write', type: 'streak' },
+        });
       });
     }
   };
@@ -314,9 +323,12 @@ export function useTaskActions(deps: TaskActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch((err) => {
+    }).catch(err => {
       console.warn('Notification failed (mission_rejected):', err);
-      Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'mission_rejected' } });
+      Sentry.captureException(err, {
+        level: 'warning',
+        tags: { action: 'notification-write', type: 'mission_rejected' },
+      });
     });
   };
 

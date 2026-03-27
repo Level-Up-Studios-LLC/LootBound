@@ -247,10 +247,10 @@ export function md5(input: string): string {
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
   ];
   const s = [
-    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20,
-    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23,
-    4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15,
-    21, 6, 10, 15, 21,
+    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5,
+    9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11,
+    16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10,
+    15, 21,
   ];
 
   const bytes: number[] = [];
@@ -283,7 +283,12 @@ export function md5(input: string): string {
   bytes.push(0x80);
   while (bytes.length % 64 !== 56) bytes.push(0);
   const bitLen = origLen * 8;
-  bytes.push(bitLen & 0xff, (bitLen >> 8) & 0xff, (bitLen >> 16) & 0xff, (bitLen >> 24) & 0xff);
+  bytes.push(
+    bitLen & 0xff,
+    (bitLen >> 8) & 0xff,
+    (bitLen >> 16) & 0xff,
+    (bitLen >> 24) & 0xff
+  );
   bytes.push(0, 0, 0, 0);
 
   let a0 = 0x67452301;
@@ -301,16 +306,30 @@ export function md5(input: string): string {
         (bytes[i + j * 4 + 3] << 24);
     }
 
-    let a = a0, b = b0, c = c0, d = d0;
+    let a = a0,
+      b = b0,
+      c = c0,
+      d = d0;
     for (let j = 0; j < 64; j++) {
       let f: number, g: number;
-      if (j < 16) { f = (b & c) | (~b & d); g = j; }
-      else if (j < 32) { f = (d & b) | (~d & c); g = (5 * j + 1) % 16; }
-      else if (j < 48) { f = b ^ c ^ d; g = (3 * j + 5) % 16; }
-      else { f = c ^ (b | ~d); g = (7 * j) % 16; }
+      if (j < 16) {
+        f = (b & c) | (~b & d);
+        g = j;
+      } else if (j < 32) {
+        f = (d & b) | (~d & c);
+        g = (5 * j + 1) % 16;
+      } else if (j < 48) {
+        f = b ^ c ^ d;
+        g = (3 * j + 5) % 16;
+      } else {
+        f = c ^ (b | ~d);
+        g = (7 * j) % 16;
+      }
 
       f = (f + a + k[j] + m[g]) >>> 0;
-      a = d; d = c; c = b;
+      a = d;
+      d = c;
+      c = b;
       b = (b + ((f << s[j]) | (f >>> (32 - s[j])))) >>> 0;
     }
     a0 = (a0 + a) >>> 0;
@@ -320,6 +339,8 @@ export function md5(input: string): string {
   }
 
   const hex = (n: number) =>
-    [0, 8, 16, 24].map(sh => ((n >>> sh) & 0xff).toString(16).padStart(2, '0')).join('');
+    [0, 8, 16, 24]
+      .map(sh => ((n >>> sh) & 0xff).toString(16).padStart(2, '0'))
+      .join('');
   return hex(a0) + hex(b0) + hex(c0) + hex(d0);
 }

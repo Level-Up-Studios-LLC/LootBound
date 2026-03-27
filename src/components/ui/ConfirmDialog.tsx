@@ -31,7 +31,8 @@ export default function ConfirmDialog(
   useEffect(() => {
     prevFocusRef.current = document.activeElement as HTMLElement;
     if (overlayRef.current) {
-      const first = overlayRef.current.querySelector<HTMLElement>('input, button');
+      const first =
+        overlayRef.current.querySelector<HTMLElement>('input, button');
       if (first) first.focus();
     }
     return () => {
@@ -47,14 +48,24 @@ export default function ConfirmDialog(
       aria-modal='true'
       aria-labelledby='confirm-dialog-title'
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') { props.onCancel(); return; }
+        if (e.key === 'Escape') {
+          props.onCancel();
+          return;
+        }
         if (e.key !== 'Tab' || !overlayRef.current) return;
-        const focusable = overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])');
+        const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])'
+        );
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }}
     >
       <div
@@ -93,7 +104,9 @@ export default function ConfirmDialog(
                 onKeyDown={(e: React.KeyboardEvent) => {
                   if (e.key === 'Enter' && confirmed) {
                     if (dontAsk && props.dontAskAgainKey) {
-                      try { localStorage.setItem(props.dontAskAgainKey, '1'); } catch (_e) {}
+                      try {
+                        localStorage.setItem(props.dontAskAgainKey, '1');
+                      } catch (_e) {}
                     }
                     props.onConfirm();
                   }
@@ -110,7 +123,7 @@ export default function ConfirmDialog(
             <input
               type='checkbox'
               checked={dontAsk}
-              onChange={(e) => setDontAsk(e.target.checked)}
+              onChange={e => setDontAsk(e.target.checked)}
               className='w-4 h-4 accent-qteal'
             />
             <span className='text-[12px] text-qmuted'>Don't ask me again</span>
@@ -128,7 +141,9 @@ export default function ConfirmDialog(
               onClick={() => {
                 if (!confirmed) return;
                 if (dontAsk && props.dontAskAgainKey) {
-                  try { localStorage.setItem(props.dontAskAgainKey, '1'); } catch (_e) {}
+                  try {
+                    localStorage.setItem(props.dontAskAgainKey, '1');
+                  } catch (_e) {}
                 }
                 props.onConfirm();
               }}
@@ -136,7 +151,9 @@ export default function ConfirmDialog(
               className={
                 (props.confirmColor || 'bg-qcoral') +
                 ' text-white rounded-badge px-5 py-2.5 font-bold border-none font-body' +
-                (confirmed ? ' cursor-pointer' : ' opacity-40 cursor-not-allowed')
+                (confirmed
+                  ? ' cursor-pointer'
+                  : ' opacity-40 cursor-not-allowed')
               }
             >
               {props.confirmLabel}

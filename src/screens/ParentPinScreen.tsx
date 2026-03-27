@@ -4,7 +4,11 @@ import { saveParentMember } from '../services/firestoreStorage.ts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
-import { isBiometricAvailable, authenticateWithBiometric, isNative } from '../services/platform.ts';
+import {
+  isBiometricAvailable,
+  authenticateWithBiometric,
+  isNative,
+} from '../services/platform.ts';
 import PasswordInput from '../components/ui/PasswordInput.tsx';
 
 interface ParentPinScreenProps {
@@ -14,7 +18,6 @@ interface ParentPinScreenProps {
   onSuccess: () => void;
   onSignOut: () => void;
 }
-
 
 export default function ParentPinScreen(
   props: ParentPinScreenProps
@@ -31,21 +34,23 @@ export default function ParentPinScreen(
   useEffect(() => {
     if (isNative() && hasPin) {
       let cancelled = false;
-      isBiometricAvailable().then((available) => {
+      isBiometricAvailable().then(available => {
         if (cancelled) return;
         setBioAvailable(available);
         if (available) {
-          authenticateWithBiometric().then((ok) => {
+          authenticateWithBiometric().then(ok => {
             if (!cancelled && ok) props.onSuccess();
           });
         }
       });
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }
   }, [hasPin, props.onSuccess]);
 
   const handleBiometric = () => {
-    authenticateWithBiometric().then((ok) => {
+    authenticateWithBiometric().then(ok => {
       if (ok) {
         props.onSuccess();
       } else {
@@ -97,7 +102,9 @@ export default function ParentPinScreen(
       return;
     }
     try {
-      await saveParentMember(getCurrentUid() || props.familyId, { parentPin: '' });
+      await saveParentMember(getCurrentUid() || props.familyId, {
+        parentPin: '',
+      });
       props.onSuccess();
     } catch (_e) {
       setErr('Failed to clear PIN. Please try again.');
@@ -106,21 +113,25 @@ export default function ParentPinScreen(
   };
 
   return (
-    <div className="page-wrapper page-centered">
-      <div className="font-display text-5xl font-bold text-qslate tracking-wider mb-1">
+    <div className='page-wrapper page-centered'>
+      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-1'>
         LOOTBOUND
       </div>
-      <div className="text-sm text-qmuted mb-3">
-        <FontAwesomeIcon icon={faLock} className="mr-1.5" style={FA_ICON_STYLE} />
+      <div className='text-sm text-qmuted mb-3'>
+        <FontAwesomeIcon
+          icon={faLock}
+          className='mr-1.5'
+          style={FA_ICON_STYLE}
+        />
         Welcome back
       </div>
-      <div className="text-[13px] text-qdim mb-10">{props.email}</div>
+      <div className='text-[13px] text-qdim mb-10'>{props.email}</div>
 
       {/* PIN entry mode */}
       {hasPin && !forgot && (
-        <div className="flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6">
-          <div className="text-sm text-qmuted">Enter parent PIN</div>
-          <div className="flex gap-2">
+        <div className='flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6'>
+          <div className='text-sm text-qmuted'>Enter parent PIN</div>
+          <div className='flex gap-2'>
             <PasswordInput
               maxLength={6}
               value={pin}
@@ -129,24 +140,16 @@ export default function ParentPinScreen(
                 setErr('');
               }}
               onKeyDown={handlePinKeyDown}
-              className="quest-input w-[120px] text-center text-lg"
+              className='quest-input w-[120px] text-center text-lg'
               autoFocus
             />
-            <button
-              onClick={handlePinSubmit}
-              className="btn-primary"
-            >
+            <button onClick={handlePinSubmit} className='btn-primary'>
               Enter
             </button>
           </div>
-          {err && (
-            <div className="text-qcoral text-[13px]">{err}</div>
-          )}
+          {err && <div className='text-qcoral text-[13px]'>{err}</div>}
           {bioAvailable && (
-            <button
-              onClick={handleBiometric}
-              className="btn-primary w-full"
-            >
+            <button onClick={handleBiometric} className='btn-primary w-full'>
               Use Face ID / Touch ID
             </button>
           )}
@@ -156,7 +159,7 @@ export default function ParentPinScreen(
               setErr('');
               setPin('');
             }}
-            className="btn-ghost mt-1"
+            className='btn-ghost mt-1'
           >
             Forgot PIN?
           </button>
@@ -165,17 +168,17 @@ export default function ParentPinScreen(
 
       {/* Password entry mode (no PIN set, or forgot PIN) */}
       {(!hasPin || forgot) && (
-        <div className="flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6">
+        <div className='flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6'>
           {forgot && (
-            <div className="text-sm text-qmuted text-center">Reset PIN</div>
+            <div className='text-sm text-qmuted text-center'>Reset PIN</div>
           )}
-          <div className="text-xs text-qdim text-center">
+          <div className='text-xs text-qdim text-center'>
             {forgot
               ? 'Enter your account password to clear your PIN. You will be prompted to create a new one.'
               : 'Enter your account password to continue'}
           </div>
           <PasswordInput
-            placeholder="Account password"
+            placeholder='Account password'
             value={pass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setPass(e.target.value);
@@ -190,13 +193,11 @@ export default function ParentPinScreen(
                 }
               }
             }}
-            className="quest-input"
+            className='quest-input'
             autoFocus
           />
-          {err && (
-            <div className="text-qcoral text-[13px]">{err}</div>
-          )}
-          <div className="flex gap-2">
+          {err && <div className='text-qcoral text-[13px]'>{err}</div>}
+          <div className='flex gap-2'>
             {forgot && (
               <button
                 onClick={() => {
@@ -205,7 +206,7 @@ export default function ParentPinScreen(
                   setErr('');
                 }}
                 disabled={busy}
-                className="btn-ghost"
+                className='btn-ghost'
               >
                 Cancel
               </button>
@@ -219,27 +220,20 @@ export default function ParentPinScreen(
                 }
               }}
               disabled={busy}
-              className="btn-primary disabled:cursor-not-allowed"
+              className='btn-primary disabled:cursor-not-allowed'
             >
-              {busy
-                ? 'Verifying...'
-                : forgot
-                  ? 'Reset PIN'
-                  : 'Continue'}
+              {busy ? 'Verifying...' : forgot ? 'Reset PIN' : 'Continue'}
             </button>
           </div>
           {!forgot && (
-            <div className="text-[11px] text-qdim text-center mt-1">
+            <div className='text-[11px] text-qdim text-center mt-1'>
               You can create a PIN in Settings to skip this step next time.
             </div>
           )}
         </div>
       )}
 
-      <button
-        onClick={props.onSignOut}
-        className="btn-ghost mt-5"
-      >
+      <button onClick={props.onSignOut} className='btn-ghost mt-5'>
         Not you? Sign out
       </button>
     </div>

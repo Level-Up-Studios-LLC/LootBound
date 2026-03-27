@@ -121,10 +121,15 @@ export default function CompleteProfileScreen(
         try {
           const ctrl = new AbortController();
           const timer = setTimeout(() => ctrl.abort(), 3000);
-          const res = await fetch(gravatarUrl, { method: 'HEAD', signal: ctrl.signal });
+          const res = await fetch(gravatarUrl, {
+            method: 'HEAD',
+            signal: ctrl.signal,
+          });
           clearTimeout(timer);
           if (res.ok) memberData.parentPhotoURL = gravatarUrl;
-        } catch (_e) { /* Gravatar unreachable or timed out — skip */ }
+        } catch (_e) {
+          /* Gravatar unreachable or timed out — skip */
+        }
       }
       if (pin) {
         memberData.parentPin = pin;
@@ -185,7 +190,8 @@ export default function CompleteProfileScreen(
           Family Created!
         </div>
         <div className='text-sm text-qmuted text-center mb-8 max-w-[300px]'>
-          Share this code with your kids' devices so they can connect to your family
+          Share this code with your kids' devices so they can connect to your
+          family
         </div>
 
         <button
@@ -196,7 +202,9 @@ export default function CompleteProfileScreen(
                 setTimeout(() => setCopied(false), 2000);
               } else {
                 setCopied(false);
-                setError('Could not copy. Long-press the code to copy manually.');
+                setError(
+                  'Could not copy. Long-press the code to copy manually.'
+                );
               }
             });
           }}
@@ -239,7 +247,10 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label htmlFor='cp-name' className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='cp-name'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             Full Name
           </label>
           <input
@@ -259,7 +270,10 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label htmlFor='cp-email' className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='cp-email'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             Email
           </label>
           <input
@@ -272,7 +286,10 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label htmlFor='cp-family-code' className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='cp-family-code'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             Family Code
           </label>
           <input
@@ -293,7 +310,10 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label htmlFor='cp-pin' className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='cp-pin'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             Parent PIN
           </label>
           <PasswordInput
@@ -332,7 +352,10 @@ export default function CompleteProfileScreen(
         </div>
 
         <div>
-          <label htmlFor='cp-referral' className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='cp-referral'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             How did you hear about us?
           </label>
           <select
@@ -353,7 +376,10 @@ export default function CompleteProfileScreen(
         </div>
 
         {error && (
-          <div role='alert' className='text-qcoral text-[13px] text-center py-1.5'>
+          <div
+            role='alert'
+            className='text-qcoral text-[13px] text-center py-1.5'
+          >
             {error}
           </div>
         )}

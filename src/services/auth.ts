@@ -32,7 +32,13 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, deleteDoc, runTransaction } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  runTransaction,
+} from 'firebase/firestore';
 import { auth, db } from './firebase.ts';
 import {
   generateFamilyCode,
@@ -98,7 +104,10 @@ export async function signUpFamily(
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch(err => {
     console.warn('Verification email failed:', err);
-    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
+    Sentry.captureException(err, {
+      level: 'warning',
+      tags: { action: 'send-email-verification' },
+    });
   });
 
   return {
@@ -123,7 +132,11 @@ export async function joinFamilyByCode(
   code: string
 ): Promise<{ user: AuthUser; familyCode: string }> {
   const familyId = await lookupFamilyCode(code);
-  if (!familyId) { const e = new Error('Invalid family code'); (e as any).code = 'auth/invalid-family-code'; throw e; }
+  if (!familyId) {
+    const e = new Error('Invalid family code');
+    (e as any).code = 'auth/invalid-family-code';
+    throw e;
+  }
 
   const cred = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -139,7 +152,10 @@ export async function joinFamilyByCode(
   // Send verification email (fire-and-forget)
   sendEmailVerification(cred.user, appActionCodeSettings()).catch(err => {
     console.warn('Verification email failed:', err);
-    Sentry.captureException(err, { level: 'warning', tags: { action: 'send-email-verification' } });
+    Sentry.captureException(err, {
+      level: 'warning',
+      tags: { action: 'send-email-verification' },
+    });
   });
 
   return {
@@ -205,7 +221,9 @@ export async function handleGoogleRedirectResult(): Promise<{
     result = await getRedirectResult(auth);
   } catch (err: any) {
     if (err.code === 'auth/account-exists-with-different-credential') {
-      const e = new Error('An account with this email already exists. Please sign in with your original method first.');
+      const e = new Error(
+        'An account with this email already exists. Please sign in with your original method first.'
+      );
       (e as any).code = err.code;
       throw e;
     }
@@ -229,7 +247,11 @@ export async function handleGoogleRedirectResult(): Promise<{
   );
   const code = await generateFamilyCode();
   await registerFamilyCode(code, uid);
-  return { isNew: true, familyCode: code, photoURL: user.photoURL ?? undefined };
+  return {
+    isNew: true,
+    familyCode: code,
+    photoURL: user.photoURL ?? undefined,
+  };
 }
 
 export async function signOutFamily(): Promise<void> {
@@ -263,7 +285,9 @@ export function onAuthChange(
         .catch(err => {
           if (token !== seq) return;
           console.error('resolveFamilyId failed:', err);
-          Sentry.captureException(err, { tags: { action: 'resolve-familyid-authchange' } });
+          Sentry.captureException(err, {
+            tags: { action: 'resolve-familyid-authchange' },
+          });
           callback(null);
         });
     } else {
@@ -423,7 +447,9 @@ export async function deleteAuthAccount(password?: string): Promise<void> {
         await reauthenticateWithCredential(user, cred);
         await user.delete();
       } catch (retryErr) {
-        Sentry.captureException(retryErr, { tags: { action: 'delete-auth-retry' } });
+        Sentry.captureException(retryErr, {
+          tags: { action: 'delete-auth-retry' },
+        });
         throw retryErr;
       }
     } else {
@@ -462,21 +488,32 @@ export async function switchToExistingFamily(
   oldFamilyCode: string
 ): Promise<string> {
   const familyId = await lookupFamilyCode(joinCode);
-  if (!familyId) { const e = new Error('Invalid family code'); (e as any).code = 'auth/invalid-family-code'; throw e; }
-  if (familyId === uid) { const e = new Error('Cannot join own family'); (e as any).code = 'auth/invalid-family-code'; throw e; }
+  if (!familyId) {
+    const e = new Error('Invalid family code');
+    (e as any).code = 'auth/invalid-family-code';
+    throw e;
+  }
+  if (familyId === uid) {
+    const e = new Error('Cannot join own family');
+    (e as any).code = 'auth/invalid-family-code';
+    throw e;
+  }
 
   // Atomically delete and recreate parentMembers with new familyId
   // (Firestore rules block familyId changes via update for security)
   const memberRef = doc(db, 'parentMembers', uid);
   try {
-    await runTransaction(db, async (txn) => {
+    await runTransaction(db, async txn => {
       const snap = await txn.get(memberRef);
       const existing = snap.exists() ? snap.data() : {};
       txn.delete(memberRef);
       txn.set(memberRef, { ...existing, familyId });
     });
   } catch (err) {
-    Sentry.captureException(err, { tags: { action: 'switch-family-transaction' }, extra: { uid, familyId } });
+    Sentry.captureException(err, {
+      tags: { action: 'switch-family-transaction' },
+      extra: { uid, familyId },
+    });
     throw err;
   }
 
@@ -484,12 +521,18 @@ export async function switchToExistingFamily(
   try {
     await deleteDoc(doc(db, 'familyCodes', oldFamilyCode));
   } catch (err) {
-    Sentry.captureException(err, { level: 'warning', tags: { action: 'switch-family-cleanup-code' } });
+    Sentry.captureException(err, {
+      level: 'warning',
+      tags: { action: 'switch-family-cleanup-code' },
+    });
   }
   try {
     await deleteDoc(doc(db, 'families', uid));
   } catch (err) {
-    Sentry.captureException(err, { level: 'warning', tags: { action: 'switch-family-cleanup-doc' } });
+    Sentry.captureException(err, {
+      level: 'warning',
+      tags: { action: 'switch-family-cleanup-doc' },
+    });
   }
 
   return joinCode;
