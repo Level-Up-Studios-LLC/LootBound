@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faKey, faUserPlus, faTrashCan, faChildren, faPenToSquare } from '../../fa.ts';
+import {
+  faXmark,
+  faKey,
+  faUserPlus,
+  faTrashCan,
+  faChildren,
+  faPenToSquare,
+} from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { AVATARS, COLORS, altBg } from '../../constants.ts';
@@ -10,17 +17,29 @@ import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import PasswordInput from '../../components/ui/PasswordInput.tsx';
-import type { UserData, Child, AddChildFormData, KidPinEditState } from '../../types.ts';
+import type {
+  UserData,
+  Child,
+  AddChildFormData,
+  KidPinEditState,
+} from '../../types.ts';
 
 function getSkipKey() {
   return `lb-skip-delete-child:${getCurrentUid() || 'anon'}`;
 }
 
 export default function ChildrenTab(): React.ReactElement {
-  const [kidPinEdit, setKidPinEdit] = useState<KidPinEditState>({ uid: null, val: '' });
-  const [addChildForm, setAddChildForm] = useState<AddChildFormData | null>(null);
+  const [kidPinEdit, setKidPinEdit] = useState<KidPinEditState>({
+    uid: null,
+    val: '',
+  });
+  const [addChildForm, setAddChildForm] = useState<AddChildFormData | null>(
+    null
+  );
   const [editChild, setEditChild] = useState<Child | null>(null);
-  const [editChildForm, setEditChildForm] = useState<AddChildFormData | null>(null);
+  const [editChildForm, setEditChildForm] = useState<AddChildFormData | null>(
+    null
+  );
   const [removeChild, setRemoveChild] = useState<Child | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -32,8 +51,8 @@ export default function ChildrenTab(): React.ReactElement {
   return (
     <div>
       <div className='text-[13px] text-qmuted mb-4 leading-relaxed'>
-        Add children to your family. Each child gets their own profile, missions,
-        and coin balance. Set a PIN per child to prevent siblings from
+        Add children to your family. Each child gets their own profile,
+        missions, and coin balance. Set a PIN per child to prevent siblings from
         accessing each other's profiles.
       </div>
       <div className='flex justify-between items-center mb-4'>
@@ -64,9 +83,8 @@ export default function ChildrenTab(): React.ReactElement {
                     {c.name}
                   </div>
                   <div className='text-xs text-qmuted'>
-                    Age {c.age} |{' '}
-                    {(allU[c.id] || ({} as UserData)).points || 0} coins |{' '}
-                    {c.pin ? 'PIN set' : 'No PIN'}
+                    Age {c.age} | {(allU[c.id] || ({} as UserData)).points || 0}{' '}
+                    coins | {c.pin ? 'PIN set' : 'No PIN'}
                   </div>
                 </div>
               </div>
@@ -85,7 +103,7 @@ export default function ChildrenTab(): React.ReactElement {
                     <button
                       onClick={() => {
                         if (kidPinEdit.val.length === 4) {
-                          const nc = cfg!.children.map((x) => {
+                          const nc = cfg!.children.map(x => {
                             return x.id === c.id
                               ? { ...x, pin: kidPinEdit.val }
                               : x;
@@ -123,10 +141,8 @@ export default function ChildrenTab(): React.ReactElement {
                     {c.pin && (
                       <button
                         onClick={() => {
-                          const nc = cfg!.children.map((x) => {
-                            return x.id === c.id
-                              ? { ...x, pin: null }
-                              : x;
+                          const nc = cfg!.children.map(x => {
+                            return x.id === c.id ? { ...x, pin: null } : x;
                           });
                           ctx.saveCfg({ ...cfg!, children: nc });
                           ctx.notify('PIN removed');
@@ -174,7 +190,7 @@ export default function ChildrenTab(): React.ReactElement {
               id={c.id}
               redeems={(allU[c.id] || ({} as UserData)).redemptions || []}
               isOpen={expanded[c.id] || false}
-              onToggle={(id) => {
+              onToggle={id => {
                 const next = { ...expanded };
                 next[id] = !next[id];
                 setExpanded(next);
@@ -195,7 +211,7 @@ export default function ChildrenTab(): React.ReactElement {
         <Modal title='Add Child'>
           <AddChildForm
             form={addChildForm}
-            onChange={(f) => {
+            onChange={f => {
               setAddChildForm(f);
             }}
             onSave={() => {
@@ -213,7 +229,7 @@ export default function ChildrenTab(): React.ReactElement {
         <Modal title='Edit Child'>
           <AddChildForm
             form={editChildForm}
-            onChange={(f) => {
+            onChange={f => {
               setEditChildForm(f);
             }}
             onSave={() => {
@@ -223,7 +239,10 @@ export default function ChildrenTab(): React.ReactElement {
                 return {
                   ...c,
                   name: editChildForm.name,
-                  age: (() => { const parsed = Number(editChildForm.age); return Number.isNaN(parsed) ? c.age : parsed; })(),
+                  age: (() => {
+                    const parsed = Number(editChildForm.age);
+                    return Number.isNaN(parsed) ? c.age : parsed;
+                  })(),
                   avatar: editChildForm.avatar,
                   color: editChildForm.color,
                 };

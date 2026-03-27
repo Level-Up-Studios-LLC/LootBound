@@ -1,5 +1,11 @@
 import * as Sentry from '@sentry/react';
-import type { Config, UserData, Child, AddChildFormData, ResetOptions } from '../types.ts';
+import type {
+  Config,
+  UserData,
+  Child,
+  AddChildFormData,
+  ResetOptions,
+} from '../types.ts';
 import type { ChildData } from '../services/firestoreStorage.ts';
 import { freshUser, slugify } from '../utils.ts';
 import {
@@ -116,7 +122,10 @@ export function useChildActions(deps: ChildActionsDeps) {
         Sentry.captureException(err, {
           tags: { action: 'reset-all-photo-cleanup' },
         });
-        deps.notify('All data reset, but some photos could not be deleted', 'error');
+        deps.notify(
+          'All data reset, but some photos could not be deleted',
+          'error'
+        );
       }
       deps.setAllU(() => resetUsers);
       if (!photoCleanupFailed) deps.notify('All data reset');
@@ -133,7 +142,12 @@ export function useChildActions(deps: ChildActionsDeps) {
       throw new Error('Cannot reset data before config has loaded');
     }
     const children = deps.cfg.children || [];
-    const allSelected = opts.coins && opts.xpLevels && opts.streaks && opts.taskHistory && opts.redemptions;
+    const allSelected =
+      opts.coins &&
+      opts.xpLevels &&
+      opts.streaks &&
+      opts.taskHistory &&
+      opts.redemptions;
 
     // If everything selected, delegate to full reset (uses replaceChildData)
     if (allSelected) return resetAll();
@@ -141,15 +155,24 @@ export function useChildActions(deps: ChildActionsDeps) {
     // Build partial update based on selected options
     const update: Partial<ChildData> = {};
     if (opts.coins) update.points = 0;
-    if (opts.xpLevels) { update.xp = 0; update.level = 1; }
+    if (opts.xpLevels) {
+      update.xp = 0;
+      update.level = 1;
+    }
     if (opts.streaks) {
       update.streak = 0;
       update.bestStreak = 0;
       update.missedDaysThisWeek = 0;
       update.lastPerfectDate = null;
     }
-    if (opts.taskHistory) { update.taskLog = {}; update.lastTaskTime = 0; }
-    if (opts.redemptions) { update.redemptions = []; update.pendingRedemptions = []; }
+    if (opts.taskHistory) {
+      update.taskLog = {};
+      update.lastTaskTime = 0;
+    }
+    if (opts.redemptions) {
+      update.redemptions = [];
+      update.pendingRedemptions = [];
+    }
 
     const promises: Promise<void>[] = [];
     for (let i = 0; i < children.length; i++) {
@@ -166,8 +189,13 @@ export function useChildActions(deps: ChildActionsDeps) {
         } catch (err) {
           photoCleanupFailed = true;
           console.warn('Photo cleanup failed during selective reset:', err);
-          Sentry.captureException(err, { tags: { action: 'reset-data-photo-cleanup' } });
-          deps.notify('Task history reset, but some photos could not be deleted', 'error');
+          Sentry.captureException(err, {
+            tags: { action: 'reset-data-photo-cleanup' },
+          });
+          deps.notify(
+            'Task history reset, but some photos could not be deleted',
+            'error'
+          );
         }
       }
       deps.setAllU(prev => {
@@ -179,14 +207,17 @@ export function useChildActions(deps: ChildActionsDeps) {
           const perChild: Partial<ChildData> = { ...update };
           if (update.taskLog !== undefined) perChild.taskLog = {};
           if (update.redemptions !== undefined) perChild.redemptions = [];
-          if (update.pendingRedemptions !== undefined) perChild.pendingRedemptions = [];
+          if (update.pendingRedemptions !== undefined)
+            perChild.pendingRedemptions = [];
           next[id] = { ...next[id], ...perChild };
         }
         return next;
       });
       if (!photoCleanupFailed) deps.notify('Selected data reset');
     } catch (err) {
-      Sentry.captureException(err, { tags: { action: 'reset-data-selective' } });
+      Sentry.captureException(err, {
+        tags: { action: 'reset-data-selective' },
+      });
       deps.notify('Data reset failed — please try again', 'error');
       throw err;
     }

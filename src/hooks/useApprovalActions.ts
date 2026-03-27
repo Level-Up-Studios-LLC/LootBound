@@ -46,9 +46,12 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch((err) => {
+    }).catch(err => {
       console.warn('Notification failed (loot_approved):', err);
-      Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'loot_approved' } });
+      Sentry.captureException(err, {
+        level: 'warning',
+        tags: { action: 'notification-write', type: 'loot_approved' },
+      });
     });
   };
 
@@ -72,9 +75,12 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
       childId: uid,
       childName,
       targetRole: 'kid',
-    }).catch((err) => {
+    }).catch(err => {
       console.warn('Notification failed (loot_denied):', err);
-      Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'loot_denied' } });
+      Sentry.captureException(err, {
+        level: 'warning',
+        tags: { action: 'notification-write', type: 'loot_denied' },
+      });
     });
   };
 

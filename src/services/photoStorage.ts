@@ -77,7 +77,10 @@ export async function deleteAllChildPhotos(
       (e as Error & { code?: string }).code !== 'storage/object-not-found'
     ) {
       console.warn('Failed to delete child photos:', e);
-      Sentry.captureException(e, { level: 'warning', tags: { action: 'delete-child-photos' } });
+      Sentry.captureException(e, {
+        level: 'warning',
+        tags: { action: 'delete-child-photos' },
+      });
     }
   }
 }
@@ -134,7 +137,10 @@ export async function deleteAllFamilyPhotos(
       (e as Error & { code?: string }).code !== 'storage/object-not-found'
     ) {
       console.warn('Failed to delete family photos:', e);
-      Sentry.captureException(e, { level: 'warning', tags: { action: 'delete-family-photos' } });
+      Sentry.captureException(e, {
+        level: 'warning',
+        tags: { action: 'delete-family-photos' },
+      });
     }
   }
 }

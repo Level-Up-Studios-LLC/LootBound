@@ -2,6 +2,7 @@ import React, {
   useState,
   useEffect,
   useMemo,
+  useCallback,
   createContext,
   useContext,
 } from 'react';
@@ -14,6 +15,7 @@ import type {
   Reward,
   AddChildFormData,
   Notification,
+  CoopRequest,
 } from '../types.ts';
 import {
   DEF_TIER_CONFIG,
@@ -50,6 +52,7 @@ import { useTaskActions } from '../hooks/useTaskActions.ts';
 import { useRewardActions } from '../hooks/useRewardActions.ts';
 import { useApprovalActions } from '../hooks/useApprovalActions.ts';
 import { useChildActions } from '../hooks/useChildActions.ts';
+import { useCoopActions } from '../hooks/useCoopActions.ts';
 import { useFirestoreSync } from '../hooks/useFirestoreSync.ts';
 import { useNotificationListener } from '../hooks/useNotificationListener.ts';
 import {
@@ -58,8 +61,14 @@ import {
   playSound,
 } from '../services/notificationSound.ts';
 import type { SoundKey } from '../services/notificationSound.ts';
-import { cleanupOldNotifications } from '../services/firestoreStorage.ts';
-import { generateFamilyCode, registerFamilyCode } from '../services/familyCode.ts';
+import {
+  cleanupOldNotifications,
+  writeNotification,
+} from '../services/firestoreStorage.ts';
+import {
+  generateFamilyCode,
+  registerFamilyCode,
+} from '../services/familyCode.ts';
 
 interface AppContextValue {
   familyId: string;
@@ -110,6 +119,31 @@ interface AppContextValue {
   doRemoveChild: (id: string) => Promise<void>;
   getChild: (id: string) => Child | null;
   onLogout: (() => void) | null;
+
+  // Co-op
+  coopRequests: CoopRequest[];
+  requestCoop: (
+    initiatorId: string,
+    taskId: string,
+    partnerId: string
+  ) => Promise<void>;
+  acceptCoop: (requestId: string) => Promise<void>;
+  declineCoop: (requestId: string) => Promise<void>;
+  approveCoop: (
+    requestId: string,
+    overrides?: {
+      windowStart?: string;
+      windowEnd?: string;
+      coinOverride?: number;
+    }
+  ) => Promise<void>;
+  denyCoop: (requestId: string) => Promise<void>;
+  cancelCoop: (requestId: string) => Promise<void>;
+  isTaskInActiveCoop: (
+    childId: string,
+    taskId: string,
+    date: string
+  ) => boolean;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -146,6 +180,7 @@ export function AppProvider(props: {
   };
   const [cfg, setCfg] = useState<Config | null>(null);
   const [allU, setAllU] = useState<Record<string, UserData>>({});
+  const [coopRequests, setCoopRequests] = useState<CoopRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [_tick, setTick] = useState(0);
   void _tick;
@@ -295,6 +330,36 @@ export function AppProvider(props: {
     notify: notification.notify,
     getChildName: getChildName,
     playSound: playSoundIfAllowed,
+  });
+
+  // --- sendNotification wrapper for co-op hook ---
+  const sendNotification = useCallback(
+    async (data: {
+      type: string;
+      title: string;
+      body: string;
+      childId?: string;
+      childName?: string;
+      targetRole: 'parent' | 'kid';
+    }) => {
+      await writeNotification(familyId, {
+        type: data.type,
+        title: data.title,
+        body: data.body,
+        childId: data.childId || '',
+        childName: data.childName || '',
+        targetRole: data.targetRole,
+      });
+    },
+    [familyId]
+  );
+
+  const coopActions = useCoopActions({
+    familyId,
+    children: cfg ? cfg.children : [],
+    tasks: cfg ? cfg.tasks : {},
+    coopRequests,
+    sendNotification,
   });
 
   const childActions = useChildActions({
@@ -508,6 +573,7 @@ export function AppProvider(props: {
     loading,
     setCfg,
     setAllU,
+    setCoopRequests,
   });
 
   // --- In-app notification listener ---
@@ -550,7 +616,10 @@ export function AppProvider(props: {
     if (!familyId || loading || curUser !== 'parent') return;
     cleanupOldNotifications(familyId).catch(err => {
       console.warn('Notification cleanup failed:', err);
-      Sentry.captureException(err, { level: 'warning', tags: { action: 'cleanup-old-notifications' } });
+      Sentry.captureException(err, {
+        level: 'warning',
+        tags: { action: 'cleanup-old-notifications' },
+      });
     });
   }, [familyId, loading, curUser]);
 
@@ -639,9 +708,48 @@ export function AppProvider(props: {
     curUser && curUser !== 'parent' ? allU[curUser] || null : null;
   const uTasks =
     curUser && curUser !== 'parent' && cfg ? cfg.tasks[curUser] || [] : [];
-  const activeTasks = uTasks.filter(isTaskActiveToday);
-  const tomorrowTasks = uTasks.filter(t => !isTaskActiveToday(t) && isTaskActiveTomorrow(t));
+  const soloActiveTasks = useMemo(
+    () => uTasks.filter(isTaskActiveToday),
+    [uTasks]
+  );
+  const tomorrowTasks = uTasks.filter(
+    t => !isTaskActiveToday(t) && isTaskActiveTomorrow(t)
+  );
   const d = getToday();
+
+  // Derive virtual co-op tasks for partner kids.
+  // Approved coopRequests where curUser is the partner act as virtual task
+  // assignments. The virtual task inherits the original task's definition
+  // but uses id = "coop:{requestId}" so it doesn't collide with real tasks.
+  // If the original task was deleted, skip the virtual task (orphaned co-op).
+  const coopVirtualTasks: import('../types.ts').Task[] = useMemo(() => {
+    if (!curUser || curUser === 'parent' || !cfg) return [];
+    return coopRequests
+      .filter(
+        r => r.partnerId === curUser && r.status === 'approved' && r.date === d
+      )
+      .map(r => {
+        const initiatorTasks = cfg.tasks[r.initiatorId] || [];
+        const original = initiatorTasks.find(t => t.id === r.taskId);
+        if (!original) return null;
+        return {
+          id: `coop:${r.id}`,
+          name: r.taskName,
+          tier: r.taskTier,
+          windowStart: r.windowStartOverride ?? original.windowStart,
+          windowEnd: r.windowEndOverride ?? original.windowEnd,
+          daily: original.daily,
+          dueDay: original.dueDay,
+        };
+      })
+      .filter((t): t is import('../types.ts').Task => t !== null);
+  }, [curUser, cfg, coopRequests, d]);
+
+  const activeTasks = useMemo(
+    () => [...soloActiveTasks, ...coopVirtualTasks],
+    [soloActiveTasks, coopVirtualTasks]
+  );
+
   const tLog =
     currentUserData && currentUserData.taskLog && currentUserData.taskLog[d]
       ? currentUserData.taskLog[d]
@@ -652,6 +760,10 @@ export function AppProvider(props: {
     const u = allU[c.id];
     if (u && u.pendingRedemptions) pendingCount += u.pendingRedemptions.length;
   });
+  // Include co-op requests awaiting parent approval
+  pendingCount += coopRequests.filter(
+    r => r.status === 'pending_parent'
+  ).length;
 
   const value: AppContextValue = {
     familyId,
@@ -696,6 +808,16 @@ export function AppProvider(props: {
     doRemoveChild: childActions.doRemoveChild,
     getChild,
     onLogout: props.onLogout || null,
+
+    // Co-op
+    coopRequests,
+    requestCoop: coopActions.requestCoop,
+    acceptCoop: coopActions.acceptCoop,
+    declineCoop: coopActions.declineCoop,
+    approveCoop: coopActions.approveCoop,
+    denyCoop: coopActions.denyCoop,
+    cancelCoop: coopActions.cancelCoop,
+    isTaskInActiveCoop: coopActions.isTaskInActiveCoop,
   };
 
   return (

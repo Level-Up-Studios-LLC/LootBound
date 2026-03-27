@@ -55,7 +55,9 @@ service cloud.firestore {
 
       match /coopRequests/{requestId} {
         allow read: if isAuthenticated();
-        allow create: if isAuthenticated() &&
+        // All co-op mutations restricted to parents until child Custom
+        // Token auth is implemented (kids lack verifiable identity today).
+        allow create: if isParent(familyId) &&
           request.resource.data.keys().hasOnly([
             'taskId', 'initiatorId', 'partnerId', 'status', 'date',
             'createdAt', 'partnerRespondedAt', 'parentResolvedAt', 'completedAt',
@@ -65,20 +67,55 @@ service cloud.firestore {
           ]) &&
           request.resource.data.status == 'pending_partner' &&
           request.resource.data.initiatorCompleted == false &&
-          request.resource.data.partnerCompleted == false;
-        // Parents can approve/deny and set override fields.
+          request.resource.data.partnerCompleted == false &&
+          request.resource.data.partnerRespondedAt == null &&
+          request.resource.data.parentResolvedAt == null &&
+          request.resource.data.completedAt == null &&
+          request.resource.data.windowStartOverride == null &&
+          request.resource.data.windowEndOverride == null &&
+          request.resource.data.coinOverride == null &&
+          exists(/databases/$(database)/documents/families/$(familyId)/children/$(request.resource.data.initiatorId)) &&
+          exists(/databases/$(database)/documents/families/$(familyId)/children/$(request.resource.data.partnerId));
+        // Parents can approve/deny from pending_parent and set override fields.
         allow update: if isParent(familyId) &&
+          resource.data.status == 'pending_parent' &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status', 'parentResolvedAt', 'coinOverride',
                       'windowStartOverride', 'windowEndOverride']) &&
           request.resource.data.status in ['approved', 'denied'];
-        // Any authenticated user can drive partner response, cancellation, and completion.
-        // The resulting status must not be a parent-only terminal state.
-        allow update: if isAuthenticated() &&
+        // Partner accept/decline: only from pending_partner.
+        allow update: if isParent(familyId) &&
+          resource.data.status == 'pending_partner' &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'partnerRespondedAt', 'completedAt',
-                      'initiatorCompleted', 'partnerCompleted']) &&
-          !(request.resource.data.status in ['approved', 'denied']);
+            .hasOnly(['status', 'partnerRespondedAt']) &&
+          request.resource.data.status in ['pending_parent', 'declined'];
+        // Cancellation: from any active status.
+        allow update: if isParent(familyId) &&
+          resource.data.status in ['pending_partner', 'pending_parent', 'approved'] &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status']) &&
+          request.resource.data.status == 'cancelled';
+        // Completion tracking: only from approved. Flags are monotonic
+        // (false→true only) and status=completed requires both true + completedAt set.
+        allow update: if isParent(familyId) &&
+          resource.data.status == 'approved' &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'completedAt', 'initiatorCompleted', 'partnerCompleted']) &&
+          request.resource.data.status in ['approved', 'completed'] &&
+          // Monotonic: flags can only go false→true, never true→false
+          (request.resource.data.initiatorCompleted == true || request.resource.data.initiatorCompleted == resource.data.initiatorCompleted) &&
+          (request.resource.data.partnerCompleted == true || request.resource.data.partnerCompleted == resource.data.partnerCompleted) &&
+          // completed status requires both flags true and completedAt set
+          (request.resource.data.status == 'approved' ||
+           (request.resource.data.initiatorCompleted == true &&
+            request.resource.data.partnerCompleted == true &&
+            request.resource.data.completedAt != null));
+        // Expiration: parent expires an approved co-op at bedtime.
+        allow update: if isParent(familyId) &&
+          resource.data.status == 'approved' &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status']) &&
+          request.resource.data.status == 'expired';
         allow delete: if isParent(familyId);
       }
 

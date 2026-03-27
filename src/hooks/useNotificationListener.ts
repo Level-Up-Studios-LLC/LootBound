@@ -54,13 +54,13 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
 
     firstSnapshotRef.current = true;
 
-    const unsub = onNotificationsSnapshot(deps.familyId, (list) => {
+    const unsub = onNotificationsSnapshot(deps.familyId, list => {
       const prefs = prefsRef.current;
 
       if (firstSnapshotRef.current) {
         firstSnapshotRef.current = false;
         // On first snapshot, surface unread eligible notifications and mark all as seen
-        list.forEach((n) => {
+        list.forEach(n => {
           if (
             !seenRef.current.has(n.id) &&
             isEligible(n, deps.role, deps.childId, prefs)
@@ -75,8 +75,11 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
             if (prefs.soundEnabled) {
               playSound(notifTypeToSound(n.type));
             }
-            markNotificationRead(deps.familyId, n.id).catch((err) => {
-              Sentry.captureException(err, { level: 'warning', tags: { action: 'mark-notification-read' } });
+            markNotificationRead(deps.familyId, n.id).catch(err => {
+              Sentry.captureException(err, {
+                level: 'warning',
+                tags: { action: 'mark-notification-read' },
+              });
             });
             seenRef.current.add(n.id);
           }
@@ -84,7 +87,7 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
         return;
       }
 
-      list.forEach((n) => {
+      list.forEach(n => {
         if (seenRef.current.has(n.id)) return;
 
         if (!isEligible(n, deps.role, deps.childId, prefs)) return;
@@ -103,8 +106,11 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
           playSound(notifTypeToSound(n.type));
         }
 
-        markNotificationRead(deps.familyId, n.id).catch((err) => {
-          Sentry.captureException(err, { level: 'warning', tags: { action: 'mark-notification-read' } });
+        markNotificationRead(deps.familyId, n.id).catch(err => {
+          Sentry.captureException(err, {
+            level: 'warning',
+            tags: { action: 'mark-notification-read' },
+          });
         });
       });
     });

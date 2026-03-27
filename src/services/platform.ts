@@ -41,14 +41,20 @@ export async function setStorage(key: string, val: string): Promise<void> {
     try {
       await Preferences.set({ key: key, value: val });
     } catch (e) {
-      Sentry.captureException(e, { level: 'warning', tags: { action: 'set-storage', key } });
+      Sentry.captureException(e, {
+        level: 'warning',
+        tags: { action: 'set-storage', key },
+      });
     }
     return;
   }
   try {
     sessionStorage.setItem(key, val);
   } catch (e) {
-    Sentry.captureException(e, { level: 'warning', tags: { action: 'set-storage', key } });
+    Sentry.captureException(e, {
+      level: 'warning',
+      tags: { action: 'set-storage', key },
+    });
   }
 }
 
@@ -98,14 +104,20 @@ export async function setPersistentStorage(
     try {
       await Preferences.set({ key: key, value: val });
     } catch (e) {
-      Sentry.captureException(e, { level: 'warning', tags: { action: 'set-persistent-storage', key } });
+      Sentry.captureException(e, {
+        level: 'warning',
+        tags: { action: 'set-persistent-storage', key },
+      });
     }
     return;
   }
   try {
     localStorage.setItem(key, val);
   } catch (e) {
-    Sentry.captureException(e, { level: 'warning', tags: { action: 'set-persistent-storage', key } });
+    Sentry.captureException(e, {
+      level: 'warning',
+      tags: { action: 'set-persistent-storage', key },
+    });
   }
 }
 

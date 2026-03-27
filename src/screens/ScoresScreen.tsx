@@ -68,18 +68,29 @@ export default function ScoresScreen(): React.ReactElement | null {
   const isSolo = children.length === 1;
 
   // Single unconditional useGSAP call — animates whichever view renders
-  useGSAP(() => {
-    if (!ch || !ud || !cfg) return;
-    if (isSolo) {
-      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-      tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
-      tl.from('.scores-stat', { opacity: 0, y: 16, duration: 0.3, stagger: 0.06 }, '-=0.2');
-    } else {
-      gsap.from('.leader-card', {
-        opacity: 0, x: -20, duration: 0.35, stagger: 0.08, ease: 'power2.out',
-      });
-    }
-  }, { scope: containerRef, dependencies: [ch, ud, cfg, isSolo] });
+  useGSAP(
+    () => {
+      if (!ch || !ud || !cfg) return;
+      if (isSolo) {
+        const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+        tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
+        tl.from(
+          '.scores-stat',
+          { opacity: 0, y: 16, duration: 0.3, stagger: 0.06 },
+          '-=0.2'
+        );
+      } else {
+        gsap.from('.leader-card', {
+          opacity: 0,
+          x: -20,
+          duration: 0.35,
+          stagger: 0.08,
+          ease: 'power2.out',
+        });
+      }
+    },
+    { scope: containerRef, dependencies: [ch, ud, cfg, isSolo] }
+  );
 
   if (!ch || !ud || !cfg) return null;
 

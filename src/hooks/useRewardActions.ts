@@ -79,9 +79,12 @@ export function useRewardActions(deps: RewardActionsDeps) {
         childId: uid,
         childName,
         targetRole: 'parent',
-      }).catch((err) => {
+      }).catch(err => {
         console.warn('Notification failed (loot_request):', err);
-        Sentry.captureException(err, { level: 'warning', tags: { action: 'notification-write', type: 'loot_request' } });
+        Sentry.captureException(err, {
+          level: 'warning',
+          tags: { action: 'notification-write', type: 'loot_request' },
+        });
       });
       return;
     }

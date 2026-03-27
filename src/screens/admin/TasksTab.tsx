@@ -34,7 +34,10 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
     null
   );
   const [addTask, setAddTask] = useState<(Task & { uid: string }) | null>(null);
-  const [deleteTask, setDeleteTask] = useState<{ task: Task; childId: string } | null>(null);
+  const [deleteTask, setDeleteTask] = useState<{
+    task: Task;
+    childId: string;
+  } | null>(null);
 
   const ctx = useAppContext();
   const children = ctx.children;

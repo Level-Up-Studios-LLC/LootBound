@@ -11,7 +11,14 @@
  * in the foreground.
  */
 
-const SOUND_KEYS = ['success', 'error', 'approval', 'levelup', 'streak', 'victory'] as const;
+const SOUND_KEYS = [
+  'success',
+  'error',
+  'approval',
+  'levelup',
+  'streak',
+  'victory',
+] as const;
 export type SoundKey = (typeof SOUND_KEYS)[number];
 
 let audioCtx: AudioContext | null = null;
@@ -23,7 +30,13 @@ function getCtx(): AudioContext {
   return audioCtx;
 }
 
-function tone(freq: number, duration: number, startTime: number, type: OscillatorType = 'sine', gain = 0.3) {
+function tone(
+  freq: number,
+  duration: number,
+  startTime: number,
+  type: OscillatorType = 'sine',
+  gain = 0.3
+) {
   const ctx = getCtx();
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
@@ -41,37 +54,37 @@ const SYNTHS: Record<string, () => void> = {
   success() {
     const ctx = getCtx();
     const t = ctx.currentTime;
-    tone(523, 0.12, t, 'sine', 0.25);        // C5
-    tone(659, 0.12, t + 0.1, 'sine', 0.25);  // E5
-    tone(784, 0.2, t + 0.2, 'sine', 0.3);    // G5
+    tone(523, 0.12, t, 'sine', 0.25); // C5
+    tone(659, 0.12, t + 0.1, 'sine', 0.25); // E5
+    tone(784, 0.2, t + 0.2, 'sine', 0.3); // G5
   },
   error() {
     const ctx = getCtx();
     const t = ctx.currentTime;
-    tone(330, 0.15, t, 'square', 0.15);       // E4
+    tone(330, 0.15, t, 'square', 0.15); // E4
     tone(262, 0.25, t + 0.15, 'square', 0.15); // C4
   },
   approval() {
     const ctx = getCtx();
     const t = ctx.currentTime;
-    tone(440, 0.1, t, 'sine', 0.2);           // A4
-    tone(554, 0.1, t + 0.08, 'sine', 0.2);    // C#5
-    tone(659, 0.15, t + 0.16, 'sine', 0.25);  // E5
+    tone(440, 0.1, t, 'sine', 0.2); // A4
+    tone(554, 0.1, t + 0.08, 'sine', 0.2); // C#5
+    tone(659, 0.15, t + 0.16, 'sine', 0.25); // E5
   },
   levelup() {
     const ctx = getCtx();
     const t = ctx.currentTime;
-    tone(523, 0.1, t, 'sine', 0.25);          // C5
-    tone(659, 0.1, t + 0.08, 'sine', 0.25);   // E5
-    tone(784, 0.1, t + 0.16, 'sine', 0.25);   // G5
-    tone(1047, 0.3, t + 0.24, 'sine', 0.3);   // C6
+    tone(523, 0.1, t, 'sine', 0.25); // C5
+    tone(659, 0.1, t + 0.08, 'sine', 0.25); // E5
+    tone(784, 0.1, t + 0.16, 'sine', 0.25); // G5
+    tone(1047, 0.3, t + 0.24, 'sine', 0.3); // C6
   },
   streak() {
     const ctx = getCtx();
     const t = ctx.currentTime;
-    tone(392, 0.1, t, 'triangle', 0.2);       // G4
+    tone(392, 0.1, t, 'triangle', 0.2); // G4
     tone(494, 0.1, t + 0.1, 'triangle', 0.2); // B4
-    tone(587, 0.1, t + 0.2, 'triangle', 0.25);// D5
+    tone(587, 0.1, t + 0.2, 'triangle', 0.25); // D5
     tone(784, 0.2, t + 0.3, 'triangle', 0.3); // G5
   },
 };
@@ -132,7 +145,12 @@ export function playSound(key: SoundKey): void {
 export function notifTypeToSound(type: string): SoundKey {
   if (type === 'mission_complete') return 'success';
   if (type === 'mission_rejected') return 'error';
-  if (type === 'loot_request' || type === 'loot_approved' || type === 'loot_denied') return 'approval';
+  if (
+    type === 'loot_request' ||
+    type === 'loot_approved' ||
+    type === 'loot_denied'
+  )
+    return 'approval';
   if (type === 'level_up') return 'levelup';
   if (type === 'streak') return 'streak';
   return 'success';

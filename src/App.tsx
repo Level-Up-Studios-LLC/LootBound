@@ -260,7 +260,9 @@ function AppRouter() {
 
   const [parentPin, setParentPin] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
-  const [verifyAction, setVerifyAction] = useState<'send' | 'check' | null>(null);
+  const [verifyAction, setVerifyAction] = useState<'send' | 'check' | null>(
+    null
+  );
 
   const [initDone, setInitDone] = useState(false);
   useEffect(() => {
@@ -441,10 +443,7 @@ function AppRouter() {
     }
 
     // Email verification gate — block unverified email+password users
-    if (
-      hasPasswordProvider() &&
-      !auth.authUser.emailVerified
-    ) {
+    if (hasPasswordProvider() && !auth.authUser.emailVerified) {
       return (
         <div className='page-wrapper page-centered'>
           <div className='text-5xl mb-5'>
@@ -454,8 +453,9 @@ function AppRouter() {
             Verify Your Email
           </div>
           <div className='text-sm text-qmuted text-center mb-6 max-w-[300px]'>
-            We sent a verification link to <strong>{auth.authUser.email}</strong>.
-            Please check your inbox and click the link to continue.
+            We sent a verification link to{' '}
+            <strong>{auth.authUser.email}</strong>. Please check your inbox and
+            click the link to continue.
           </div>
           <div className='flex flex-col gap-3 w-full max-w-[260px]'>
             <button
@@ -473,7 +473,9 @@ function AppRouter() {
               }}
               className='btn-primary'
             >
-              {verifyAction === 'send' ? 'Sending...' : 'Resend Verification Email'}
+              {verifyAction === 'send'
+                ? 'Sending...'
+                : 'Resend Verification Email'}
             </button>
             <div
               role='status'
@@ -491,19 +493,25 @@ function AppRouter() {
                 try {
                   const verified = await auth.doRefreshVerification();
                   if (!verified) {
-                    setResendStatus('Not verified yet. Please check your inbox.');
+                    setResendStatus(
+                      'Not verified yet. Please check your inbox.'
+                    );
                   } else {
                     setResendStatus('Email verified! Redirecting...');
                   }
                 } catch {
-                  setResendStatus('Could not check verification status. Please try again.');
+                  setResendStatus(
+                    'Could not check verification status. Please try again.'
+                  );
                 } finally {
                   setVerifyAction(null);
                 }
               }}
               className='btn-ghost'
             >
-              {verifyAction === 'check' ? 'Checking...' : "I've Verified My Email"}
+              {verifyAction === 'check'
+                ? 'Checking...'
+                : "I've Verified My Email"}
             </button>
             <button
               onClick={async () => {

@@ -1,11 +1,20 @@
 import { useEffect, useRef } from 'react';
-import type { Config, Child, Task, Reward, UserData } from '../types.ts';
+import * as Sentry from '@sentry/react';
+import type {
+  Config,
+  Child,
+  Task,
+  Reward,
+  UserData,
+  CoopRequest,
+} from '../types.ts';
 import {
   onConfigSnapshot,
   onChildrenSnapshot,
   onTasksSnapshot,
   onRewardsSnapshot,
   onChildDataSnapshot,
+  onCoopRequestsSnapshot,
 } from '../services/firestoreStorage.ts';
 
 interface FirestoreSyncDeps {
@@ -15,6 +24,7 @@ interface FirestoreSyncDeps {
   setAllU: (
     fn: (prev: Record<string, UserData>) => Record<string, UserData>
   ) => void;
+  setCoopRequests: (fn: (prev: CoopRequest[]) => CoopRequest[]) => void;
 }
 
 /**
@@ -23,7 +33,7 @@ interface FirestoreSyncDeps {
  * without a refresh.
  */
 export function useFirestoreSync(deps: FirestoreSyncDeps) {
-  const { familyId, loading, setCfg, setAllU } = deps;
+  const { familyId, loading, setCfg, setAllU, setCoopRequests } = deps;
 
   // Track child IDs so we can add/remove per-child listeners dynamically
   const childUnsubsRef = useRef<Record<string, () => void>>({});
@@ -110,6 +120,20 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
       });
     });
 
+    // --- Co-op requests listener ---
+    const unsubCoop = onCoopRequestsSnapshot(
+      familyId,
+      list => {
+        if (dead) return;
+        setCoopRequests(() => list);
+      },
+      err => {
+        Sentry.captureException(err, {
+          tags: { action: 'sync-coop-requests' },
+        });
+      }
+    );
+
     // --- Per-child data listeners ---
     const attachChildDataListener = (childId: string) => {
       if (childUnsubsRef.current[childId]) return; // already listening
@@ -164,6 +188,7 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
       unsubChildren();
       unsubTasks();
       unsubRewards();
+      unsubCoop();
       // Clean up all child data listeners
       Object.keys(childUnsubsRef.current).forEach(id => {
         childUnsubsRef.current[id]();
