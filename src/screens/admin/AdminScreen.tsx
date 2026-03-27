@@ -44,10 +44,19 @@ export default function AdminScreen(): React.ReactElement {
       const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
       (cfg.tasks[c.id] || []).forEach(t => {
         const entry = log[t.id];
-        if (entry && !entry.rejected && entry.status !== 'missed')
+        if (
+          entry &&
+          !entry.rejected &&
+          entry.status !== 'missed' &&
+          !entry.coopRequestId
+        )
           reviewCount++;
       });
     });
+    // Add completed co-op requests for today
+    reviewCount += ctx.coopRequests.filter(
+      r => r.status === 'completed' && r.date === d
+    ).length;
   }
 
   const bottomTabs: [string, string, string, number][] = [
