@@ -38,16 +38,38 @@ export default function AdminScreen(): React.ReactElement {
   let reviewCount = 0;
   if (cfg) {
     const d = getToday();
+
+    // Build set of initiator childId:taskId keys that belong to active/completed
+    // co-ops today so solo count excludes them (prevents double-counting)
+    const coopTaskKeys = new Set(
+      ctx.coopRequests
+        .filter(
+          r =>
+            r.date === d &&
+            (r.status === 'approved' || r.status === 'completed')
+        )
+        .map(r => `${r.initiatorId}:${r.taskId}`)
+    );
+
     ctx.children.forEach(c => {
       const udata = ctx.allU[c.id];
       if (!udata) return;
       const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
       (cfg.tasks[c.id] || []).forEach(t => {
         const entry = log[t.id];
-        if (entry && !entry.rejected && entry.status !== 'missed')
+        if (
+          entry &&
+          !entry.rejected &&
+          entry.status !== 'missed' &&
+          !coopTaskKeys.has(`${c.id}:${t.id}`)
+        )
           reviewCount++;
       });
     });
+    // Add completed co-op requests for today
+    reviewCount += ctx.coopRequests.filter(
+      r => r.status === 'completed' && r.date === d
+    ).length;
   }
 
   const bottomTabs: [string, string, string, number][] = [

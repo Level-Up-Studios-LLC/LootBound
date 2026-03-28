@@ -72,6 +72,7 @@ import {
   faVolumeHigh,
   faVolumeXmark,
   faBug,
+  faHandshake,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
@@ -189,7 +190,8 @@ library.add(
   faBellSlash,
   faVolumeHigh,
   faVolumeXmark,
-  faBug
+  faBug,
+  faHandshake
 );
 
 export {
@@ -265,4 +267,5 @@ export {
   faVolumeHigh,
   faVolumeXmark,
   faBug,
+  faHandshake,
 };
