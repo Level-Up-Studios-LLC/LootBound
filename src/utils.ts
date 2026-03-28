@@ -1,4 +1,10 @@
-import type { Task, UserData, Redemption, TierConfig } from './types.ts';
+import type {
+  Task,
+  UserData,
+  Redemption,
+  TierConfig,
+  CoopRequest,
+} from './types.ts';
 import { BEDTIME, LEVEL_XP, LEVEL_TITLES } from './constants.ts';
 
 export function freshUser(): UserData {
@@ -100,6 +106,30 @@ export function isTaskPreview(task: Task, bedtime?: number): boolean {
     return task.dueDay === tomorrowDow;
   }
   return false;
+}
+
+/**
+ * Build the set of initiator childId:taskId keys for active/completed co-ops
+ * on a given date (to exclude from solo review counts) and the list of
+ * completed co-op requests for co-op review display.
+ */
+export function buildCoopReviewData(
+  coopRequests: CoopRequest[],
+  date: string
+): { coopTaskKeys: Set<string>; completedCoops: CoopRequest[] } {
+  const coopTaskKeys = new Set(
+    coopRequests
+      .filter(
+        r =>
+          r.date === date &&
+          (r.status === 'approved' || r.status === 'completed')
+      )
+      .map(r => `${r.initiatorId}:${r.taskId}`)
+  );
+  const completedCoops = coopRequests.filter(
+    r => r.status === 'completed' && r.date === date
+  );
+  return { coopTaskKeys, completedCoops };
 }
 
 export function slugify(s: string): string {

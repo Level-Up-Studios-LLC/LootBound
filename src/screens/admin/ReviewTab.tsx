@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faMagnifyingGlass, faHandshake } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { SL, altBg, TIER_COLORS } from '../../constants.ts';
-import { freshUser, getToday } from '../../utils.ts';
+import { freshUser, getToday, buildCoopReviewData } from '../../utils.ts';
 import Badge from '../../components/Badge.tsx';
 import Modal from '../../components/ui/Modal.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
@@ -20,15 +20,9 @@ export default function ReviewTab(): React.ReactElement {
 
   if (!cfg) return <div />;
 
-  // Build set of initiator childId:taskId keys that belong to active/completed co-ops today
-  // so solo review excludes them (prevents double-counting with the co-op section)
-  const coopTaskKeys = new Set(
-    ctx.coopRequests
-      .filter(
-        r =>
-          r.date === d && (r.status === 'approved' || r.status === 'completed')
-      )
-      .map(r => `${r.initiatorId}:${r.taskId}`)
+  const { coopTaskKeys, completedCoops } = buildCoopReviewData(
+    ctx.coopRequests,
+    d
   );
 
   // Solo review items
@@ -47,11 +41,6 @@ export default function ReviewTab(): React.ReactElement {
         items.push({ uid: c.id, child: c, task: t, entry });
     });
   });
-
-  // Completed co-op requests for today
-  const completedCoops = ctx.coopRequests.filter(
-    r => r.status === 'completed' && r.date === d
-  );
 
   const allEmpty = items.length === 0 && completedCoops.length === 0;
 
@@ -189,16 +178,16 @@ function CoopReviewCard({
   request: CoopRequest;
 }): React.ReactElement {
   const ctx = useAppContext();
-  const d = getToday();
 
   const initiator = ctx.getChild(request.initiatorId);
   const partner = ctx.getChild(request.partnerId);
 
-  // Look up each kid's taskLog entry
+  // Use request.date (not getToday()) so the log lookup stays consistent with
+  // the parent filter even if the app stays open across midnight.
   const iData = ctx.allU[request.initiatorId];
   const pData = ctx.allU[request.partnerId];
-  const iLog = iData?.taskLog?.[d]?.[request.taskId];
-  const pLog = pData?.taskLog?.[d]?.[`coop:${request.id}`];
+  const iLog = iData?.taskLog?.[request.date]?.[request.taskId];
+  const pLog = pData?.taskLog?.[request.date]?.[`coop:${request.id}`];
 
   const iCoins = iLog?.points ?? 0;
   const pCoins = pLog?.points ?? 0;
@@ -232,9 +221,10 @@ function CoopReviewCard({
           {iLog?.photo && (
             <button
               onClick={() => ctx.setViewPhoto(iLog.photo)}
+              aria-label={`View ${request.initiatorName}'s photo proof for ${request.taskName}`}
               className='bg-qblue-dim text-qblue rounded-badge px-2.5 py-1 text-[10px] font-semibold border-none cursor-pointer font-body flex items-center gap-1'
             >
-              <FontAwesomeIcon icon={faEye} />
+              <FontAwesomeIcon icon={faEye} aria-hidden='true' />
               Photo
             </button>
           )}
@@ -264,9 +254,10 @@ function CoopReviewCard({
           {pLog?.photo && (
             <button
               onClick={() => ctx.setViewPhoto(pLog.photo)}
+              aria-label={`View ${request.partnerName}'s photo proof for ${request.taskName}`}
               className='bg-qblue-dim text-qblue rounded-badge px-2.5 py-1 text-[10px] font-semibold border-none cursor-pointer font-body flex items-center gap-1'
             >
-              <FontAwesomeIcon icon={faEye} />
+              <FontAwesomeIcon icon={faEye} aria-hidden='true' />
               Photo
             </button>
           )}
