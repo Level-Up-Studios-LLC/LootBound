@@ -217,7 +217,7 @@ export default function DashboardScreen(): React.ReactElement | null {
       const l = tLog[t.id];
       if (l && !l.rejected && l.status !== 'missed') return false; // completed
       if (getTaskStatus(t, null, ctx.cfg?.bedtime) === 'missed') return false;
-      // Also include co-op tasks waiting on partner (my part done)
+      // Exclude co-op tasks where this kid's part is already done
       const coopReq = getCoopForTask(t.id, coopRequests, ctx.curUser, todayStr);
       if (
         coopReq &&
@@ -226,7 +226,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           ? coopReq.initiatorCompleted
           : coopReq.partnerCompleted)
       )
-        return false; // my part done
+        return false; // filter out — waiting for partner to finish their part
       return !l || l.rejected;
     })
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
@@ -398,6 +398,10 @@ export default function DashboardScreen(): React.ReactElement | null {
 
             const canComplete = !coopPending && status !== 'missed';
 
+            // coop:* virtual tasks carry an underlying taskId for completion
+            const effectiveTaskId =
+              (t as { taskId?: string }).taskId ?? t.id;
+
             return (
               <div
                 key={t.id}
@@ -458,7 +462,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                       isRej ? `Redo ${t.name}` : `Mark ${t.name} as done`
                     }
                     onClick={() => {
-                      startCapture(t.id);
+                      startCapture(effectiveTaskId);
                     }}
                     className={
                       'text-xs py-2 px-4 rounded-badge cursor-pointer font-body font-bold text-white transition-all hover:scale-105 active:scale-95 border-none ' +

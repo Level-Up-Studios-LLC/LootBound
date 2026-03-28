@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -55,6 +55,7 @@ export default function TasksScreen(): React.ReactElement | null {
   const containerRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<HTMLSpanElement>(null);
   const tomorrowRef = useRef<HTMLDivElement>(null);
+  const coopModalRef = useRef<HTMLDivElement>(null);
 
   // Entrance animations — must be above early return to satisfy Rules of Hooks
   useGSAP(
@@ -70,6 +71,12 @@ export default function TasksScreen(): React.ReactElement | null {
     },
     { scope: containerRef, dependencies: [ch, ud] }
   );
+
+  useEffect(() => {
+    if (coopTask && coopModalRef.current) {
+      coopModalRef.current.focus();
+    }
+  }, [coopTask]);
 
   if (!ch || !ud) return null;
 
@@ -266,12 +273,22 @@ export default function TasksScreen(): React.ReactElement | null {
               ? coopReq.initiatorCompleted
               : coopReq.partnerCompleted);
 
+          // Co-op request is in a terminal state — no further completion allowed
+          const coopTerminal =
+            coopReq &&
+            (coopReq.status === 'completed' ||
+              coopReq.status === 'expired' ||
+              coopReq.status === 'cancelled' ||
+              coopReq.status === 'denied' ||
+              coopReq.status === 'declined');
+
           const canComplete =
             !isDone &&
             !isMissed &&
             status !== 'missed' &&
             !coopPending &&
-            !coopMyPartDone;
+            !coopMyPartDone &&
+            !coopTerminal;
 
           // Get partner info for CoopBadge
           const coopPartnerName =
@@ -291,6 +308,10 @@ export default function TasksScreen(): React.ReactElement | null {
                   return p?.avatar;
                 })()
               : undefined;
+
+          // coop:* virtual tasks carry an underlying taskId for completion
+          const effectiveTaskId =
+            (t as { taskId?: string }).taskId ?? t.id;
 
           return (
             <div
@@ -396,7 +417,7 @@ export default function TasksScreen(): React.ReactElement | null {
               {canComplete && (
                 <button
                   onClick={() => {
-                    startCapture(t.id);
+                    startCapture(effectiveTaskId);
                   }}
                   className={
                     'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
@@ -516,6 +537,8 @@ export default function TasksScreen(): React.ReactElement | null {
       </div>
       {coopTask && (
         <div
+          ref={coopModalRef}
+          tabIndex={-1}
           role='dialog'
           aria-label='Start Co-op'
           aria-modal='true'
