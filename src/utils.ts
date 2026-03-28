@@ -34,6 +34,36 @@ export function getToday(): string {
   return localDateStr(new Date());
 }
 
+/**
+ * Find the active co-op request associated with a task for a given kid today.
+ * Handles both real tasks (by taskId) and virtual co-op tasks (id starting with "coop:").
+ */
+export function getCoopForTask(
+  taskId: string,
+  coopRequests: CoopRequest[],
+  curUser: string | null,
+  today: string
+): CoopRequest | undefined {
+  if (taskId.startsWith('coop:')) {
+    const reqId = taskId.slice(5);
+    return coopRequests.find(r => r.id === reqId);
+  }
+  if (!curUser) return undefined;
+  return coopRequests.find(
+    r =>
+      r.taskId === taskId &&
+      r.date === today &&
+      (r.initiatorId === curUser || r.partnerId === curUser) &&
+      [
+        'pending_partner',
+        'pending_parent',
+        'approved',
+        'completed',
+        'expired',
+      ].includes(r.status)
+  );
+}
+
 export function getWeekStart(resetDay?: number): string {
   const day = resetDay != null ? resetDay : 0;
   const d = new Date();
