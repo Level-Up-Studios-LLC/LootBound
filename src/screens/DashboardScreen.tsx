@@ -217,7 +217,7 @@ export default function DashboardScreen(): React.ReactElement | null {
       const l = tLog[t.id];
       if (l && !l.rejected && l.status !== 'missed') return false; // completed
       if (getTaskStatus(t, null, ctx.cfg?.bedtime) === 'missed') return false;
-      // Also include co-op tasks waiting on partner (my part done)
+      // Exclude co-op tasks where this kid's part is already done
       const coopReq = getCoopForTask(t.id, coopRequests, ctx.curUser, todayStr);
       if (
         coopReq &&
@@ -226,7 +226,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           ? coopReq.initiatorCompleted
           : coopReq.partnerCompleted)
       )
-        return false; // my part done
+        return false;
       return !l || l.rejected;
     })
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
@@ -396,7 +396,22 @@ export default function DashboardScreen(): React.ReactElement | null {
                 ? 'bg-qmint'
                 : 'bg-qyellow';
 
-            const canComplete = !coopPending && status !== 'missed';
+            const coopTerminal =
+              coopReq &&
+              [
+                'completed',
+                'expired',
+                'cancelled',
+                'denied',
+                'declined',
+              ].includes(coopReq.status);
+            const isVirtualCoop = t.id.startsWith('coop:');
+
+            const canComplete =
+              !coopPending &&
+              status !== 'missed' &&
+              !coopTerminal &&
+              !isVirtualCoop;
 
             return (
               <div

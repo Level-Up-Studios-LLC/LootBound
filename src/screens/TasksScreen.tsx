@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -55,6 +55,36 @@ export default function TasksScreen(): React.ReactElement | null {
   const containerRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<HTMLSpanElement>(null);
   const tomorrowRef = useRef<HTMLDivElement>(null);
+  const coopModalRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap for co-op request modal
+  const handleModalKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setCoopTask(null);
+      return;
+    }
+    if (e.key !== 'Tab' || !coopModalRef.current) return;
+    const focusable = coopModalRef.current.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }, []);
+
+  // Auto-focus modal on open
+  useEffect(() => {
+    if (coopTask && coopModalRef.current) {
+      coopModalRef.current.focus();
+    }
+  }, [coopTask]);
 
   // Entrance animations — must be above early return to satisfy Rules of Hooks
   useGSAP(
@@ -266,12 +296,28 @@ export default function TasksScreen(): React.ReactElement | null {
               ? coopReq.initiatorCompleted
               : coopReq.partnerCompleted);
 
+          // Co-op request is in a terminal state and should not be completable
+          const coopTerminal =
+            coopReq &&
+            [
+              'completed',
+              'expired',
+              'cancelled',
+              'denied',
+              'declined',
+            ].includes(coopReq.status);
+
+          // Virtual co-op tasks (coop:*) can't be completed yet (Phase 5)
+          const isVirtualCoop = t.id.startsWith('coop:');
+
           const canComplete =
             !isDone &&
             !isMissed &&
             status !== 'missed' &&
             !coopPending &&
-            !coopMyPartDone;
+            !coopMyPartDone &&
+            !coopTerminal &&
+            !isVirtualCoop;
 
           // Get partner info for CoopBadge
           const coopPartnerName =
@@ -516,12 +562,12 @@ export default function TasksScreen(): React.ReactElement | null {
       </div>
       {coopTask && (
         <div
+          ref={coopModalRef}
+          tabIndex={-1}
           role='dialog'
           aria-label='Start Co-op'
           aria-modal='true'
-          onKeyDown={e => {
-            if (e.key === 'Escape') setCoopTask(null);
-          }}
+          onKeyDown={handleModalKeyDown}
         >
           <Modal title='Start Co-op' bgColor='bg-white'>
             <CoopRequestForm
