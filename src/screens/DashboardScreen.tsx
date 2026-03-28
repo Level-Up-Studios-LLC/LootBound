@@ -405,12 +405,19 @@ export default function DashboardScreen(): React.ReactElement | null {
                 'denied',
                 'declined',
               ].includes(coopReq.status);
+            const coopMyPartDone =
+              coopReq &&
+              coopReq.status === 'approved' &&
+              (coopReq.initiatorId === ctx.curUser
+                ? coopReq.initiatorCompleted
+                : coopReq.partnerCompleted);
             const isVirtualCoop = t.id.startsWith('coop:');
 
             const canComplete =
               !coopPending &&
               status !== 'missed' &&
               !coopTerminal &&
+              !coopMyPartDone &&
               !isVirtualCoop;
 
             return (
