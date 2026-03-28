@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHandshake,
@@ -39,11 +39,35 @@ export default function CoopRequestCard({
   );
   const [coins, setCoins] = useState(request.coinOverride ?? defaultCoins);
 
+  // Resync form state when the underlying data changes (e.g. ctx.cfg reload,
+  // request snapshot update) without clobbering in-progress edits — we only
+  // react to source-of-truth changes.
+  useEffect(() => {
+    setWindowStart(
+      request.windowStartOverride ?? originalTask?.windowStart ?? ''
+    );
+    setWindowEnd(request.windowEndOverride ?? originalTask?.windowEnd ?? '');
+    setCoins(request.coinOverride ?? defaultCoins);
+  }, [
+    request.windowStartOverride,
+    request.windowEndOverride,
+    request.coinOverride,
+    originalTask?.windowStart,
+    originalTask?.windowEnd,
+    defaultCoins,
+  ]);
+
   // Original task may have been deleted — warn parent and block approval if
   // we can't derive a valid time window from either the request overrides or
   // the original task definition.
+  const toMinutes = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
   const hasValidWindow =
-    /^\d{2}:\d{2}$/.test(windowStart) && /^\d{2}:\d{2}$/.test(windowEnd);
+    /^\d{2}:\d{2}$/.test(windowStart) &&
+    /^\d{2}:\d{2}$/.test(windowEnd) &&
+    toMinutes(windowStart) < toMinutes(windowEnd);
   const taskOrphaned = !originalTask && !hasValidWindow;
 
   const splitCoins = Math.floor(coins / 2);

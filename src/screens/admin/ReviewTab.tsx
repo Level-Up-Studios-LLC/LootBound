@@ -189,10 +189,10 @@ function CoopReviewCard({
   const iLog = iData?.taskLog?.[request.date]?.[request.taskId];
   const pLog = pData?.taskLog?.[request.date]?.[`coop:${request.id}`];
 
-  const iCoins = iLog?.points ?? 0;
-  const pCoins = pLog?.points ?? 0;
-  const iXp = iLog?.xp ?? 0;
-  const pXp = pLog?.xp ?? 0;
+  const iCoins = iLog?.points;
+  const pCoins = pLog?.points;
+  const iXp = iLog?.xp;
+  const pXp = pLog?.xp;
 
   return (
     <div className='bg-qcoop-dim rounded-[10px] p-4 mb-4'>
@@ -237,10 +237,12 @@ function CoopReviewCard({
           )}
         </div>
       </div>
-      <div className='text-[11px] text-qmuted pl-7 mb-2'>
-        {iCoins > 0 ? '+' : ''}
-        {iCoins} coins &middot; +{iXp} XP
-      </div>
+      {iLog && (
+        <div className='text-[11px] text-qmuted pl-7 mb-2'>
+          {(iCoins ?? 0) > 0 ? '+' : ''}
+          {iCoins ?? 0} coins &middot; +{iXp ?? 0} XP
+        </div>
+      )}
 
       {/* Partner row */}
       <div className='flex items-center justify-between mb-1.5'>
@@ -270,10 +272,12 @@ function CoopReviewCard({
           )}
         </div>
       </div>
-      <div className='text-[11px] text-qmuted pl-7'>
-        {pCoins > 0 ? '+' : ''}
-        {pCoins} coins &middot; +{pXp} XP
-      </div>
+      {pLog && (
+        <div className='text-[11px] text-qmuted pl-7'>
+          {(pCoins ?? 0) > 0 ? '+' : ''}
+          {pCoins ?? 0} coins &middot; +{pXp ?? 0} XP
+        </div>
+      )}
     </div>
   );
 }
