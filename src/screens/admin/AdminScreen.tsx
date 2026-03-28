@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getToday } from '../../utils.ts';
+import { getToday, buildCoopReviewData } from '../../utils.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
@@ -38,16 +38,27 @@ export default function AdminScreen(): React.ReactElement {
   let reviewCount = 0;
   if (cfg) {
     const d = getToday();
+    const { coopTaskKeys, completedCoops } = buildCoopReviewData(
+      ctx.coopRequests,
+      d
+    );
+
     ctx.children.forEach(c => {
       const udata = ctx.allU[c.id];
       if (!udata) return;
       const log = udata.taskLog && udata.taskLog[d] ? udata.taskLog[d] : {};
       (cfg.tasks[c.id] || []).forEach(t => {
         const entry = log[t.id];
-        if (entry && !entry.rejected && entry.status !== 'missed')
+        if (
+          entry &&
+          !entry.rejected &&
+          entry.status !== 'missed' &&
+          !coopTaskKeys.has(`${c.id}:${t.id}`)
+        )
           reviewCount++;
       });
     });
+    reviewCount += completedCoops.length;
   }
 
   const bottomTabs: [string, string, string, number][] = [

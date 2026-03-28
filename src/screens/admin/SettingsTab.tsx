@@ -319,6 +319,7 @@ export default function SettingsTab(): React.ReactElement {
               ['lootDenied', 'Loot Denied'],
               ['levelUp', 'Level Up'],
               ['streak', 'Streak Milestones'],
+              ['coopUpdates', 'Co-op Updates'],
             ];
             return items.map(([key, label]) => {
               const isMain = key === 'soundEnabled';
