@@ -2,7 +2,14 @@ import React, { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBed, faCamera, faChevronRight, faGamepadModern } from '../fa.ts';
+import {
+  faBed,
+  faCamera,
+  faChevronRight,
+  faGamepadModern,
+  faHandshake,
+  faPeopleGroup,
+} from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import {
   KID_NAV,
@@ -13,8 +20,18 @@ import {
 } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
+import CoopBadge from '../components/CoopBadge.tsx';
+import CoopInviteCard from '../components/CoopInviteCard.tsx';
+import CoopRequestForm from '../components/forms/CoopRequestForm.tsx';
+import Modal from '../components/ui/Modal.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
-import { getTaskStatus, fmtTime, timeToMin } from '../utils.ts';
+import {
+  getTaskStatus,
+  fmtTime,
+  timeToMin,
+  getToday,
+  getCoopForTask,
+} from '../utils.ts';
 
 export default function TasksScreen(): React.ReactElement | null {
   const ctx = useAppContext();
@@ -28,7 +45,13 @@ export default function TasksScreen(): React.ReactElement | null {
   const setViewPhoto = ctx.setViewPhoto;
   const tp = ctx.tp;
   const tierCfgFn = ctx.tierCfg;
+  const coopRequests = ctx.coopRequests;
+  const children = ctx.cfg?.children || [];
+  const curUser = ctx.curUser;
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [coopTask, setCoopTask] = useState<import('../types.ts').Task | null>(
+    null
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<HTMLSpanElement>(null);
   const tomorrowRef = useRef<HTMLDivElement>(null);
@@ -58,6 +81,24 @@ export default function TasksScreen(): React.ReactElement | null {
     if (ac !== bc) return ac ? 1 : -1;
     return timeToMin(a.windowStart) - timeToMin(b.windowStart);
   });
+
+  const today = getToday();
+
+  // Pending invites for this kid (Kid 2 perspective)
+  const pendingInvites = coopRequests.filter(
+    r =>
+      r.partnerId === curUser &&
+      r.status === 'pending_partner' &&
+      r.date === today
+  );
+
+  // Should the co-op button be shown on a task card?
+  const canShowCoopButton = (task: import('../types.ts').Task): boolean => {
+    if (children.length < 2) return false;
+    if (task.id.startsWith('coop:')) return false;
+    if (ctx.isTaskInActiveCoop(curUser!, task.id, today)) return false;
+    return true;
+  };
 
   const sortedTomorrow = tomorrowTasks
     .slice()
@@ -108,7 +149,19 @@ export default function TasksScreen(): React.ReactElement | null {
         )}
       </div>
       <div className='px-4 pt-3 flex flex-col gap-3'>
-        {activeTasks.length === 0 && (
+        {/* Pending co-op invites (Kid 2 perspective) */}
+        {pendingInvites.length > 0 && (
+          <div className='mb-2'>
+            <div className='text-[11px] font-bold text-qcyan uppercase tracking-wide mb-2 flex items-center gap-1.5'>
+              <FontAwesomeIcon icon={faPeopleGroup} />
+              Co-op Invites
+            </div>
+            {pendingInvites.map(r => (
+              <CoopInviteCard key={r.id} request={r} />
+            ))}
+          </div>
+        )}
+        {activeTasks.length === 0 && pendingInvites.length === 0 && (
           <EmptyState
             icon={faGamepadModern}
             title='No missions today!'
@@ -126,45 +179,132 @@ export default function TasksScreen(): React.ReactElement | null {
             null,
             ctx.cfg ? ctx.cfg.bedtime : undefined
           );
-          const status = isDone
-            ? entry.status
-            : isMissed
-              ? 'missed'
-              : isRej
-                ? baseStatus === 'missed'
-                  ? 'missed'
-                  : 'rejected'
-                : baseStatus;
+
+          // Co-op awareness
+          const coopReq = getCoopForTask(t.id, coopRequests, curUser, today);
+          const isCoop = !!coopReq;
+
+          // Determine co-op-specific status label key
+          const getCoopStatusKey = (): string | null => {
+            if (!coopReq) return null;
+            if (
+              coopReq.status === 'pending_partner' ||
+              coopReq.status === 'pending_parent'
+            )
+              return 'coopPending';
+            if (coopReq.status === 'expired') return 'coopFailed';
+            if (coopReq.status === 'completed') return 'coopComplete';
+            if (coopReq.status === 'approved') {
+              // Check if this kid completed their part
+              const myPart =
+                coopReq.initiatorId === curUser
+                  ? coopReq.initiatorCompleted
+                  : coopReq.partnerCompleted;
+              if (myPart) return 'coopWaiting'; // done, waiting on partner
+              return 'coopReady'; // approved, ready to work
+            }
+            return null;
+          };
+
+          const coopStatusKey = getCoopStatusKey();
+          const status =
+            coopStatusKey ||
+            (isDone
+              ? entry.status
+              : isMissed
+                ? 'missed'
+                : isRej
+                  ? baseStatus === 'missed'
+                    ? 'missed'
+                    : 'rejected'
+                  : baseStatus);
+
           const sl = SL[status] || {
             text: '',
             color: '#64748b',
             bg: 'transparent',
           };
-          const coins = isDone
-            ? entry.points
-            : isMissed
-              ? entry.points
-              : tp(t.tier);
+
+          // For co-op tasks, show split coins
+          const displayCoins =
+            isCoop && coopReq && !isDone && !isMissed
+              ? Math.floor(
+                  (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
+                )
+              : isDone
+                ? entry.points
+                : isMissed
+                  ? entry.points
+                  : tp(t.tier);
           const xpVal = isDone
             ? entry.xp || 0
             : isMissed
               ? 0
               : tierCfgFn(t.tier).xp;
 
-          const cardBg = idx % 2 === 0 ? 'bg-qmint' : 'bg-qyellow';
-          const dimBg = idx % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
+          const cardBg = isCoop
+            ? 'bg-qcoop'
+            : idx % 2 === 0
+              ? 'bg-qmint'
+              : 'bg-qyellow';
+          const dimBg = isCoop
+            ? 'bg-qcoop-dim'
+            : idx % 2 === 0
+              ? 'bg-qmint-dim'
+              : 'bg-qyellow-dim';
+
+          // Co-op cards waiting for partner/parent can't be completed
+          const coopPending =
+            coopReq &&
+            (coopReq.status === 'pending_partner' ||
+              coopReq.status === 'pending_parent');
+          // This kid already completed their part
+          const coopMyPartDone =
+            coopReq &&
+            coopReq.status === 'approved' &&
+            (coopReq.initiatorId === curUser
+              ? coopReq.initiatorCompleted
+              : coopReq.partnerCompleted);
+
+          const canComplete =
+            !isDone &&
+            !isMissed &&
+            status !== 'missed' &&
+            !coopPending &&
+            !coopMyPartDone;
+
+          // Get partner info for CoopBadge
+          const coopPartnerName =
+            isCoop && coopReq
+              ? coopReq.initiatorId === curUser
+                ? coopReq.partnerName
+                : coopReq.initiatorName
+              : '';
+          const coopPartnerAvatar =
+            isCoop && coopReq
+              ? (() => {
+                  const p = ctx.getChild(
+                    coopReq.initiatorId === curUser
+                      ? coopReq.partnerId
+                      : coopReq.initiatorId
+                  );
+                  return p?.avatar;
+                })()
+              : undefined;
 
           return (
             <div
               key={t.id}
               className={
-                (isDone || isMissed ? dimBg : cardBg) +
+                (isDone || isMissed || coopMyPartDone ? dimBg : cardBg) +
                 ' rounded-btn p-4 task-card'
               }
-              style={{ borderLeft: `3px solid ${sl.color}` }}
+              style={{
+                borderLeft: `3px solid ${isCoop ? '#5ec4d4' : sl.color}`,
+              }}
             >
               <div className='flex justify-between items-start'>
-                <div>
+                <div className='flex-1 min-w-0'>
                   <div
                     className={
                       'text-sm font-semibold text-qslate flex items-center gap-1.5' +
@@ -180,6 +320,12 @@ export default function TasksScreen(): React.ReactElement | null {
                     >
                       {t.tier}
                     </span>
+                    {isCoop && (
+                      <FontAwesomeIcon
+                        icon={faHandshake}
+                        className='text-qcyan text-xs'
+                      />
+                    )}
                     {t.name}
                   </div>
                   <div className='text-[11px] text-qmuted'>
@@ -188,9 +334,33 @@ export default function TasksScreen(): React.ReactElement | null {
                       ? ` | ${DAYS_SHORT[t.dueDay]}`
                       : ''}
                   </div>
-                  {isRej && (
+                  {isCoop && (
+                    <div className='mt-1'>
+                      <CoopBadge
+                        partnerName={coopPartnerName}
+                        partnerAvatar={coopPartnerAvatar}
+                      />
+                    </div>
+                  )}
+                  {isRej && !isCoop && (
                     <div className='text-[11px] text-qpink mt-0.5'>
                       Parent requested redo
+                    </div>
+                  )}
+                  {coopPending && (
+                    <div className='text-[11px] text-qmuted mt-0.5 italic'>
+                      {coopReq!.status === 'pending_partner'
+                        ? `Waiting for ${coopReq!.initiatorId === curUser ? coopReq!.partnerName : coopReq!.initiatorName}...`
+                        : 'Awaiting parent approval'}
+                    </div>
+                  )}
+                  {coopMyPartDone && (
+                    <div className='text-[11px] text-qcyan mt-0.5 italic'>
+                      Done! Waiting for{' '}
+                      {coopReq!.initiatorId === curUser
+                        ? coopReq!.partnerName
+                        : coopReq!.initiatorName}
+                      ...
                     </div>
                   )}
                 </div>
@@ -198,10 +368,10 @@ export default function TasksScreen(): React.ReactElement | null {
                   <Badge status={status} />
                   <div className='text-sm font-bold font-display text-qslate'>
                     {isDone || isMissed
-                      ? coins > 0
-                        ? `+${coins}`
-                        : coins
-                      : tp(t.tier)}{' '}
+                      ? displayCoins > 0
+                        ? `+${displayCoins}`
+                        : displayCoins
+                      : displayCoins}{' '}
                     coins
                   </div>
                   <div className='text-[10px] text-qmuted font-semibold'>
@@ -223,33 +393,47 @@ export default function TasksScreen(): React.ReactElement | null {
                   View photo proof
                 </button>
               )}
-              {!isDone && !isMissed && status !== 'missed' && (
+              {canComplete && (
                 <button
                   onClick={() => {
                     startCapture(t.id);
                   }}
                   className={
                     'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
-                    (isRej
-                      ? 'bg-qcoral'
-                      : status === 'active'
-                        ? 'bg-qteal'
-                        : status === 'upcoming'
-                          ? 'bg-qpurple'
-                          : 'bg-qorange')
+                    (isCoop
+                      ? 'bg-qcyan'
+                      : isRej
+                        ? 'bg-qcoral'
+                        : status === 'active'
+                          ? 'bg-qteal'
+                          : status === 'upcoming'
+                            ? 'bg-qpurple'
+                            : 'bg-qorange')
                   }
                 >
                   <FontAwesomeIcon icon={faCamera} className='mr-1.5' />
                   {isRej
                     ? 'Redo + Photo'
-                    : status === 'upcoming'
-                      ? 'Early (+25%) + Photo'
-                      : status === 'overdue'
-                        ? 'Late (50%) + Photo'
-                        : 'Complete + Photo'}
+                    : isCoop
+                      ? 'Complete Co-op + Photo'
+                      : status === 'upcoming'
+                        ? 'Early (+25%) + Photo'
+                        : status === 'overdue'
+                          ? 'Late (50%) + Photo'
+                          : 'Complete + Photo'}
                 </button>
               )}
-              {isDone && (
+              {/* Co-op request button for solo tasks */}
+              {canComplete && !isCoop && canShowCoopButton(t) && (
+                <button
+                  onClick={() => setCoopTask(t)}
+                  className='w-full bg-qcoop-dim text-qcyan rounded-badge py-2 text-[12px] font-semibold mt-2 border-none cursor-pointer font-body flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-[0.98] transition-all'
+                >
+                  <FontAwesomeIcon icon={faHandshake} />
+                  Co-op with sibling
+                </button>
+              )}
+              {isDone && !isCoop && (
                 <div className='text-xs mt-1.5' style={{ color: sl.color }}>
                   {status === 'early'
                     ? 'Early! Bonus coins.'
@@ -258,9 +442,19 @@ export default function TasksScreen(): React.ReactElement | null {
                       : 'Late. Half coins.'}
                 </div>
               )}
-              {isMissed && (
+              {isDone && isCoop && (
+                <div className='text-xs mt-1.5 text-qcyan'>
+                  Co-op complete! Coins split.
+                </div>
+              )}
+              {isMissed && !isCoop && (
                 <div className='text-xs mt-1.5 text-qred'>
                   Missed. Coins deducted.
+                </div>
+              )}
+              {isMissed && isCoop && (
+                <div className='text-xs mt-1.5 text-qred'>
+                  Co-op expired. Mission missed.
                 </div>
               )}
             </div>
@@ -320,6 +514,27 @@ export default function TasksScreen(): React.ReactElement | null {
           </div>
         )}
       </div>
+      {coopTask && (
+        <div
+          role='dialog'
+          aria-label='Start Co-op'
+          aria-modal='true'
+          onKeyDown={e => {
+            if (e.key === 'Escape') setCoopTask(null);
+          }}
+        >
+          <Modal title='Start Co-op' bgColor='bg-white'>
+            <CoopRequestForm
+              task={coopTask}
+              onSend={async partnerId => {
+                await ctx.requestCoop(curUser!, coopTask.id, partnerId);
+                setCoopTask(null);
+              }}
+              onCancel={() => setCoopTask(null)}
+            />
+          </Modal>
+        </div>
+      )}
       <BNav tabs={KID_NAV} />
     </div>
   );
