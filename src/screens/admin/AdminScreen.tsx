@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getToday } from '../../utils.ts';
+import { getToday, buildCoopReviewData } from '../../utils.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
@@ -38,17 +38,9 @@ export default function AdminScreen(): React.ReactElement {
   let reviewCount = 0;
   if (cfg) {
     const d = getToday();
-
-    // Build set of initiator childId:taskId keys that belong to active/completed
-    // co-ops today so solo count excludes them (prevents double-counting)
-    const coopTaskKeys = new Set(
-      ctx.coopRequests
-        .filter(
-          r =>
-            r.date === d &&
-            (r.status === 'approved' || r.status === 'completed')
-        )
-        .map(r => `${r.initiatorId}:${r.taskId}`)
+    const { coopTaskKeys, completedCoops } = buildCoopReviewData(
+      ctx.coopRequests,
+      d
     );
 
     ctx.children.forEach(c => {
@@ -66,10 +58,7 @@ export default function AdminScreen(): React.ReactElement {
           reviewCount++;
       });
     });
-    // Add completed co-op requests for today
-    reviewCount += ctx.coopRequests.filter(
-      r => r.status === 'completed' && r.date === d
-    ).length;
+    reviewCount += completedCoops.length;
   }
 
   const bottomTabs: [string, string, string, number][] = [

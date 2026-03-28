@@ -44,7 +44,7 @@ export default function CoopRequestCard({
   // the original task definition.
   const hasValidWindow =
     /^\d{2}:\d{2}$/.test(windowStart) && /^\d{2}:\d{2}$/.test(windowEnd);
-  const taskOrphaned = !originalTask && !request.windowStartOverride;
+  const taskOrphaned = !originalTask && !hasValidWindow;
 
   const splitCoins = Math.floor(coins / 2);
 
