@@ -121,7 +121,10 @@ export default function CoopRequestCard({
 
       {/* Orphaned task warning */}
       {taskOrphaned && isPendingParent && (
-        <div className='text-xs text-qcoral bg-qcoral-dim rounded-badge px-3 py-2 mb-3'>
+        <div
+          role='alert'
+          className='text-xs text-qcoral bg-qcoral-dim rounded-badge px-3 py-2 mb-3'
+        >
           Original mission was deleted. Set a valid time window before
           approving, or cancel this request.
         </div>
