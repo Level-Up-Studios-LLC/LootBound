@@ -60,14 +60,14 @@ export default function CoopRequestCard({
   // Original task may have been deleted — warn parent and block approval if
   // we can't derive a valid time window from either the request overrides or
   // the original task definition.
-  const toMinutes = (t: string) => {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
+  const parseTime = (v: string): number | null => {
+    const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(v);
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null;
   };
+  const startMin = parseTime(windowStart);
+  const endMin = parseTime(windowEnd);
   const hasValidWindow =
-    /^\d{2}:\d{2}$/.test(windowStart) &&
-    /^\d{2}:\d{2}$/.test(windowEnd) &&
-    toMinutes(windowStart) < toMinutes(windowEnd);
+    startMin != null && endMin != null && startMin < endMin;
   const taskOrphaned = !originalTask && !hasValidWindow;
 
   const splitCoins = Math.floor(coins / 2);
@@ -139,7 +139,10 @@ export default function CoopRequestCard({
 
       {/* Orphaned task warning */}
       {taskOrphaned && isPendingParent && (
-        <div className='text-xs text-qcoral bg-qcoral-dim rounded-badge px-3 py-2 mb-3'>
+        <div
+          role='alert'
+          className='text-xs text-qcoral bg-qcoral-dim rounded-badge px-3 py-2 mb-3'
+        >
           Original mission was deleted. Set a valid time window before
           approving, or cancel this request.
         </div>

@@ -109,23 +109,25 @@ export function isTaskPreview(task: Task, bedtime?: number): boolean {
 }
 
 /**
- * Build the set of initiator childId:taskId keys for active/completed co-ops
- * on a given date (to exclude from solo review counts) and the list of
- * completed co-op requests for co-op review display.
+ * Build the set of childId:taskId keys for active/completed co-ops on a given
+ * date (to exclude from solo review counts) and the list of completed co-op
+ * requests for co-op review display. Both initiator and partner keys are
+ * tracked so neither side leaks into the solo review list.
  */
 export function buildCoopReviewData(
   coopRequests: CoopRequest[],
   date: string
 ): { coopTaskKeys: Set<string>; completedCoops: CoopRequest[] } {
-  const coopTaskKeys = new Set(
-    coopRequests
-      .filter(
-        r =>
-          r.date === date &&
-          (r.status === 'approved' || r.status === 'completed')
-      )
-      .map(r => `${r.initiatorId}:${r.taskId}`)
-  );
+  const coopTaskKeys = new Set<string>();
+  coopRequests
+    .filter(
+      r =>
+        r.date === date && (r.status === 'approved' || r.status === 'completed')
+    )
+    .forEach(r => {
+      coopTaskKeys.add(`${r.initiatorId}:${r.taskId}`);
+      coopTaskKeys.add(`${r.partnerId}:${r.taskId}`);
+    });
   const completedCoops = coopRequests.filter(
     r => r.status === 'completed' && r.date === date
   );
