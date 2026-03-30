@@ -219,14 +219,11 @@ export default function DashboardScreen(): React.ReactElement | null {
       if (getTaskStatus(t, null, ctx.cfg?.bedtime) === 'missed') return false;
       // Exclude co-op tasks where this kid's part is already done
       const coopReq = getCoopForTask(t.id, coopRequests, ctx.curUser, todayStr);
-      if (
-        coopReq &&
-        coopReq.status === 'approved' &&
-        (coopReq.initiatorId === ctx.curUser
-          ? coopReq.initiatorCompleted
-          : coopReq.partnerCompleted)
-      )
-        return false;
+      if (coopReq && coopReq.status === 'approved') {
+        const init = coopReq.initiatorId === ctx.curUser;
+        if (init ? coopReq.initiatorCompleted : coopReq.partnerCompleted)
+          return false;
+      }
       return !l || l.rejected;
     })
     .sort((a, b) => timeToMin(a.windowStart) - timeToMin(b.windowStart))
@@ -377,6 +374,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               todayStr
             );
             const isCoop = !!coopReq;
+            const isInitiator = coopReq?.initiatorId === ctx.curUser;
             const coopPending =
               coopReq &&
               (coopReq.status === 'pending_partner' ||
@@ -408,7 +406,7 @@ export default function DashboardScreen(): React.ReactElement | null {
             const coopMyPartDone =
               coopReq &&
               coopReq.status === 'approved' &&
-              (coopReq.initiatorId === ctx.curUser
+              (isInitiator
                 ? coopReq.initiatorCompleted
                 : coopReq.partnerCompleted);
             const isVirtualCoop = t.id.startsWith('coop:');
@@ -444,13 +442,13 @@ export default function DashboardScreen(): React.ReactElement | null {
                     <div className='mt-0.5'>
                       <CoopBadge
                         partnerName={
-                          coopReq.initiatorId === ctx.curUser
+                          isInitiator
                             ? coopReq.partnerName
                             : coopReq.initiatorName
                         }
                         partnerAvatar={(() => {
                           const p = ctx.getChild(
-                            coopReq.initiatorId === ctx.curUser
+                            isInitiator
                               ? coopReq.partnerId
                               : coopReq.initiatorId
                           );

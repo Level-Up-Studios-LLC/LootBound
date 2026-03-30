@@ -213,6 +213,7 @@ export default function TasksScreen(): React.ReactElement | null {
           // Co-op awareness
           const coopReq = getCoopForTask(t.id, coopRequests, curUser, today);
           const isCoop = !!coopReq;
+          const isInitiator = coopReq?.initiatorId === curUser;
 
           // Determine co-op-specific status label key
           const getCoopStatusKey = (): string | null => {
@@ -226,10 +227,9 @@ export default function TasksScreen(): React.ReactElement | null {
             if (coopReq.status === 'completed') return 'coopComplete';
             if (coopReq.status === 'approved') {
               // Check if this kid completed their part
-              const myPart =
-                coopReq.initiatorId === curUser
-                  ? coopReq.initiatorCompleted
-                  : coopReq.partnerCompleted;
+              const myPart = isInitiator
+                ? coopReq.initiatorCompleted
+                : coopReq.partnerCompleted;
               if (myPart) return 'coopWaiting'; // done, waiting on partner
               return 'coopReady'; // approved, ready to work
             }
@@ -292,7 +292,7 @@ export default function TasksScreen(): React.ReactElement | null {
           const coopMyPartDone =
             coopReq &&
             coopReq.status === 'approved' &&
-            (coopReq.initiatorId === curUser
+            (isInitiator
               ? coopReq.initiatorCompleted
               : coopReq.partnerCompleted);
 
@@ -322,7 +322,7 @@ export default function TasksScreen(): React.ReactElement | null {
           // Get partner info for CoopBadge
           const coopPartnerName =
             isCoop && coopReq
-              ? coopReq.initiatorId === curUser
+              ? isInitiator
                 ? coopReq.partnerName
                 : coopReq.initiatorName
               : '';
@@ -330,9 +330,7 @@ export default function TasksScreen(): React.ReactElement | null {
             isCoop && coopReq
               ? (() => {
                   const p = ctx.getChild(
-                    coopReq.initiatorId === curUser
-                      ? coopReq.partnerId
-                      : coopReq.initiatorId
+                    isInitiator ? coopReq.partnerId : coopReq.initiatorId
                   );
                   return p?.avatar;
                 })()
@@ -396,14 +394,14 @@ export default function TasksScreen(): React.ReactElement | null {
                   {coopPending && (
                     <div className='text-[11px] text-qmuted mt-0.5 italic'>
                       {coopReq!.status === 'pending_partner'
-                        ? `Waiting for ${coopReq!.initiatorId === curUser ? coopReq!.partnerName : coopReq!.initiatorName}...`
+                        ? `Waiting for ${isInitiator ? coopReq!.partnerName : coopReq!.initiatorName}...`
                         : 'Awaiting parent approval'}
                     </div>
                   )}
                   {coopMyPartDone && (
                     <div className='text-[11px] text-qcyan mt-0.5 italic'>
                       Done! Waiting for{' '}
-                      {coopReq!.initiatorId === curUser
+                      {isInitiator
                         ? coopReq!.partnerName
                         : coopReq!.initiatorName}
                       ...
