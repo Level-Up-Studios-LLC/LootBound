@@ -60,6 +60,9 @@ export function getCoopForTask(
         'approved',
         'completed',
         'expired',
+        'cancelled',
+        'denied',
+        'declined',
       ].includes(r.status)
   );
 }

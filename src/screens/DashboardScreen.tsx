@@ -219,10 +219,19 @@ export default function DashboardScreen(): React.ReactElement | null {
       if (getTaskStatus(t, null, ctx.cfg?.bedtime) === 'missed') return false;
       // Exclude co-op tasks where this kid's part is already done
       const coopReq = getCoopForTask(t.id, coopRequests, ctx.curUser, todayStr);
-      if (coopReq && coopReq.status === 'approved') {
-        const init = coopReq.initiatorId === ctx.curUser;
-        if (init ? coopReq.initiatorCompleted : coopReq.partnerCompleted)
+      if (coopReq) {
+        // Exclude terminal co-op requests (completed, expired, cancelled, denied, declined)
+        if (
+          ['completed', 'expired', 'cancelled', 'denied', 'declined'].includes(
+            coopReq.status
+          )
+        )
           return false;
+        if (coopReq.status === 'approved') {
+          const init = coopReq.initiatorId === ctx.curUser;
+          if (init ? coopReq.initiatorCompleted : coopReq.partnerCompleted)
+            return false;
+        }
       }
       return !l || l.rejected;
     })
@@ -379,21 +388,6 @@ export default function DashboardScreen(): React.ReactElement | null {
               coopReq &&
               (coopReq.status === 'pending_partner' ||
                 coopReq.status === 'pending_parent');
-
-            const status = coopPending
-              ? 'coopPending'
-              : coopReq && coopReq.status === 'approved'
-                ? 'coopReady'
-                : isRej && baseStatus !== 'missed'
-                  ? 'rejected'
-                  : baseStatus;
-
-            const cardBg = isCoop
-              ? 'bg-qcoop'
-              : idx % 2 === 0
-                ? 'bg-qmint'
-                : 'bg-qyellow';
-
             const coopTerminal =
               coopReq &&
               [
@@ -403,6 +397,22 @@ export default function DashboardScreen(): React.ReactElement | null {
                 'denied',
                 'declined',
               ].includes(coopReq.status);
+
+            const status = coopPending
+              ? 'coopPending'
+              : coopTerminal
+                ? 'coopFailed'
+                : coopReq && coopReq.status === 'approved'
+                  ? 'coopReady'
+                  : isRej && baseStatus !== 'missed'
+                    ? 'rejected'
+                    : baseStatus;
+
+            const cardBg = isCoop
+              ? 'bg-qcoop'
+              : idx % 2 === 0
+                ? 'bg-qmint'
+                : 'bg-qyellow';
             const coopMyPartDone =
               coopReq &&
               coopReq.status === 'approved' &&
@@ -416,7 +426,8 @@ export default function DashboardScreen(): React.ReactElement | null {
               status !== 'missed' &&
               !coopTerminal &&
               !coopMyPartDone &&
-              !isVirtualCoop;
+              !isVirtualCoop &&
+              !isCoop;
 
             return (
               <div

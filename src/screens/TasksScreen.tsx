@@ -72,10 +72,14 @@ export default function TasksScreen(): React.ReactElement | null {
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
+      const onWrapper = document.activeElement === coopModalRef.current;
+      if (e.shiftKey && (document.activeElement === first || onWrapper)) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (
+        !e.shiftKey &&
+        (document.activeElement === last || onWrapper)
+      ) {
         e.preventDefault();
         first.focus();
       }
@@ -83,10 +87,13 @@ export default function TasksScreen(): React.ReactElement | null {
     [coopBusy]
   );
 
-  // Auto-focus modal on open
+  // Auto-focus first focusable child on open (falls back to wrapper)
   useEffect(() => {
     if (coopTask && coopModalRef.current) {
-      coopModalRef.current.focus();
+      const first = coopModalRef.current.querySelector<HTMLElement>(
+        'button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])'
+      );
+      (first || coopModalRef.current).focus();
     }
   }, [coopTask]);
 
@@ -228,6 +235,12 @@ export default function TasksScreen(): React.ReactElement | null {
             )
               return 'coopPending';
             if (coopReq.status === 'expired') return 'coopFailed';
+            if (
+              coopReq.status === 'cancelled' ||
+              coopReq.status === 'declined' ||
+              coopReq.status === 'denied'
+            )
+              return 'coopFailed';
             if (coopReq.status === 'completed') return 'coopComplete';
             if (coopReq.status === 'approved') {
               // Check if this kid completed their part
@@ -311,7 +324,7 @@ export default function TasksScreen(): React.ReactElement | null {
               'declined',
             ].includes(coopReq.status);
 
-          // Virtual co-op tasks (coop:*) can't be completed yet (Phase 5)
+          // Co-op tasks can't be completed via solo flow (Phase 5 will wire co-op completion)
           const isVirtualCoop = t.id.startsWith('coop:');
 
           const canComplete =
@@ -321,7 +334,8 @@ export default function TasksScreen(): React.ReactElement | null {
             !coopPending &&
             !coopMyPartDone &&
             !coopTerminal &&
-            !isVirtualCoop;
+            !isVirtualCoop &&
+            !isCoop;
 
           // Get partner info for CoopBadge
           const coopPartnerName =
