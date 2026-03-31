@@ -52,32 +52,36 @@ export default function TasksScreen(): React.ReactElement | null {
   const [coopTask, setCoopTask] = useState<import('../types.ts').Task | null>(
     null
   );
+  const [coopBusy, setCoopBusy] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<HTMLSpanElement>(null);
   const tomorrowRef = useRef<HTMLDivElement>(null);
   const coopModalRef = useRef<HTMLDivElement>(null);
 
   // Focus trap for co-op request modal
-  const handleModalKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setCoopTask(null);
-      return;
-    }
-    if (e.key !== 'Tab' || !coopModalRef.current) return;
-    const focusable = coopModalRef.current.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])'
-    );
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }, []);
+  const handleModalKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (!coopBusy) setCoopTask(null);
+        return;
+      }
+      if (e.key !== 'Tab' || !coopModalRef.current) return;
+      const focusable = coopModalRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input, a[href], [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    },
+    [coopBusy]
+  );
 
   // Auto-focus modal on open
   useEffect(() => {
@@ -471,6 +475,8 @@ export default function TasksScreen(): React.ReactElement | null {
               {canComplete && !isCoop && canShowCoopButton(t) && (
                 <button
                   onClick={() => setCoopTask(t)}
+                  aria-haspopup='dialog'
+                  aria-label={`Start co-op for ${t.name}`}
                   className='w-full bg-qcoop-dim text-qcyan rounded-badge py-2 text-[12px] font-semibold mt-2 border-none cursor-pointer font-body flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-[0.98] transition-all'
                 >
                   <FontAwesomeIcon icon={faHandshake} />
@@ -486,7 +492,7 @@ export default function TasksScreen(): React.ReactElement | null {
                       : 'Late. Half coins.'}
                 </div>
               )}
-              {isDone && isCoop && (
+              {isCoop && coopReq?.status === 'completed' && (
                 <div className='text-xs mt-1.5 text-qcyan'>
                   Co-op complete! Coins split.
                 </div>
@@ -496,7 +502,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   Missed. Coins deducted.
                 </div>
               )}
-              {isMissed && isCoop && (
+              {isCoop && coopReq?.status === 'expired' && (
                 <div className='text-xs mt-1.5 text-qred'>
                   Co-op expired. Mission missed.
                 </div>
@@ -571,10 +577,17 @@ export default function TasksScreen(): React.ReactElement | null {
             <CoopRequestForm
               task={coopTask}
               onSend={async partnerId => {
-                await ctx.requestCoop(curUser!, coopTask.id, partnerId);
-                setCoopTask(null);
+                setCoopBusy(true);
+                try {
+                  await ctx.requestCoop(curUser!, coopTask.id, partnerId);
+                  setCoopTask(null);
+                } finally {
+                  setCoopBusy(false);
+                }
               }}
-              onCancel={() => setCoopTask(null)}
+              onCancel={() => {
+                if (!coopBusy) setCoopTask(null);
+              }}
             />
           </Modal>
         </div>
