@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import * as Sentry from '@sentry/react';
-import type { Config, TierConfig, UserData } from '../types.ts';
+import type { Config, TierConfig, UserData, CoopRequest } from '../types.ts';
 import { COOLDOWN, SL } from '../constants.ts';
 import {
   freshUser,
@@ -38,6 +38,14 @@ interface TaskActionsDeps {
   tierCfg: (tier: string) => TierConfig;
   getChildName?: (id: string) => string;
   playSound: (key: SoundKey) => void;
+  // Phase 5 co-op deps
+  coopRequests?: CoopRequest[];
+  completeCoopTask?: (
+    childId: string,
+    taskId: string,
+    coopReq: CoopRequest,
+    photo: string | null
+  ) => Promise<void>;
 }
 
 export function useTaskActions(deps: TaskActionsDeps) {
@@ -117,6 +125,22 @@ export function useTaskActions(deps: TaskActionsDeps) {
       deps.notify('Past bedtime.', 'error');
       return;
     }
+
+    // Co-op detection: delegate to completeCoopTask if this task has an active co-op
+    if (deps.coopRequests && deps.completeCoopTask) {
+      const today = getToday();
+      const coopReq = deps.coopRequests.find(
+        r =>
+          r.date === today &&
+          r.status === 'approved' &&
+          ((r.initiatorId === uid && r.taskId === taskId) ||
+            (r.partnerId === uid && taskId === `coop:${r.id}`))
+      );
+      if (coopReq) {
+        return deps.completeCoopTask(uid, taskId, coopReq, photo);
+      }
+    }
+
     const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
     const d = getToday();
     if (!ud.taskLog) ud.taskLog = {};
@@ -177,12 +201,25 @@ export function useTaskActions(deps: TaskActionsDeps) {
     ud.level = getLevelFromXp(ud.xp);
     ud.lastTaskTime = nowSec();
     const todayActive = (deps.cfg.tasks[uid] || []).filter(isTaskActiveToday);
-    const allDone = todayActive.every(t => {
-      const l = ud.taskLog[d] && ud.taskLog[d][t.id];
-      return l && !l.rejected;
+    // Include virtual co-op tasks for partner
+    const virtualCoopIds = (deps.coopRequests || [])
+      .filter(
+        r =>
+          r.partnerId === uid &&
+          r.date === d &&
+          (r.status === 'approved' || r.status === 'completed')
+      )
+      .map(r => `coop:${r.id}`);
+    const allTaskIds = [...todayActive.map(t => t.id), ...virtualCoopIds];
+    const allDone = allTaskIds.every(tid => {
+      const l = ud.taskLog[d] && ud.taskLog[d][tid];
+      if (!l || l.rejected) return false;
+      // Co-op entries only count as done when both kids completed
+      if (l.coopRequestId && !l.coopPartnerCompleted) return false;
+      return true;
     });
-    const noneMissed = todayActive.every(t => {
-      const l = ud.taskLog[d] && ud.taskLog[d][t.id];
+    const noneMissed = allTaskIds.every(tid => {
+      const l = ud.taskLog[d] && ud.taskLog[d][tid];
       return l && l.status !== 'missed' && !l.rejected;
     });
     if (allDone && noneMissed) {

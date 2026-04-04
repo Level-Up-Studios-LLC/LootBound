@@ -141,7 +141,10 @@ export default function DashboardScreen(): React.ReactElement | null {
 
   const done = activeTasks.filter(t => {
     const l = tLog[t.id];
-    return l && !l.rejected && l.status !== 'missed';
+    if (!l || l.rejected || l.status === 'missed') return false;
+    // Co-op entries only count as done when both kids completed
+    if (l.coopRequestId && !l.coopPartnerCompleted) return false;
+    return true;
   }).length;
   const total = activeTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -419,15 +422,13 @@ export default function DashboardScreen(): React.ReactElement | null {
               (isInitiator
                 ? coopReq.initiatorCompleted
                 : coopReq.partnerCompleted);
-            const isVirtualCoop = t.id.startsWith('coop:');
-
             const canComplete =
               !coopPending &&
               status !== 'missed' &&
               !coopTerminal &&
               !coopMyPartDone &&
-              !isVirtualCoop &&
-              !isCoop;
+              // Co-op tasks can be completed when approved
+              (!isCoop || coopReq?.status === 'approved');
 
             return (
               <div
