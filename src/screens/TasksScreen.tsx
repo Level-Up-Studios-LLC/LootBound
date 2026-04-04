@@ -301,12 +301,15 @@ export default function TasksScreen(): React.ReactElement | null {
               'declined',
             ].includes(coopReq.status);
 
-          // For co-op tasks, show split coins
+          // For co-op tasks, show split coins (0 for failed co-op states)
+          const coopFailed = coopStatusKey === 'coopFailed';
           const displayCoins =
-            isCoop && coopReq && !isDone && !isMissed
-              ? Math.floor(
-                  (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
-                )
+            isCoop && coopReq
+              ? coopFailed
+                ? 0
+                : Math.floor(
+                    (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
+                  )
               : isDone
                 ? entry.points
                 : isMissed
@@ -491,10 +494,10 @@ export default function TasksScreen(): React.ReactElement | null {
               {/* Co-op request button for solo tasks */}
               {canComplete && !isCoop && canShowCoopButton(t) && (
                 <button
-                  ref={el => {
-                    if (el) coopTriggerRef.current = el;
+                  onClick={e => {
+                    coopTriggerRef.current = e.currentTarget;
+                    setCoopTask(t);
                   }}
-                  onClick={() => setCoopTask(t)}
                   aria-haspopup='dialog'
                   aria-label={`Start co-op for ${t.name}`}
                   className='w-full bg-qcoop-dim text-qcyan rounded-badge py-2 text-[12px] font-semibold mt-2 border-none cursor-pointer font-body flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-[0.98] transition-all'
