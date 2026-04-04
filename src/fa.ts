@@ -73,6 +73,7 @@ import {
   faVolumeXmark,
   faBug,
   faHandshake,
+  faPeopleGroup,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
 import {
@@ -191,7 +192,8 @@ library.add(
   faVolumeHigh,
   faVolumeXmark,
   faBug,
-  faHandshake
+  faHandshake,
+  faPeopleGroup
 );
 
 export {
@@ -268,4 +270,5 @@ export {
   faVolumeXmark,
   faBug,
   faHandshake,
+  faPeopleGroup,
 };
