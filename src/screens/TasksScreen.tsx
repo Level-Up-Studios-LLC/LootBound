@@ -57,12 +57,16 @@ export default function TasksScreen(): React.ReactElement | null {
   const chevronRef = useRef<HTMLSpanElement>(null);
   const tomorrowRef = useRef<HTMLDivElement>(null);
   const coopModalRef = useRef<HTMLDivElement>(null);
+  const coopTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Focus trap for co-op request modal
   const handleModalKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (!coopBusy) setCoopTask(null);
+        if (!coopBusy) {
+          coopTriggerRef.current?.focus();
+          setCoopTask(null);
+        }
         return;
       }
       if (e.key !== 'Tab' || !coopModalRef.current) return;
@@ -485,6 +489,9 @@ export default function TasksScreen(): React.ReactElement | null {
               {/* Co-op request button for solo tasks */}
               {canComplete && !isCoop && canShowCoopButton(t) && (
                 <button
+                  ref={el => {
+                    if (el) coopTriggerRef.current = el;
+                  }}
                   onClick={() => setCoopTask(t)}
                   aria-haspopup='dialog'
                   aria-label={`Start co-op for ${t.name}`}
@@ -591,13 +598,17 @@ export default function TasksScreen(): React.ReactElement | null {
                 setCoopBusy(true);
                 try {
                   await ctx.requestCoop(curUser!, coopTask.id, partnerId);
+                  coopTriggerRef.current?.focus();
                   setCoopTask(null);
                 } finally {
                   setCoopBusy(false);
                 }
               }}
               onCancel={() => {
-                if (!coopBusy) setCoopTask(null);
+                if (!coopBusy) {
+                  coopTriggerRef.current?.focus();
+                  setCoopTask(null);
+                }
               }}
             />
           </Modal>
