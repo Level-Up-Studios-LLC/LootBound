@@ -135,9 +135,10 @@ export default function TasksScreen(): React.ReactElement | null {
 
   // Should the co-op button be shown on a task card?
   const canShowCoopButton = (task: import('../types.ts').Task): boolean => {
+    if (!curUser) return false;
     if (children.length < 2) return false;
     if (task.id.startsWith('coop:')) return false;
-    if (ctx.isTaskInActiveCoop(curUser!, task.id, today)) return false;
+    if (ctx.isTaskInActiveCoop(curUser, task.id, today)) return false;
     return true;
   };
 
@@ -462,27 +463,23 @@ export default function TasksScreen(): React.ReactElement | null {
                   }}
                   className={
                     'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
-                    (isCoop
-                      ? 'bg-qcyan'
-                      : isRej
-                        ? 'bg-qcoral'
-                        : status === 'active'
-                          ? 'bg-qteal'
-                          : status === 'upcoming'
-                            ? 'bg-qpurple'
-                            : 'bg-qorange')
+                    (isRej
+                      ? 'bg-qcoral'
+                      : status === 'active'
+                        ? 'bg-qteal'
+                        : status === 'upcoming'
+                          ? 'bg-qpurple'
+                          : 'bg-qorange')
                   }
                 >
                   <FontAwesomeIcon icon={faCamera} className='mr-1.5' />
                   {isRej
                     ? 'Redo + Photo'
-                    : isCoop
-                      ? 'Complete Co-op + Photo'
-                      : status === 'upcoming'
-                        ? 'Early (+25%) + Photo'
-                        : status === 'overdue'
-                          ? 'Late (50%) + Photo'
-                          : 'Complete + Photo'}
+                    : status === 'upcoming'
+                      ? 'Early (+25%) + Photo'
+                      : status === 'overdue'
+                        ? 'Late (50%) + Photo'
+                        : 'Complete + Photo'}
                 </button>
               )}
               {/* Co-op request button for solo tasks */}
