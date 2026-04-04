@@ -277,34 +277,6 @@ export default function TasksScreen(): React.ReactElement | null {
             bg: 'transparent',
           };
 
-          // For co-op tasks, show split coins
-          const displayCoins =
-            isCoop && coopReq && !isDone && !isMissed
-              ? Math.floor(
-                  (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
-                )
-              : isDone
-                ? entry.points
-                : isMissed
-                  ? entry.points
-                  : tp(t.tier);
-          const xpVal = isDone
-            ? entry.xp || 0
-            : isMissed
-              ? 0
-              : tierCfgFn(t.tier).xp;
-
-          const cardBg = isCoop
-            ? 'bg-qcoop'
-            : idx % 2 === 0
-              ? 'bg-qmint'
-              : 'bg-qyellow';
-          const dimBg = isCoop
-            ? 'bg-qcoop-dim'
-            : idx % 2 === 0
-              ? 'bg-qmint-dim'
-              : 'bg-qyellow-dim';
-
           // Co-op cards waiting for partner/parent can't be completed
           const coopPending =
             coopReq &&
@@ -328,6 +300,34 @@ export default function TasksScreen(): React.ReactElement | null {
               'denied',
               'declined',
             ].includes(coopReq.status);
+
+          // For co-op tasks, show split coins
+          const displayCoins =
+            isCoop && coopReq && !isDone && !isMissed
+              ? Math.floor(
+                  (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
+                )
+              : isDone
+                ? entry.points
+                : isMissed
+                  ? entry.points
+                  : tp(t.tier);
+          const xpVal = isDone
+            ? entry.xp || 0
+            : isMissed || coopTerminal
+              ? 0
+              : tierCfgFn(t.tier).xp;
+
+          const cardBg = isCoop
+            ? 'bg-qcoop'
+            : idx % 2 === 0
+              ? 'bg-qmint'
+              : 'bg-qyellow';
+          const dimBg = isCoop
+            ? 'bg-qcoop-dim'
+            : idx % 2 === 0
+              ? 'bg-qmint-dim'
+              : 'bg-qyellow-dim';
 
           // Co-op tasks can't be completed via solo flow (Phase 5 will wire co-op completion)
           const isVirtualCoop = t.id.startsWith('coop:');
@@ -359,12 +359,14 @@ export default function TasksScreen(): React.ReactElement | null {
                 })()
               : undefined;
 
+          const isSettled =
+            isDone || isMissed || coopMyPartDone || coopTerminal;
+
           return (
             <div
               key={t.id}
               className={
-                (isDone || isMissed || coopMyPartDone ? dimBg : cardBg) +
-                ' rounded-btn p-4 task-card'
+                (isSettled ? dimBg : cardBg) + ' rounded-btn p-4 task-card'
               }
               style={{
                 borderLeft: `3px solid ${isCoop ? '#5ec4d4' : sl.color}`,
@@ -375,7 +377,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   <div
                     className={
                       'text-sm font-semibold text-qslate flex items-center gap-1.5' +
-                      (isDone ? ' line-through' : '')
+                      (isDone || coopTerminal ? ' line-through' : '')
                     }
                   >
                     <span
@@ -434,7 +436,7 @@ export default function TasksScreen(): React.ReactElement | null {
                 <div className='flex flex-col items-end gap-1'>
                   <Badge status={status} />
                   <div className='text-sm font-bold font-display text-qslate'>
-                    {isDone || isMissed
+                    {isSettled
                       ? displayCoins > 0
                         ? `+${displayCoins}`
                         : displayCoins
@@ -442,9 +444,9 @@ export default function TasksScreen(): React.ReactElement | null {
                     coins
                   </div>
                   <div className='text-[10px] text-qmuted font-semibold'>
-                    {isDone
+                    {isDone || (isCoop && coopReq?.status === 'completed')
                       ? `+${xpVal} XP`
-                      : isMissed
+                      : isSettled
                         ? '0 XP'
                         : `${xpVal} XP`}
                   </div>
