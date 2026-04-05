@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   createContext,
   useContext,
 } from 'react';
@@ -803,19 +804,32 @@ export function AppProvider(props: {
     })();
   });
 
+  // Track co-op request IDs currently being awarded to prevent double-award
+  const awardingCoopsRef = useRef<Set<string>>(new Set());
+
   // Safety effect: award co-op rewards if both kids completed but status is still 'approved'
   // This handles the race condition where both kids complete simultaneously
   useEffect(() => {
     if (!cfg || loading) return;
-    const pendingAward = coopRequests.find(
-      r => r.status === 'approved' && r.initiatorCompleted && r.partnerCompleted
+    const pendingAwards = coopRequests.filter(
+      r =>
+        r.status === 'approved' &&
+        r.initiatorCompleted &&
+        r.partnerCompleted &&
+        !awardingCoopsRef.current.has(r.id)
     );
-    if (pendingAward) {
-      coopActions.awardCoopRewards(pendingAward).catch(err => {
-        Sentry.captureException(err, {
-          tags: { action: 'coop-safety-award' },
+    for (const req of pendingAwards) {
+      awardingCoopsRef.current.add(req.id);
+      coopActions
+        .awardCoopRewards(req)
+        .catch(err => {
+          Sentry.captureException(err, {
+            tags: { action: 'coop-safety-award' },
+          });
+        })
+        .finally(() => {
+          awardingCoopsRef.current.delete(req.id);
         });
-      });
     }
   }, [coopRequests, cfg, loading, coopActions.awardCoopRewards]);
 

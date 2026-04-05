@@ -503,8 +503,10 @@ export function useCoopActions(params: UseCoopActionsParams) {
       req: CoopRequest,
       overrideUserData?: Record<string, UserData>
     ): Promise<void> => {
-      if (!allU || !cfg || !saveUsr || !tierCfg || !notify || !playSound)
+      if (!allU || !cfg || !saveUsr || !tierCfg || !notify || !playSound) {
+        console.warn('awardCoopRewards: missing required deps, skipping');
         return;
+      }
       // Idempotency: skip if already completed
       if (req.status === 'completed') return;
 
@@ -534,7 +536,23 @@ export function useCoopActions(params: UseCoopActionsParams) {
           if (!ud.taskLog) ud.taskLog = {};
           if (!ud.taskLog[d]) ud.taskLog[d] = {};
           const entry = ud.taskLog[d][kid.logKey] as TaskLogEntry | undefined;
-          if (!entry) continue;
+          if (!entry) {
+            console.warn(
+              `awardCoopRewards: no taskLog entry for ${kid.id}/${kid.logKey}`
+            );
+            Sentry.captureMessage(
+              'Co-op reward skipped: missing taskLog entry',
+              {
+                level: 'warning',
+                tags: {
+                  action: 'coop-award',
+                  kidId: kid.id,
+                  logKey: kid.logKey,
+                },
+              }
+            );
+            continue;
+          }
 
           // Calculate rewards using the kid's individual completion status
           const rawCoins = Math.floor(calcPts(baseCoinValue, entry.status) / 2);
