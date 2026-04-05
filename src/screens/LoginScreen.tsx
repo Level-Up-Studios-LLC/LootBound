@@ -94,12 +94,24 @@ export default function LoginScreen(
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Entrance animations
+  // Entrance animations — elements start with opacity-0 via CSS class,
+  // GSAP animates them in. For reduced-motion, immediately show them.
   useGSAP(
     () => {
-      if (prefersReducedMotion) return;
+      if (prefersReducedMotion) {
+        gsap.set('.login-title, .login-profile', {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        });
+        return;
+      }
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-      tl.from('.login-title', { opacity: 0, y: -20, duration: 0.4 });
+      tl.fromTo(
+        '.login-title',
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.4 }
+      );
       tl.fromTo(
         '.login-profile',
         { opacity: 0, scale: 0.85 },
@@ -154,7 +166,7 @@ export default function LoginScreen(
         ref={containerRef}
         aria-hidden={!!pinTarget}
       >
-        <h1 className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title'>
+        <h1 className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title opacity-0'>
           LOOTBOUND
         </h1>
         <div className='text-base text-qmuted mb-5'>Choose your profile</div>
@@ -168,7 +180,7 @@ export default function LoginScreen(
                   doKidLogin(c.id);
                 }}
                 className={
-                  'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer border-none transition-all hover:scale-105 active:scale-95 login-profile ' +
+                  'flex flex-col items-center gap-3 px-7 py-6 rounded-card min-w-[120px] font-body text-qtext cursor-pointer border-none transition-all hover:scale-105 active:scale-95 login-profile opacity-0 ' +
                   cardBg
                 }
               >

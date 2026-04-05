@@ -168,24 +168,26 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
         ctx.screen !== 'admin' &&
         ctx.curUser &&
         ctx.curUser !== 'parent' && (
-          <div className='fixed top-3 right-3 z-[100]'>
-            <HamburgerMenu
-              items={[
-                {
-                  id: 'logout',
-                  icon: 'left-from-bracket',
-                  label: 'Logout',
-                  onClick: () => {
-                    if (ctx.onLogout) {
-                      ctx.onLogout();
-                    } else {
-                      ctx.setCurUser(null);
-                      ctx.setScreen('login');
-                    }
+          <div className='fixed top-3 z-[100] w-full max-w-[480px] left-1/2 -translate-x-1/2 flex justify-end pr-3 pointer-events-none'>
+            <div className='pointer-events-auto'>
+              <HamburgerMenu
+                items={[
+                  {
+                    id: 'logout',
+                    icon: 'left-from-bracket',
+                    label: 'Logout',
+                    onClick: () => {
+                      if (ctx.onLogout) {
+                        ctx.onLogout();
+                      } else {
+                        ctx.setCurUser(null);
+                        ctx.setScreen('login');
+                      }
+                    },
                   },
-                },
-              ]}
-            />
+                ]}
+              />
+            </div>
           </div>
         )}
 
