@@ -554,6 +554,9 @@ export function useCoopActions(params: UseCoopActionsParams) {
             continue;
           }
 
+          // Persisted idempotency: skip if rewards already awarded for this kid
+          if (entry.coopPartnerCompleted) continue;
+
           // Calculate rewards using the kid's individual completion status
           const rawCoins = Math.floor(calcPts(baseCoinValue, entry.status) / 2);
           const lvlBonus = getLevelCoinBonus(ud.level || 1);

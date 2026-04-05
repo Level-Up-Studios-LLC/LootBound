@@ -706,9 +706,6 @@ export function AppProvider(props: {
           r => r.status === 'approved' && r.date === d
         );
         for (const req of approvedCoops) {
-          // Expire the co-op request
-          await saveCoopRequest(familyId, req.id, { status: 'expired' });
-
           const tc = tierCfg(req.taskTier);
           const kids = [
             {
@@ -737,11 +734,21 @@ export function AppProvider(props: {
 
             if (kid.done) {
               // Completer: void held rewards, mark as failed, break streak (no coin deduction)
-              if (existingEntry) {
-                existingEntry.status = 'missed';
-                existingEntry.coopFailed = true;
-                // points/xp stay at 0 (held rewards never granted)
-              }
+              kidUd.taskLog[d][kid.logKey] = {
+                ...(existingEntry || {
+                  completedAt: null,
+                  photo: null,
+                  rejected: false,
+                }),
+                status: 'missed',
+                points: 0,
+                xp: 0,
+                coopFailed: true,
+                coopRequestId: req.id,
+                coopRole: kid.id === req.initiatorId ? 'initiator' : 'partner',
+                coopPartnerId:
+                  kid.id === req.initiatorId ? req.partnerId : req.initiatorId,
+              };
               kidUd.streak = 0;
             } else {
               // Non-completer: normal missed penalty
@@ -771,6 +778,9 @@ export function AppProvider(props: {
             updatedUsers[kid.id] = kidUd;
             await saveUsr(kid.id, kidUd);
           }
+
+          // Expire co-op after both kids processed (so failures are retryable)
+          await saveCoopRequest(familyId, req.id, { status: 'expired' });
 
           // Notify both kids
           sendNotification({
