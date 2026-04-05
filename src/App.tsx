@@ -578,8 +578,8 @@ function AppRouter() {
         familyId={auth.authUser.familyId}
         initialScreen='admin'
         initialUser='parent'
-        onLogout={() => {
-          auth.doSignOut();
+        onLogout={async () => {
+          await auth.doSignOut();
           setParentVerified(false);
           setParentPin(null);
           setRole(null);
@@ -600,6 +600,7 @@ function AppRouter() {
             setKidFamilyId(fid);
           }}
           onBack={() => {
+            auth.doSignOut();
             setRole(null);
           }}
         />
@@ -617,6 +618,7 @@ function AppRouter() {
               /* ignore */
             });
             clearSession(SESSION_KEY_KID);
+            auth.doSignOut();
             setStoredKid(null);
             setKidFamilyId(null);
             setRole(null);

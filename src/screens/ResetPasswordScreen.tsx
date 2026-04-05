@@ -77,10 +77,10 @@ export default function ResetPasswordScreen(
   // Invalid or expired code
   if (invalidCode) {
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+      <main className='page-wrapper page-centered'>
+        <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qcoral-dim flex flex-col gap-4 items-center'>
           <div className='text-[32px]'>
             <FontAwesomeIcon
@@ -99,17 +99,17 @@ export default function ResetPasswordScreen(
             Back to Sign In
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   // Transient error — offer retry
   if (retryable) {
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+      <main className='page-wrapper page-centered'>
+        <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qcoral-dim flex flex-col gap-4 items-center'>
           <div className='text-[32px]'>
             <FontAwesomeIcon
@@ -131,28 +131,28 @@ export default function ResetPasswordScreen(
             Back to Sign In
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   // Still verifying the code
   if (!email && !invalidCode) {
     return (
-      <div className='page-wrapper page-centered'>
+      <main className='page-wrapper page-centered'>
         <div className='font-display text-2xl text-qteal animate-pulse rounded-card px-6 py-3'>
           Verifying reset link...
         </div>
-      </div>
+      </main>
     );
   }
 
   // Success state
   if (success) {
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+      <main className='page-wrapper page-centered'>
+        <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qmint flex flex-col gap-4 items-center'>
           <div className='text-[32px] text-qteal'>
             <FontAwesomeIcon icon={faCircleCheck} style={FA_ICON_STYLE} />
@@ -168,16 +168,16 @@ export default function ResetPasswordScreen(
             Sign In
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   // Reset form
   return (
-    <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+    <main className='page-wrapper page-centered'>
+      <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
-      </div>
+      </h1>
       <div className='text-sm text-qmuted mb-5'>Set a new password</div>
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
         <div className='text-sm text-qmuted text-center'>
@@ -220,6 +220,6 @@ export default function ResetPasswordScreen(
           {busy ? 'Resetting...' : 'Reset Password'}
         </button>
       </div>
-    </div>
+    </main>
   );
 }

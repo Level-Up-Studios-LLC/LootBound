@@ -37,6 +37,7 @@ export default function BNav(p: BNavProps) {
             onClick={() => {
               ctx.setScreen(t.id);
             }}
+            aria-current={isActive ? 'page' : undefined}
             className={
               'flex flex-col items-center gap-1 bg-transparent px-3 py-2 rounded-badge border-none cursor-pointer font-body transition-colors ' +
               (isActive ? 'text-qteal' : 'text-qslate hover:text-qteal')

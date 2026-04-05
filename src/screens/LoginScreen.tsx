@@ -154,9 +154,9 @@ export default function LoginScreen(
         ref={containerRef}
         aria-hidden={!!pinTarget}
       >
-        <div className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title'>
+        <h1 className='font-display text-[42px] font-bold text-qslate tracking-wider mb-4 login-title'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='text-base text-qmuted mb-5'>Choose your profile</div>
         <div className='flex gap-5 flex-wrap justify-center mb-10'>
           {children.map((c, idx) => {

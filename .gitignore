@@ -47,6 +47,10 @@ media/
 .firebase/
 firebase-debug.log
 
+# Playwright
+.playwright-mcp/
+.playwright-screenshots/
+
 # Misc
 *.tsbuildinfo
 *.tgz

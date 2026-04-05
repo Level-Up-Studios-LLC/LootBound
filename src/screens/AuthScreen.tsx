@@ -107,10 +107,10 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   if (showReset) {
     const resetError = localErr || auth.authError;
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+      <main className='page-wrapper page-centered'>
+        <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='text-sm text-qmuted mb-5'>Reset your password</div>
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
           {resetSent ? (
@@ -162,11 +162,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
                   autoFocus
                 />
               </div>
-              {resetError && (
-                <div className='text-qcoral text-[13px] text-center py-1.5'>
-                  {resetError}
-                </div>
-              )}
+              <div
+                role={resetError ? 'alert' : undefined}
+                className='text-qcoral text-[13px] text-center py-1.5 min-h-[20px]'
+              >
+                {resetError}
+              </div>
               <button
                 onClick={handleResetPassword}
                 disabled={busy}
@@ -188,7 +189,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             </>
           )}
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -211,20 +212,24 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
   // --- Sign In Step 1: Email + Google ---
   if (mode === 'signin' && step === 1) {
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+      <main className='page-wrapper page-centered'>
+        <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='text-sm text-qmuted mb-5'>
           Sign in with your family account
         </div>
 
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
           <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+            <label
+              htmlFor='login-email'
+              className='block text-qslate font-semibold mb-1 tracking-wide'
+            >
               Email
             </label>
             <input
+              id='login-email'
               type='email'
               placeholder='family@example.com'
               value={email}
@@ -241,11 +246,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             />
           </div>
 
-          {error && (
-            <div className='text-qcoral text-[13px] text-center py-1.5'>
-              {error}
-            </div>
-          )}
+          <div
+            role={error ? 'alert' : undefined}
+            className='text-qcoral text-[13px] text-center py-1.5 min-h-[20px]'
+          >
+            {error}
+          </div>
 
           <button
             onClick={handleSigninStep1}
@@ -297,26 +303,30 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             Back
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   // --- Sign In Step 2: Password ---
   if (mode === 'signin' && step === 2) {
     return (
-      <div className='page-wrapper page-centered'>
-        <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+      <main className='page-wrapper page-centered'>
+        <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
           LOOTBOUND
-        </div>
+        </h1>
         <div className='text-sm text-qmuted mb-1'>Welcome back</div>
         <div className='text-xs text-qmuted mb-5'>{email}</div>
 
         <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
           <div>
-            <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+            <label
+              htmlFor='login-password'
+              className='block text-qslate font-semibold mb-1 tracking-wide'
+            >
               Password
             </label>
             <PasswordInput
+              id='login-password'
               placeholder='Enter password'
               value={pass}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -329,11 +339,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             />
           </div>
 
-          {error && (
-            <div className='text-qcoral text-[13px] text-center py-1.5'>
-              {error}
-            </div>
-          )}
+          <div
+            role={error ? 'alert' : undefined}
+            className='text-qcoral text-[13px] text-center py-1.5 min-h-[20px]'
+          >
+            {error}
+          </div>
 
           <button
             onClick={handleSigninSubmit}
@@ -369,26 +380,30 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             Back
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   // --- Sign Up: Single step — Email + Password + Google ---
   return (
-    <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+    <main className='page-wrapper page-centered'>
+      <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
-      </div>
+      </h1>
       <div className='text-sm text-qmuted mb-5'>
         Create a new family account
       </div>
 
       <div className='w-full max-w-[360px] rounded-card p-6 bg-qyellow flex flex-col gap-4'>
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='signup-email'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             Email
           </label>
           <input
+            id='signup-email'
             type='email'
             placeholder='family@example.com'
             value={email}
@@ -404,10 +419,14 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </div>
 
         <div>
-          <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+          <label
+            htmlFor='signup-password'
+            className='block text-qslate font-semibold mb-1 tracking-wide'
+          >
             Password
           </label>
           <PasswordInput
+            id='signup-password'
             placeholder='At least 6 characters'
             value={pass}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -419,11 +438,12 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           />
         </div>
 
-        {error && (
-          <div className='text-qcoral text-[13px] text-center py-1.5'>
-            {error}
-          </div>
-        )}
+        <div
+          role='alert'
+          className='text-qcoral text-[13px] text-center py-1.5 min-h-[20px]'
+        >
+          {error}
+        </div>
 
         <button
           onClick={handleSignupSubmit}
@@ -476,6 +496,6 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           Back
         </button>
       </div>
-    </div>
+    </main>
   );
 }

@@ -10,6 +10,7 @@
   --color-qmint: #b8f2e6;
   --color-qmint-dim: #d9f7ef;
   --color-qteal: #4ac7a8;
+  --color-qteal-btn: #1f9e78;
   --color-qteal-dim: #c8f0e4;
   --color-qyellow: #ffe08a;
   --color-qyellow-dim: #fff2c7;
@@ -28,7 +29,7 @@
   --color-qpurple: #8b7ec8;
   --color-qpurple-dim: #e4dff2;
   --color-qpink: #ff8c94;
-  --color-qorange: #e8a44a;
+  --color-qorange: #c78a2e;
   --color-qorange-dim: #f8e6cf;
   --color-qred: #e05a5a;
   --color-qred-dim: #f8d4d4;
@@ -36,8 +37,8 @@
   --color-qcoop: #5ec4d414;
   --color-qcoop-dim: #5ec4d426;
   --color-qtext: #4b4e6d;
-  --color-qmuted: #7a7d96;
-  --color-qdim: #a0a3b5;
+  --color-qmuted: #6a6d87;
+  --color-qdim: #8a8d9f;
   --color-qinput: #ffffff;
   --color-qinput-border: #dddde0;
 
@@ -56,10 +57,19 @@
   box-sizing: border-box;
 }
 
-input:focus,
-button:focus,
-select:focus {
+/* Suppress focus ring for mouse/touch clicks, keep for keyboard navigation */
+input:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
   outline: none;
+}
+
+input:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-qteal);
+  outline-offset: 2px;
+  border-radius: inherit;
 }
 
 ::-webkit-scrollbar {
@@ -184,7 +194,7 @@ body,
 
 /* Button base - ensures all buttons have decent padding */
 @utility btn-primary {
-  background: var(--color-qteal);
+  background: var(--color-qteal-btn);
   color: #ffffff;
   font-weight: 700;
   padding: 10px 20px;
