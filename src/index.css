@@ -125,6 +125,21 @@ body,
   animation: float 3s ease-in-out infinite;
 }
 
+/* Respect prefers-reduced-motion for CSS animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+
+  .animate-slide-up {
+    animation: none;
+  }
+
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* Page wrapper pattern */
 @utility page-wrapper {
   font-family: var(--font-body);

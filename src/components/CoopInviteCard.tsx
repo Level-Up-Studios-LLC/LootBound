@@ -82,6 +82,7 @@ export default function CoopInviteCard({
             runAction(() => ctx.acceptCoop(request.id), 'accept co-op')
           }
           disabled={busy}
+          aria-label={`Accept co-op invite for ${request.taskName}`}
           className='bg-qteal-dim text-qteal rounded-badge px-4 py-2 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
         >
           <FontAwesomeIcon icon={faThumbsUp} />
@@ -93,6 +94,7 @@ export default function CoopInviteCard({
             runAction(() => ctx.declineCoop(request.id), 'decline co-op')
           }
           disabled={busy}
+          aria-label={`Decline co-op invite for ${request.taskName}`}
           className='bg-qcoral-dim text-qcoral rounded-badge px-4 py-2 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
         >
           <FontAwesomeIcon icon={faThumbsDown} />

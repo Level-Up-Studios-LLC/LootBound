@@ -210,6 +210,7 @@ export default function CoopRequestCard({
             <button
               onClick={handleApprove}
               disabled={busy || !hasValidWindow}
+              aria-label={`Approve co-op for ${request.taskName}`}
               className='bg-qteal-dim text-qteal rounded-badge px-4 py-2 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <FontAwesomeIcon icon={faThumbsUp} />
@@ -220,6 +221,7 @@ export default function CoopRequestCard({
                 runAction(() => ctx.denyCoop(request.id), 'deny co-op')
               }
               disabled={busy}
+              aria-label={`Deny co-op for ${request.taskName}`}
               className='bg-qcoral-dim text-qcoral rounded-badge px-4 py-2 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <FontAwesomeIcon icon={faThumbsDown} />
@@ -232,6 +234,7 @@ export default function CoopRequestCard({
             runAction(() => ctx.cancelCoop(request.id), 'cancel co-op')
           }
           disabled={busy}
+          aria-label={`Cancel co-op for ${request.taskName}`}
           className='bg-qslate-dim text-qslate rounded-badge px-3 py-2 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
         >
           <FontAwesomeIcon icon={faXmark} />

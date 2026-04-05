@@ -145,13 +145,21 @@ export function playSound(key: SoundKey): void {
 export function notifTypeToSound(type: string): SoundKey {
   if (type === 'mission_complete') return 'success';
   if (type === 'mission_rejected') return 'error';
-  if (
-    type === 'loot_request' ||
-    type === 'loot_approved' ||
-    type === 'loot_denied'
-  )
-    return 'approval';
+  if (type === 'loot_request' || type === 'loot_approved') return 'approval';
+  if (type === 'loot_denied') return 'error';
   if (type === 'level_up') return 'levelup';
   if (type === 'streak') return 'streak';
+  // Co-op notification sounds
+  if (type === 'coop_complete') return 'success';
+  if (type === 'coop_approved' || type === 'coop_accepted') return 'approval';
+  if (
+    type === 'coop_denied' ||
+    type === 'coop_declined' ||
+    type === 'coop_cancelled' ||
+    type === 'coop_expired'
+  )
+    return 'error';
+  if (type === 'coop_request') return 'approval';
+  if (type === 'coop_partner_done') return 'success';
   return 'success';
 }
