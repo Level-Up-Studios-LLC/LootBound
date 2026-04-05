@@ -19,6 +19,7 @@ interface NotificationListenerDeps {
 
 function notifTypeToToast(type: string): string {
   if (type === 'level_up') return 'levelup';
+  if (type === 'streak') return 'streak';
   if (
     type === 'mission_rejected' ||
     type === 'loot_denied' ||

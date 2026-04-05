@@ -785,40 +785,33 @@ export async function cleanupOldNotifications(familyId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function cleanupOldCoopRequests(familyId: string): Promise<void> {
-  try {
-    const BATCH_LIMIT = 500;
-    const cutoffTs = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const terminalStatuses = new Set([
-      'declined',
-      'denied',
-      'cancelled',
-      'completed',
-      'expired',
-    ]);
-    const q = query(
-      collection(db, 'families', familyId, 'coopRequests'),
-      where('createdAt', '<', cutoffTs)
-    );
-    const snap = await getDocs(q);
-    const refs: import('firebase/firestore').DocumentReference[] = [];
-    snap.forEach(d => {
-      if (terminalStatuses.has(d.data().status)) {
-        refs.push(d.ref);
-      }
-    });
-    for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
-      const chunk = refs.slice(start, start + BATCH_LIMIT);
-      const batch = writeBatch(db);
-      for (let j = 0; j < chunk.length; j++) {
-        batch.delete(chunk[j]);
-      }
-      await batch.commit();
+  const BATCH_LIMIT = 500;
+  const cutoffMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const terminalStatuses = new Set([
+    'declined',
+    'denied',
+    'cancelled',
+    'completed',
+    'expired',
+  ]);
+  const q = query(
+    collection(db, 'families', familyId, 'coopRequests'),
+    where('createdAt', '<', cutoffMs)
+  );
+  const snap = await getDocs(q);
+  const refs: import('firebase/firestore').DocumentReference[] = [];
+  snap.forEach(d => {
+    if (terminalStatuses.has(d.data().status)) {
+      refs.push(d.ref);
     }
-  } catch (err) {
-    Sentry.captureException(err, {
-      tags: { action: 'cleanup-old-coop-requests' },
-    });
-    throw err;
+  });
+  for (let start = 0; start < refs.length; start += BATCH_LIMIT) {
+    const chunk = refs.slice(start, start + BATCH_LIMIT);
+    const batch = writeBatch(db);
+    for (let j = 0; j < chunk.length; j++) {
+      batch.delete(chunk[j]);
+    }
+    await batch.commit();
   }
 }
 

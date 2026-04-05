@@ -19,7 +19,7 @@ export default function CoopBadge({
         aria-hidden='true'
       />
       <span className='sr-only'>Co-op </span>
-      {partnerAvatar && <span>{partnerAvatar}</span>}
+      {partnerAvatar && <span aria-hidden='true'>{partnerAvatar}</span>}
       with {partnerName}
     </span>
   );
