@@ -144,10 +144,14 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
                 password.
               </div>
               <div>
-                <label className='block text-qslate font-semibold mb-1 tracking-wide'>
+                <label
+                  htmlFor='reset-email'
+                  className='block text-qslate font-semibold mb-1 tracking-wide'
+                >
                   Email
                 </label>
                 <input
+                  id='reset-email'
                   type='email'
                   placeholder='family@example.com'
                   value={email}
@@ -439,7 +443,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </div>
 
         <div
-          role='alert'
+          role={error ? 'alert' : undefined}
           className='text-qcoral text-[13px] text-center py-1.5 min-h-[20px]'
         >
           {error}

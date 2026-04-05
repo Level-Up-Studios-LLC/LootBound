@@ -579,10 +579,15 @@ function AppRouter() {
         initialScreen='admin'
         initialUser='parent'
         onLogout={async () => {
-          await auth.doSignOut();
-          setParentVerified(false);
-          setParentPin(null);
-          setRole(null);
+          try {
+            await auth.doSignOut();
+          } catch (err) {
+            Sentry.captureException(err, { tags: { action: 'parent-logout' } });
+          } finally {
+            setParentVerified(false);
+            setParentPin(null);
+            setRole(null);
+          }
         }}
       >
         <AppInner />
@@ -599,8 +604,12 @@ function AppRouter() {
           onSuccess={fid => {
             setKidFamilyId(fid);
           }}
-          onBack={() => {
-            auth.doSignOut();
+          onBack={async () => {
+            await auth.doSignOut().catch(err =>
+              Sentry.captureException(err, {
+                tags: { action: 'kid-back-signout' },
+              })
+            );
             setRole(null);
           }}
         />
@@ -613,12 +622,16 @@ function AppRouter() {
     return (
       <AppProvider familyId={kidFamilyId} initialUser={storedKid || null}>
         <AppInner
-          onSwitchFamily={() => {
+          onSwitchFamily={async () => {
             clearStoredFamilyCode().catch(() => {
               /* ignore */
             });
             clearSession(SESSION_KEY_KID);
-            auth.doSignOut();
+            await auth.doSignOut().catch(err =>
+              Sentry.captureException(err, {
+                tags: { action: 'kid-switch-signout' },
+              })
+            );
             setStoredKid(null);
             setKidFamilyId(null);
             setRole(null);
