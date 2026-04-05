@@ -332,9 +332,6 @@ export default function TasksScreen(): React.ReactElement | null {
               ? 'bg-qmint-dim'
               : 'bg-qyellow-dim';
 
-          // Co-op tasks can't be completed via solo flow (Phase 5 will wire co-op completion)
-          const isVirtualCoop = t.id.startsWith('coop:');
-
           const canComplete =
             !isDone &&
             !isMissed &&
@@ -342,8 +339,8 @@ export default function TasksScreen(): React.ReactElement | null {
             !coopPending &&
             !coopMyPartDone &&
             !coopTerminal &&
-            !isVirtualCoop &&
-            !isCoop;
+            // Co-op tasks can be completed when approved (doComplete delegates to completeCoopTask)
+            (!isCoop || coopReq?.status === 'approved');
 
           // Get partner info for CoopBadge
           const coopPartnerName =
@@ -472,23 +469,27 @@ export default function TasksScreen(): React.ReactElement | null {
                   }}
                   className={
                     'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
-                    (isRej
-                      ? 'bg-qcoral'
-                      : status === 'active'
-                        ? 'bg-qteal'
-                        : status === 'upcoming'
-                          ? 'bg-qpurple'
-                          : 'bg-qorange')
+                    (isCoop
+                      ? 'bg-qcyan'
+                      : isRej
+                        ? 'bg-qcoral'
+                        : status === 'active'
+                          ? 'bg-qteal'
+                          : status === 'upcoming'
+                            ? 'bg-qpurple'
+                            : 'bg-qorange')
                   }
                 >
                   <FontAwesomeIcon icon={faCamera} className='mr-1.5' />
-                  {isRej
-                    ? 'Redo + Photo'
-                    : status === 'upcoming'
-                      ? 'Early (+25%) + Photo'
-                      : status === 'overdue'
-                        ? 'Late (50%) + Photo'
-                        : 'Complete + Photo'}
+                  {isCoop
+                    ? 'Complete Co-op + Photo'
+                    : isRej
+                      ? 'Redo + Photo'
+                      : status === 'upcoming'
+                        ? 'Early (+25%) + Photo'
+                        : status === 'overdue'
+                          ? 'Late (50%) + Photo'
+                          : 'Complete + Photo'}
                 </button>
               )}
               {/* Co-op request button for solo tasks */}

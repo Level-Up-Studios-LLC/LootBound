@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   createContext,
   useContext,
 } from 'react';
@@ -64,6 +65,7 @@ import type { SoundKey } from '../services/notificationSound.ts';
 import {
   cleanupOldNotifications,
   writeNotification,
+  saveCoopRequest,
 } from '../services/firestoreStorage.ts';
 import {
   generateFamilyCode,
@@ -298,41 +300,7 @@ export function AppProvider(props: {
     }
   };
 
-  // --- Compose action hooks ---
-  const taskActions = useTaskActions({
-    cfg,
-    allU,
-    curUser,
-    familyId,
-    saveUsr,
-    notify: notification.notify,
-    tp,
-    tierCfg,
-    getChildName,
-    playSound: playSoundIfAllowed,
-  });
-
-  const rewardActions = useRewardActions({
-    cfg,
-    allU,
-    curUser,
-    familyId,
-    saveUsr,
-    notify: notification.notify,
-    getChildName: getChildName,
-    playSound: playSoundIfAllowed,
-  });
-
-  const approvalActions = useApprovalActions({
-    allU,
-    familyId,
-    saveUsr,
-    notify: notification.notify,
-    getChildName: getChildName,
-    playSound: playSoundIfAllowed,
-  });
-
-  // --- sendNotification wrapper for co-op hook ---
+  // --- sendNotification wrapper (must be defined before coopActions) ---
   const sendNotification = useCallback(
     async (data: {
       type: string;
@@ -354,12 +322,54 @@ export function AppProvider(props: {
     [familyId]
   );
 
+  // --- Compose action hooks (coopActions before taskActions for delegation) ---
   const coopActions = useCoopActions({
     familyId,
     children: cfg ? cfg.children : [],
     tasks: cfg ? cfg.tasks : {},
     coopRequests,
     sendNotification,
+    allU,
+    cfg,
+    saveUsr,
+    tierCfg,
+    notify: notification.notify,
+    playSound: playSoundIfAllowed,
+  });
+
+  const taskActions = useTaskActions({
+    cfg,
+    allU,
+    curUser,
+    familyId,
+    saveUsr,
+    notify: notification.notify,
+    tp,
+    tierCfg,
+    getChildName,
+    playSound: playSoundIfAllowed,
+    coopRequests,
+    completeCoopTask: coopActions.completeCoopTask,
+  });
+
+  const rewardActions = useRewardActions({
+    cfg,
+    allU,
+    curUser,
+    familyId,
+    saveUsr,
+    notify: notification.notify,
+    getChildName: getChildName,
+    playSound: playSoundIfAllowed,
+  });
+
+  const approvalActions = useApprovalActions({
+    allU,
+    familyId,
+    saveUsr,
+    notify: notification.notify,
+    getChildName: getChildName,
+    playSound: playSoundIfAllowed,
   });
 
   const childActions = useChildActions({
@@ -637,6 +647,10 @@ export function AppProvider(props: {
   useEffect(() => {
     if (!cfg || loading) return;
     (async () => {
+      // Track updated user data across both solo and co-op bedtime loops
+      // to prevent co-op loop from overwriting solo penalties with stale data
+      const updatedUsers: Record<string, UserData> = {};
+
       for (let i = 0; i < cfg.children.length; i++) {
         const ch = cfg.children[i];
         const ud = allU[ch.id];
@@ -654,6 +668,8 @@ export function AppProvider(props: {
           const entry = updated.taskLog[d][t.id];
           // Skip tasks created today — don't penalize for late-added missions
           if (t.createdAt === d) return;
+          // Skip tasks with active co-op — handled by co-op bedtime logic below
+          if (coopActions.isTaskInActiveCoop(ch.id, t.id, d)) return;
           if (!entry || entry.rejected) {
             const tc = tierCfg(t.tier);
             updated.taskLog[d][t.id] = {
@@ -679,11 +695,153 @@ export function AppProvider(props: {
           if (updated.missedDaysThisWeek > 1) {
             updated.streak = 0;
           }
+          updatedUsers[ch.id] = updated;
           await saveUsr(ch.id, updated);
+        }
+      }
+      // --- Co-op bedtime cutoff ---
+      if (isPastBedtime(cfg.bedtime)) {
+        const d = getToday();
+        const approvedCoops = coopRequests.filter(
+          r => r.status === 'approved' && r.date === d
+        );
+        for (const req of approvedCoops) {
+          const tc = tierCfg(req.taskTier);
+          const kids = [
+            {
+              id: req.initiatorId,
+              done: req.initiatorCompleted,
+              logKey: req.taskId,
+            },
+            {
+              id: req.partnerId,
+              done: req.partnerCompleted,
+              logKey: `coop:${req.id}`,
+            },
+          ];
+
+          for (const kid of kids) {
+            // Use locally-updated data from solo loop if available
+            const kidUd = structuredClone(
+              updatedUsers[kid.id] ?? allU[kid.id] ?? freshUser()
+            ) as UserData;
+            if (!kidUd.taskLog) kidUd.taskLog = {};
+            if (!kidUd.taskLog[d]) kidUd.taskLog[d] = {};
+
+            // Idempotency: skip if already processed
+            const existingEntry = kidUd.taskLog[d][kid.logKey];
+            if (existingEntry && existingEntry.coopFailed) continue;
+
+            if (kid.done) {
+              // Completer: void held rewards, mark as failed, break streak (no coin deduction)
+              kidUd.taskLog[d][kid.logKey] = {
+                ...(existingEntry || {
+                  completedAt: null,
+                  photo: null,
+                  rejected: false,
+                }),
+                status: 'missed',
+                points: 0,
+                xp: 0,
+                coopFailed: true,
+                coopRequestId: req.id,
+                coopRole: kid.id === req.initiatorId ? 'initiator' : 'partner',
+                coopPartnerId:
+                  kid.id === req.initiatorId ? req.partnerId : req.initiatorId,
+              };
+              kidUd.streak = 0;
+            } else {
+              // Non-completer: normal missed penalty
+              kidUd.taskLog[d][kid.logKey] = {
+                completedAt: null,
+                status: 'missed',
+                points: -tc.coins,
+                xp: 0,
+                photo: null,
+                rejected: false,
+                autoCutoff: true,
+                coopRequestId: req.id,
+                coopRole: kid.id === req.initiatorId ? 'initiator' : 'partner',
+                coopPartnerId:
+                  kid.id === req.initiatorId ? req.partnerId : req.initiatorId,
+                coopFailed: true,
+              };
+              kidUd.points = Math.max(
+                MIN_COINS,
+                (kidUd.points || 0) - tc.coins
+              );
+              kidUd.missedDaysThisWeek = (kidUd.missedDaysThisWeek || 0) + 1;
+              if (kidUd.missedDaysThisWeek > 1) {
+                kidUd.streak = 0;
+              }
+            }
+            updatedUsers[kid.id] = kidUd;
+            await saveUsr(kid.id, kidUd);
+          }
+
+          // Expire co-op after both kids processed (so failures are retryable)
+          await saveCoopRequest(familyId, req.id, { status: 'expired' });
+
+          // Notify both kids
+          sendNotification({
+            type: 'coop_expired',
+            title: 'Co-op Expired',
+            body: `The co-op on ${req.taskName} expired at bedtime`,
+            childId: req.initiatorId,
+            childName: getChildName(req.initiatorId),
+            targetRole: 'kid',
+          }).catch(e =>
+            Sentry.captureException(e, {
+              level: 'warning',
+              tags: { action: 'coop-notification' },
+            })
+          );
+          sendNotification({
+            type: 'coop_expired',
+            title: 'Co-op Expired',
+            body: `The co-op on ${req.taskName} expired at bedtime`,
+            childId: req.partnerId,
+            childName: getChildName(req.partnerId),
+            targetRole: 'kid',
+          }).catch(e =>
+            Sentry.captureException(e, {
+              level: 'warning',
+              tags: { action: 'coop-notification' },
+            })
+          );
         }
       }
     })();
   });
+
+  // Track co-op request IDs currently being awarded to prevent double-award
+  const awardingCoopsRef = useRef<Set<string>>(new Set());
+
+  // Safety effect: award co-op rewards if both kids completed but status is still 'approved'
+  // This handles the race condition where both kids complete simultaneously
+  useEffect(() => {
+    if (!cfg || loading) return;
+    const pendingAwards = coopRequests.filter(
+      r =>
+        r.status === 'approved' &&
+        r.initiatorCompleted &&
+        r.partnerCompleted &&
+        !awardingCoopsRef.current.has(r.id)
+    );
+    for (const req of pendingAwards) {
+      awardingCoopsRef.current.add(req.id);
+      coopActions
+        .awardCoopRewards(req)
+        .catch(err => {
+          Sentry.captureException(err, {
+            tags: { action: 'coop-safety-award' },
+          });
+        })
+        .finally(() => {
+          awardingCoopsRef.current.delete(req.id);
+        });
+    }
+  }, [coopRequests, cfg, loading, coopActions.awardCoopRewards]);
 
   // Validate restored kid session — promote to dashboard if valid, reset if not
   useEffect(() => {
