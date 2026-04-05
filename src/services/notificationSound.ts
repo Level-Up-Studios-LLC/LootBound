@@ -159,7 +159,7 @@ export function notifTypeToSound(type: string): SoundKey {
     type === 'coop_expired'
   )
     return 'error';
-  if (type === 'coop_request' || type === 'coop_partner_done')
-    return 'approval';
+  if (type === 'coop_request') return 'approval';
+  if (type === 'coop_partner_done') return 'success';
   return 'success';
 }
