@@ -529,6 +529,7 @@ export function useCoopActions(params: UseCoopActionsParams) {
           },
         ];
 
+        let allKidsProcessed = true;
         for (const kid of kids) {
           const ud = structuredClone(
             overrideUserData?.[kid.id] ?? allU[kid.id] ?? freshUser()
@@ -551,6 +552,7 @@ export function useCoopActions(params: UseCoopActionsParams) {
                 },
               }
             );
+            allKidsProcessed = false;
             continue;
           }
 
@@ -618,22 +620,69 @@ export function useCoopActions(params: UseCoopActionsParams) {
             ud.lastPerfectDate = d;
             if (ud.streak > (ud.bestStreak || 0)) ud.bestStreak = ud.streak;
             // Streak milestone bonuses (same as solo path)
+            // Use sendNotification instead of local notify/playSound since
+            // awardCoopRewards can run on a different device or parent session
+            const kidName = getChildName(kid.id);
             if (ud.streak === 3) {
               ud.points += 20;
-              notify('+20: 3-day streak!', 'streak');
-              playSound('streak');
+              sendNotification({
+                type: 'streak',
+                title: 'Streak Milestone!',
+                body: `${kidName} hit a 3-day streak! +20 coins`,
+                childId: kid.id,
+                childName: kidName,
+                targetRole: 'kid',
+              }).catch(e =>
+                Sentry.captureException(e, {
+                  level: 'warning',
+                  tags: { action: 'coop-notification' },
+                })
+              );
             } else if (ud.streak === 7) {
               ud.points += 75;
-              notify('+75: 7-day streak!', 'streak');
-              playSound('streak');
+              sendNotification({
+                type: 'streak',
+                title: 'Streak Milestone!',
+                body: `${kidName} hit a 7-day streak! +75 coins`,
+                childId: kid.id,
+                childName: kidName,
+                targetRole: 'kid',
+              }).catch(e =>
+                Sentry.captureException(e, {
+                  level: 'warning',
+                  tags: { action: 'coop-notification' },
+                })
+              );
             } else if (ud.streak === 15) {
               ud.points += 150;
-              notify('+150: 15-day streak!', 'streak');
-              playSound('streak');
+              sendNotification({
+                type: 'streak',
+                title: 'Streak Milestone!',
+                body: `${kidName} hit a 15-day streak! +150 coins`,
+                childId: kid.id,
+                childName: kidName,
+                targetRole: 'kid',
+              }).catch(e =>
+                Sentry.captureException(e, {
+                  level: 'warning',
+                  tags: { action: 'coop-notification' },
+                })
+              );
             } else if (ud.streak === 30) {
               ud.points += 300;
-              notify('+300: 30-day streak!', 'streak');
-              playSound('streak');
+              sendNotification({
+                type: 'streak',
+                title: 'Streak Milestone!',
+                body: `${kidName} hit a 30-day streak! +300 coins`,
+                childId: kid.id,
+                childName: kidName,
+                targetRole: 'kid',
+              }).catch(e =>
+                Sentry.captureException(e, {
+                  level: 'warning',
+                  tags: { action: 'coop-notification' },
+                })
+              );
             }
           }
 
@@ -659,7 +708,9 @@ export function useCoopActions(params: UseCoopActionsParams) {
           }
         }
 
-        // Mark co-op as completed
+        // Only mark completed if both kids were successfully processed
+        if (!allKidsProcessed) return;
+
         await saveCoopRequest(familyId, req.id, {
           status: 'completed',
           completedAt: Date.now(),
