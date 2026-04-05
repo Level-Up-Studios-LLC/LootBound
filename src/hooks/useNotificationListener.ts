@@ -17,6 +17,20 @@ interface NotificationListenerDeps {
   loading: boolean;
 }
 
+function notifTypeToToast(type: string): string {
+  if (type === 'level_up') return 'levelup';
+  if (
+    type === 'mission_rejected' ||
+    type === 'loot_denied' ||
+    type === 'coop_denied' ||
+    type === 'coop_declined' ||
+    type === 'coop_cancelled' ||
+    type === 'coop_expired'
+  )
+    return 'error';
+  return 'success';
+}
+
 function isEligible(
   n: { targetRole: string; childId?: string; type: string; read: boolean },
   role: string,
@@ -65,12 +79,7 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
             !seenRef.current.has(n.id) &&
             isEligible(n, deps.role, deps.childId, prefs)
           ) {
-            const toastType =
-              n.type === 'level_up'
-                ? 'levelup'
-                : n.type === 'mission_rejected' || n.type === 'loot_denied'
-                  ? 'error'
-                  : 'success';
+            const toastType = notifTypeToToast(n.type);
             deps.notify(n.body || n.title, toastType);
             if (prefs.soundEnabled) {
               playSound(notifTypeToSound(n.type));
@@ -94,12 +103,7 @@ export function useNotificationListener(deps: NotificationListenerDeps) {
 
         seenRef.current.add(n.id);
 
-        const toastType =
-          n.type === 'level_up'
-            ? 'levelup'
-            : n.type === 'mission_rejected' || n.type === 'loot_denied'
-              ? 'error'
-              : 'success';
+        const toastType = notifTypeToToast(n.type);
         deps.notify(n.body || n.title, toastType);
 
         if (prefs.soundEnabled) {

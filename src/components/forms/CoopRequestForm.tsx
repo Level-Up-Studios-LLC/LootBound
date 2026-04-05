@@ -73,6 +73,8 @@ export default function CoopRequestForm({
             key={s.id}
             type='button'
             onClick={() => setSelectedId(s.id)}
+            aria-pressed={selectedId === s.id}
+            aria-label={`Select ${s.name} as co-op partner`}
             className={
               'flex items-center gap-2.5 p-3 rounded-btn border-2 cursor-pointer font-body transition-all ' +
               (selectedId === s.id

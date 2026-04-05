@@ -64,6 +64,7 @@ import {
 import type { SoundKey } from '../services/notificationSound.ts';
 import {
   cleanupOldNotifications,
+  cleanupOldCoopRequests,
   writeNotification,
   saveCoopRequest,
 } from '../services/firestoreStorage.ts';
@@ -621,7 +622,7 @@ export function AppProvider(props: {
     };
   }, []);
 
-  // --- Cleanup old notifications on load (parents only) ---
+  // --- Cleanup old notifications and co-op requests on load (parents only) ---
   useEffect(() => {
     if (!familyId || loading || curUser !== 'parent') return;
     cleanupOldNotifications(familyId).catch(err => {
@@ -629,6 +630,13 @@ export function AppProvider(props: {
       Sentry.captureException(err, {
         level: 'warning',
         tags: { action: 'cleanup-old-notifications' },
+      });
+    });
+    cleanupOldCoopRequests(familyId).catch(err => {
+      console.warn('Co-op request cleanup failed:', err);
+      Sentry.captureException(err, {
+        level: 'warning',
+        tags: { action: 'cleanup-old-coop-requests' },
       });
     });
   }, [familyId, loading, curUser]);
