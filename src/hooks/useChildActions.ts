@@ -99,7 +99,7 @@ export function useChildActions(deps: ChildActionsDeps) {
         tags: { action: 'add-bonus-save-user', childId: uid },
       });
       deps.notify('Could not update coins — please try again', 'error');
-      throw err;
+      return;
     }
     const childName = deps.getChild(uid)?.name ?? 'this child';
     deps.notify(
