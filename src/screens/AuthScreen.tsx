@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '../context/AuthContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPartyHorn, faAngleLeft, faArrowLeft } from '../fa.ts';
+import { faPartyHorn, faAngleLeft } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import PasswordInput from '../components/ui/PasswordInput.tsx';
 
@@ -380,7 +380,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             disabled={busy}
             className='btn-ghost'
           >
-            <FontAwesomeIcon icon={faArrowLeft} className='mr-1' />
+            <FontAwesomeIcon icon={faAngleLeft} />
             Back
           </button>
         </div>

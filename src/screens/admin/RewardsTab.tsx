@@ -189,7 +189,7 @@ export default function RewardsTab(): React.ReactElement {
                 className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
               >
                 <FontAwesomeIcon icon={faTrashCan} />
-                <span className='sr-only'>Delete</span>
+                <span className='sr-only'>Delete {r.name}</span>
               </button>
             </div>
           </div>

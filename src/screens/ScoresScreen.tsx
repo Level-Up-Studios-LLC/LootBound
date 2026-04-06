@@ -71,6 +71,7 @@ export default function ScoresScreen(): React.ReactElement | null {
   useGSAP(
     () => {
       if (!ch || !ud || !cfg) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (isSolo) {
         const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
         tl.from('.scores-profile', { opacity: 0, scale: 0.9, duration: 0.4 });
@@ -105,9 +106,9 @@ export default function ScoresScreen(): React.ReactElement | null {
 
     return (
       <div className='p-4 pb-20' ref={containerRef}>
-        <div className='font-display text-2xl font-bold mb-4 text-qslate'>
+        <h1 className='font-display text-2xl font-bold mb-4 text-qslate'>
           My Stats
-        </div>
+        </h1>
         <div className='bg-qmint rounded-card p-5 mb-4 text-center scores-profile'>
           <div className='text-[40px] mb-1'>{ch.avatar}</div>
           <div className='font-display text-xl font-bold text-qslate'>
@@ -136,6 +137,7 @@ export default function ScoresScreen(): React.ReactElement | null {
             <div className='font-display text-xl font-bold text-qslate'>
               <FontAwesomeIcon
                 icon={faFire}
+                aria-hidden='true'
                 style={FA_ICON_STYLE}
                 className='mr-1 text-sm'
               />
@@ -162,6 +164,7 @@ export default function ScoresScreen(): React.ReactElement | null {
           <div className='bg-qmint rounded-btn p-3 mb-4 text-center text-[13px] text-qmuted font-semibold'>
             <FontAwesomeIcon
               icon={faFire}
+              aria-hidden='true'
               style={FA_ICON_STYLE}
               className='mr-1'
             />
@@ -170,7 +173,11 @@ export default function ScoresScreen(): React.ReactElement | null {
         )}
         <div className='bg-qyellow rounded-card p-4'>
           <div className='font-bold text-sm text-qslate mb-3 flex items-center gap-2'>
-            <FontAwesomeIcon icon={faMedal} style={FA_ICON_STYLE} />
+            <FontAwesomeIcon
+              icon={faMedal}
+              aria-hidden='true'
+              style={FA_ICON_STYLE}
+            />
             Milestones
           </div>
           <div className='flex flex-col gap-2'>
@@ -244,11 +251,14 @@ export default function ScoresScreen(): React.ReactElement | null {
   return (
     <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
-        <div className='font-display text-2xl font-bold text-qslate'>
+        <h1 className='font-display text-2xl font-bold text-qslate'>
           Leaderboard
+        </h1>
+        <div className='text-[12px] text-qmuted -mt-1'>
+          Ranked by perfect days this week
         </div>
       </div>
-      <div className='px-4 pt-3 flex flex-col gap-4'>
+      <ol className='px-4 pt-3 flex flex-col gap-4 list-none'>
         {sorted.map((c, idx) => {
           const udata = allU[c.id] || freshUser();
           const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);
@@ -256,18 +266,19 @@ export default function ScoresScreen(): React.ReactElement | null {
           const done = tasks.filter(t => isTaskDone(t, log)).length;
           const isMe = c.id === curUser;
           const isTop = topPerfect > 0 && topIds.indexOf(c.id) !== -1;
-          const cardBg = isTop
+          const isFirst = idx === 0;
+          const cardBg = isFirst
             ? 'bg-qyellow'
             : idx % 2 === 0
               ? 'bg-qmint'
               : 'bg-qyellow';
           const lt = getLevelTitle(udata.level || 1);
           return (
-            <div
+            <li
               key={c.id}
-              className={'rounded-card p-4 leader-card ' + cardBg}
+              className={'rounded-card p-4 leader-card relative ' + cardBg}
               style={
-                isTop
+                isFirst
                   ? {
                       border: '2px solid #eab308',
                       boxShadow: '0 0 12px rgba(234,179,8,0.2)',
@@ -275,12 +286,27 @@ export default function ScoresScreen(): React.ReactElement | null {
                   : {}
               }
             >
+              <div className='absolute top-2 left-3 text-[11px] font-bold text-qmuted'>
+                {isFirst ? (
+                  <FontAwesomeIcon
+                    icon={faTrophy}
+                    aria-hidden='true'
+                    className='text-[#eab308]'
+                  />
+                ) : (
+                  `#${idx + 1}`
+                )}
+              </div>
               {isTop && (
                 <div
                   className='text-[11px] font-bold text-center mb-2'
                   style={{ color: '#eab308' }}
                 >
-                  <FontAwesomeIcon icon={faTrophy} className='mr-1' />
+                  <FontAwesomeIcon
+                    icon={faTrophy}
+                    aria-hidden='true'
+                    className='mr-1'
+                  />
                   Top Adventurer
                 </div>
               )}
@@ -305,13 +331,19 @@ export default function ScoresScreen(): React.ReactElement | null {
                     {(udata.points || 0).toLocaleString()}
                   </div>
                   <div className='text-[11px] text-qmuted font-bold'>COINS</div>
+                  <div className='font-display text-sm font-bold text-qslate'>
+                    {(udata.xp || 0).toLocaleString()}{' '}
+                    <span className='text-[11px] text-qmuted font-bold'>
+                      XP
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className='grid grid-cols-4 gap-2'>
                 {(
                   [
                     [`${done}/${tasks.length}`, 'Today'],
-                    [perfects[c.id] || 0, 'Perfect'],
+                    [perfects[c.id] || 0, 'Perf. Days'],
                     [udata.streak || 0, 'Streak'],
                     [udata.bestStreak || 0, 'Best'],
                   ] as [string | number, string][]
@@ -323,16 +355,16 @@ export default function ScoresScreen(): React.ReactElement | null {
                     <div className='font-display text-base font-bold text-qslate'>
                       {s[0]}
                     </div>
-                    <div className='text-[9px] text-qmuted font-bold'>
+                    <div className='text-[11px] text-qmuted font-bold'>
                       {s[1]}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
       <BNav tabs={KID_NAV} />
     </div>
   );

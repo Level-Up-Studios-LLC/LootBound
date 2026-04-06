@@ -151,7 +151,6 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
         ref={ctx.fileRef}
         type='file'
         accept='image/*'
-        capture='environment'
         className='hidden'
         onChange={ctx.handlePhoto}
       />

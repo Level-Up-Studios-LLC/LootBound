@@ -3,14 +3,18 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
-import { KID_NAV } from '../constants.ts';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCoins } from '../fa.ts';
+import { FA_ICON_STYLE, KID_NAV } from '../constants.ts';
 import BNav from '../components/BNav.tsx';
+import EmptyState from '../components/ui/EmptyState.tsx';
 import { countRedeems } from '../utils.ts';
 import type { Reward } from '../types.ts';
 
 export default function StoreScreen(): React.ReactElement | null {
   const [confirmR, setConfirmR] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +87,17 @@ export default function StoreScreen(): React.ReactElement | null {
         </div>
         <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full store-balance'>
           <span className='font-semibold text-qslate'>Balance:</span>
-          <span className='font-display text-[22px] font-bold text-qslate'>
+          <span
+            className='font-display text-[22px] font-bold text-qslate flex items-center gap-1.5'
+            aria-live='polite'
+            aria-atomic='true'
+          >
+            <FontAwesomeIcon
+              icon={faCoins}
+              style={FA_ICON_STYLE}
+              className='text-base'
+              aria-hidden='true'
+            />
             {(ud.points || 0).toLocaleString()} coins
           </span>
         </div>
@@ -107,6 +121,13 @@ export default function StoreScreen(): React.ReactElement | null {
               </div>
             ))}
           </div>
+        )}
+        {rewards.length === 0 && (
+          <EmptyState
+            icon='bag-shopping'
+            title='No loot available yet'
+            description='Ask your parent to add some rewards!'
+          />
         )}
         <div className='grid grid-cols-2 gap-3.5'>
           {rewards.map((r, idx) => {
@@ -143,7 +164,12 @@ export default function StoreScreen(): React.ReactElement | null {
                 <div className='font-display font-bold text-qslate'>
                   {r.cost} coins
                 </div>
-                {li && <div className='text-[10px] text-qmuted'>{li}</div>}
+                {li && <div className='text-[11px] text-qmuted'>{li}</div>}
+                {!can && (
+                  <div className='text-[11px] text-qmuted italic'>
+                    {check.reason || 'Not enough coins'}
+                  </div>
+                )}
                 {na && (
                   <div className='text-[10px] text-qorange'>
                     Needs parent OK
@@ -152,12 +178,20 @@ export default function StoreScreen(): React.ReactElement | null {
                 <button
                   disabled={!can}
                   onClick={() => {
-                    if (can) setConfirmR(r);
+                    if (can) {
+                      setRedeemError('');
+                      setConfirmR(r);
+                    }
                   }}
+                  aria-label={
+                    can
+                      ? `${na ? 'Request' : 'Redeem'} ${r.name} for ${r.cost} coins`
+                      : `${r.name} — ${check.reason || 'Need more coins'}`
+                  }
                   className={
                     'w-full rounded-badge py-2 text-xs font-bold border-none font-body transition-all' +
                     (can
-                      ? ' bg-qteal text-white cursor-pointer hover:brightness-110 hover:scale-[1.03] active:scale-[0.97]'
+                      ? ' bg-qteal-btn text-white cursor-pointer hover:brightness-110 hover:scale-[1.03] active:scale-[0.97]'
                       : ' bg-qslate-dim text-qmuted cursor-not-allowed')
                   }
                 >
@@ -250,6 +284,14 @@ export default function StoreScreen(): React.ReactElement | null {
                   </div>
                 )}
               </div>
+              {redeemError && (
+                <div
+                  role='alert'
+                  className='text-qcoral text-[13px] text-center mb-3'
+                >
+                  {redeemError}
+                </div>
+              )}
               <div className='flex gap-3 justify-end'>
                 <button
                   onClick={() => setConfirmR(null)}
@@ -270,6 +312,7 @@ export default function StoreScreen(): React.ReactElement | null {
                       Sentry.captureException(err, {
                         tags: { action: 'redemption' },
                       });
+                      setRedeemError('Something went wrong. Please try again.');
                     } finally {
                       setRedeeming(false);
                     }

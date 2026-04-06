@@ -94,7 +94,7 @@ export default function ApprovalsTab(): React.ReactElement {
       )}
 
       {/* Loot Approvals Section */}
-      {items.length > 0 && hasCoopRequests && (
+      {items.length > 0 && (
         <div className='flex items-center gap-2 mb-3'>
           <span className='font-bold text-qslate text-sm'>Loot Approvals</span>
         </div>

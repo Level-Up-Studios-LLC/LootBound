@@ -143,6 +143,12 @@ export default function TasksScreen(): React.ReactElement | null {
     if (children.length < 2) return false;
     if (task.id.startsWith('coop:')) return false;
     if (ctx.isTaskInActiveCoop(curUser, task.id, today)) return false;
+    const hasSiblingWithTask = children.some(
+      c =>
+        c.id !== curUser &&
+        (ctx.cfg?.tasks[c.id] || []).some(t => t.id === task.id)
+    );
+    if (!hasSiblingWithTask) return false;
     return true;
   };
 
@@ -184,7 +190,10 @@ export default function TasksScreen(): React.ReactElement | null {
           Today's Missions
         </div>
         {bedLock && (
-          <div className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'>
+          <div
+            role='alert'
+            className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'
+          >
             <FontAwesomeIcon
               icon={faBed}
               style={FA_ICON_STYLE}
@@ -393,6 +402,7 @@ export default function TasksScreen(): React.ReactElement | null {
                       <FontAwesomeIcon
                         icon={faHandshake}
                         className='text-qcyan text-xs'
+                        aria-hidden='true'
                       />
                     )}
                     {t.name}
@@ -457,7 +467,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   onClick={() => {
                     setViewPhoto(entry.photo);
                   }}
-                  className='text-[11px] text-qteal bg-transparent border-none cursor-pointer font-body mt-1 hover:underline'
+                  className='text-[12px] text-qteal bg-transparent border-none cursor-pointer font-body mt-1 py-1.5 px-2 -ml-2 rounded-badge hover:underline hover:bg-qteal/5'
                 >
                   View photo proof
                 </button>
@@ -480,7 +490,11 @@ export default function TasksScreen(): React.ReactElement | null {
                             : 'bg-qorange')
                   }
                 >
-                  <FontAwesomeIcon icon={faCamera} className='mr-1.5' />
+                  <FontAwesomeIcon
+                    icon={faCamera}
+                    className='mr-1.5'
+                    aria-hidden='true'
+                  />
                   {isCoop
                     ? 'Complete Co-op + Photo'
                     : isRej
@@ -555,6 +569,7 @@ export default function TasksScreen(): React.ReactElement | null {
           <div
             id='tomorrow-preview'
             role='region'
+            aria-label="Tomorrow's missions"
             className='flex flex-col gap-2'
             ref={tomorrowRef}
           >

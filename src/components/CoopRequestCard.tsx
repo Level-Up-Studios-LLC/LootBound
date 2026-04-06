@@ -10,6 +10,7 @@ import {
 } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import { TIER_COLORS } from '../constants.ts';
+import * as Sentry from '@sentry/react';
 import type { CoopRequest } from '../types.ts';
 
 interface CoopRequestCardProps {
@@ -80,8 +81,9 @@ export default function CoopRequestCard({
     setBusy(true);
     try {
       await action();
-    } catch {
+    } catch (err) {
       ctx.notify(`Failed to ${label}. Please try again.`);
+      Sentry.captureException(err, { tags: { action: `coop-${label}` } });
     } finally {
       setBusy(false);
     }
