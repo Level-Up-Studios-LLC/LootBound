@@ -27,9 +27,13 @@ service firebase.storage {
     // rules without custom auth claims (a Cloud Functions roadmap
     // item). Until then, isolation is enforced at the application
     // layer and all authenticated users can access any family path.
-    match /families/{familyId}/photos/{childId}/{date}/{fileName} {
+    // Allow listing photos at any depth under a family's photos folder.
+    // Required for listAll() calls in photoStorage.ts cleanup functions.
+    match /families/{familyId}/photos/{allPaths=**} {
       allow read: if isAuthenticated();
+    }
 
+    match /families/{familyId}/photos/{childId}/{date}/{fileName} {
       allow create, update: if isAuthenticated()
                             && isImage()
                             && isUnderSizeLimit()

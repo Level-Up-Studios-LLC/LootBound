@@ -101,8 +101,9 @@ export function useChildActions(deps: ChildActionsDeps) {
       deps.notify('Could not update coins — please try again', 'error');
       throw err;
     }
+    const childName = deps.getChild(uid)?.name ?? 'this child';
     deps.notify(
-      `${appliedDelta > 0 ? '+' : ''}${appliedDelta} coins for ${(deps.getChild(uid) || ({} as any)).name}`
+      `${appliedDelta > 0 ? '+' : ''}${appliedDelta} coins for ${childName}`
     );
   };
 

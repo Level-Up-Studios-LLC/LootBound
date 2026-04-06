@@ -535,21 +535,23 @@ export default function AccountTab(): React.ReactElement | null {
         <form
           onSubmit={async (e: React.FormEvent) => {
             e.preventDefault();
-            if (newPin.length >= 4) {
-              const uid = currentUid;
-              if (uid) {
-                try {
-                  await saveParentMember(uid, { parentPin: newPin });
-                  setMyPin(newPin);
-                  setNewPin('');
-                  ctx.notify('PIN updated');
-                } catch (pinErr) {
-                  ctx.notify('Failed to save PIN', 'error');
-                  // saveParentMember already captures to Sentry
-                }
-              } else {
-                ctx.notify('Not signed in', 'error');
+            if (newPin.length < 4) {
+              ctx.notify('PIN must be at least 4 digits', 'error');
+              return;
+            }
+            const uid = currentUid;
+            if (uid) {
+              try {
+                await saveParentMember(uid, { parentPin: newPin });
+                setMyPin(newPin);
+                setNewPin('');
+                ctx.notify('PIN updated');
+              } catch (pinErr) {
+                ctx.notify('Failed to save PIN', 'error');
+                // saveParentMember already captures to Sentry
               }
+            } else {
+              ctx.notify('Not signed in', 'error');
             }
           }}
           className='flex gap-3'
