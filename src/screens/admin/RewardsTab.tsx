@@ -174,7 +174,7 @@ export default function RewardsTab(): React.ReactElement {
                 className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
               >
                 <FontAwesomeIcon icon={faPenToSquare} />
-                Edit
+                <span className='sr-only'>Edit {r.name}</span>
               </button>
               <button
                 onClick={() => {
@@ -189,14 +189,20 @@ export default function RewardsTab(): React.ReactElement {
                 className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
               >
                 <FontAwesomeIcon icon={faTrashCan} />
-                <span className='sr-only'>Delete</span>
+                <span className='sr-only'>Delete {r.name}</span>
               </button>
             </div>
           </div>
         );
       })}
       {(addReward || editReward) && (
-        <Modal title={editReward ? 'Edit Loot' : 'Add Loot'}>
+        <Modal
+          title={editReward ? 'Edit Loot' : 'Add Loot'}
+          onClose={() => {
+            setAddReward(null);
+            setEditReward(null);
+          }}
+        >
           <RewardForm
             reward={(editReward || addReward)!}
             onSave={r => {

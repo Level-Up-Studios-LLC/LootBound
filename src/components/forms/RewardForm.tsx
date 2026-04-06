@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import type { Reward } from '../../types.ts';
 
-const REWARD_EMOJIS = [
-  '\u{1F3AE}',
-  '\u{1F4F1}',
-  '\u{1F355}',
-  '\u{1F381}',
-  '\u{1F3AC}',
-  '\u{1F319}',
-  '\u{1F3E0}',
-  '\u{1F3C6}',
-  '\u{1F3A8}',
-  '\u26BD',
-  '\u{1F366}',
-  '\u{1F4DA}',
+const REWARD_EMOJIS: { emoji: string; label: string }[] = [
+  { emoji: '\u{1F3AE}', label: 'Video game' },
+  { emoji: '\u{1F4F1}', label: 'Phone or screen time' },
+  { emoji: '\u{1F355}', label: 'Pizza or food pick' },
+  { emoji: '\u{1F381}', label: 'Gift or present' },
+  { emoji: '\u{1F3AC}', label: 'Movie' },
+  { emoji: '\u{1F319}', label: 'Stay up late' },
+  { emoji: '\u{1F3E0}', label: 'Home activity' },
+  { emoji: '\u{1F3C6}', label: 'Trophy or prize' },
+  { emoji: '\u{1F3A8}', label: 'Art or craft' },
+  { emoji: '\u26BD', label: 'Sports' },
+  { emoji: '\u{1F366}', label: 'Ice cream or treat' },
+  { emoji: '\u{1F4DA}', label: 'Books or reading' },
 ];
 
 interface RewardFormProps {
@@ -44,20 +44,23 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
       </div>
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Icon</label>
-        <div className='flex gap-1 flex-wrap'>
-          {REWARD_EMOJIS.map(e => {
+        <div className='flex gap-1 flex-wrap' role='group' aria-label='Icon picker'>
+          {REWARD_EMOJIS.map(({ emoji, label }) => {
             return (
               <button
-                key={e}
+                key={emoji}
+                type='button'
                 onClick={() => {
-                  u('icon', e);
+                  u('icon', emoji);
                 }}
+                aria-label={label}
+                aria-pressed={f.icon === emoji}
                 className={
                   'text-xl rounded-[6px] px-1.5 py-1 border-none cursor-pointer ' +
-                  (f.icon === e ? 'bg-qteal-dim' : 'bg-transparent')
+                  (f.icon === emoji ? 'bg-qteal-dim' : 'bg-transparent')
                 }
               >
-                {e}
+                {emoji}
               </button>
             );
           })}

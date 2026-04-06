@@ -22,7 +22,7 @@ export default function RoleSelectScreen(
           onClick={() => {
             props.onSelectRole('parent');
           }}
-          className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
+          className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] min-h-[180px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-qslate focus-visible:outline-offset-2'
         >
           <div className='text-5xl' aria-hidden='true'>
             <FontAwesomeIcon icon={faShieldHalved} style={FA_ICON_STYLE} />
@@ -35,7 +35,7 @@ export default function RoleSelectScreen(
           onClick={() => {
             props.onSelectRole('kid');
           }}
-          className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
+          className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] min-h-[180px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-qslate focus-visible:outline-offset-2'
         >
           <div className='text-5xl' aria-hidden='true'>
             <FontAwesomeIcon icon={faGamepadModern} style={FA_ICON_STYLE} />

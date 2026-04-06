@@ -89,27 +89,34 @@ export default function OverviewTab(
               </span>
               <span>Streak: {udata.streak || 0}</span>
             </div>
-            <div className='flex gap-2 flex-wrap items-center'>
-              <span className='text-xs text-qmuted'>Adjust:</span>
-              {[10, 25, 50, -10, -25, -50].map(p => {
-                return (
-                  <button
-                    key={p}
-                    onClick={() => {
-                      ctx.addBonus(c.id, p);
-                    }}
-                    className={
-                      'rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body ' +
-                      (p > 0
-                        ? 'bg-qblue-dim text-qblue'
-                        : 'bg-qred-dim text-qred')
-                    }
-                  >
-                    {p > 0 ? '+' : ''}
-                    {p}
-                  </button>
-                );
-              })}
+            <div>
+              <span className='text-xs text-qmuted block mb-1'>Adjust:</span>
+              <div className='grid grid-cols-3 gap-1'>
+                {[10, 25, 50, -10, -25, -50].map(p => {
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => {
+                        ctx.addBonus(c.id, p);
+                      }}
+                      aria-label={
+                        p > 0
+                          ? `Add ${p} coins to ${c.name}`
+                          : `Remove ${Math.abs(p)} coins from ${c.name}`
+                      }
+                      className={
+                        'rounded-[6px] px-2 py-1.5 text-xs font-bold border-none cursor-pointer font-body ' +
+                        (p > 0
+                          ? 'bg-qblue-dim text-qblue'
+                          : 'bg-qred-dim text-qred')
+                      }
+                    >
+                      {p > 0 ? '+' : ''}
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <PurchasesToggle
               id={c.id}

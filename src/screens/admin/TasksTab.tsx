@@ -129,7 +129,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
                     >
                       <FontAwesomeIcon icon={faPenToSquare} />
-                      Edit
+                      <span className='sr-only'>Edit {t.name}</span>
                     </button>
                     <button
                       onClick={() => {
@@ -144,7 +144,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
                     >
                       <FontAwesomeIcon icon={faTrashCan} />
-                      <span className='sr-only'>Delete</span>
+                      <span className='sr-only'>Delete {t.name}</span>
                     </button>
                   </div>
                 </div>
@@ -154,7 +154,13 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
         );
       })}
       {(editTask || addTask) && (
-        <Modal title={editTask ? 'Edit Mission' : 'Add Mission'}>
+        <Modal
+          title={editTask ? 'Edit Mission' : 'Add Mission'}
+          onClose={() => {
+            setEditTask(null);
+            setAddTask(null);
+          }}
+        >
           <TaskForm
             task={(editTask || addTask)!}
             tierConfig={cfg!.tierConfig || DEF_TIER_CONFIG}

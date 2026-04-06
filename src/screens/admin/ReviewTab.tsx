@@ -129,7 +129,7 @@ export default function ReviewTab(): React.ReactElement {
       })}
 
       {reviewTask && (
-        <Modal title='Reject Mission?'>
+        <Modal title='Reject Mission?' onClose={() => setReviewTask(null)}>
           <div className='mb-4'>
             <div className='font-semibold text-qslate'>
               {reviewTask.child.name}: {reviewTask.task.name}

@@ -34,7 +34,7 @@
   --color-qred: #e05a5a;
   --color-qred-dim: #f8d4d4;
   --color-qcyan: #5ec4d4;
-  --color-qcoop: #5ec4d414;
+  --color-qcoop: #5ec4d430;
   --color-qcoop-dim: #5ec4d426;
   --color-qtext: #4b4e6d;
   --color-qmuted: #6a6d87;
@@ -183,6 +183,7 @@ body,
 @utility quest-input {
   width: 100%;
   background: var(--color-qinput);
+  border: 1.5px solid var(--color-qinput-border);
   border-radius: var(--radius-badge);
   color: var(--color-qtext);
   padding: 10px 14px;

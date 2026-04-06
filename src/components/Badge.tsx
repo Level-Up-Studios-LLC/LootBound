@@ -13,8 +13,9 @@ export default function Badge(p: BadgeProps) {
   };
   return (
     <span
-      className='text-[10px] font-bold px-2.5 py-1 rounded-badge tracking-wide'
+      className='text-[11px] font-bold px-2.5 py-1 rounded-badge tracking-wide'
       style={{ color: sl.color, background: sl.bg }}
+      aria-hidden='true'
     >
       {sl.text}
     </span>

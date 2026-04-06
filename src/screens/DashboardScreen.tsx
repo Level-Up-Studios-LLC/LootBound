@@ -258,7 +258,11 @@ export default function DashboardScreen(): React.ReactElement | null {
               })}
             </div>
           </div>
-          <div className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5'>
+          <div
+            className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5'
+            role='status'
+            aria-label={`Coin balance: ${(ud.points || 0).toLocaleString()} coins`}
+          >
             <FontAwesomeIcon
               icon={faCoins}
               style={FA_ICON_STYLE}
@@ -312,6 +316,15 @@ export default function DashboardScreen(): React.ReactElement | null {
           <div className='h-2.5 bg-qmint-dim rounded-sm'>
             <div
               className='h-full rounded-sm transition-all duration-500'
+              role='progressbar'
+              aria-label='XP progress'
+              aria-valuemin={0}
+              {...(xpProg.needed > 0
+                ? {
+                    'aria-valuenow': xpProg.current,
+                    'aria-valuemax': xpProg.needed,
+                  }
+                : { 'aria-valuetext': 'Max level' })}
               style={{
                 width: `${xpProg.pct}%`,
                 background: ch.color,
@@ -366,10 +379,10 @@ export default function DashboardScreen(): React.ReactElement | null {
             <div className='text-xs text-qmuted'>Done</div>
           </div>
         </div>
-        <div className='font-display text-lg font-semibold mb-3 mt-5 text-qslate'>
+        <h2 className='font-display text-lg font-semibold mb-3 mt-5 text-qslate'>
           Up Next
-        </div>
-        <div className='flex flex-col gap-3'>
+        </h2>
+        <ul role='list' className='flex flex-col gap-3 list-none p-0 m-0'>
           {upNextTasks.map((t, idx) => {
             const entry = tLog[t.id];
             const isRej = entry && entry.rejected;
@@ -431,7 +444,7 @@ export default function DashboardScreen(): React.ReactElement | null {
               (!isCoop || coopReq?.status === 'approved');
 
             return (
-              <div
+              <li
                 key={t.id}
                 className={
                   'flex items-center gap-3 rounded-btn p-4 dash-task ' + cardBg
@@ -507,11 +520,11 @@ export default function DashboardScreen(): React.ReactElement | null {
                     )}
                   </button>
                 )}
-              </div>
+              </li>
             );
           })}
           {allDone && (
-            <div className='text-center p-6 dash-celebrate'>
+            <li className='text-center p-6 dash-celebrate'>
               <FontAwesomeIcon
                 icon={faPartyHorn}
                 style={FA_ICON_STYLE}
@@ -523,9 +536,9 @@ export default function DashboardScreen(): React.ReactElement | null {
               <div className='text-sm text-qmuted mt-1'>
                 Great job, {ch.name}!
               </div>
-            </div>
+            </li>
           )}
-        </div>
+        </ul>
       </div>
       <BNav tabs={KID_NAV} />
     </div>

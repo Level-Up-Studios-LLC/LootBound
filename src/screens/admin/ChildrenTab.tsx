@@ -167,7 +167,7 @@ export default function ChildrenTab(): React.ReactElement {
                   className='bg-qblue-dim text-qblue rounded-[6px] px-2 py-[3px] text-[11px] font-semibold border-none cursor-pointer font-body flex items-center gap-1'
                 >
                   <FontAwesomeIcon icon={faPenToSquare} />
-                  <span className='sr-only'>Edit</span>
+                  <span className='sr-only'>Edit {c.name}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -182,7 +182,7 @@ export default function ChildrenTab(): React.ReactElement {
                   className='bg-qred-dim text-qred rounded-[6px] px-2 py-[3px] text-[11px] font-bold border-none cursor-pointer font-body flex items-center gap-1'
                 >
                   <FontAwesomeIcon icon={faTrashCan} />
-                  <span className='sr-only'>Delete</span>
+                  <span className='sr-only'>Delete {c.name}</span>
                 </button>
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function ChildrenTab(): React.ReactElement {
       )}
 
       {addChildForm && (
-        <Modal title='Add Child'>
+        <Modal title='Add Child' onClose={() => setAddChildForm(null)}>
           <AddChildForm
             form={addChildForm}
             onChange={f => {
@@ -226,7 +226,13 @@ export default function ChildrenTab(): React.ReactElement {
       )}
 
       {editChild && editChildForm && (
-        <Modal title='Edit Child'>
+        <Modal
+          title='Edit Child'
+          onClose={() => {
+            setEditChild(null);
+            setEditChildForm(null);
+          }}
+        >
           <AddChildForm
             form={editChildForm}
             onChange={f => {

@@ -1,14 +1,49 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /families/{familyId}/{allPaths=**} {
-      // Any authenticated user (parents + anonymous kids) can read/write
-      // family photos. Family-level isolation is enforced at the app layer.
-      // Photos are capped at 5MB to prevent abuse.
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
     }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isUnderSizeLimit() {
+      // 5 MB cap to prevent abuse
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // ── Family task-completion photos ───────────────────────────
+    // Path: families/{familyId}/photos/{childId}/{date}/{fileName}
+    //
+    // The specific 4-segment match prevents writing arbitrary files
+    // to unexpected paths under a family (e.g. families/{id}/evil.exe).
+    //
+    // NOTE: Family-level isolation (ensuring a user belongs to the
+    // family whose photos they access) cannot be enforced in Storage
+    // rules without custom auth claims (a Cloud Functions roadmap
+    // item). Until then, isolation is enforced at the application
+    // layer and all authenticated users can access any family path.
+    // Allow listing photos at any depth under a family's photos folder.
+    // Required for listAll() calls in photoStorage.ts cleanup functions.
+    match /families/{familyId}/photos/{allPaths=**} {
+      allow read: if isAuthenticated();
+    }
+
+    match /families/{familyId}/photos/{childId}/{date}/{fileName} {
+      allow create, update: if isAuthenticated()
+                            && isImage()
+                            && isUnderSizeLimit()
+                            && fileName.matches('.*\\.jpg');
+
+      allow delete: if isAuthenticated();
+    }
+
+    // ── Deny-all fallback ───────────────────────────────────────
+    // Any path not explicitly matched above is denied by default.
+    // This is implicit in Firebase rules but stated for clarity.
   }
 }

@@ -116,7 +116,7 @@ export default function SettingsTab(): React.ReactElement {
   const cfg = local;
 
   return (
-    <div>
+    <div className='pb-20'>
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCoins} style={FA_ICON_STYLE} />
