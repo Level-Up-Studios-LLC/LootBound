@@ -57,7 +57,7 @@ Dev server starts at **http://localhost:3000**.
 
 - **🏠 Dashboard (HQ)** — Today's progress, active streak, coin balance, XP bar with level + title, upcoming missions, and next-day mission preview after bedtime
 - **🎯 Missions** — Daily mission list with tier badges (S through F), status indicators, time windows, coin + XP breakdowns, and badge count on nav tab
-- **📸 Photo Proof** — Camera capture on completion with confirmation prompt
+- **📸 Photo Proof** — Photo upload on mission completion with confirmation prompt before file picker
 - **🤝 Co-op Missions** — Invite a sibling to complete a mission together for shared rewards; co-op tasks show distinct styling with handshake icons and CoopBadge
 - **🏆 Leaderboard** — Rankings by perfect days with "Top Adventurer" highlight, level titles, XP, and streaks
 - **🛒 Loot Shop** — Browse and redeem rewards, view limits, track pending approvals and history
@@ -222,7 +222,7 @@ familyCodes/{code}               — Maps family codes to family IDs
 
 ```bash
 npm run build
-firebase deploy
+firebase deploy --project staging
 ```
 
 Deploys:

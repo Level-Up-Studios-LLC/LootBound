@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Co-op indicators on Review tab for completed co-op tasks
 - Photo upload confirmation prompt before opening file picker
 - Favicon (SVG) and mobile-web-app-capable meta tag
-- `role="progressbar"` with aria-valuenow/valuemax on XP bar (aria-valuetext at max level)
+- `role="progressbar"` with `aria-valuenow` and `aria-valuemax` on XP bar (`aria-valuetext` at max level)
 - `role="status"` on coin balance pill for screen reader live updates
 - Semantic headings (`<h1>`/`<h2>`) for "Today's Missions", "Loot Shop", "Up Next" sections
 - List semantics (`<ul>`/`<li>`) for task card containers on Dashboard and Tasks screens
