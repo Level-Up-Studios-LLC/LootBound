@@ -632,17 +632,18 @@ function AppRouter() {
     const kidFullLogout = async () => {
       try {
         await auth.doSignOut();
-        clearStoredFamilyCode().catch(() => {
+      } catch (err) {
+        Sentry.captureException(err, {
+          tags: { action: 'kid-logout' },
+        });
+      } finally {
+        await clearStoredFamilyCode().catch(() => {
           /* ignore */
         });
         clearSession(SESSION_KEY_KID);
         setStoredKid(null);
         setKidFamilyId(null);
         setRole(null);
-      } catch (err) {
-        Sentry.captureException(err, {
-          tags: { action: 'kid-logout' },
-        });
       }
     };
 

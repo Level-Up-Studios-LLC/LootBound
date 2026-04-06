@@ -88,10 +88,21 @@ export function useChildActions(deps: ChildActionsDeps) {
 
   const addBonus = async (uid: string, pts: number) => {
     const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
-    ud.points = Math.max(0, (ud.points || 0) + pts);
-    await deps.saveUsr(uid, ud);
+    const prevPoints = ud.points || 0;
+    const nextPoints = Math.max(0, prevPoints + pts);
+    const appliedDelta = nextPoints - prevPoints;
+    ud.points = nextPoints;
+    try {
+      await deps.saveUsr(uid, ud);
+    } catch (err) {
+      Sentry.captureException(err, {
+        tags: { action: 'add-bonus-save-user', childId: uid },
+      });
+      deps.notify('Could not update coins — please try again', 'error');
+      throw err;
+    }
     deps.notify(
-      `${pts > 0 ? '+' : ''}${pts} coins for${(deps.getChild(uid) || ({} as any)).name}`
+      `${appliedDelta > 0 ? '+' : ''}${appliedDelta} coins for ${(deps.getChild(uid) || ({} as any)).name}`
     );
   };
 

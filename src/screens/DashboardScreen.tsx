@@ -260,6 +260,7 @@ export default function DashboardScreen(): React.ReactElement | null {
           </div>
           <div
             className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5'
+            role='status'
             aria-label={`Coin balance: ${(ud.points || 0).toLocaleString()} coins`}
           >
             <FontAwesomeIcon
@@ -317,9 +318,13 @@ export default function DashboardScreen(): React.ReactElement | null {
               className='h-full rounded-sm transition-all duration-500'
               role='progressbar'
               aria-label='XP progress'
-              aria-valuenow={xpProg.current}
               aria-valuemin={0}
-              aria-valuemax={xpProg.needed}
+              {...(xpProg.needed > 0
+                ? {
+                    'aria-valuenow': xpProg.current,
+                    'aria-valuemax': xpProg.needed,
+                  }
+                : { 'aria-valuetext': 'Max level' })}
               style={{
                 width: `${xpProg.pct}%`,
                 background: ch.color,
@@ -519,7 +524,7 @@ export default function DashboardScreen(): React.ReactElement | null {
             );
           })}
           {allDone && (
-            <li className='text-center p-6 dash-celebrate list-none'>
+            <li className='text-center p-6 dash-celebrate'>
               <FontAwesomeIcon
                 icon={faPartyHorn}
                 style={FA_ICON_STYLE}

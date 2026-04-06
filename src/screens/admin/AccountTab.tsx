@@ -545,10 +545,10 @@ export default function AccountTab(): React.ReactElement | null {
                   ctx.notify('PIN updated');
                 } catch (pinErr) {
                   ctx.notify('Failed to save PIN', 'error');
-                  Sentry.captureException(pinErr, {
-                    tags: { action: 'save-parent-pin' },
-                  });
+                  // saveParentMember already captures to Sentry
                 }
+              } else {
+                ctx.notify('Not signed in', 'error');
               }
             }
           }}

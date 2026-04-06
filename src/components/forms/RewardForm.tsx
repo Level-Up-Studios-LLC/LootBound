@@ -49,6 +49,7 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
             return (
               <button
                 key={emoji}
+                type='button'
                 onClick={() => {
                   u('icon', emoji);
                 }}
