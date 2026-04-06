@@ -4,7 +4,7 @@
 
 LootBound is a gamified family chore/reward tracker built by Level Up Studios LLC. Parents create tasks and rewards; kids complete missions, earn coins and XP, level up, and redeem loot in the store. The app supports multiple children per family with parent admin controls.
 
-**Current version:** v1.6.0
+**Current version:** v1.8.0
 
 ## Memory Maintenance
 

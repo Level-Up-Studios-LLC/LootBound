@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Storage-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase" />
   <img src="https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind" />
   <img src="https://img.shields.io/badge/Font%20Awesome-Pro%207-528DD7?style=flat-square&logo=fontawesome&logoColor=white" alt="FontAwesome" />
-  <img src="https://img.shields.io/badge/Capacitor-7-119EFF?style=flat-square&logo=capacitor&logoColor=white" alt="Capacitor" />
+  <img src="https://img.shields.io/badge/Capacitor-8-119EFF?style=flat-square&logo=capacitor&logoColor=white" alt="Capacitor" />
   <img src="https://img.shields.io/badge/Sentry-Error%20Tracking-362D59?style=flat-square&logo=sentry&logoColor=white" alt="Sentry" />
 </p>
 
@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <a href="https://quest-board-app-2973b.web.app"><strong>🌐 Live App</strong></a>
+  <a href="https://app.lootbound.com"><strong>🌐 Live App</strong></a>
 </p>
 
 ---
@@ -57,8 +57,9 @@ Dev server starts at **http://localhost:3000**.
 
 - **🏠 Dashboard (HQ)** — Today's progress, active streak, coin balance, XP bar with level + title, upcoming missions, and next-day mission preview after bedtime
 - **🎯 Missions** — Daily mission list with tier badges (S through F), status indicators, time windows, coin + XP breakdowns, and badge count on nav tab
-- **📸 Photo Proof** — Camera capture on completion (camera-only on mobile to prevent gallery uploads)
-- **🏆 Leaderboard** — Rankings by perfect days with "Top Adventurer" highlight, level titles, and streaks
+- **📸 Photo Proof** — Photo upload on mission completion with confirmation prompt before file picker
+- **🤝 Co-op Missions** — Invite a sibling to complete a mission together for shared rewards; co-op tasks show distinct styling with handshake icons and CoopBadge
+- **🏆 Leaderboard** — Rankings by perfect days with "Top Adventurer" highlight, level titles, XP, and streaks
 - **🛒 Loot Shop** — Browse and redeem rewards, view limits, track pending approvals and history
 - **🔥 Streaks** — Perfect days build streaks with escalating bonuses and XP multipliers (up to 2.0x)
 - **🔔 Notifications** — Real-time in-app notifications for mission completions, level ups, streaks, and loot requests/approvals with configurable sounds
@@ -67,8 +68,8 @@ Dev server starts at **http://localhost:3000**.
 ### 👨‍👩‍👧‍👦 Parent Features
 
 - **📊 Overview** — All children at a glance with coins, levels, progress, quick +/- adjustments, and collapsible purchase history
-- **✅ Approvals** — Queue for high-value redemptions with approve/deny actions, badge count on nav tab
-- **🔍 Review** — Completed missions with photo proof; reject sub-standard work (deducts coins and XP, XP cannot go below 0), badge count on nav tab
+- **✅ Approvals** — Queue for high-value redemptions and co-op requests with approve/deny/cancel actions, badge count on nav tab
+- **🔍 Review** — Completed missions with photo proof and co-op indicators; reject sub-standard work (deducts coins and XP, XP cannot go below 0), badge count on nav tab
 - **📋 Mission Management** — Add, edit, delete missions per child with tier (S-F), time windows, and scheduling
 - **🎁 Loot Management** — Full CRUD for rewards with cost, icon, limits, and approval flags
 - **👶 Children Management** — Add/remove children, manage profiles and PINs, view purchase history
@@ -221,7 +222,7 @@ familyCodes/{code}               — Maps family codes to family IDs
 
 ```bash
 npm run build
-firebase deploy --project quest-board-app-2973b
+firebase deploy --project staging
 ```
 
 Deploys:
@@ -259,6 +260,7 @@ LootBound/
     hooks/
       useApprovalActions.ts     # Approve/deny pending redemptions
       useChildActions.ts        # Child CRUD operations
+      useCoopActions.ts         # Co-op mission request/accept/complete logic
       useFirestoreSync.ts       # Real-time Firestore listeners
       useNotification.ts        # Toast notification management
       useNotificationListener.ts # Firestore notification listener with sounds
@@ -274,6 +276,9 @@ LootBound/
     components/
       Badge.tsx                 # Status badges
       BNav.tsx                  # Bottom navigation bar with badge counts
+      CoopBadge.tsx             # Co-op mission badge indicator
+      CoopInviteCard.tsx        # Co-op invite accept/decline card
+      CoopRequestCard.tsx       # Co-op request management card
       HamburgerMenu.tsx         # Hamburger menu overlay
       IconBadge.tsx             # Reusable icon + badge rendering
       NotificationToast.tsx     # Toast notifications (with level-up celebration)
@@ -282,14 +287,16 @@ LootBound/
         ConfirmDialog.tsx       # Confirmation modal
         PasswordInput.tsx       # Password field with eye toggle
         ...                     # Other UI primitives
-      forms/                    # Form components
+      forms/
+        CoopRequestForm.tsx     # Co-op sibling request form
+        ...                     # Other form components
     screens/
       RoleSelectScreen.tsx      # Parent/Kid role selection
       LoginScreen.tsx           # Child profile selection
       KidCodeScreen.tsx         # Kid family code entry
       AuthScreen.tsx            # Parent auth (login/signup with Google)
+      CompleteProfileScreen.tsx  # New user profile setup (name, family code, PIN)
       ParentPinScreen.tsx       # Parent PIN verification
-      CreatePinPrompt.tsx       # PIN setup prompt
       ResetPasswordScreen.tsx   # Branded password reset page
       DashboardScreen.tsx       # Kid HQ with XP bar
       TasksScreen.tsx           # Kid missions list
