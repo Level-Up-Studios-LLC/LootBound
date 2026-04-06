@@ -532,7 +532,28 @@ export default function AccountTab(): React.ReactElement | null {
             No PIN set. You'll need your password each time you open the app.
           </div>
         )}
-        <div className='flex gap-3'>
+        <form
+          onSubmit={async (e: React.FormEvent) => {
+            e.preventDefault();
+            if (newPin.length >= 4) {
+              const uid = currentUid;
+              if (uid) {
+                try {
+                  await saveParentMember(uid, { parentPin: newPin });
+                  setMyPin(newPin);
+                  setNewPin('');
+                  ctx.notify('PIN updated');
+                } catch (pinErr) {
+                  ctx.notify('Failed to save PIN', 'error');
+                  Sentry.captureException(pinErr, {
+                    tags: { action: 'save-parent-pin' },
+                  });
+                }
+              }
+            }
+          }}
+          className='flex gap-3'
+        >
           <PasswordInput
             maxLength={6}
             placeholder={myPin ? 'New PIN' : 'Create PIN'}
@@ -540,33 +561,17 @@ export default function AccountTab(): React.ReactElement | null {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewPin(e.target.value);
             }}
+            aria-label={myPin ? 'New PIN' : 'Create PIN'}
             className='quest-input w-[120px]! text-center'
           />
           <button
-            onClick={async () => {
-              if (newPin.length >= 4) {
-                const uid = currentUid;
-                if (uid) {
-                  try {
-                    await saveParentMember(uid, { parentPin: newPin });
-                    setMyPin(newPin);
-                    setNewPin('');
-                    ctx.notify('PIN updated');
-                  } catch (pinErr) {
-                    ctx.notify('Failed to save PIN', 'error');
-                    Sentry.captureException(pinErr, {
-                      tags: { action: 'save-parent-pin' },
-                    });
-                  }
-                }
-              }
-            }}
+            type='submit'
             className='bg-qteal text-white rounded-badge px-4 py-2 font-semibold border-none cursor-pointer font-body flex items-center gap-1.5'
           >
             <FontAwesomeIcon icon={faFloppyDisk} />
             Save
           </button>
-        </div>
+        </form>
       </div>
 
       {/* Password Section */}
@@ -581,7 +586,19 @@ export default function AccountTab(): React.ReactElement | null {
             and password.
           </div>
         )}
-        <div className='flex flex-col gap-3'>
+        <form
+          onSubmit={(e: React.FormEvent) => {
+            e.preventDefault();
+            if (!passBusy) {
+              if (hasPasswordProvider()) {
+                handleChangePassword();
+              } else {
+                handleSetPassword();
+              }
+            }
+          }}
+          className='flex flex-col gap-3'
+        >
           {hasPasswordProvider() && (
             <PasswordInput
               placeholder='Current password'
@@ -616,15 +633,6 @@ export default function AccountTab(): React.ReactElement | null {
               setPassErr('');
               setPassSuccess(false);
             }}
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' && !passBusy) {
-                if (hasPasswordProvider()) {
-                  handleChangePassword();
-                } else {
-                  handleSetPassword();
-                }
-              }
-            }}
             className='quest-input'
           />
           {passErr && <div className='text-qcoral text-[13px]'>{passErr}</div>}
@@ -636,13 +644,7 @@ export default function AccountTab(): React.ReactElement | null {
             </div>
           )}
           <button
-            onClick={() => {
-              if (hasPasswordProvider()) {
-                handleChangePassword();
-              } else {
-                handleSetPassword();
-              }
-            }}
+            type='submit'
             disabled={passBusy}
             className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body disabled:opacity-60'
           >
@@ -652,7 +654,7 @@ export default function AccountTab(): React.ReactElement | null {
                 ? 'Update Password'
                 : 'Set Password'}
           </button>
-        </div>
+        </form>
       </div>
 
       {/* Reset Data — owner only */}

@@ -208,7 +208,7 @@ export default function ChildrenTab(): React.ReactElement {
       )}
 
       {addChildForm && (
-        <Modal title='Add Child'>
+        <Modal title='Add Child' onClose={() => setAddChildForm(null)}>
           <AddChildForm
             form={addChildForm}
             onChange={f => {
@@ -226,7 +226,13 @@ export default function ChildrenTab(): React.ReactElement {
       )}
 
       {editChild && editChildForm && (
-        <Modal title='Edit Child'>
+        <Modal
+          title='Edit Child'
+          onClose={() => {
+            setEditChild(null);
+            setEditChildForm(null);
+          }}
+        >
           <AddChildForm
             form={editChildForm}
             onChange={f => {

@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoins } from '../fa.ts';
+import { faCoins, faBagShopping } from '../fa.ts';
 import { FA_ICON_STYLE, KID_NAV } from '../constants.ts';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
@@ -82,9 +82,9 @@ export default function StoreScreen(): React.ReactElement | null {
   return (
     <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
-        <div className='font-display text-2xl font-bold text-qslate mb-3'>
+        <h1 className='font-display text-2xl font-bold text-qslate mb-3'>
           Loot Shop
-        </div>
+        </h1>
         <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full store-balance'>
           <span className='font-semibold text-qslate'>Balance:</span>
           <span
@@ -124,7 +124,7 @@ export default function StoreScreen(): React.ReactElement | null {
         )}
         {rewards.length === 0 && (
           <EmptyState
-            icon='bag-shopping'
+            icon={faBagShopping}
             title='No loot available yet'
             description='Ask your parent to add some rewards!'
           />
@@ -171,7 +171,7 @@ export default function StoreScreen(): React.ReactElement | null {
                   </div>
                 )}
                 {na && (
-                  <div className='text-[10px] text-qorange'>
+                  <div className='text-xs text-qorange'>
                     Needs parent OK
                   </div>
                 )}

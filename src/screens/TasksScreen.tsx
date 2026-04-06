@@ -143,11 +143,18 @@ export default function TasksScreen(): React.ReactElement | null {
     if (children.length < 2) return false;
     if (task.id.startsWith('coop:')) return false;
     if (ctx.isTaskInActiveCoop(curUser, task.id, today)) return false;
-    const hasSiblingWithTask = children.some(
-      c =>
-        c.id !== curUser &&
-        (ctx.cfg?.tasks[c.id] || []).some(t => t.id === task.id)
-    );
+    const hasSiblingWithTask = children.some(c => {
+      if (c.id === curUser) return false;
+      return (ctx.cfg?.tasks[c.id] || []).some(
+        t =>
+          t.name === task.name &&
+          t.tier === task.tier &&
+          t.windowStart === task.windowStart &&
+          t.windowEnd === task.windowEnd &&
+          t.daily === task.daily &&
+          t.dueDay === task.dueDay
+      );
+    });
     if (!hasSiblingWithTask) return false;
     return true;
   };
@@ -186,9 +193,9 @@ export default function TasksScreen(): React.ReactElement | null {
   return (
     <div className='pb-20' ref={containerRef}>
       <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
-        <div className='font-display text-2xl font-bold text-qslate'>
+        <h1 className='font-display text-2xl font-bold text-qslate'>
           Today's Missions
-        </div>
+        </h1>
         {bedLock && (
           <div
             role='alert'
@@ -223,6 +230,7 @@ export default function TasksScreen(): React.ReactElement | null {
             description='Enjoy your free time. Check back tomorrow for new missions!'
           />
         )}
+        <ul role='list' className='flex flex-col gap-3 list-none p-0 m-0'>
         {sorted.map((t, idx) => {
           const entry = tLog[t.id];
           const isRej = entry && entry.rejected;
@@ -372,7 +380,7 @@ export default function TasksScreen(): React.ReactElement | null {
             isDone || isMissed || coopMyPartDone || coopTerminal;
 
           return (
-            <div
+            <li
               key={t.id}
               className={
                 (isSettled ? dimBg : cardBg) + ' rounded-btn p-4 task-card'
@@ -477,6 +485,7 @@ export default function TasksScreen(): React.ReactElement | null {
                   onClick={() => {
                     startCapture(t.id);
                   }}
+                  aria-label={`Complete ${t.name}`}
                   className={
                     'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
                     (isCoop
@@ -545,9 +554,10 @@ export default function TasksScreen(): React.ReactElement | null {
                   Co-op expired. Mission missed.
                 </div>
               )}
-            </div>
+            </li>
           );
         })}
+        </ul>
         {tomorrowTasks.length > 0 && (
           <button
             onClick={togglePreview}

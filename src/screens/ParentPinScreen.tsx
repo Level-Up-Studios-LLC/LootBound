@@ -59,7 +59,8 @@ export default function ParentPinScreen(
     });
   };
 
-  const handlePinSubmit = () => {
+  const handlePinSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (pin === props.parentPin) {
       props.onSuccess();
     } else {
@@ -67,11 +68,8 @@ export default function ParentPinScreen(
     }
   };
 
-  const handlePinKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handlePinSubmit();
-  };
-
-  const handlePasswordSubmit = async () => {
+  const handlePasswordSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!pass) {
       setErr('Password is required');
       return;
@@ -87,7 +85,8 @@ export default function ParentPinScreen(
     setBusy(false);
   };
 
-  const handleResetPin = async () => {
+  const handleResetPin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!pass) {
       setErr('Password is required');
       return;
@@ -131,7 +130,7 @@ export default function ParentPinScreen(
       {hasPin && !forgot && (
         <div className='flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6'>
           <div className='text-sm text-qmuted'>Enter parent PIN</div>
-          <div className='flex gap-2'>
+          <form onSubmit={handlePinSubmit} className='flex gap-2'>
             <PasswordInput
               maxLength={6}
               value={pin}
@@ -139,14 +138,14 @@ export default function ParentPinScreen(
                 setPin(e.target.value);
                 setErr('');
               }}
-              onKeyDown={handlePinKeyDown}
+              aria-label='Parent PIN'
               className='quest-input w-[120px] text-center text-lg'
               autoFocus
             />
-            <button onClick={handlePinSubmit} className='btn-primary'>
+            <button type='submit' className='btn-primary'>
               Enter
             </button>
-          </div>
+          </form>
           {err && <div className='text-qcoral text-[13px]'>{err}</div>}
           {bioAvailable && (
             <button onClick={handleBiometric} className='btn-primary w-full'>
@@ -168,7 +167,10 @@ export default function ParentPinScreen(
 
       {/* Password entry mode (no PIN set, or forgot PIN) */}
       {(!hasPin || forgot) && (
-        <div className='flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6'>
+        <form
+          onSubmit={forgot ? handleResetPin : handlePasswordSubmit}
+          className='flex flex-col items-center gap-4 w-full max-w-[280px] bg-qmint rounded-card p-6'
+        >
           {forgot && (
             <div className='text-sm text-qmuted text-center'>Reset PIN</div>
           )}
@@ -184,15 +186,7 @@ export default function ParentPinScreen(
               setPass(e.target.value);
               setErr('');
             }}
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' && !busy) {
-                if (forgot) {
-                  handleResetPin();
-                } else {
-                  handlePasswordSubmit();
-                }
-              }
-            }}
+            aria-label='Account password'
             className='quest-input'
             autoFocus
           />
@@ -200,6 +194,7 @@ export default function ParentPinScreen(
           <div className='flex gap-2'>
             {forgot && (
               <button
+                type='button'
                 onClick={() => {
                   setForgot(false);
                   setPass('');
@@ -212,13 +207,7 @@ export default function ParentPinScreen(
               </button>
             )}
             <button
-              onClick={() => {
-                if (forgot) {
-                  handleResetPin();
-                } else {
-                  handlePasswordSubmit();
-                }
-              }}
+              type='submit'
               disabled={busy}
               className='btn-primary disabled:cursor-not-allowed'
             >
@@ -230,7 +219,7 @@ export default function ParentPinScreen(
               You can create a PIN in Settings to skip this step next time.
             </div>
           )}
-        </div>
+        </form>
       )}
 
       <button onClick={props.onSignOut} className='btn-ghost mt-5'>

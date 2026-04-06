@@ -88,7 +88,7 @@ export function useChildActions(deps: ChildActionsDeps) {
 
   const addBonus = async (uid: string, pts: number) => {
     const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
-    ud.points = (ud.points || 0) + pts;
+    ud.points = Math.max(0, (ud.points || 0) + pts);
     await deps.saveUsr(uid, ud);
     deps.notify(
       `${pts > 0 ? '+' : ''}${pts} coins for${(deps.getChild(uid) || ({} as any)).name}`

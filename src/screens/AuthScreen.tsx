@@ -303,7 +303,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </button>
 
           <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
-            <FontAwesomeIcon icon={faAngleLeft} />
+            <FontAwesomeIcon icon={faAngleLeft} className='mr-1.5' />
             Back
           </button>
         </div>
@@ -380,7 +380,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             disabled={busy}
             className='btn-ghost'
           >
-            <FontAwesomeIcon icon={faAngleLeft} />
+            <FontAwesomeIcon icon={faAngleLeft} className='mr-1.5' />
             Back
           </button>
         </div>
@@ -496,7 +496,7 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
         </button>
 
         <button onClick={props.onBack} disabled={busy} className='btn-ghost'>
-          <FontAwesomeIcon icon={faAngleLeft} />
+          <FontAwesomeIcon icon={faAngleLeft} className='mr-1.5' />
           Back
         </button>
       </div>
