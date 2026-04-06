@@ -44,7 +44,11 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
       </div>
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Icon</label>
-        <div className='flex gap-1 flex-wrap' role='group' aria-label='Icon picker'>
+        <div
+          className='flex gap-1 flex-wrap'
+          role='group'
+          aria-label='Icon picker'
+        >
           {REWARD_EMOJIS.map(({ emoji, label }) => {
             return (
               <button

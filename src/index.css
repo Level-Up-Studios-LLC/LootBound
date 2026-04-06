@@ -89,6 +89,40 @@ body,
 #root {
   min-height: 100vh;
   background: var(--color-qbg);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable] {
+  user-select: text;
+}
+
+/* Prevent iOS auto-zoom on inputs below 16px */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* Native-feel press feedback */
+button:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 /* --- CSS Animations (GSAP handles screen-level animations) --- */
@@ -150,6 +184,76 @@ body,
 
   .animate-float {
     animation: none;
+  }
+}
+
+/* --- View Transitions (screen navigation) --- */
+
+@keyframes vt-slide-in-from-right {
+  from {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vt-slide-out-to-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+}
+
+@keyframes vt-slide-in-from-left {
+  from {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vt-slide-out-to-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+}
+
+/* Forward navigation (default) */
+::view-transition-old(root) {
+  animation: vt-slide-out-to-left 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+::view-transition-new(root) {
+  animation: vt-slide-in-from-right 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Back navigation */
+html.nav-back::view-transition-old(root) {
+  animation: vt-slide-out-to-right 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html.nav-back::view-transition-new(root) {
+  animation: vt-slide-in-from-left 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
   }
 }
 

@@ -19,7 +19,7 @@ export default function NotificationToast(p: NotificationToastProps) {
   return (
     <div
       className={
-        'fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-btn font-bold text-sm z-[1000] text-white shadow-lg animate-slide-up ' +
+        'fixed top-[calc(16px+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 px-6 py-3 rounded-btn font-bold text-sm z-[1000] text-white shadow-lg animate-slide-up ' +
         bg
       }
     >

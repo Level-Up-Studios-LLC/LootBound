@@ -120,7 +120,9 @@ export default function ScoresScreen(): React.ReactElement | null {
         </div>
         <div className='grid grid-cols-2 gap-3 mb-4'>
           <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
-            <div className={`font-display text-2xl font-bold ${(ud.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}>
+            <div
+              className={`font-display text-2xl font-bold ${(ud.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}
+            >
               {(ud.points || 0).toLocaleString()}
             </div>
             <div className='text-[10px] text-qmuted font-bold'>COINS</div>
@@ -330,7 +332,9 @@ export default function ScoresScreen(): React.ReactElement | null {
                   </div>
                 </div>
                 <div className='text-right'>
-                  <div className={`font-display text-[26px] font-bold ${(udata.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}>
+                  <div
+                    className={`font-display text-[26px] font-bold ${(udata.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}
+                  >
                     {(udata.points || 0).toLocaleString()}
                   </div>
                   <div className='text-[11px] text-qmuted font-bold'>COINS</div>

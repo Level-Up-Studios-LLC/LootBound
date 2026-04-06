@@ -6,6 +6,7 @@ import { useAppContext } from '../context/AppContext.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faBagShopping } from '../fa.ts';
 import { FA_ICON_STYLE, KID_NAV } from '../constants.ts';
+import { triggerHaptic } from '../services/platform.ts';
 import BNav from '../components/BNav.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
 import { countRedeems } from '../utils.ts';
@@ -171,14 +172,13 @@ export default function StoreScreen(): React.ReactElement | null {
                   </div>
                 )}
                 {na && (
-                  <div className='text-xs text-qorange'>
-                    Needs parent OK
-                  </div>
+                  <div className='text-xs text-qorange'>Needs parent OK</div>
                 )}
                 <button
                   disabled={!can}
                   onClick={() => {
                     if (can) {
+                      triggerHaptic('light');
                       setRedeemError('');
                       setConfirmR(r);
                     }

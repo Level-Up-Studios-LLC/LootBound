@@ -55,6 +55,7 @@ import { useApprovalActions } from '../hooks/useApprovalActions.ts';
 import { useChildActions } from '../hooks/useChildActions.ts';
 import { useCoopActions } from '../hooks/useCoopActions.ts';
 import { useFirestoreSync } from '../hooks/useFirestoreSync.ts';
+import { useNavigation } from '../hooks/useNavigation.ts';
 import { useNotificationListener } from '../hooks/useNotificationListener.ts';
 import {
   unlockAudio,
@@ -94,6 +95,7 @@ interface AppContextValue {
   pendingCount: number;
 
   setScreen: (s: string) => void;
+  navigate: (target: string, direction?: 'forward' | 'back') => void;
   setCurUser: (u: string | null) => void;
   setViewPhoto: (p: string | null) => void;
   notify: (msg: string, type?: string) => void;
@@ -165,6 +167,12 @@ export function AppProvider(props: {
   onLogout?: () => void;
 }) {
   const [screen, setScreen] = useState(props.initialScreen || 'login');
+  const navigateRaw = useNavigation(setScreen);
+  const navigate = useCallback(
+    (target: string, direction?: 'forward' | 'back') =>
+      navigateRaw(target, direction, screen),
+    [navigateRaw, screen]
+  );
   const [curUser, setCurUserRaw] = useState<string | null>(
     props.initialUser || null
   );
@@ -950,6 +958,7 @@ export function AppProvider(props: {
     tLog,
     pendingCount,
     setScreen,
+    navigate,
     setCurUser,
     setViewPhoto,
     notify: notification.notify,
