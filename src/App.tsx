@@ -168,24 +168,26 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
         ctx.screen !== 'admin' &&
         ctx.curUser &&
         ctx.curUser !== 'parent' && (
-          <div className='fixed top-3 right-3 z-[100]'>
-            <HamburgerMenu
-              items={[
-                {
-                  id: 'logout',
-                  icon: 'left-from-bracket',
-                  label: 'Logout',
-                  onClick: () => {
-                    if (ctx.onLogout) {
-                      ctx.onLogout();
-                    } else {
-                      ctx.setCurUser(null);
-                      ctx.setScreen('login');
-                    }
+          <div className='fixed top-3 z-[100] w-full max-w-[480px] left-1/2 -translate-x-1/2 flex justify-end pr-3 pointer-events-none'>
+            <div className='pointer-events-auto'>
+              <HamburgerMenu
+                items={[
+                  {
+                    id: 'logout',
+                    icon: 'left-from-bracket',
+                    label: 'Logout',
+                    onClick: () => {
+                      if (ctx.onLogout) {
+                        ctx.onLogout();
+                      } else {
+                        ctx.setCurUser(null);
+                        ctx.setScreen('login');
+                      }
+                    },
                   },
-                },
-              ]}
-            />
+                ]}
+              />
+            </div>
           </div>
         )}
 
@@ -558,11 +560,18 @@ function AppRouter() {
             onSuccess={() => {
               setParentVerified(true);
             }}
-            onSignOut={() => {
-              auth.doSignOut();
-              setParentVerified(false);
-              setParentPin(null);
-              setRole(null);
+            onSignOut={async () => {
+              try {
+                await auth.doSignOut();
+              } catch (err) {
+                Sentry.captureException(err, {
+                  tags: { action: 'pin-signout' },
+                });
+              } finally {
+                setParentVerified(false);
+                setParentPin(null);
+                setRole(null);
+              }
             }}
           />
         );
@@ -578,11 +587,16 @@ function AppRouter() {
         familyId={auth.authUser.familyId}
         initialScreen='admin'
         initialUser='parent'
-        onLogout={() => {
-          auth.doSignOut();
-          setParentVerified(false);
-          setParentPin(null);
-          setRole(null);
+        onLogout={async () => {
+          try {
+            await auth.doSignOut();
+          } catch (err) {
+            Sentry.captureException(err, { tags: { action: 'parent-logout' } });
+          } finally {
+            setParentVerified(false);
+            setParentPin(null);
+            setRole(null);
+          }
         }}
       >
         <AppInner />
@@ -599,8 +613,15 @@ function AppRouter() {
           onSuccess={fid => {
             setKidFamilyId(fid);
           }}
-          onBack={() => {
-            setRole(null);
+          onBack={async () => {
+            try {
+              await auth.doSignOut();
+              setRole(null);
+            } catch (err) {
+              Sentry.captureException(err, {
+                tags: { action: 'kid-back-signout' },
+              });
+            }
           }}
         />
       );
@@ -612,14 +633,21 @@ function AppRouter() {
     return (
       <AppProvider familyId={kidFamilyId} initialUser={storedKid || null}>
         <AppInner
-          onSwitchFamily={() => {
-            clearStoredFamilyCode().catch(() => {
-              /* ignore */
-            });
-            clearSession(SESSION_KEY_KID);
-            setStoredKid(null);
-            setKidFamilyId(null);
-            setRole(null);
+          onSwitchFamily={async () => {
+            try {
+              await auth.doSignOut();
+              clearStoredFamilyCode().catch(() => {
+                /* ignore */
+              });
+              clearSession(SESSION_KEY_KID);
+              setStoredKid(null);
+              setKidFamilyId(null);
+              setRole(null);
+            } catch (err) {
+              Sentry.captureException(err, {
+                tags: { action: 'kid-switch-signout' },
+              });
+            }
           }}
         />
       </AppProvider>

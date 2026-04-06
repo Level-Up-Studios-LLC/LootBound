@@ -23,10 +23,17 @@ export default function StoreScreen(): React.ReactElement | null {
   const needsApproval = ctx.needsApproval;
   const requestRedemption = ctx.requestRedemption;
 
-  // Entrance animations — must be above early return for Rules of Hooks
+  // Entrance animations — run once on mount, not on every data change
+  // Re-running on ud changes causes GSAP to reset opacity:0 on existing cards
+  const animatedRef = useRef(false);
   useGSAP(
     () => {
-      if (!ch || !ud) return;
+      if (!ch || !ud || animatedRef.current) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        animatedRef.current = true;
+        return;
+      }
+      animatedRef.current = true;
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
       tl.from('.store-balance', { opacity: 0, y: -10, duration: 0.35 });
       tl.from(

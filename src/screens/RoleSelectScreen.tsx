@@ -11,10 +11,10 @@ export default function RoleSelectScreen(
   props: RoleSelectScreenProps
 ): React.ReactElement {
   return (
-    <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+    <main className='page-wrapper page-centered'>
+      <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
-      </div>
+      </h1>
       <div className='text-base text-qmuted mb-5'>Who are you?</div>
 
       <div className='flex gap-6 justify-center'>
@@ -24,7 +24,7 @@ export default function RoleSelectScreen(
           }}
           className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qmint rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
         >
-          <div className='text-5xl'>
+          <div className='text-5xl' aria-hidden='true'>
             <FontAwesomeIcon icon={faShieldHalved} style={FA_ICON_STYLE} />
           </div>
           <div className='font-display text-xl font-semibold'>I'm a Parent</div>
@@ -37,7 +37,7 @@ export default function RoleSelectScreen(
           }}
           className='flex flex-col items-center justify-center gap-3 py-8 px-6 bg-qyellow rounded-card cursor-pointer min-w-[140px] max-w-[200px] font-body text-qslate transition-all duration-200 hover:scale-105 active:scale-95'
         >
-          <div className='text-5xl'>
+          <div className='text-5xl' aria-hidden='true'>
             <FontAwesomeIcon icon={faGamepadModern} style={FA_ICON_STYLE} />
           </div>
           <div className='font-display text-xl font-semibold'>I'm a Kid</div>
@@ -46,6 +46,6 @@ export default function RoleSelectScreen(
           </div>
         </button>
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface MenuItem {
@@ -16,13 +16,41 @@ export default function HamburgerMenu(
   p: HamburgerMenuProps
 ): React.ReactElement {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // Escape to close + restore focus
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open]);
+
+  // Focus first menu item on open
+  useEffect(() => {
+    if (open && menuRef.current) {
+      const first = menuRef.current.querySelector<HTMLElement>(
+        'button[role="menuitem"]'
+      );
+      first?.focus();
+    }
+  }, [open]);
 
   return (
     <div className='relative'>
       <button
+        ref={triggerRef}
         onClick={() => setOpen(!open)}
-        className='flex flex-col items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer p-0'
+        className='flex flex-col items-center justify-center w-11 h-11 bg-transparent border-none cursor-pointer p-0'
         aria-label='Menu'
+        aria-expanded={open}
+        aria-haspopup='menu'
       >
         <FontAwesomeIcon
           icon={['fas', 'ellipsis-vertical'] as any}
@@ -33,13 +61,21 @@ export default function HamburgerMenu(
         <>
           <div
             className='fixed inset-0 z-[200]'
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setOpen(false);
+              triggerRef.current?.focus();
+            }}
           />
-          <div className='absolute right-0 top-full mt-1 bg-white rounded-card shadow-lg z-[201] min-w-[180px] py-2 animate-fade-in'>
+          <div
+            ref={menuRef}
+            role='menu'
+            className='absolute right-0 top-full mt-1 bg-white rounded-card shadow-lg z-[201] min-w-[180px] py-2 animate-fade-in'
+          >
             {p.items.map(item => {
               return (
                 <button
                   key={item.id}
+                  role='menuitem'
                   onClick={() => {
                     setOpen(false);
                     item.onClick();
@@ -49,6 +85,7 @@ export default function HamburgerMenu(
                   <FontAwesomeIcon
                     icon={['fas', item.icon] as any}
                     className='text-base w-5 text-center'
+                    aria-hidden='true'
                   />
                   {item.label}
                 </button>

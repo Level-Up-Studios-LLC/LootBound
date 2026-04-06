@@ -57,14 +57,18 @@ export default function KidCodeScreen(
   };
 
   return (
-    <div className='page-wrapper page-centered'>
-      <div className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
+    <main className='page-wrapper page-centered'>
+      <h1 className='font-display text-5xl font-bold text-qslate tracking-wider mb-4'>
         LOOTBOUND
-      </div>
+      </h1>
       <div className='text-base text-qmuted mb-5'>Enter your family code</div>
 
       <div className='bg-qyellow w-full max-w-[360px] p-6 rounded-card flex flex-col items-center gap-5'>
+        <label htmlFor='family-code' className='sr-only'>
+          Family code
+        </label>
         <input
+          id='family-code'
           type='text'
           value={code}
           onChange={handleChange}
@@ -80,9 +84,12 @@ export default function KidCodeScreen(
           Ask your parent for this code
         </div>
 
-        {err && (
-          <div className='text-qcoral text-[13px] text-center'>{err}</div>
-        )}
+        <div
+          role={err ? 'alert' : undefined}
+          className='text-qcoral text-[13px] text-center min-h-[20px]'
+        >
+          {err}
+        </div>
 
         <button
           onClick={handleSubmit}
@@ -97,6 +104,6 @@ export default function KidCodeScreen(
           Back
         </button>
       </div>
-    </div>
+    </main>
   );
 }
