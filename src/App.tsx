@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots, faCircleCheck } from './fa.ts';
+import { faCommentDots, faCircleCheck, faRightFromBracket } from './fa.ts';
 import { FA_ICON_STYLE, FEEDBACK_URL } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
@@ -192,7 +192,7 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
           items={[
             {
               id: 'logout',
-              icon: 'left-from-bracket',
+              icon: faRightFromBracket,
               label: 'Logout',
               destructive: true,
               onClick: () => {

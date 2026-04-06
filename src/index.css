@@ -115,13 +115,13 @@ textarea {
 
 /* Native-feel press feedback */
 button:active:not(:disabled) {
-  transform: scale(0.97);
+  scale: 0.97;
   opacity: 0.85;
 }
 
 @media (prefers-reduced-motion: reduce) {
   button:active:not(:disabled) {
-    transform: none;
+    scale: none;
   }
 }
 

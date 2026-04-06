@@ -1,4 +1,5 @@
 import { useAppContext } from '../context/AppContext.tsx';
+import { triggerHaptic } from '../services/platform.ts';
 import IconBadge from './IconBadge.tsx';
 
 interface NavTab {
@@ -35,6 +36,7 @@ export default function BNav(p: BNavProps) {
           <button
             key={t.id}
             onClick={() => {
+              triggerHaptic('light');
               ctx.navigate(t.id);
             }}
             aria-current={isActive ? 'page' : undefined}

@@ -5,6 +5,12 @@ import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { triggerHaptic } from '../../services/platform.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
+import {
+  faCircleUser,
+  faChildren,
+  faGear,
+  faRightFromBracket,
+} from '../../fa.ts';
 import FullPageMenu from '../../components/FullPageMenu.tsx';
 import IconBadge from '../../components/IconBadge.tsx';
 import OverviewTab from './OverviewTab.tsx';
@@ -135,7 +141,7 @@ export default function AdminScreen(): React.ReactElement {
           items={[
             {
               id: 'account',
-              icon: 'circle-user',
+              icon: faCircleUser,
               label: 'Account',
               onClick: () => {
                 setAtab('account');
@@ -143,7 +149,7 @@ export default function AdminScreen(): React.ReactElement {
             },
             {
               id: 'children',
-              icon: 'children',
+              icon: faChildren,
               label: 'Children',
               onClick: () => {
                 setAtab('children');
@@ -151,7 +157,7 @@ export default function AdminScreen(): React.ReactElement {
             },
             {
               id: 'settings',
-              icon: 'gear',
+              icon: faGear,
               label: 'Settings',
               onClick: () => {
                 setAtab('settings');
@@ -159,7 +165,7 @@ export default function AdminScreen(): React.ReactElement {
             },
             {
               id: 'logout',
-              icon: 'left-from-bracket',
+              icon: faRightFromBracket,
               label: 'Logout',
               destructive: true,
               onClick: () => {

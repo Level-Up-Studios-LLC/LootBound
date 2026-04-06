@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { faXmark, faChevronRight } from '../fa.ts';
 import { triggerHaptic } from '../services/platform.ts';
 
 interface FullPageMenuItem {
   id: string;
-  icon: string;
+  icon: IconDefinition;
   label: string;
   destructive?: boolean;
   onClick: () => void;
@@ -203,7 +204,7 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
               }}
             >
               <FontAwesomeIcon
-                icon={['fas', item.icon] as any}
+                icon={item.icon}
                 className='text-lg w-6 text-center'
                 aria-hidden='true'
               />

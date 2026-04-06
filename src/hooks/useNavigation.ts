@@ -1,5 +1,4 @@
 import { useCallback, useRef } from 'react';
-import { triggerHaptic } from '../services/platform.ts';
 
 const SCREEN_ORDER: Record<string, number> = {
   dashboard: 1,
@@ -23,8 +22,6 @@ export function useNavigation(setScreen: (s: string) => void) {
       direction?: 'forward' | 'back',
       currentScreen?: string
     ) => {
-      triggerHaptic('light');
-
       if (prefersReducedMotion() || !document.startViewTransition) {
         setScreen(target);
         return;
