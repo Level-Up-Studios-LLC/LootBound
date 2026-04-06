@@ -21,10 +21,13 @@ export default function Modal(props: ModalProps): React.ReactElement {
       }
       if (e.key !== 'Tab' || !overlayRef.current) return;
       const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]):not([hidden]), input:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), a[href]:not([hidden]), [tabindex]:not([tabindex="-1"]):not([hidden])'
       );
       if (focusable.length === 0) {
         e.preventDefault();
+        const panel =
+          overlayRef.current?.querySelector<HTMLElement>('[role="dialog"]');
+        panel?.focus();
         return;
       }
       const first = focusable[0];
@@ -45,7 +48,7 @@ export default function Modal(props: ModalProps): React.ReactElement {
     prevFocusRef.current = document.activeElement as HTMLElement;
     if (overlayRef.current) {
       const first = overlayRef.current.querySelector<HTMLElement>(
-        'button:not([disabled]), input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]):not([hidden]), input:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), a[href]:not([hidden]), [tabindex]:not([tabindex="-1"]):not([hidden])'
       );
       if (first) {
         first.focus();

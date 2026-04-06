@@ -29,7 +29,10 @@ export default function StoreScreen(): React.ReactElement | null {
   useGSAP(
     () => {
       if (!ch || !ud || animatedRef.current) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        animatedRef.current = true;
+        return;
+      }
       animatedRef.current = true;
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
       tl.from('.store-balance', { opacity: 0, y: -10, duration: 0.35 });

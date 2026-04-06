@@ -560,11 +560,18 @@ function AppRouter() {
             onSuccess={() => {
               setParentVerified(true);
             }}
-            onSignOut={() => {
-              auth.doSignOut();
-              setParentVerified(false);
-              setParentPin(null);
-              setRole(null);
+            onSignOut={async () => {
+              try {
+                await auth.doSignOut();
+              } catch (err) {
+                Sentry.captureException(err, {
+                  tags: { action: 'pin-signout' },
+                });
+              } finally {
+                setParentVerified(false);
+                setParentPin(null);
+                setRole(null);
+              }
             }}
           />
         );
@@ -627,12 +634,12 @@ function AppRouter() {
       <AppProvider familyId={kidFamilyId} initialUser={storedKid || null}>
         <AppInner
           onSwitchFamily={async () => {
-            clearStoredFamilyCode().catch(() => {
-              /* ignore */
-            });
-            clearSession(SESSION_KEY_KID);
             try {
               await auth.doSignOut();
+              clearStoredFamilyCode().catch(() => {
+                /* ignore */
+              });
+              clearSession(SESSION_KEY_KID);
               setStoredKid(null);
               setKidFamilyId(null);
               setRole(null);

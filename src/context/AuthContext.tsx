@@ -237,8 +237,12 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     try {
       await signOutFamily();
     } catch (err: any) {
-      setAuthError(err.message || 'Sign out failed');
-      throw err;
+      const normalized = (
+        err instanceof Error ? err : new Error('Sign out failed')
+      ) as Error & { code?: string };
+      normalized.code = normalized.code || err?.code || 'auth/sign-out-failed';
+      setAuthError(normalized.message || 'Sign out failed');
+      throw normalized;
     }
   };
 
