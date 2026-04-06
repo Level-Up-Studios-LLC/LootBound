@@ -95,14 +95,25 @@ export default function Modal(props: ModalProps): React.ReactElement {
     dragStartY.current = null;
     if (!panel) return;
 
-    panel.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
 
     if (dragCurrentY.current > panel.offsetHeight * 0.4 && props.onClose) {
-      // Dismiss
-      panel.style.transform = 'translateY(100%)';
-      setTimeout(() => props.onClose!(), 300);
+      if (reduced) {
+        panel.style.transition = 'none';
+        panel.style.transform = 'translateY(100%)';
+        props.onClose();
+      } else {
+        panel.style.transition =
+          'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+        panel.style.transform = 'translateY(100%)';
+        setTimeout(() => props.onClose!(), 300);
+      }
     } else {
-      // Snap back
+      panel.style.transition = reduced
+        ? 'none'
+        : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
       panel.style.transform = 'translateY(0)';
     }
     dragCurrentY.current = 0;

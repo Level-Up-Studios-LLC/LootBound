@@ -70,16 +70,40 @@ export default function ConfirmDialog(
     dragStartY.current = null;
     if (!panel) return;
 
-    panel.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
 
     if (dragCurrentY.current > panel.offsetHeight * 0.4) {
-      panel.style.transform = 'translateY(100%)';
-      setTimeout(() => props.onCancel(), 300);
+      if (reduced) {
+        panel.style.transition = 'none';
+        panel.style.transform = 'translateY(100%)';
+        props.onCancel();
+      } else {
+        panel.style.transition =
+          'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+        panel.style.transform = 'translateY(100%)';
+        setTimeout(() => props.onCancel(), 300);
+      }
     } else {
+      panel.style.transition = reduced
+        ? 'none'
+        : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
       panel.style.transform = 'translateY(0)';
     }
     dragCurrentY.current = 0;
   }, [props.onCancel]);
+
+  const handleConfirm = useCallback(() => {
+    if (!confirmed) return;
+    triggerHaptic('light');
+    if (dontAsk && props.dontAskAgainKey) {
+      try {
+        localStorage.setItem(props.dontAskAgainKey, '1');
+      } catch (_e) {}
+    }
+    props.onConfirm();
+  }, [confirmed, dontAsk, props.dontAskAgainKey, props.onConfirm]);
 
   return (
     <div
@@ -154,14 +178,7 @@ export default function ConfirmDialog(
                   setTyped(e.target.value);
                 }}
                 onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && confirmed) {
-                    if (dontAsk && props.dontAskAgainKey) {
-                      try {
-                        localStorage.setItem(props.dontAskAgainKey, '1');
-                      } catch (_e) {}
-                    }
-                    props.onConfirm();
-                  }
+                  if (e.key === 'Enter') handleConfirm();
                 }}
                 className='quest-input'
                 autoFocus
@@ -190,16 +207,7 @@ export default function ConfirmDialog(
           </button>
           {props.confirmLabel && (
             <button
-              onClick={() => {
-                if (!confirmed) return;
-                triggerHaptic('light');
-                if (dontAsk && props.dontAskAgainKey) {
-                  try {
-                    localStorage.setItem(props.dontAskAgainKey, '1');
-                  } catch (_e) {}
-                }
-                props.onConfirm();
-              }}
+              onClick={handleConfirm}
               disabled={!confirmed}
               className={
                 (props.confirmColor || 'bg-qcoral') +

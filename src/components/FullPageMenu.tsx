@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark, faChevronRight } from '../fa.ts';
 import { triggerHaptic } from '../services/platform.ts';
 
 interface FullPageMenuItem {
@@ -57,56 +59,46 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
     [prefersReducedMotion]
   );
 
-  // Entrance animation
+  // Save previous focus on mount, restore on unmount
   useEffect(() => {
     prevFocusRef.current = document.activeElement as HTMLElement;
-
-    if (!overlayRef.current) return;
-    const panel = overlayRef.current.querySelector('.menu-panel');
-    const items = overlayRef.current.querySelectorAll('.menu-item');
-
-    if (prefersReducedMotion) {
-      // Focus close button immediately
-      const closeBtn =
-        overlayRef.current.querySelector<HTMLElement>('.menu-close');
-      closeBtn?.focus();
-      return;
-    }
-
-    const ctx = gsap.context(() => {
-      if (panel) {
-        gsap.fromTo(
-          panel,
-          { x: '100%' },
-          { x: '0%', duration: 0.35, ease: 'power2.out' }
-        );
-      }
-      if (items.length > 0) {
-        gsap.fromTo(
-          items,
-          { opacity: 0, x: 30 },
-          {
-            opacity: 1,
-            x: 0,
-            duration: 0.3,
-            stagger: 0.05,
-            delay: 0.15,
-            ease: 'power2.out',
-            onComplete: () => {
-              const closeBtn =
-                overlayRef.current?.querySelector<HTMLElement>('.menu-close');
-              closeBtn?.focus();
-            },
-          }
-        );
-      }
-    }, overlayRef);
-
     return () => {
-      ctx.revert();
       prevFocusRef.current?.focus();
     };
-  }, [prefersReducedMotion]);
+  }, []);
+
+  // Entrance animation
+  useGSAP(
+    () => {
+      if (prefersReducedMotion) {
+        overlayRef.current?.querySelector<HTMLElement>('.menu-close')?.focus();
+        return;
+      }
+      gsap.fromTo(
+        '.menu-panel',
+        { x: '100%' },
+        { x: '0%', duration: 0.35, ease: 'power2.out' }
+      );
+      gsap.fromTo(
+        '.menu-item',
+        { opacity: 0, x: 30 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.3,
+          stagger: 0.05,
+          delay: 0.15,
+          ease: 'power2.out',
+          onComplete: () => {
+            overlayRef.current
+              ?.querySelector<HTMLElement>('.menu-close')
+              ?.focus();
+          },
+        }
+      );
+    },
+    { scope: overlayRef, dependencies: [prefersReducedMotion] }
+  );
 
   // Focus trap + Escape
   const handleKeyDown = useCallback(
@@ -117,7 +109,14 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
       }
       if (e.key !== 'Tab' || !overlayRef.current) return;
       const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]):not([hidden]), a[href]:not([hidden]), [tabindex]:not([tabindex="-1"]):not([hidden])'
+        [
+          'button:not([disabled]):not([hidden])',
+          'a[href]:not([hidden])',
+          'input:not([disabled]):not([hidden])',
+          'select:not([disabled]):not([hidden])',
+          'textarea:not([disabled]):not([hidden])',
+          '[tabindex]:not([tabindex="-1"]):not([hidden])',
+        ].join(', ')
       );
       if (focusable.length === 0) {
         e.preventDefault();
@@ -185,10 +184,7 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
             aria-label='Close menu'
             onClick={() => doClose()}
           >
-            <FontAwesomeIcon
-              icon={['fad', 'xmark'] as any}
-              className='text-xl'
-            />
+            <FontAwesomeIcon icon={faXmark} className='text-xl' />
           </button>
         </div>
 
@@ -215,7 +211,7 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
                 {item.label}
               </span>
               <FontAwesomeIcon
-                icon={['fad', 'chevron-right'] as any}
+                icon={faChevronRight}
                 className='text-sm text-qdim'
                 aria-hidden='true'
               />

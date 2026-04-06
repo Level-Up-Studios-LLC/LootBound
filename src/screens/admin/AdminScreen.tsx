@@ -73,7 +73,7 @@ export default function AdminScreen(): React.ReactElement {
   ];
 
   return (
-    <div className='pb-[72px]'>
+    <div className='pb-[calc(72px+env(safe-area-inset-bottom))]'>
       <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center mb-3'>
           <div className='flex items-center gap-2.5'>
