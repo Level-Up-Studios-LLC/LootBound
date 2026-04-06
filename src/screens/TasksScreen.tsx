@@ -483,6 +483,13 @@ export default function TasksScreen(): React.ReactElement | null {
               {canComplete && (
                 <button
                   onClick={() => {
+                    if (
+                      !isRej &&
+                      !window.confirm(
+                        'Take a photo of your completed mission as proof!'
+                      )
+                    )
+                      return;
                     startCapture(t.id);
                   }}
                   aria-label={`Complete ${t.name}`}

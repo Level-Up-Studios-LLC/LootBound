@@ -123,7 +123,7 @@ export default function ScoresScreen(): React.ReactElement | null {
             <div className={`font-display text-2xl font-bold ${(ud.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}>
               {(ud.points || 0).toLocaleString()}
             </div>
-            <div className='text-[10px] text-qmuted font-bold'>COINS</div>
+            <div className='text-[10px] text-qmuted font-bold' aria-hidden='true'>COINS</div>
           </div>
           <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
             <div className='font-display text-2xl font-bold text-qslate'>
@@ -333,7 +333,7 @@ export default function ScoresScreen(): React.ReactElement | null {
                   <div className={`font-display text-[26px] font-bold ${(udata.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}>
                     {(udata.points || 0).toLocaleString()}
                   </div>
-                  <div className='text-[11px] text-qmuted font-bold'>COINS</div>
+                  <div className='text-[11px] text-qmuted font-bold' aria-hidden='true'>COINS</div>
                   <div className='font-display text-sm font-bold text-qslate'>
                     {(udata.xp || 0).toLocaleString()}{' '}
                     <span className='text-[11px] text-qmuted font-bold'>

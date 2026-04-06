@@ -629,26 +629,30 @@ function AppRouter() {
     // Family code resolved → show app
     // Pass stored kid as initialUser but start at 'login' — AppContext will
     // validate the child ID against cfg.children and promote to 'dashboard'
+    const kidFullLogout = async () => {
+      try {
+        await auth.doSignOut();
+        clearStoredFamilyCode().catch(() => {
+          /* ignore */
+        });
+        clearSession(SESSION_KEY_KID);
+        setStoredKid(null);
+        setKidFamilyId(null);
+        setRole(null);
+      } catch (err) {
+        Sentry.captureException(err, {
+          tags: { action: 'kid-logout' },
+        });
+      }
+    };
+
     return (
-      <AppProvider familyId={kidFamilyId} initialUser={storedKid || null}>
-        <AppInner
-          onSwitchFamily={async () => {
-            try {
-              await auth.doSignOut();
-              clearStoredFamilyCode().catch(() => {
-                /* ignore */
-              });
-              clearSession(SESSION_KEY_KID);
-              setStoredKid(null);
-              setKidFamilyId(null);
-              setRole(null);
-            } catch (err) {
-              Sentry.captureException(err, {
-                tags: { action: 'kid-switch-signout' },
-              });
-            }
-          }}
-        />
+      <AppProvider
+        familyId={kidFamilyId}
+        initialUser={storedKid || null}
+        onLogout={kidFullLogout}
+      >
+        <AppInner onSwitchFamily={kidFullLogout} />
       </AppProvider>
     );
   }
