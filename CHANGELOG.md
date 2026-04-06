@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-04-06
+
+### Added
+- Sibling co-op mission system — kids can invite siblings to complete tasks together for shared rewards
+- Co-op request workflow with parent approval/deny/cancel controls
+- Co-op invite cards on kid Tasks screen with accept/decline actions
+- CoopBadge and CoopRequestForm components for co-op task UI
+- Co-op indicators on Review tab for completed co-op tasks
+- Photo upload confirmation prompt before opening file picker
+- Favicon (SVG) and mobile-web-app-capable meta tag
+- `role="progressbar"` with aria-valuenow/valuemax on XP bar (aria-valuetext at max level)
+- `role="status"` on coin balance pill for screen reader live updates
+- Semantic headings (`<h1>`/`<h2>`) for "Today's Missions", "Loot Shop", "Up Next" sections
+- List semantics (`<ul>`/`<li>`) for task card containers on Dashboard and Tasks screens
+- Per-task `aria-label` on completion buttons (e.g., "Complete Clean Room")
+- `aria-label` and `aria-pressed` on reward icon picker buttons with `role="group"` container
+- `aria-label` on PIN and password inputs in ParentPinScreen
+- `sr-only` labels on Edit buttons in TasksTab and RewardsTab
+- `sr-only` "Rank 1" text next to trophy icon on ScoresScreen
+- `aria-hidden="true"` on decorative status badges (UPCOMING, COMPLETED, etc.)
+- Focus-visible outlines on RoleSelectScreen role selection buttons
+- PIN length validation feedback ("PIN must be at least 4 digits")
+- Missing UID guard with error notification in AccountTab PIN save
+- Sentry try/catch instrumentation on `addBonus` coin adjustment writes
+- Negative coin balance floor (`Math.max(0, ...)`) on parent coin adjustments
+- Conditional red styling (`text-red-500`) for negative coin values on ScoresScreen
+- 3x2 grid layout for coin adjust buttons on mobile with per-child `aria-label`
+
+### Changed
+- Kid logout now routes to role-select screen instead of profile-select
+- Kid logout cleanup uses `finally` block so state resets even if sign-out fails
+- `addBonus` toast shows applied delta after clamping instead of raw requested amount
+- `addBonus` uses safe fallback name (`'this child'`) to prevent "coins for undefined"
+- `hasSiblingWithTask` matches by task attributes (name, tier, schedule) instead of unique task ID
+- StoreScreen EmptyState uses imported `faBagShopping` icon object instead of string
+- AuthScreen back button icons use consistent `mr-1.5` spacing
+- "Needs parent OK" label bumped from `text-[10px]` to `text-xs` for readability
+- Storage rules tightened to specific path structure with `.jpg` filename validation
+- Storage rules use helper functions (`isAuthenticated`, `isImage`, `isUnderSizeLimit`)
+- Storage rules add wildcard read rule for folder-level `listAll()` operations
+- Removed duplicate Sentry capture in AccountTab PIN save (saveParentMember already captures)
+- Removed redundant `list-none` class on celebrate `<li>` in DashboardScreen
+- Icon picker buttons explicitly typed as `type="button"`
+- `addBonus` catch returns instead of re-throwing to prevent unhandled rejections
+- `pb-20` added to SettingsTab scroll container for bottom nav clearance
+
+### Fixed
+- Escape key not closing Add/Edit modals in TasksTab, RewardsTab, ChildrenTab, and ReviewTab (missing `onClose` prop)
+- Firestore 403 errors during kid sessions (parent identity inherited by anonymous sign-in)
+- Storage photo delete failures on reset (separated create/update from delete rules)
+- Password fields not wrapped in `<form>` elements (ParentPinScreen and AccountTab)
+- `capture='environment'` attribute removed from web file inputs (was blocking gallery selection)
+- Co-op request card catch blocks now capture exceptions to Sentry
+- `bg-qcoop` opacity raised from 8% to 19% for better visibility
+- Quest-input fields given explicit border style
+- Back button icons standardized across auth screens
+
+### Security
+- Storage rules restrict writes to `families/{familyId}/photos/{childId}/{date}/{fileName}` path only
+- Storage rules enforce `.jpg` extension on uploaded files
+
 ## [1.7.0] - 2026-03-25
 
 ### Added
