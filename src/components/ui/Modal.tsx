@@ -54,13 +54,15 @@ export default function Modal(props: ModalProps): React.ReactElement {
   return (
     <div
       ref={overlayRef}
-      role='dialog'
-      aria-modal='true'
-      aria-labelledby={titleId}
+      role='presentation'
       className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5 animate-fade-in'
       onKeyDown={handleKeyDown}
+      onClick={props.onClose}
     >
       <div
+        role='dialog'
+        aria-modal='true'
+        aria-labelledby={titleId}
         className={
           (props.bgColor || 'bg-qyellow') +
           ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg animate-slide-up'

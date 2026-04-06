@@ -607,12 +607,14 @@ function AppRouter() {
             setKidFamilyId(fid);
           }}
           onBack={async () => {
-            await auth.doSignOut().catch(err =>
+            try {
+              await auth.doSignOut();
+              setRole(null);
+            } catch (err) {
               Sentry.captureException(err, {
                 tags: { action: 'kid-back-signout' },
-              })
-            );
-            setRole(null);
+              });
+            }
           }}
         />
       );
@@ -629,14 +631,16 @@ function AppRouter() {
               /* ignore */
             });
             clearSession(SESSION_KEY_KID);
-            await auth.doSignOut().catch(err =>
+            try {
+              await auth.doSignOut();
+              setStoredKid(null);
+              setKidFamilyId(null);
+              setRole(null);
+            } catch (err) {
               Sentry.captureException(err, {
                 tags: { action: 'kid-switch-signout' },
-              })
-            );
-            setStoredKid(null);
-            setKidFamilyId(null);
-            setRole(null);
+              });
+            }
           }}
         />
       </AppProvider>
