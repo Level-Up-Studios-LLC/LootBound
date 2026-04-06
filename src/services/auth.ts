@@ -547,6 +547,10 @@ export const getCurrentFamilyId = getCurrentUid;
  * to Firebase Storage without requiring email/password.
  */
 export async function signInAnonymousKid(): Promise<void> {
-  if (auth.currentUser) return; // already signed in
+  if (auth.currentUser?.isAnonymous) return; // already signed in as anonymous kid
+  // Sign out any existing parent session before creating anonymous kid session
+  if (auth.currentUser) {
+    await signOut(auth);
+  }
   await signInAnonymously(auth);
 }
