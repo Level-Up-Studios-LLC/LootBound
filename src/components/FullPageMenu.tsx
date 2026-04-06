@@ -71,10 +71,12 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
   // Entrance animation
   useGSAP(
     () => {
-      if (prefersReducedMotion) {
-        overlayRef.current?.querySelector<HTMLElement>('.menu-close')?.focus();
-        return;
-      }
+      // Move focus into the dialog immediately so the focus trap is active
+      // during the entrance animation
+      overlayRef.current?.querySelector<HTMLElement>('.menu-close')?.focus();
+
+      if (prefersReducedMotion) return;
+
       gsap.fromTo(
         '.menu-panel',
         { x: '100%' },
@@ -90,11 +92,6 @@ export default function FullPageMenu(p: FullPageMenuProps): React.ReactElement {
           stagger: 0.05,
           delay: 0.15,
           ease: 'power2.out',
-          onComplete: () => {
-            overlayRef.current
-              ?.querySelector<HTMLElement>('.menu-close')
-              ?.focus();
-          },
         }
       );
     },
