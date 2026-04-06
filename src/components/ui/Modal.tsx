@@ -23,7 +23,10 @@ export default function Modal(props: ModalProps): React.ReactElement {
       const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
         'button:not([disabled]), input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
       );
-      if (focusable.length === 0) return;
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (e.shiftKey && document.activeElement === first) {
@@ -44,7 +47,14 @@ export default function Modal(props: ModalProps): React.ReactElement {
       const first = overlayRef.current.querySelector<HTMLElement>(
         'button:not([disabled]), input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
       );
-      if (first) first.focus();
+      if (first) {
+        first.focus();
+      } else {
+        // No tabbable children — focus the dialog panel itself
+        const panel =
+          overlayRef.current.querySelector<HTMLElement>('[role="dialog"]');
+        panel?.focus();
+      }
     }
     return () => {
       prevFocusRef.current?.focus();
@@ -63,6 +73,7 @@ export default function Modal(props: ModalProps): React.ReactElement {
         role='dialog'
         aria-modal='true'
         aria-labelledby={titleId}
+        tabIndex={-1}
         className={
           (props.bgColor || 'bg-qyellow') +
           ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg animate-slide-up'

@@ -238,6 +238,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       await signOutFamily();
     } catch (err: any) {
       setAuthError(err.message || 'Sign out failed');
+      throw err;
     }
   };
 
