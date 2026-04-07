@@ -54,31 +54,22 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
 
   const isFormValid = (t: Task & { uid: string }) => {
     if (!t.name) return false;
-    const freq = t.frequency || (t.daily ? 'daily' : 'specific_days');
-    if (freq === 'specific_days' && !(t.dueDays && t.dueDays.length > 0))
+    if (t.frequency === 'specific_days' && t.dueDays.length === 0)
       return false;
     if (t.windowStart && t.windowEnd && t.windowEnd <= t.windowStart)
       return false;
     return true;
   };
 
-  const buildTask = (t: Task & { uid: string }): Omit<Task, 'id'> => {
-    const freq = t.frequency || (t.daily ? 'daily' : 'specific_days');
-    return {
-      name: t.name,
-      tier: t.tier,
-      windowStart: t.windowStart,
-      windowEnd: t.windowEnd,
-      daily: freq === 'daily',
-      frequency: freq as Task['frequency'],
-      dueDay:
-        freq === 'specific_days' && t.dueDays?.length
-          ? t.dueDays[0]
-          : null,
-      dueDays: freq === 'specific_days' ? t.dueDays : undefined,
-      photoRequired: t.photoRequired,
-    };
-  };
+  const buildTask = (t: Task & { uid: string }): Omit<Task, 'id'> => ({
+    name: t.name,
+    tier: t.tier,
+    windowStart: t.windowStart,
+    windowEnd: t.windowEnd,
+    frequency: t.frequency,
+    dueDays: t.frequency === 'specific_days' ? t.dueDays : [],
+    photoRequired: t.photoRequired,
+  });
 
   const saveTask = () => {
     if (!activeForm || !isFormValid(activeForm)) return;
@@ -147,9 +138,8 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     tier: 'C',
                     windowStart: '08:00',
                     windowEnd: '10:00',
-                    daily: true,
-                    dueDay: null,
                     frequency: 'daily',
+                    dueDays: [],
                     photoRequired: true,
                   });
                 }}
@@ -183,10 +173,8 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       XP) | {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
                       {t.frequency === 'once'
                         ? 'Once'
-                        : t.frequency === 'specific_days' || (!t.daily && t.dueDay != null)
-                          ? t.dueDays?.length
-                            ? t.dueDays.map(d => DAYS_SHORT[d]).join(', ')
-                            : DAYS_SHORT[t.dueDay!]
+                        : t.frequency === 'specific_days'
+                          ? t.dueDays.map(d => DAYS_SHORT[d]).join(', ')
                           : 'Daily'}
                     </div>
                   </div>
@@ -253,8 +241,8 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
               tier: preset.tier,
               windowStart: preset.windowStart,
               windowEnd: preset.windowEnd,
-              daily: preset.daily,
-              dueDay: null,
+              frequency: preset.frequency,
+              dueDays: [],
             });
             setShowPreset(false);
           }}

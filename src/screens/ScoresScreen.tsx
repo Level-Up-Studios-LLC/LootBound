@@ -37,8 +37,8 @@ function countPerfectDays(
     if (!log) continue;
     const dow = new Date(dt + 'T12:00:00').getDay();
     const activeTasks = tasks.filter(t => {
-      if (t.daily) return true;
-      if (t.dueDay != null) return t.dueDay === dow;
+      if (t.frequency === 'daily' || t.frequency === 'once') return true;
+      if (t.frequency === 'specific_days') return t.dueDays.includes(dow);
       return true;
     });
     if (activeTasks.length === 0) continue;

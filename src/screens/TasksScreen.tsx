@@ -152,8 +152,8 @@ export default function TasksScreen(): React.ReactElement | null {
           t.tier === task.tier &&
           t.windowStart === task.windowStart &&
           t.windowEnd === task.windowEnd &&
-          t.daily === task.daily &&
-          t.dueDay === task.dueDay
+          t.frequency === task.frequency &&
+          JSON.stringify(t.dueDays) === JSON.stringify(task.dueDays)
       );
     });
     if (!hasSiblingWithTask) return false;
@@ -418,9 +418,11 @@ export default function TasksScreen(): React.ReactElement | null {
                     </div>
                     <div className='text-[11px] text-qmuted'>
                       {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
-                      {!t.daily && t.dueDay != null
-                        ? ` | ${DAYS_SHORT[t.dueDay]}`
-                        : ''}
+                      {t.frequency === 'specific_days' && t.dueDays.length > 0
+                        ? ` | ${t.dueDays.map(d => DAYS_SHORT[d]).join(', ')}`
+                        : t.frequency === 'once'
+                          ? ' | Once'
+                          : ''}
                     </div>
                     {isCoop && (
                       <div className='mt-1'>

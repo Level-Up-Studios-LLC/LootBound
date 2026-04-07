@@ -55,8 +55,9 @@ export interface TaskDef {
   tier: string;
   windowStart: string;
   windowEnd: string;
-  daily: boolean;
-  dueDay: number | null;
+  frequency: 'daily' | 'specific_days' | 'once';
+  dueDays: number[];
+  photoRequired: boolean;
 }
 
 export interface RewardDef {

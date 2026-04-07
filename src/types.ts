@@ -13,11 +13,9 @@ export interface Task {
   tier: string;
   windowStart: string;
   windowEnd: string;
-  daily: boolean;
-  dueDay: number | null;
-  dueDays?: number[]; // Array of day indices (0=Sun..6=Sat) for "Specific Days" frequency
-  frequency?: 'daily' | 'specific_days' | 'once'; // explicit frequency type (defaults to daily/weekly via `daily` flag for backward compat)
-  photoRequired?: boolean; // default true — require photo proof on completion
+  frequency: 'daily' | 'specific_days' | 'once';
+  dueDays: number[]; // day indices (0=Sun..6=Sat) for "Specific Days"; empty for daily/once
+  photoRequired: boolean;
   createdAt?: string; // ISO date (YYYY-MM-DD) — tasks created on this date skip same-day bedtime penalty
 }
 

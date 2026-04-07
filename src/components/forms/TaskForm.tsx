@@ -12,18 +12,10 @@ interface TaskFormProps {
 
 type Freq = 'daily' | 'specific_days' | 'once';
 
-/** Derive frequency from task fields for backward compat */
-function getFreq(t: Task): Freq {
-  if (t.frequency) return t.frequency;
-  if (t.daily) return 'daily';
-  if (t.dueDay != null) return 'specific_days';
-  return 'daily';
-}
-
 export default function TaskForm(props: TaskFormProps): React.ReactElement {
   const f = props.task;
   const tc = props.tierConfig;
-  const freq = getFreq(f);
+  const freq = f.frequency;
   type FormState = Task & { uid: string };
   const u = <K extends keyof FormState>(k: K, v: FormState[K]): void => {
     props.onChange({ ...f, [k]: v });
@@ -32,35 +24,24 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
   const setFreq = (next: Freq) => {
     const updated: Partial<FormState> = { frequency: next };
     if (next === 'daily') {
-      updated.daily = true;
-      updated.dueDay = null;
-      updated.dueDays = undefined;
+      updated.dueDays = [];
     } else if (next === 'specific_days') {
-      updated.daily = false;
-      updated.dueDay = f.dueDays?.length ? f.dueDays[0] : null;
-      updated.dueDays = f.dueDays?.length ? f.dueDays : [];
+      updated.dueDays = f.dueDays.length ? f.dueDays : [];
     } else {
-      // once
-      updated.daily = false;
-      updated.dueDay = null;
-      updated.dueDays = undefined;
+      updated.dueDays = [];
     }
     props.onChange({ ...f, ...updated });
   };
 
   const toggleDay = (dayIdx: number) => {
-    const current = f.dueDays || [];
+    const current = f.dueDays;
     const next = current.includes(dayIdx)
       ? current.filter(d => d !== dayIdx)
       : [...current, dayIdx].sort((a, b) => a - b);
-    props.onChange({
-      ...f,
-      dueDays: next,
-      dueDay: next.length > 0 ? next[0] : null,
-    });
+    props.onChange({ ...f, dueDays: next });
   };
 
-  const photoOn = f.photoRequired !== false; // default true
+  const photoOn = f.photoRequired;
 
   return (
     <div className='flex flex-col gap-4'>

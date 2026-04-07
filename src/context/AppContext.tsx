@@ -505,8 +505,9 @@ export function AppProvider(props: {
             tier: t.tier,
             windowStart: t.windowStart,
             windowEnd: t.windowEnd,
-            daily: t.daily,
-            dueDay: t.dueDay,
+            frequency: t.frequency || 'daily',
+            dueDays: t.dueDays || [],
+            photoRequired: t.photoRequired !== false,
             createdAt: t.createdAt,
           });
         });
@@ -912,8 +913,9 @@ export function AppProvider(props: {
           tier: r.taskTier,
           windowStart: r.windowStartOverride ?? original.windowStart,
           windowEnd: r.windowEndOverride ?? original.windowEnd,
-          daily: original.daily,
-          dueDay: original.dueDay,
+          frequency: original.frequency,
+          dueDays: original.dueDays,
+          photoRequired: original.photoRequired,
         };
       })
       .filter((t): t is import('../types.ts').Task => t !== null);

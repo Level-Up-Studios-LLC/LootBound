@@ -4,7 +4,7 @@ export interface MissionPreset {
   tier: string;
   windowStart: string;
   windowEnd: string;
-  daily: boolean;
+  frequency: 'daily' | 'specific_days' | 'once';
 }
 
 export const MISSION_PRESETS: MissionPreset[] = [
@@ -14,7 +14,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'F',
     windowStart: '07:00',
     windowEnd: '08:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Make the bed',
@@ -22,7 +22,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'D',
     windowStart: '07:00',
     windowEnd: '09:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Tidy up your room',
@@ -30,7 +30,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'C',
     windowStart: '16:00',
     windowEnd: '18:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Read a book',
@@ -38,7 +38,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'B',
     windowStart: '18:00',
     windowEnd: '20:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Wash up',
@@ -46,7 +46,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'F',
     windowStart: '19:00',
     windowEnd: '20:30',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Fold clothes',
@@ -54,7 +54,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'D',
     windowStart: '16:00',
     windowEnd: '18:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Store shoes properly',
@@ -62,7 +62,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'F',
     windowStart: '15:00',
     windowEnd: '18:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Clear the table',
@@ -70,7 +70,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'D',
     windowStart: '18:00',
     windowEnd: '19:30',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Take shower',
@@ -78,7 +78,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'F',
     windowStart: '19:00',
     windowEnd: '20:30',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Feed a pet',
@@ -86,7 +86,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'D',
     windowStart: '07:00',
     windowEnd: '08:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Do homework',
@@ -94,7 +94,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'B',
     windowStart: '15:00',
     windowEnd: '17:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Wash the dishes',
@@ -102,7 +102,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'C',
     windowStart: '18:30',
     windowEnd: '19:30',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Practice an instrument',
@@ -110,7 +110,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'B',
     windowStart: '16:00',
     windowEnd: '17:30',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Take out the trash',
@@ -118,7 +118,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'D',
     windowStart: '17:00',
     windowEnd: '19:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Water the plants',
@@ -126,7 +126,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'F',
     windowStart: '08:00',
     windowEnd: '10:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Set the table',
@@ -134,7 +134,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'D',
     windowStart: '17:00',
     windowEnd: '18:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Pack school bag',
@@ -142,7 +142,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'F',
     windowStart: '19:00',
     windowEnd: '20:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Exercise or play outside',
@@ -150,7 +150,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'A',
     windowStart: '15:00',
     windowEnd: '17:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Complete a chore without being asked',
@@ -158,7 +158,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'A',
     windowStart: '08:00',
     windowEnd: '20:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Help a sibling with homework',
@@ -166,7 +166,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'A',
     windowStart: '15:00',
     windowEnd: '18:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Cook or prepare a meal',
@@ -174,7 +174,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'S',
     windowStart: '16:00',
     windowEnd: '19:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Deep clean your room',
@@ -182,7 +182,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'S',
     windowStart: '10:00',
     windowEnd: '14:00',
-    daily: true,
+    frequency: 'daily',
   },
   {
     name: 'Complete all missions before noon',
@@ -190,6 +190,6 @@ export const MISSION_PRESETS: MissionPreset[] = [
     tier: 'S',
     windowStart: '06:00',
     windowEnd: '12:00',
-    daily: true,
+    frequency: 'daily',
   },
 ];
