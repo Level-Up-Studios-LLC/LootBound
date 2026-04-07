@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faPlus,
-  faPenToSquare,
-  faTrashCan,
-  faClipboardList,
-} from '../../fa.ts';
+import { faPlus, faClipboardList } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import {
@@ -15,10 +10,11 @@ import {
   altBg,
 } from '../../constants.ts';
 import { fmtTime, getToday } from '../../utils.ts';
-import Modal from '../../components/ui/Modal.tsx';
+import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import TaskForm from '../../components/forms/TaskForm.tsx';
+import MissionPresetScreen from './MissionPresetScreen.tsx';
 import type { Task } from '../../types.ts';
 
 function getSkipKey() {
@@ -38,15 +34,65 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
     task: Task;
     childId: string;
   } | null>(null);
+  const [showPreset, setShowPreset] = useState(false);
 
   const ctx = useAppContext();
   const children = ctx.children;
   const cfg = ctx.cfg;
+  const activeForm = editTask || addTask;
 
   const removeTask = (childId: string, taskId: string) => {
     const nt: Record<string, Task[]> = { ...cfg!.tasks };
     nt[childId] = (nt[childId] || []).filter(x => x.id !== taskId);
     ctx.saveCfg({ ...cfg!, tasks: nt });
+  };
+
+  const isFormValid = (t: Task & { uid: string }) => {
+    if (!t.name) return false;
+    if (t.frequency === 'specific_days' && t.dueDays.length === 0) return false;
+    if (t.windowStart && t.windowEnd && t.windowEnd <= t.windowStart)
+      return false;
+    return true;
+  };
+
+  const buildTask = (t: Task & { uid: string }): Omit<Task, 'id'> => ({
+    name: t.name,
+    tier: t.tier,
+    windowStart: t.windowStart,
+    windowEnd: t.windowEnd,
+    frequency: t.frequency,
+    dueDays: t.frequency === 'specific_days' ? t.dueDays : [],
+    photoRequired: t.photoRequired,
+  });
+
+  const saveTask = () => {
+    if (!activeForm || !isFormValid(activeForm)) return;
+    const t = activeForm;
+    const uid = t.uid;
+    const nt: Record<string, Task[]> = { ...cfg!.tasks };
+    const taskData = buildTask(t);
+    if (editTask) {
+      nt[uid] = nt[uid].map(x => {
+        return x.id === t.id ? { ...x, ...taskData, id: t.id } : x;
+      });
+    } else {
+      nt[uid] = (nt[uid] || []).concat([
+        {
+          ...taskData,
+          id: uid.substring(0, 3) + Date.now(),
+          createdAt: getToday(),
+        },
+      ]);
+    }
+    ctx.saveCfg({ ...cfg!, tasks: nt });
+    setEditTask(null);
+    setAddTask(null);
+  };
+
+  const closeForm = () => {
+    setEditTask(null);
+    setAddTask(null);
+    setShowPreset(false);
   };
 
   if (children.length === 0) {
@@ -86,8 +132,9 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     tier: 'C',
                     windowStart: '08:00',
                     windowEnd: '10:00',
-                    daily: true,
-                    dueDay: null,
+                    frequency: 'daily',
+                    dueDays: [],
+                    photoRequired: true,
                   });
                 }}
                 className='bg-qmint text-qslate rounded-badge px-4 py-2 text-[13px] font-bold border-none cursor-pointer font-body flex items-center gap-1.5'
@@ -96,116 +143,92 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                 Add
               </button>
             </div>
-            {tasks.map((t, ti) => {
-              return (
-                <div
-                  key={t.id}
-                  className={
-                    altBg(ti) +
-                    ' flex justify-between items-center rounded-badge px-4 py-3 mb-3'
-                  }
-                >
-                  <div>
-                    <div className='font-semibold text-qslate'>{t.name}</div>
-                    <div className='text-xs text-qmuted'>
-                      <span
-                        style={{
-                          color: TIER_COLORS[t.tier] || '#6b7280',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {t.tier}
-                      </span>
-                      -Tier ({ctx.tp(t.tier)} coins, {ctx.tierCfg(t.tier).xp}{' '}
-                      XP) | {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
-                      {t.daily ? 'Daily' : `Weekly: ${DAYS_SHORT[t.dueDay!]}`}
-                    </div>
-                  </div>
-                  <div className='flex gap-1.5'>
-                    <button
-                      onClick={() => {
-                        setEditTask({ ...t, uid: c.id });
+            {tasks.map((t, ti) => (
+              <button
+                key={t.id}
+                type='button'
+                onClick={() => setEditTask({ ...t, uid: c.id })}
+                className={
+                  altBg(ti) +
+                  ' flex justify-between items-center rounded-badge px-4 py-3 mb-3 w-full text-left border-none cursor-pointer font-body hover:brightness-95 active:scale-[0.99] transition-all'
+                }
+              >
+                <div>
+                  <div className='font-semibold text-qslate'>{t.name}</div>
+                  <div className='text-xs text-qmuted'>
+                    <span
+                      style={{
+                        color: TIER_COLORS[t.tier] || '#6b7280',
+                        fontWeight: 700,
                       }}
-                      className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
                     >
-                      <FontAwesomeIcon icon={faPenToSquare} />
-                      <span className='sr-only'>Edit {t.name}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        try {
-                          if (localStorage.getItem(getSkipKey()) === '1') {
-                            removeTask(c.id, t.id);
-                            return;
-                          }
-                        } catch (_e) {}
-                        setDeleteTask({ task: t, childId: c.id });
-                      }}
-                      className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
-                    >
-                      <FontAwesomeIcon icon={faTrashCan} />
-                      <span className='sr-only'>Delete {t.name}</span>
-                    </button>
+                      {t.tier}
+                    </span>
+                    -Tier ({ctx.tp(t.tier)} coins, {ctx.tierCfg(t.tier).xp} XP)
+                    | {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
+                    {t.frequency === 'once'
+                      ? 'Once'
+                      : t.frequency === 'specific_days'
+                        ? t.dueDays.map(d => DAYS_SHORT[d]).join(', ')
+                        : 'Daily'}
                   </div>
                 </div>
-              );
-            })}
+              </button>
+            ))}
           </div>
         );
       })}
-      {(editTask || addTask) && (
-        <Modal
-          title={editTask ? 'Edit Mission' : 'Add Mission'}
-          onClose={() => {
-            setEditTask(null);
-            setAddTask(null);
-          }}
+
+      {activeForm && (
+        <FullScreenSlideUp
+          title={editTask ? 'Edit Mission' : 'New Mission'}
+          cancelLabel='Cancel'
+          actionLabel={editTask ? 'Save' : 'Add'}
+          actionDisabled={!isFormValid(activeForm)}
+          onCancel={closeForm}
+          onAction={saveTask}
         >
           <TaskForm
-            task={(editTask || addTask)!}
+            task={activeForm}
             tierConfig={cfg!.tierConfig || DEF_TIER_CONFIG}
-            onSave={t => {
-              const uid = t.uid;
-              const nt: Record<string, Task[]> = { ...cfg!.tasks };
-              if (editTask) {
-                nt[uid] = nt[uid].map(x => {
-                  return x.id === t.id
-                    ? {
-                        ...x,
-                        id: t.id,
-                        name: t.name,
-                        tier: t.tier,
-                        windowStart: t.windowStart,
-                        windowEnd: t.windowEnd,
-                        daily: t.daily,
-                        dueDay: t.daily ? null : t.dueDay,
-                      }
-                    : x;
-                });
-              } else {
-                nt[uid] = (nt[uid] || []).concat([
-                  {
-                    id: uid.substring(0, 3) + Date.now(),
-                    name: t.name,
-                    tier: t.tier,
-                    windowStart: t.windowStart,
-                    windowEnd: t.windowEnd,
-                    daily: t.daily,
-                    dueDay: t.daily ? null : t.dueDay,
-                    createdAt: getToday(),
-                  },
-                ]);
-              }
-              ctx.saveCfg({ ...cfg!, tasks: nt });
-              setEditTask(null);
-              setAddTask(null);
+            onChange={t => {
+              if (editTask) setEditTask(t);
+              else setAddTask(t);
             }}
-            onCancel={() => {
-              setEditTask(null);
-              setAddTask(null);
-            }}
+            onUsePreset={!editTask ? () => setShowPreset(true) : undefined}
           />
-        </Modal>
+          {editTask && (
+            <div className='mt-8 text-center'>
+              <button
+                type='button'
+                onClick={() => {
+                  setDeleteTask({ task: editTask, childId: editTask.uid });
+                }}
+                className='bg-transparent border-none cursor-pointer font-body text-qred text-sm'
+              >
+                Delete Mission
+              </button>
+            </div>
+          )}
+        </FullScreenSlideUp>
+      )}
+
+      {showPreset && addTask && (
+        <MissionPresetScreen
+          onSelect={preset => {
+            setAddTask({
+              ...addTask,
+              name: preset.name,
+              tier: preset.tier,
+              windowStart: preset.windowStart,
+              windowEnd: preset.windowEnd,
+              frequency: preset.frequency,
+              dueDays: [],
+            });
+            setShowPreset(false);
+          }}
+          onBack={() => setShowPreset(false)}
+        />
       )}
 
       {deleteTask && (
@@ -217,6 +240,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           onConfirm={() => {
             removeTask(deleteTask.childId, deleteTask.task.id);
             setDeleteTask(null);
+            setEditTask(null);
           }}
           onCancel={() => setDeleteTask(null)}
         />

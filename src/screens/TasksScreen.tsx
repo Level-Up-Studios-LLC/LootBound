@@ -23,6 +23,7 @@ import BNav from '../components/BNav.tsx';
 import CoopBadge from '../components/CoopBadge.tsx';
 import CoopInviteCard from '../components/CoopInviteCard.tsx';
 import CoopRequestForm from '../components/forms/CoopRequestForm.tsx';
+import KidHeader from '../components/KidHeader.tsx';
 import Modal from '../components/ui/Modal.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
 import {
@@ -151,8 +152,9 @@ export default function TasksScreen(): React.ReactElement | null {
           t.tier === task.tier &&
           t.windowStart === task.windowStart &&
           t.windowEnd === task.windowEnd &&
-          t.daily === task.daily &&
-          t.dueDay === task.dueDay
+          t.frequency === task.frequency &&
+          JSON.stringify([...t.dueDays].sort()) ===
+            JSON.stringify([...task.dueDays].sort())
       );
     });
     if (!hasSiblingWithTask) return false;
@@ -192,14 +194,15 @@ export default function TasksScreen(): React.ReactElement | null {
 
   return (
     <div className='pb-20' ref={containerRef}>
-      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+      <KidHeader child={ch} userData={ud} />
+      <div className='px-4 pt-3 flex flex-col gap-3'>
         <h1 className='font-display text-2xl font-bold text-qslate'>
           Today's Missions
         </h1>
         {bedLock && (
           <div
             role='alert'
-            className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'
+            className='bg-qcoral-dim rounded-badge px-4 py-2.5 text-[13px] text-qcoral text-center'
           >
             <FontAwesomeIcon
               icon={faBed}
@@ -209,8 +212,6 @@ export default function TasksScreen(): React.ReactElement | null {
             Bedtime cutoff passed. Incomplete missions marked as missed.
           </div>
         )}
-      </div>
-      <div className='px-4 pt-3 flex flex-col gap-3'>
         {/* Pending co-op invites (Kid 2 perspective) */}
         {pendingInvites.length > 0 && (
           <div className='mb-2'>
@@ -418,9 +419,11 @@ export default function TasksScreen(): React.ReactElement | null {
                     </div>
                     <div className='text-[11px] text-qmuted'>
                       {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
-                      {!t.daily && t.dueDay != null
-                        ? ` | ${DAYS_SHORT[t.dueDay]}`
-                        : ''}
+                      {t.frequency === 'specific_days' && t.dueDays.length > 0
+                        ? ` | ${t.dueDays.map(d => DAYS_SHORT[d]).join(', ')}`
+                        : t.frequency === 'once'
+                          ? ' | Once'
+                          : ''}
                     </div>
                     {isCoop && (
                       <div className='mt-1'>
@@ -484,13 +487,6 @@ export default function TasksScreen(): React.ReactElement | null {
                 {canComplete && (
                   <button
                     onClick={() => {
-                      if (
-                        !isRej &&
-                        !window.confirm(
-                          'Take a photo of your completed mission as proof!'
-                        )
-                      )
-                        return;
                       startCapture(t.id);
                     }}
                     aria-label={`Complete ${t.name}`}
@@ -507,20 +503,32 @@ export default function TasksScreen(): React.ReactElement | null {
                               : 'bg-qorange')
                     }
                   >
-                    <FontAwesomeIcon
-                      icon={faCamera}
-                      className='mr-1.5'
-                      aria-hidden='true'
-                    />
+                    {t.photoRequired !== false && (
+                      <FontAwesomeIcon
+                        icon={faCamera}
+                        className='mr-1.5'
+                        aria-hidden='true'
+                      />
+                    )}
                     {isCoop
-                      ? 'Complete Co-op + Photo'
+                      ? t.photoRequired !== false
+                        ? 'Complete Co-op + Photo'
+                        : 'Complete Co-op'
                       : isRej
-                        ? 'Redo + Photo'
+                        ? t.photoRequired !== false
+                          ? 'Redo + Photo'
+                          : 'Redo'
                         : status === 'upcoming'
-                          ? 'Early (+25%) + Photo'
+                          ? t.photoRequired !== false
+                            ? 'Early (+25%) + Photo'
+                            : 'Early (+25%)'
                           : status === 'overdue'
-                            ? 'Late (50%) + Photo'
-                            : 'Complete + Photo'}
+                            ? t.photoRequired !== false
+                              ? 'Late (50%) + Photo'
+                              : 'Late (50%)'
+                            : t.photoRequired !== false
+                              ? 'Complete + Photo'
+                              : 'Complete'}
                   </button>
                 )}
                 {/* Co-op request button for solo tasks */}

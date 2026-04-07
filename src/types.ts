@@ -13,8 +13,9 @@ export interface Task {
   tier: string;
   windowStart: string;
   windowEnd: string;
-  daily: boolean;
-  dueDay: number | null;
+  frequency: 'daily' | 'specific_days' | 'once';
+  dueDays: number[]; // day indices (0=Sun..6=Sat) for "Specific Days"; empty for daily/once
+  photoRequired: boolean;
   createdAt?: string; // ISO date (YYYY-MM-DD) — tasks created on this date skip same-day bedtime penalty
 }
 
@@ -66,6 +67,12 @@ export interface StatusLabel {
   bg: string;
 }
 
+export interface CoinAdjustment {
+  amount: number;
+  reason: string;
+  date: string;
+}
+
 export interface UserData {
   points: number;
   xp: number;
@@ -77,6 +84,7 @@ export interface UserData {
   taskLog: Record<string, Record<string, any>>;
   redemptions: Redemption[];
   pendingRedemptions: PendingRedemption[];
+  adjustments: CoinAdjustment[];
   lastTaskTime: number;
 }
 

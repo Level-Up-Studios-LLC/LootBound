@@ -11,12 +11,10 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { AVATARS, COLORS, altBg } from '../../constants.ts';
-import Modal from '../../components/ui/Modal.tsx';
+import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
-import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
-import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import type {
   UserData,
   Child,
@@ -41,7 +39,6 @@ export default function ChildrenTab(): React.ReactElement {
     null
   );
   const [removeChild, setRemoveChild] = useState<Child | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const ctx = useAppContext();
   const children = ctx.children;
@@ -91,14 +88,18 @@ export default function ChildrenTab(): React.ReactElement {
               <div className='flex gap-1.5'>
                 {kidPinEdit.uid === c.id ? (
                   <div className='flex gap-1'>
-                    <PasswordInput
+                    <input
+                      type='password'
                       maxLength={4}
+                      inputMode='numeric'
+                      pattern='[0-9]*'
                       placeholder='PIN'
                       value={kidPinEdit.val}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         setKidPinEdit({ uid: c.id, val: e.target.value });
                       }}
                       className='quest-input w-[60px]! text-center py-1! px-1.5! text-xs!'
+                      autoFocus
                     />
                     <button
                       onClick={() => {
@@ -186,16 +187,6 @@ export default function ChildrenTab(): React.ReactElement {
                 </button>
               </div>
             </div>
-            <PurchasesToggle
-              id={c.id}
-              redeems={(allU[c.id] || ({} as UserData)).redemptions || []}
-              isOpen={expanded[c.id] || false}
-              onToggle={id => {
-                const next = { ...expanded };
-                next[id] = !next[id];
-                setExpanded(next);
-              }}
-            />
           </div>
         );
       })}
@@ -208,27 +199,53 @@ export default function ChildrenTab(): React.ReactElement {
       )}
 
       {addChildForm && (
-        <Modal title='Add Child' onClose={() => setAddChildForm(null)}>
+        <FullScreenSlideUp
+          title='Add Child'
+          cancelLabel='Cancel'
+          actionLabel='Add'
+          actionDisabled={!addChildForm.name || !addChildForm.age}
+          onCancel={() => setAddChildForm(null)}
+          onAction={() => {
+            ctx.doAddChild(addChildForm!);
+            setAddChildForm(null);
+          }}
+        >
           <AddChildForm
             form={addChildForm}
             onChange={f => {
               setAddChildForm(f);
             }}
-            onSave={() => {
-              ctx.doAddChild(addChildForm!);
-              setAddChildForm(null);
-            }}
-            onCancel={() => {
-              setAddChildForm(null);
-            }}
           />
-        </Modal>
+        </FullScreenSlideUp>
       )}
 
       {editChild && editChildForm && (
-        <Modal
+        <FullScreenSlideUp
           title='Edit Child'
-          onClose={() => {
+          cancelLabel='Cancel'
+          actionLabel='Save'
+          actionDisabled={!editChildForm.name || !editChildForm.age}
+          onCancel={() => {
+            setEditChild(null);
+            setEditChildForm(null);
+          }}
+          onAction={() => {
+            if (!editChildForm || !editChild || !cfg) return;
+            const updated = cfg.children.map(c => {
+              if (c.id !== editChild.id) return c;
+              return {
+                ...c,
+                name: editChildForm.name,
+                age: (() => {
+                  const parsed = Number(editChildForm.age);
+                  return Number.isNaN(parsed) ? c.age : parsed;
+                })(),
+                avatar: editChildForm.avatar,
+                color: editChildForm.color,
+              };
+            });
+            ctx.saveCfg({ ...cfg, children: updated });
+            ctx.notify(`${editChildForm.name} updated!`);
             setEditChild(null);
             setEditChildForm(null);
           }}
@@ -238,33 +255,8 @@ export default function ChildrenTab(): React.ReactElement {
             onChange={f => {
               setEditChildForm(f);
             }}
-            onSave={() => {
-              if (!editChildForm || !editChild || !cfg) return;
-              const updated = cfg.children.map(c => {
-                if (c.id !== editChild.id) return c;
-                return {
-                  ...c,
-                  name: editChildForm.name,
-                  age: (() => {
-                    const parsed = Number(editChildForm.age);
-                    return Number.isNaN(parsed) ? c.age : parsed;
-                  })(),
-                  avatar: editChildForm.avatar,
-                  color: editChildForm.color,
-                };
-              });
-              ctx.saveCfg({ ...cfg, children: updated });
-              ctx.notify(`${editChildForm.name} updated!`);
-              setEditChild(null);
-              setEditChildForm(null);
-            }}
-            onCancel={() => {
-              setEditChild(null);
-              setEditChildForm(null);
-            }}
-            saveLabel='Save'
           />
-        </Modal>
+        </FullScreenSlideUp>
       )}
 
       {removeChild && (

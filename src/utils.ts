@@ -19,6 +19,7 @@ export function freshUser(): UserData {
     taskLog: {},
     redemptions: [],
     pendingRedemptions: [],
+    adjustments: [],
     lastTaskTime: 0,
   };
 }
@@ -111,32 +112,32 @@ export function isPastBedtime(bedtime?: number): boolean {
 }
 
 export function isTaskActiveToday(task: Task): boolean {
-  if (task.daily) return true;
-  if (task.dueDay != null) return todayDow() === task.dueDay;
+  if (task.frequency === 'daily' || task.frequency === 'once') return true;
+  if (task.frequency === 'specific_days')
+    return task.dueDays.includes(todayDow());
   return true;
 }
 
 export function isTaskActiveTomorrow(task: Task): boolean {
-  if (task.daily) return true;
-  if (task.dueDay != null) {
+  if (task.frequency === 'daily' || task.frequency === 'once') return true;
+  if (task.frequency === 'specific_days') {
     const tomorrowDow = (todayDow() + 1) % 7;
-    return task.dueDay === tomorrowDow;
+    return task.dueDays.includes(tomorrowDow);
   }
-  // Tasks with no schedule are always active (same as isTaskActiveToday)
   return true;
 }
 
 /**
  * Check if a task should be displayed as a tomorrow preview.
- * Daily tasks are previews after bedtime; weekly tasks are previews when
- * their dueDay matches tomorrow (only after bedtime).
+ * Daily/once tasks are previews after bedtime; specific-day tasks are previews
+ * when one of their dueDays matches tomorrow (only after bedtime).
  */
 export function isTaskPreview(task: Task, bedtime?: number): boolean {
   if (!isPastBedtime(bedtime)) return false;
-  if (task.daily) return true;
-  if (task.dueDay != null) {
+  if (task.frequency === 'daily' || task.frequency === 'once') return true;
+  if (task.frequency === 'specific_days') {
     const tomorrowDow = (todayDow() + 1) % 7;
-    return task.dueDay === tomorrowDow;
+    return task.dueDays.includes(tomorrowDow);
   }
   return false;
 }

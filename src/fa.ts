@@ -74,6 +74,7 @@ import {
   faBug,
   faHandshake,
   faPeopleGroup,
+  faChevronLeft,
   faBagShopping,
 } from '@awesome.me/kit-e916efbc87/icons/duotone/solid';
 
@@ -195,7 +196,8 @@ library.add(
   faBug,
   faHandshake,
   faPeopleGroup,
-  faBagShopping
+  faBagShopping,
+  faChevronLeft
 );
 
 export {
@@ -274,4 +276,5 @@ export {
   faHandshake,
   faPeopleGroup,
   faBagShopping,
+  faChevronLeft,
 };

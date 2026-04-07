@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPenToSquare, faTrashCan, faGift } from '../../fa.ts';
+import { faPlus, faGift } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { altBg } from '../../constants.ts';
-import Modal from '../../components/ui/Modal.tsx';
+import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import RewardForm from '../../components/forms/RewardForm.tsx';
+import LootPresetScreen from './LootPresetScreen.tsx';
 import type { Reward } from '../../types.ts';
 
 function getSkipKey() {
@@ -71,14 +72,48 @@ export default function RewardsTab(): React.ReactElement {
   const [addReward, setAddReward] = useState<Reward | null>(null);
   const [editReward, setEditReward] = useState<Reward | null>(null);
   const [deleteReward, setDeleteReward] = useState<Reward | null>(null);
+  const [showPreset, setShowPreset] = useState(false);
 
   const ctx = useAppContext();
   const cfg = ctx.cfg;
   if (!cfg) return <div />;
   const rewards = cfg.rewards || [];
+  const activeForm = editReward || addReward;
 
   const removeReward = (rewardId: string) => {
     ctx.saveCfg({ ...cfg, rewards: rewards.filter(x => x.id !== rewardId) });
+  };
+
+  const saveReward = () => {
+    if (!activeForm || !activeForm.name) return;
+    const r = activeForm;
+    if (editReward) {
+      ctx.saveCfg({
+        ...cfg!,
+        rewards: (cfg!.rewards || []).map(x => {
+          return x.id === r.id ? r : x;
+        }),
+      });
+    } else {
+      ctx.saveCfg({
+        ...cfg!,
+        rewards: (cfg!.rewards || []).concat([
+          {
+            ...r,
+            id: 'r' + Date.now(),
+            active: true,
+          },
+        ]),
+      });
+    }
+    setAddReward(null);
+    setEditReward(null);
+  };
+
+  const closeForm = () => {
+    setAddReward(null);
+    setEditReward(null);
+    setShowPreset(false);
   };
 
   return (
@@ -135,105 +170,85 @@ export default function RewardsTab(): React.ReactElement {
               ? `${r.limitMax}/wk`
               : 'No limit';
         return (
-          <div
+          <button
             key={r.id}
+            type='button'
+            onClick={() => setEditReward({ ...r })}
             className={
               altBg(ri) +
-              ' flex justify-between items-center rounded-badge px-4 py-3 mb-3'
+              ' flex justify-between items-center rounded-badge px-4 py-3 mb-3 w-full text-left border-none cursor-pointer font-body hover:brightness-95 active:scale-[0.99] transition-all'
             }
           >
-            <div>
+            <div className='flex items-center gap-2'>
               <span className='text-lg'>{r.icon}</span>
-              <span className='font-semibold ml-2 text-qslate'>{r.name}</span>
-              <div className='text-[11px] text-qmuted'>
-                {r.cost} coins | {ll}
-                {r.requireApproval ? ' | Approval req.' : ''}
+              <div>
+                <div className='font-semibold text-qslate'>{r.name}</div>
+                <div className='text-[11px] text-qmuted'>
+                  {r.cost} coins | {ll}
+                  {r.requireApproval ? ' | Approval req.' : ''}
+                </div>
               </div>
             </div>
-            <div className='flex gap-1.5'>
-              <button
-                onClick={() => {
-                  ctx.saveCfg({
-                    ...cfg!,
-                    rewards: rewards.map(x => {
-                      return x.id === r.id ? { ...x, active: !x.active } : x;
-                    }),
-                  });
-                }}
-                className={
-                  'rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body ' +
-                  (r.active ? 'bg-qteal text-white' : 'bg-qcoral text-white')
-                }
-              >
-                {r.active ? 'On' : 'Off'}
-              </button>
-              <button
-                onClick={() => {
-                  setEditReward({ ...r });
-                }}
-                className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
-              >
-                <FontAwesomeIcon icon={faPenToSquare} />
-                <span className='sr-only'>Edit {r.name}</span>
-              </button>
-              <button
-                onClick={() => {
-                  try {
-                    if (localStorage.getItem(getSkipKey()) === '1') {
-                      removeReward(r.id);
-                      return;
-                    }
-                  } catch (_e) {}
-                  setDeleteReward(r);
-                }}
-                className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
-              >
-                <FontAwesomeIcon icon={faTrashCan} />
-                <span className='sr-only'>Delete {r.name}</span>
-              </button>
-            </div>
-          </div>
+            <span
+              className={
+                'rounded-badge px-2.5 py-1 text-[11px] font-bold shrink-0 ' +
+                (r.active
+                  ? 'bg-qteal-dim text-qteal'
+                  : 'bg-qcoral-dim text-qcoral')
+              }
+            >
+              {r.active ? 'Active' : 'Off'}
+            </span>
+          </button>
         );
       })}
-      {(addReward || editReward) && (
-        <Modal
-          title={editReward ? 'Edit Loot' : 'Add Loot'}
-          onClose={() => {
-            setAddReward(null);
-            setEditReward(null);
-          }}
+
+      {activeForm && (
+        <FullScreenSlideUp
+          title={editReward ? 'Edit Loot' : 'New Loot'}
+          cancelLabel='Cancel'
+          actionLabel={editReward ? 'Save' : 'Add'}
+          actionDisabled={!activeForm.name}
+          onCancel={closeForm}
+          onAction={saveReward}
         >
           <RewardForm
-            reward={(editReward || addReward)!}
-            onSave={r => {
-              if (editReward) {
-                ctx.saveCfg({
-                  ...cfg!,
-                  rewards: (cfg!.rewards || []).map(x => {
-                    return x.id === r.id ? r : x;
-                  }),
-                });
-              } else {
-                ctx.saveCfg({
-                  ...cfg!,
-                  rewards: (cfg!.rewards || []).concat([
-                    {
-                      ...r,
-                      id: 'r' + Date.now(),
-                      active: true,
-                    },
-                  ]),
-                });
-              }
-              setAddReward(null);
-              setEditReward(null);
+            reward={activeForm}
+            onChange={r => {
+              if (editReward) setEditReward(r);
+              else setAddReward(r);
             }}
-            onCancel={() => {
-              setAddReward(null);
-              setEditReward(null);
-            }}
+            onUsePreset={!editReward ? () => setShowPreset(true) : undefined}
           />
-        </Modal>
+          {editReward && (
+            <div className='mt-8 text-center'>
+              <button
+                type='button'
+                onClick={() => setDeleteReward(editReward)}
+                className='bg-transparent border-none cursor-pointer font-body text-qred text-sm'
+              >
+                Delete Loot
+              </button>
+            </div>
+          )}
+        </FullScreenSlideUp>
+      )}
+
+      {showPreset && (
+        <LootPresetScreen
+          onSelect={preset => {
+            if (addReward) {
+              setAddReward({
+                ...addReward,
+                name: preset.name,
+                icon: preset.icon,
+                cost: preset.cost,
+              });
+            }
+            setShowPreset(false);
+          }}
+          onBack={() => setShowPreset(false)}
+        />
       )}
 
       {deleteReward && (
@@ -245,6 +260,7 @@ export default function RewardsTab(): React.ReactElement {
           onConfirm={() => {
             removeReward(deleteReward.id);
             setDeleteReward(null);
+            setEditReward(null);
           }}
           onCancel={() => setDeleteReward(null)}
         />

@@ -98,8 +98,10 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
           tier: t.tier,
           windowStart: t.windowStart,
           windowEnd: t.windowEnd,
-          daily: t.daily,
-          dueDay: t.dueDay,
+          frequency: t.frequency || 'daily',
+          dueDays: t.dueDays || [],
+          photoRequired: t.photoRequired !== false,
+          createdAt: t.createdAt,
         });
       });
       setCfg(prev => {

@@ -286,6 +286,7 @@ html.nav-back::view-transition-new(root) {
 /* Quest input base */
 @utility quest-input {
   width: 100%;
+  box-sizing: border-box;
   background: var(--color-qinput);
   border: 1.5px solid var(--color-qinput-border);
   border-radius: var(--radius-badge);
@@ -294,6 +295,12 @@ html.nav-back::view-transition-new(root) {
   font-size: 14px;
   font-family: var(--font-body);
   transition: border-color 0.2s;
+}
+
+/* Prevent iOS time inputs from overflowing their container */
+input[type='time'].quest-input {
+  min-width: 0;
+  -webkit-appearance: none;
 }
 
 .quest-input:focus {

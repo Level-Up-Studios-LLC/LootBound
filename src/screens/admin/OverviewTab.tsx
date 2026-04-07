@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFamilyPants } from '../../fa.ts';
+import { faCoins, faChevronRight, faFamilyPants } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE, altBg } from '../../constants.ts';
 import {
@@ -9,7 +9,7 @@ import {
   isTaskActiveToday,
   getLevelTitle,
 } from '../../utils.ts';
-import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
+import ChildProfileSlideUp from '../../components/ChildProfileSlideUp.tsx';
 
 interface OverviewTabProps {
   onSwitchTab: (tab: string) => void;
@@ -18,7 +18,7 @@ interface OverviewTabProps {
 export default function OverviewTab(
   props: OverviewTabProps
 ): React.ReactElement {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [profileChildId, setProfileChildId] = useState<string | null>(null);
   const ctx = useAppContext();
   const children = ctx.children;
   const allU = ctx.allU;
@@ -79,58 +79,40 @@ export default function OverviewTab(
                   Lv.{udata.level || 1} {lt.title}
                 </div>
               </div>
-              <span className='text-qslate font-display'>
-                {(udata.points || 0).toLocaleString()} coins
-              </span>
+              <button
+                onClick={() => setProfileChildId(c.id)}
+                className='bg-qmint rounded-badge px-3 py-1.5 border-none cursor-pointer font-display text-qslate flex items-center gap-1.5 hover:brightness-95 active:scale-[0.97] transition-all'
+                aria-label={`View ${c.name}'s coin balance and history`}
+              >
+                <FontAwesomeIcon
+                  icon={faCoins}
+                  style={FA_ICON_STYLE}
+                  className='text-xs'
+                />
+                <span className='font-bold'>
+                  {(udata.points || 0).toLocaleString()}
+                </span>
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  className='text-[10px] text-qmuted ml-0.5'
+                />
+              </button>
             </div>
-            <div className='flex gap-4 text-[13px] text-qmuted mb-2'>
+            <div className='flex gap-4 text-[13px] text-qmuted'>
               <span>
                 Today: {done}/{tasks.length}
               </span>
               <span>Streak: {udata.streak || 0}</span>
             </div>
-            <div>
-              <span className='text-xs text-qmuted block mb-1'>Adjust:</span>
-              <div className='grid grid-cols-3 gap-1'>
-                {[10, 25, 50, -10, -25, -50].map(p => {
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => {
-                        ctx.addBonus(c.id, p);
-                      }}
-                      aria-label={
-                        p > 0
-                          ? `Add ${p} coins to ${c.name}`
-                          : `Remove ${Math.abs(p)} coins from ${c.name}`
-                      }
-                      className={
-                        'rounded-[6px] px-2 py-1.5 text-xs font-bold border-none cursor-pointer font-body ' +
-                        (p > 0
-                          ? 'bg-qblue-dim text-qblue'
-                          : 'bg-qred-dim text-qred')
-                      }
-                    >
-                      {p > 0 ? '+' : ''}
-                      {p}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <PurchasesToggle
-              id={c.id}
-              redeems={udata.redemptions || []}
-              isOpen={expanded[c.id] || false}
-              onToggle={id => {
-                const next = { ...expanded };
-                next[id] = !next[id];
-                setExpanded(next);
-              }}
-            />
           </div>
         );
       })}
+      {profileChildId && (
+        <ChildProfileSlideUp
+          childId={profileChildId}
+          onClose={() => setProfileChildId(null)}
+        />
+      )}
     </div>
   );
 }

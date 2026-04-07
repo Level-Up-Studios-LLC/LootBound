@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Reward } from '../../types.ts';
 
 const REWARD_EMOJIS: { emoji: string; label: string }[] = [
@@ -18,14 +18,14 @@ const REWARD_EMOJIS: { emoji: string; label: string }[] = [
 
 interface RewardFormProps {
   reward: Reward;
-  onSave: (reward: Reward) => void;
-  onCancel: () => void;
+  onChange: (reward: Reward) => void;
+  onUsePreset?: () => void;
 }
 
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
-  const [f, setF] = useState<Reward>(props.reward);
+  const f = props.reward;
   const u = <K extends keyof Reward>(k: K, v: Reward[K]): void => {
-    setF(prev => Object.assign({}, prev, { [k]: v }));
+    props.onChange(Object.assign({}, f, { [k]: v }));
   };
   return (
     <div className='flex flex-col gap-4'>
@@ -41,6 +41,17 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
           }}
           className='quest-input'
         />
+        {props.onUsePreset && (
+          <div className='flex justify-end mt-1'>
+            <button
+              type='button'
+              onClick={props.onUsePreset}
+              className='bg-transparent border-none cursor-pointer font-body text-sm font-semibold text-qteal px-0 py-0.5'
+            >
+              Use Preset
+            </button>
+          </div>
+        )}
       </div>
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Icon</label>
@@ -78,9 +89,14 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
           type='number'
           value={f.cost ?? ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const v = e.target.value === '' ? 0 : Number(e.target.value);
-            u('cost', Number.isFinite(v) ? v : 0);
+            if (e.target.value === '') {
+              u('cost', 0);
+            } else {
+              const raw = Number(e.target.value);
+              u('cost', Number.isFinite(raw) ? Math.max(0, raw) : 0);
+            }
           }}
+          onFocus={e => e.target.select()}
           min={0}
           placeholder='0'
           className='quest-input'
@@ -110,7 +126,11 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
             value={f.limitMax || 1}
             min={1}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              u('limitMax', Number(e.target.value) || 1);
+              const raw = Number(e.target.value);
+              u(
+                'limitMax',
+                Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 1
+              );
             }}
             className='quest-input'
           />
@@ -126,22 +146,6 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         />{' '}
         Require parent approval
       </label>
-      <div className='flex gap-3 justify-end'>
-        <button
-          onClick={props.onCancel}
-          className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            if (f.name) props.onSave(f);
-          }}
-          className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
-        >
-          Save
-        </button>
-      </div>
     </div>
   );
 }
