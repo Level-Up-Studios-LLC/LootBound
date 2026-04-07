@@ -54,8 +54,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
 
   const isFormValid = (t: Task & { uid: string }) => {
     if (!t.name) return false;
-    if (t.frequency === 'specific_days' && t.dueDays.length === 0)
-      return false;
+    if (t.frequency === 'specific_days' && t.dueDays.length === 0) return false;
     if (t.windowStart && t.windowEnd && t.windowEnd <= t.windowStart)
       return false;
     return true;

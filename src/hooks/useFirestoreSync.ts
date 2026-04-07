@@ -101,6 +101,7 @@ export function useFirestoreSync(deps: FirestoreSyncDeps) {
           frequency: t.frequency || 'daily',
           dueDays: t.dueDays || [],
           photoRequired: t.photoRequired !== false,
+          createdAt: t.createdAt,
         });
       });
       setCfg(prev => {

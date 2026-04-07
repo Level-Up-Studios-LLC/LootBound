@@ -89,8 +89,8 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
           type='number'
           value={f.cost ?? ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const v = e.target.value === '' ? 0 : Number(e.target.value);
-            u('cost', Number.isFinite(v) ? v : 0);
+            const raw = e.target.value === '' ? 0 : Number(e.target.value);
+            u('cost', Number.isFinite(raw) ? Math.max(0, raw) : 0);
           }}
           min={0}
           placeholder='0'
@@ -121,7 +121,11 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
             value={f.limitMax || 1}
             min={1}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              u('limitMax', Number(e.target.value) || 1);
+              const raw = Number(e.target.value);
+              u(
+                'limitMax',
+                Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 1
+              );
             }}
             className='quest-input'
           />

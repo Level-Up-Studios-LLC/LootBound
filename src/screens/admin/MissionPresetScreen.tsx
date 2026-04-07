@@ -20,6 +20,7 @@ export default function MissionPresetScreen(
         {MISSION_PRESETS.map((preset, i) => (
           <button
             key={i}
+            type='button'
             onClick={() => p.onSelect(preset)}
             className='flex items-center gap-3 w-full bg-white rounded-badge px-4 py-3 border border-qborder cursor-pointer font-body text-left hover:bg-qmint/30 transition-colors'
           >

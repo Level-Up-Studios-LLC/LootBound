@@ -18,5 +18,5 @@ export const LOOT_PRESETS: LootPreset[] = [
   { name: 'Go on a trip', icon: '\u{1F697}', cost: 500 },
   { name: 'Camp out', icon: '\u{26FA}', cost: 400 },
   { name: 'Stay up late', icon: '\u{1F319}', cost: 150 },
-  { name: "Pick dinner menu", icon: '\u{1F37D}', cost: 100 },
+  { name: 'Pick dinner menu', icon: '\u{1F37D}', cost: 100 },
 ];

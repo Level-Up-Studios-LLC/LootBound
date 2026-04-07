@@ -16,6 +16,7 @@ export default function LootPresetScreen(
         {LOOT_PRESETS.map((preset, i) => (
           <button
             key={i}
+            type='button'
             onClick={() => p.onSelect(preset)}
             className='flex flex-col items-center gap-2 bg-white rounded-badge px-3 py-4 border border-qborder cursor-pointer font-body hover:bg-qmint/30 transition-colors'
           >

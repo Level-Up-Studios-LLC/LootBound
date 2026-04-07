@@ -58,6 +58,7 @@ export interface TaskDef {
   frequency: 'daily' | 'specific_days' | 'once';
   dueDays: number[];
   photoRequired: boolean;
+  createdAt?: string;
 }
 
 export interface RewardDef {

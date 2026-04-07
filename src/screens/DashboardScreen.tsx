@@ -2,13 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faBed,
-  faFire,
-  faPartyHorn,
-  faCheck,
-  faHandshake,
-} from '../fa.ts';
+import { faBed, faFire, faPartyHorn, faCheck, faHandshake } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';

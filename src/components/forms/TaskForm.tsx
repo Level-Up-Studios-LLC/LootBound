@@ -164,9 +164,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
                 onClick={() => setFreq(opt)}
                 className={
                   'flex-1 rounded-badge px-3 py-2 font-semibold border-none cursor-pointer font-body text-[13px] ' +
-                  (active
-                    ? 'bg-qteal text-white'
-                    : 'bg-qslate-dim text-qmuted')
+                  (active ? 'bg-qteal text-white' : 'bg-qslate-dim text-qmuted')
                 }
               >
                 {label}
@@ -214,10 +212,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
 
       {/* Photo proof toggle */}
       <div className='flex items-center justify-between'>
-        <label
-          htmlFor='tf-photo'
-          className='text-qslate text-sm font-semibold'
-        >
+        <label htmlFor='tf-photo' className='text-qslate text-sm font-semibold'>
           Photo Proof
         </label>
         <button

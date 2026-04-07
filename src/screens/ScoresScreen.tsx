@@ -37,7 +37,8 @@ function countPerfectDays(
     if (!log) continue;
     const dow = new Date(dt + 'T12:00:00').getDay();
     const activeTasks = tasks.filter(t => {
-      if (t.frequency === 'daily' || t.frequency === 'once') return true;
+      if (t.frequency === 'once') return false; // one-time missions don't count for perfect days
+      if (t.frequency === 'daily') return true;
       if (t.frequency === 'specific_days') return t.dueDays.includes(dow);
       return true;
     });
@@ -109,119 +110,119 @@ export default function ScoresScreen(): React.ReactElement | null {
       <div className='pb-20' ref={containerRef}>
         <KidHeader child={ch} userData={ud} />
         <div className='px-4 pt-3'>
-        <h1 className='font-display text-2xl font-bold mb-4 text-qslate'>
-          My Stats
-        </h1>
-        <div className='bg-qmint rounded-card p-5 mb-4 text-center scores-profile'>
-          <div className='text-[40px] mb-1'>{ch.avatar}</div>
-          <div className='font-display text-xl font-bold text-qslate'>
-            {ch.name}
-          </div>
-          <div className='font-bold text-sm' style={{ color: lt.color }}>
-            Lv.{ud.level || 1} {lt.title}
-          </div>
-        </div>
-        <div className='grid grid-cols-2 gap-3 mb-4'>
-          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
-            <div
-              className={`font-display text-2xl font-bold ${(ud.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}
-            >
-              {(ud.points || 0).toLocaleString()}
-            </div>
-            <div className='text-[10px] text-qmuted font-bold'>COINS</div>
-          </div>
-          <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
-            <div className='font-display text-2xl font-bold text-qslate'>
-              {myDone}/{myTasks.length}
-            </div>
-            <div className='text-[10px] text-qmuted font-bold'>TODAY</div>
-          </div>
-        </div>
-        <div className='grid grid-cols-3 gap-3 mb-4'>
-          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
+          <h1 className='font-display text-2xl font-bold mb-4 text-qslate'>
+            My Stats
+          </h1>
+          <div className='bg-qmint rounded-card p-5 mb-4 text-center scores-profile'>
+            <div className='text-[40px] mb-1'>{ch.avatar}</div>
             <div className='font-display text-xl font-bold text-qslate'>
+              {ch.name}
+            </div>
+            <div className='font-bold text-sm' style={{ color: lt.color }}>
+              Lv.{ud.level || 1} {lt.title}
+            </div>
+          </div>
+          <div className='grid grid-cols-2 gap-3 mb-4'>
+            <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
+              <div
+                className={`font-display text-2xl font-bold ${(ud.points || 0) < 0 ? 'text-red-500' : 'text-qslate'}`}
+              >
+                {(ud.points || 0).toLocaleString()}
+              </div>
+              <div className='text-[10px] text-qmuted font-bold'>COINS</div>
+            </div>
+            <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
+              <div className='font-display text-2xl font-bold text-qslate'>
+                {myDone}/{myTasks.length}
+              </div>
+              <div className='text-[10px] text-qmuted font-bold'>TODAY</div>
+            </div>
+          </div>
+          <div className='grid grid-cols-3 gap-3 mb-4'>
+            <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
+              <div className='font-display text-xl font-bold text-qslate'>
+                <FontAwesomeIcon
+                  icon={faFire}
+                  aria-hidden='true'
+                  style={FA_ICON_STYLE}
+                  className='mr-1 text-sm'
+                />
+                {ud.streak || 0}
+              </div>
+              <div className='text-[10px] text-qmuted font-bold'>STREAK</div>
+            </div>
+            <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
+              <div className='font-display text-xl font-bold text-qslate'>
+                {ud.bestStreak || 0}
+              </div>
+              <div className='text-[10px] text-qmuted font-bold'>BEST</div>
+            </div>
+            <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
+              <div className='font-display text-xl font-bold text-qslate'>
+                {myPerfect}
+              </div>
+              <div className='text-[10px] text-qmuted font-bold'>
+                PERFECT DAYS
+              </div>
+            </div>
+          </div>
+          {sMult > 1 && (
+            <div className='bg-qmint rounded-btn p-3 mb-4 text-center text-[13px] text-qmuted font-semibold'>
               <FontAwesomeIcon
                 icon={faFire}
                 aria-hidden='true'
                 style={FA_ICON_STYLE}
-                className='mr-1 text-sm'
+                className='mr-1'
               />
-              {ud.streak || 0}
+              {sMult}x XP streak bonus active
             </div>
-            <div className='text-[10px] text-qmuted font-bold'>STREAK</div>
-          </div>
-          <div className='bg-qmint rounded-btn p-4 text-center scores-stat'>
-            <div className='font-display text-xl font-bold text-qslate'>
-              {ud.bestStreak || 0}
+          )}
+          <div className='bg-qyellow rounded-card p-4'>
+            <div className='font-bold text-sm text-qslate mb-3 flex items-center gap-2'>
+              <FontAwesomeIcon
+                icon={faMedal}
+                aria-hidden='true'
+                style={FA_ICON_STYLE}
+              />
+              Milestones
             </div>
-            <div className='text-[10px] text-qmuted font-bold'>BEST</div>
-          </div>
-          <div className='bg-qyellow rounded-btn p-4 text-center scores-stat'>
-            <div className='font-display text-xl font-bold text-qslate'>
-              {myPerfect}
-            </div>
-            <div className='text-[10px] text-qmuted font-bold'>
-              PERFECT DAYS
-            </div>
-          </div>
-        </div>
-        {sMult > 1 && (
-          <div className='bg-qmint rounded-btn p-3 mb-4 text-center text-[13px] text-qmuted font-semibold'>
-            <FontAwesomeIcon
-              icon={faFire}
-              aria-hidden='true'
-              style={FA_ICON_STYLE}
-              className='mr-1'
-            />
-            {sMult}x XP streak bonus active
-          </div>
-        )}
-        <div className='bg-qyellow rounded-card p-4'>
-          <div className='font-bold text-sm text-qslate mb-3 flex items-center gap-2'>
-            <FontAwesomeIcon
-              icon={faMedal}
-              aria-hidden='true'
-              style={FA_ICON_STYLE}
-            />
-            Milestones
-          </div>
-          <div className='flex flex-col gap-2'>
-            {(
-              [
-                [3, '+20 coins', ud.bestStreak >= 3],
-                [7, '+75 coins', ud.bestStreak >= 7],
-                [15, '+150 coins', ud.bestStreak >= 15],
-                [30, '+300 coins', ud.bestStreak >= 30],
-              ] as [number, string, boolean][]
-            ).map(m => (
-              <div
-                key={m[0]}
-                className={
-                  'flex justify-between items-center rounded-badge px-3 py-2 ' +
-                  (m[2] ? 'bg-qteal-dim' : 'bg-qbg')
-                }
-              >
-                <span
+            <div className='flex flex-col gap-2'>
+              {(
+                [
+                  [3, '+20 coins', ud.bestStreak >= 3],
+                  [7, '+75 coins', ud.bestStreak >= 7],
+                  [15, '+150 coins', ud.bestStreak >= 15],
+                  [30, '+300 coins', ud.bestStreak >= 30],
+                ] as [number, string, boolean][]
+              ).map(m => (
+                <div
+                  key={m[0]}
                   className={
-                    'text-[13px] font-semibold ' +
-                    (m[2] ? 'text-qteal' : 'text-qmuted')
+                    'flex justify-between items-center rounded-badge px-3 py-2 ' +
+                    (m[2] ? 'bg-qteal-dim' : 'bg-qbg')
                   }
                 >
-                  {m[0]}-day streak
-                </span>
-                <span
-                  className={
-                    'text-[13px] font-bold ' +
-                    (m[2] ? 'text-qteal' : 'text-qmuted')
-                  }
-                >
-                  {m[2] ? '✓ ' : ''}
-                  {m[1]}
-                </span>
-              </div>
-            ))}
+                  <span
+                    className={
+                      'text-[13px] font-semibold ' +
+                      (m[2] ? 'text-qteal' : 'text-qmuted')
+                    }
+                  >
+                    {m[0]}-day streak
+                  </span>
+                  <span
+                    className={
+                      'text-[13px] font-bold ' +
+                      (m[2] ? 'text-qteal' : 'text-qmuted')
+                    }
+                  >
+                    {m[2] ? '✓ ' : ''}
+                    {m[1]}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
         </div>
         <BNav tabs={KID_NAV} />
       </div>

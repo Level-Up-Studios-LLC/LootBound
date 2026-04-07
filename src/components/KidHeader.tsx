@@ -23,27 +23,49 @@ export default function KidHeader(p: KidHeaderProps): React.ReactElement {
     <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-[calc(12px+env(safe-area-inset-top))] pb-2 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
       {/* Row 1: Name + Coin balance */}
       <div className='flex justify-between items-center mb-1.5'>
-        <button
-          onClick={p.onNameTap}
-          className='bg-transparent border-none cursor-pointer p-0 font-display text-lg font-bold text-qslate text-left'
-        >
-          {ch.name} {ch.avatar}
-        </button>
-        <button
-          onClick={p.onCoinTap}
-          className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5 border-none cursor-pointer'
-          role='status'
-          aria-label={`Coin balance: ${(ud.points || 0).toLocaleString()} coins`}
-        >
-          <FontAwesomeIcon
-            icon={faCoins}
-            style={FA_ICON_STYLE}
-            className='text-sm'
-          />
-          <span className='font-display text-lg font-bold text-qslate'>
-            {(ud.points || 0).toLocaleString()}
-          </span>
-        </button>
+        {p.onNameTap ? (
+          <button
+            onClick={p.onNameTap}
+            className='bg-transparent border-none cursor-pointer p-0 font-display text-lg font-bold text-qslate text-left'
+          >
+            {ch.name} {ch.avatar}
+          </button>
+        ) : (
+          <div className='font-display text-lg font-bold text-qslate'>
+            {ch.name} {ch.avatar}
+          </div>
+        )}
+        {p.onCoinTap ? (
+          <button
+            onClick={p.onCoinTap}
+            className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5 border-none cursor-pointer'
+            aria-label={`Coin balance: ${(ud.points || 0).toLocaleString()} coins. Tap to view details.`}
+          >
+            <FontAwesomeIcon
+              icon={faCoins}
+              style={FA_ICON_STYLE}
+              className='text-sm'
+            />
+            <span className='font-display text-lg font-bold text-qslate'>
+              {(ud.points || 0).toLocaleString()}
+            </span>
+          </button>
+        ) : (
+          <div
+            className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5'
+            role='status'
+            aria-label={`Coin balance: ${(ud.points || 0).toLocaleString()} coins`}
+          >
+            <FontAwesomeIcon
+              icon={faCoins}
+              style={FA_ICON_STYLE}
+              className='text-sm'
+            />
+            <span className='font-display text-lg font-bold text-qslate'>
+              {(ud.points || 0).toLocaleString()}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Row 2: Level bar */}
@@ -72,9 +94,7 @@ export default function KidHeader(p: KidHeaderProps): React.ReactElement {
             }}
           />
           <span className='absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white mix-blend-difference'>
-            {lvl >= 20
-              ? 'MAX'
-              : `${xpProg.current} / ${xpProg.needed} XP`}
+            {lvl >= 20 ? 'MAX' : `${xpProg.current} / ${xpProg.needed} XP`}
           </span>
         </div>
       </div>

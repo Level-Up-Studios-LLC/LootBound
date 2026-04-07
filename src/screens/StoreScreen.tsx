@@ -177,7 +177,7 @@ export default function StoreScreen(): React.ReactElement | null {
                     ? na
                       ? 'Request'
                       : 'Purchase'
-                    : 'Purchase'}
+                    : check.reason || 'Purchase'}
                 </button>
               </div>
             );

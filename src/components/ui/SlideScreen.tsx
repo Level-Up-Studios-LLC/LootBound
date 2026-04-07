@@ -15,9 +15,7 @@ interface SlideScreenProps {
   children: React.ReactNode;
 }
 
-export default function SlideScreen(
-  p: SlideScreenProps
-): React.ReactElement {
+export default function SlideScreen(p: SlideScreenProps): React.ReactElement {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
@@ -128,7 +126,6 @@ export default function SlideScreen(
     <div
       ref={panelRef}
       role='dialog'
-      aria-modal='true'
       aria-labelledby={titleId}
       tabIndex={-1}
       className='fixed inset-0 z-[550] bg-white flex flex-col'
@@ -166,7 +163,7 @@ export default function SlideScreen(
               (p.actionDisabled ? 'text-qdim' : 'text-qteal')
             }
           >
-            {p.actionLabel}
+            {p.actionLabel || 'Done'}
           </button>
         ) : (
           <div className='w-12' />

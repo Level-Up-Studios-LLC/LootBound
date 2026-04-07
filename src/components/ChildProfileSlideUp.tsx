@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faMinus, faPlus } from '../fa.ts';
-import { FA_ICON_STYLE } from '../constants.ts';
+import { FA_ICON_STYLE, MIN_COINS } from '../constants.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import { freshUser, getLevelTitle, getToday } from '../utils.ts';
 import FullScreenSlideUp from './ui/FullScreenSlideUp.tsx';
@@ -13,10 +13,10 @@ interface ChildProfileSlideUpProps {
   onClose: () => void;
 }
 
-type HistoryFilter = 'all' | 'tasks' | 'rewards' | 'adjustments';
+type HistoryFilter = 'all' | 'tasks' | 'rewards';
 
 interface HistoryItem {
-  type: 'task' | 'reward' | 'adjustment';
+  type: 'task' | 'reward';
   label: string;
   coins: number;
   date: string;
@@ -50,11 +50,16 @@ export default function ChildProfileSlideUp(
     });
   }
 
-  // Tasks (from taskLog)
+  // Tasks (from taskLog) — only include completed entries, not missed/penalty
   if (ud.taskLog) {
     Object.entries(ud.taskLog).forEach(([date, logs]) => {
       Object.values(logs as Record<string, any>).forEach((entry: any) => {
-        if (entry && entry.points && !entry.rejected) {
+        if (
+          entry &&
+          !entry.rejected &&
+          entry.status !== 'missed' &&
+          typeof entry.points === 'number'
+        ) {
           history.push({
             type: 'task',
             label: `Task "${entry.taskName || 'Mission'}" completed`,
@@ -73,7 +78,6 @@ export default function ChildProfileSlideUp(
     if (filter === 'all') return true;
     if (filter === 'tasks') return h.type === 'task';
     if (filter === 'rewards') return h.type === 'reward';
-    if (filter === 'adjustments') return h.type === 'adjustment';
     return true;
   });
 
@@ -91,12 +95,18 @@ export default function ChildProfileSlideUp(
     grouped[key].push(h);
   });
 
+  const previewBalance = Math.max(MIN_COINS, (ud.points || 0) + adjustAmount);
+
   const doAdjust = async () => {
     if (adjustAmount === 0) return;
-    await ctx.addBonus(p.childId, adjustAmount);
-    setAdjustAmount(0);
-    setAdjustReason('');
-    setShowAdjust(false);
+    try {
+      await ctx.addBonus(p.childId, adjustAmount);
+      setAdjustAmount(0);
+      setAdjustReason('');
+      setShowAdjust(false);
+    } catch (_e) {
+      // addBonus handles its own error notification; keep dialog open
+    }
   };
 
   const initials = child
@@ -128,10 +138,7 @@ export default function ChildProfileSlideUp(
             {(ud.points || 0).toLocaleString()}
           </span>
         </div>
-        <div
-          className='text-xs font-bold mt-0.5'
-          style={{ color: lt.color }}
-        >
+        <div className='text-xs font-bold mt-0.5' style={{ color: lt.color }}>
           Lv.{ud.level || 1} {lt.title}
         </div>
       </div>
@@ -160,7 +167,6 @@ export default function ChildProfileSlideUp(
         <option value='all'>All Records</option>
         <option value='tasks'>Tasks Only</option>
         <option value='rewards'>Rewards Only</option>
-        <option value='adjustments'>Balance Adjustment Only</option>
       </select>
 
       {Object.entries(grouped).map(([dateLabel, items]) => (
@@ -180,11 +186,7 @@ export default function ChildProfileSlideUp(
                     (item.coins >= 0 ? 'bg-qteal' : 'bg-qcoral')
                   }
                 >
-                  {item.type === 'task'
-                    ? '\u2714'
-                    : item.type === 'reward'
-                      ? '\u{1F381}'
-                      : '\u2B50'}
+                  {item.type === 'task' ? '\u2714' : '\u{1F381}'}
                 </div>
                 <div className='flex-1 min-w-0'>
                   <div className='text-sm text-qslate font-medium truncate'>
@@ -215,7 +217,13 @@ export default function ChildProfileSlideUp(
       {/* Adjust dialog */}
       {showAdjust && (
         <Modal title='Adjust' onClose={() => setShowAdjust(false)}>
-          <div className='flex flex-col gap-4'>
+          {/* Stop Escape from propagating to parent FullScreenSlideUp */}
+          <div
+            onKeyDown={e => {
+              if (e.key === 'Escape') e.stopPropagation();
+            }}
+            className='flex flex-col gap-4'
+          >
             {/* +/- stepper */}
             <div className='flex items-center gap-3'>
               <button
@@ -243,11 +251,11 @@ export default function ChildProfileSlideUp(
               </button>
             </div>
 
-            {/* Updated balance preview */}
+            {/* Updated balance preview (clamped to MIN_COINS) */}
             <div className='text-sm text-qmuted'>
               Updated Balance:{' '}
               <span className='font-bold text-qslate'>
-                {((ud.points || 0) + adjustAmount).toLocaleString()}
+                {previewBalance.toLocaleString()}
               </span>
             </div>
 
@@ -256,6 +264,7 @@ export default function ChildProfileSlideUp(
               {[5, 10, 25, 50, 100, -10, -25, -50].map(amt => (
                 <button
                   key={amt}
+                  type='button'
                   onClick={() => setAdjustAmount(amt)}
                   className={
                     'rounded-badge px-3 py-2 text-xs font-bold border-none cursor-pointer font-body ' +

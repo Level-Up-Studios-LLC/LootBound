@@ -153,7 +153,8 @@ export default function TasksScreen(): React.ReactElement | null {
           t.windowStart === task.windowStart &&
           t.windowEnd === task.windowEnd &&
           t.frequency === task.frequency &&
-          JSON.stringify(t.dueDays) === JSON.stringify(task.dueDays)
+          JSON.stringify([...t.dueDays].sort()) ===
+            JSON.stringify([...task.dueDays].sort())
       );
     });
     if (!hasSiblingWithTask) return false;
