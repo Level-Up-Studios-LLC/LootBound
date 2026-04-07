@@ -15,7 +15,6 @@ import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
-import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 import type {
   UserData,
   Child,
@@ -40,7 +39,6 @@ export default function ChildrenTab(): React.ReactElement {
     null
   );
   const [removeChild, setRemoveChild] = useState<Child | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const ctx = useAppContext();
   const children = ctx.children;
@@ -189,16 +187,6 @@ export default function ChildrenTab(): React.ReactElement {
                 </button>
               </div>
             </div>
-            <PurchasesToggle
-              id={c.id}
-              redeems={(allU[c.id] || ({} as UserData)).redemptions || []}
-              isOpen={expanded[c.id] || false}
-              onToggle={id => {
-                const next = { ...expanded };
-                next[id] = !next[id];
-                setExpanded(next);
-              }}
-            />
           </div>
         );
       })}

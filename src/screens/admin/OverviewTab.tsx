@@ -10,7 +10,6 @@ import {
   getLevelTitle,
 } from '../../utils.ts';
 import ChildProfileSlideUp from '../../components/ChildProfileSlideUp.tsx';
-import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
 
 interface OverviewTabProps {
   onSwitchTab: (tab: string) => void;
@@ -19,7 +18,6 @@ interface OverviewTabProps {
 export default function OverviewTab(
   props: OverviewTabProps
 ): React.ReactElement {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [profileChildId, setProfileChildId] = useState<string | null>(null);
   const ctx = useAppContext();
   const children = ctx.children;
@@ -100,22 +98,12 @@ export default function OverviewTab(
                 />
               </button>
             </div>
-            <div className='flex gap-4 text-[13px] text-qmuted mb-2'>
+            <div className='flex gap-4 text-[13px] text-qmuted'>
               <span>
                 Today: {done}/{tasks.length}
               </span>
               <span>Streak: {udata.streak || 0}</span>
             </div>
-            <PurchasesToggle
-              id={c.id}
-              redeems={udata.redemptions || []}
-              isOpen={expanded[c.id] || false}
-              onToggle={id => {
-                const next = { ...expanded };
-                next[id] = !next[id];
-                setExpanded(next);
-              }}
-            />
           </div>
         );
       })}
