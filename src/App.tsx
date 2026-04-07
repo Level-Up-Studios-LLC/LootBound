@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Sentry from '@sentry/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots, faCircleCheck } from './fa.ts';
+import { faCommentDots, faCircleCheck, faRightFromBracket } from './fa.ts';
 import { FA_ICON_STYLE, FEEDBACK_URL } from './constants.ts';
 import { AuthProvider, useAuthContext } from './context/AuthContext.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
@@ -19,7 +19,7 @@ import {
 } from './services/auth.ts';
 import { getStorage, setStorage, removeStorage } from './services/platform.ts';
 import NotificationToast from './components/NotificationToast.tsx';
-import HamburgerMenu from './components/HamburgerMenu.tsx';
+import FullPageMenu from './components/FullPageMenu.tsx';
 import PhotoViewer from './components/PhotoViewer.tsx';
 import RoleSelectScreen from './screens/RoleSelectScreen.tsx';
 import AuthScreen from './screens/AuthScreen.tsx';
@@ -139,6 +139,7 @@ function LoadingScreen() {
 
 function AppInner(props: { onSwitchFamily?: () => void }) {
   const ctx = useAppContext();
+  const [menuOpen, setMenuOpen] = useState(false);
   if (ctx.loading) {
     return <LoadingScreen />;
   }
@@ -167,28 +168,46 @@ function AppInner(props: { onSwitchFamily?: () => void }) {
         ctx.screen !== 'admin' &&
         ctx.curUser &&
         ctx.curUser !== 'parent' && (
-          <div className='fixed top-3 z-[100] w-full max-w-[480px] left-1/2 -translate-x-1/2 flex justify-end pr-3 pointer-events-none'>
+          <div className='fixed top-[calc(12px+env(safe-area-inset-top))] z-[100] w-full max-w-[480px] left-1/2 -translate-x-1/2 flex justify-end pr-3 pointer-events-none'>
             <div className='pointer-events-auto'>
-              <HamburgerMenu
-                items={[
-                  {
-                    id: 'logout',
-                    icon: 'left-from-bracket',
-                    label: 'Logout',
-                    onClick: () => {
-                      if (ctx.onLogout) {
-                        ctx.onLogout();
-                      } else {
-                        ctx.setCurUser(null);
-                        ctx.setScreen('login');
-                      }
-                    },
-                  },
-                ]}
-              />
+              <button
+                onClick={() => setMenuOpen(true)}
+                className='flex flex-col items-center justify-center w-11 h-11 bg-transparent border-none cursor-pointer p-0'
+                aria-label='Menu'
+                aria-haspopup='dialog'
+                aria-expanded={menuOpen}
+              >
+                <FontAwesomeIcon
+                  icon={['fas', 'ellipsis-vertical'] as any}
+                  className='text-qslate text-xl'
+                />
+              </button>
             </div>
           </div>
         )}
+
+      {menuOpen && (
+        <FullPageMenu
+          userName={ctx.currentChild?.name}
+          items={[
+            {
+              id: 'logout',
+              icon: faRightFromBracket,
+              label: 'Logout',
+              destructive: true,
+              onClick: () => {
+                if (ctx.onLogout) {
+                  ctx.onLogout();
+                } else {
+                  ctx.setCurUser(null);
+                  ctx.navigate('login', 'back');
+                }
+              },
+            },
+          ]}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
 
       {ctx.screen === 'login' && (
         <LoginScreen onSwitchFamily={props.onSwitchFamily} />

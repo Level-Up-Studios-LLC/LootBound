@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getToday, buildCoopReviewData } from '../../utils.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
+import { triggerHaptic } from '../../services/platform.ts';
 import { onParentMemberSnapshot } from '../../services/firestoreStorage.ts';
-import HamburgerMenu from '../../components/HamburgerMenu.tsx';
+import {
+  faCircleUser,
+  faChildren,
+  faGear,
+  faRightFromBracket,
+} from '../../fa.ts';
+import FullPageMenu from '../../components/FullPageMenu.tsx';
 import IconBadge from '../../components/IconBadge.tsx';
 import OverviewTab from './OverviewTab.tsx';
 import ApprovalsTab from './ApprovalsTab.tsx';
@@ -16,6 +24,7 @@ import AccountTab from './AccountTab.tsx';
 
 export default function AdminScreen(): React.ReactElement {
   const [atab, setAtab] = useState<string>('overview');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [myName, setMyName] = useState<string | undefined>(undefined);
   const [myPhoto, setMyPhoto] = useState<string | undefined>(undefined);
 
@@ -70,7 +79,7 @@ export default function AdminScreen(): React.ReactElement {
   ];
 
   return (
-    <div className='pb-[72px]'>
+    <div className='pb-[calc(72px+env(safe-area-inset-bottom))]'>
       <div className='sticky top-0 z-[90] bg-white px-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
         <div className='flex justify-between items-center mb-3'>
           <div className='flex items-center gap-2.5'>
@@ -110,49 +119,68 @@ export default function AdminScreen(): React.ReactElement {
               </div>
             </div>
           </div>
-          <HamburgerMenu
-            items={[
-              {
-                id: 'account',
-                icon: 'circle-user',
-                label: 'Account',
-                onClick: () => {
-                  setAtab('account');
-                },
-              },
-              {
-                id: 'children',
-                icon: 'children',
-                label: 'Children',
-                onClick: () => {
-                  setAtab('children');
-                },
-              },
-              {
-                id: 'settings',
-                icon: 'gear',
-                label: 'Settings',
-                onClick: () => {
-                  setAtab('settings');
-                },
-              },
-              {
-                id: 'logout',
-                icon: 'left-from-bracket',
-                label: 'Logout',
-                onClick: () => {
-                  if (ctx.onLogout) {
-                    ctx.onLogout();
-                  } else {
-                    ctx.setCurUser(null);
-                    ctx.setScreen('login');
-                  }
-                },
-              },
-            ]}
-          />
+          <button
+            onClick={() => setMenuOpen(true)}
+            className='flex flex-col items-center justify-center w-11 h-11 bg-transparent border-none cursor-pointer p-0'
+            aria-label='Menu'
+            aria-haspopup='dialog'
+            aria-expanded={menuOpen}
+          >
+            <FontAwesomeIcon
+              icon={['fas', 'ellipsis-vertical'] as any}
+              className='text-qslate text-xl'
+            />
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <FullPageMenu
+          userName={myName}
+          userPhoto={myPhoto}
+          items={[
+            {
+              id: 'account',
+              icon: faCircleUser,
+              label: 'Account',
+              onClick: () => {
+                setAtab('account');
+              },
+            },
+            {
+              id: 'children',
+              icon: faChildren,
+              label: 'Children',
+              onClick: () => {
+                setAtab('children');
+              },
+            },
+            {
+              id: 'settings',
+              icon: faGear,
+              label: 'Settings',
+              onClick: () => {
+                setAtab('settings');
+              },
+            },
+            {
+              id: 'logout',
+              icon: faRightFromBracket,
+              label: 'Logout',
+              destructive: true,
+              onClick: () => {
+                if (ctx.onLogout) {
+                  ctx.onLogout();
+                } else {
+                  ctx.setCurUser(null);
+                  ctx.navigate('login', 'back');
+                }
+              },
+            },
+          ]}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
 
       {/* Tab Content */}
       <div className='px-4 pt-3'>
@@ -167,13 +195,14 @@ export default function AdminScreen(): React.ReactElement {
       </div>
 
       {/* Bottom Navigation */}
-      <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-2 z-[100]'>
+      <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))] z-[100]'>
         {bottomTabs.map(t => {
           const badge = t[3];
           return (
             <button
               key={t[0]}
               onClick={() => {
+                triggerHaptic('light');
                 setAtab(t[0]);
               }}
               className={

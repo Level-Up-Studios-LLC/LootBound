@@ -1,4 +1,5 @@
 import { useAppContext } from '../context/AppContext.tsx';
+import { triggerHaptic } from '../services/platform.ts';
 import IconBadge from './IconBadge.tsx';
 
 interface NavTab {
@@ -27,7 +28,7 @@ export default function BNav(p: BNavProps) {
   }
 
   return (
-    <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-3 z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]'>
+    <div className='fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] flex justify-around bg-white py-2 pb-[calc(12px+env(safe-area-inset-bottom))] z-50 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]'>
       {p.tabs.map(t => {
         const isActive = ctx.screen === t.id;
         const badge = t.id === 'tasks' ? missionBadge : 0;
@@ -35,7 +36,8 @@ export default function BNav(p: BNavProps) {
           <button
             key={t.id}
             onClick={() => {
-              ctx.setScreen(t.id);
+              triggerHaptic('light');
+              ctx.navigate(t.id);
             }}
             aria-current={isActive ? 'page' : undefined}
             className={

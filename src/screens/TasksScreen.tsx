@@ -231,339 +231,340 @@ export default function TasksScreen(): React.ReactElement | null {
           />
         )}
         <ul role='list' className='flex flex-col gap-3 list-none p-0 m-0'>
-        {sorted.map((t, idx) => {
-          const entry = tLog[t.id];
-          const isRej = entry && entry.rejected;
-          const isDone = entry && !entry.rejected && entry.status !== 'missed';
-          const isMissed =
-            entry && entry.status === 'missed' && !entry.rejected;
-          const baseStatus = getTaskStatus(
-            t,
-            null,
-            ctx.cfg ? ctx.cfg.bedtime : undefined
-          );
+          {sorted.map((t, idx) => {
+            const entry = tLog[t.id];
+            const isRej = entry && entry.rejected;
+            const isDone =
+              entry && !entry.rejected && entry.status !== 'missed';
+            const isMissed =
+              entry && entry.status === 'missed' && !entry.rejected;
+            const baseStatus = getTaskStatus(
+              t,
+              null,
+              ctx.cfg ? ctx.cfg.bedtime : undefined
+            );
 
-          // Co-op awareness
-          const coopReq = getCoopForTask(t.id, coopRequests, curUser, today);
-          const isCoop = !!coopReq;
-          const isInitiator = coopReq?.initiatorId === curUser;
+            // Co-op awareness
+            const coopReq = getCoopForTask(t.id, coopRequests, curUser, today);
+            const isCoop = !!coopReq;
+            const isInitiator = coopReq?.initiatorId === curUser;
 
-          // Determine co-op-specific status label key
-          const getCoopStatusKey = (): string | null => {
-            if (!coopReq) return null;
-            if (
-              coopReq.status === 'pending_partner' ||
-              coopReq.status === 'pending_parent'
-            )
-              return 'coopPending';
-            if (coopReq.status === 'expired') return 'coopFailed';
-            if (
-              coopReq.status === 'cancelled' ||
-              coopReq.status === 'declined' ||
-              coopReq.status === 'denied'
-            )
-              return 'coopFailed';
-            if (coopReq.status === 'completed') return 'coopComplete';
-            if (coopReq.status === 'approved') {
-              // Check if this kid completed their part
-              const myPart = isInitiator
-                ? coopReq.initiatorCompleted
-                : coopReq.partnerCompleted;
-              if (myPart) return 'coopWaiting'; // done, waiting on partner
-              return 'coopReady'; // approved, ready to work
-            }
-            return null;
-          };
-
-          const coopStatusKey = getCoopStatusKey();
-          const status =
-            coopStatusKey ||
-            (isDone
-              ? entry.status
-              : isMissed
-                ? 'missed'
-                : isRej
-                  ? baseStatus === 'missed'
-                    ? 'missed'
-                    : 'rejected'
-                  : baseStatus);
-
-          const sl = SL[status] || {
-            text: '',
-            color: '#64748b',
-            bg: 'transparent',
-          };
-
-          // Co-op cards waiting for partner/parent can't be completed
-          const coopPending =
-            coopReq &&
-            (coopReq.status === 'pending_partner' ||
-              coopReq.status === 'pending_parent');
-          // This kid already completed their part
-          const coopMyPartDone =
-            coopReq &&
-            coopReq.status === 'approved' &&
-            (isInitiator
-              ? coopReq.initiatorCompleted
-              : coopReq.partnerCompleted);
-
-          // Co-op request is in a terminal state and should not be completable
-          const coopTerminal =
-            coopReq &&
-            [
-              'completed',
-              'expired',
-              'cancelled',
-              'denied',
-              'declined',
-            ].includes(coopReq.status);
-
-          // For co-op tasks, show split coins (0 for failed co-op states)
-          const coopFailed = coopStatusKey === 'coopFailed';
-          const displayCoins =
-            isCoop && coopReq
-              ? coopFailed
-                ? 0
-                : Math.floor(
-                    (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
-                  )
-              : isDone
-                ? entry.points
-                : isMissed
-                  ? entry.points
-                  : tp(t.tier);
-          const xpVal = isDone
-            ? entry.xp || 0
-            : isMissed || coopTerminal
-              ? 0
-              : tierCfgFn(t.tier).xp;
-
-          const cardBg = isCoop
-            ? 'bg-qcoop'
-            : idx % 2 === 0
-              ? 'bg-qmint'
-              : 'bg-qyellow';
-          const dimBg = isCoop
-            ? 'bg-qcoop-dim'
-            : idx % 2 === 0
-              ? 'bg-qmint-dim'
-              : 'bg-qyellow-dim';
-
-          const canComplete =
-            !isDone &&
-            !isMissed &&
-            status !== 'missed' &&
-            !coopPending &&
-            !coopMyPartDone &&
-            !coopTerminal &&
-            // Co-op tasks can be completed when approved (doComplete delegates to completeCoopTask)
-            (!isCoop || coopReq?.status === 'approved');
-
-          // Get partner info for CoopBadge
-          const coopPartnerName =
-            isCoop && coopReq
-              ? isInitiator
-                ? coopReq.partnerName
-                : coopReq.initiatorName
-              : '';
-          const coopPartnerAvatar =
-            isCoop && coopReq
-              ? (() => {
-                  const p = ctx.getChild(
-                    isInitiator ? coopReq.partnerId : coopReq.initiatorId
-                  );
-                  return p?.avatar;
-                })()
-              : undefined;
-
-          const isSettled =
-            isDone || isMissed || coopMyPartDone || coopTerminal;
-
-          return (
-            <li
-              key={t.id}
-              className={
-                (isSettled ? dimBg : cardBg) + ' rounded-btn p-4 task-card'
+            // Determine co-op-specific status label key
+            const getCoopStatusKey = (): string | null => {
+              if (!coopReq) return null;
+              if (
+                coopReq.status === 'pending_partner' ||
+                coopReq.status === 'pending_parent'
+              )
+                return 'coopPending';
+              if (coopReq.status === 'expired') return 'coopFailed';
+              if (
+                coopReq.status === 'cancelled' ||
+                coopReq.status === 'declined' ||
+                coopReq.status === 'denied'
+              )
+                return 'coopFailed';
+              if (coopReq.status === 'completed') return 'coopComplete';
+              if (coopReq.status === 'approved') {
+                // Check if this kid completed their part
+                const myPart = isInitiator
+                  ? coopReq.initiatorCompleted
+                  : coopReq.partnerCompleted;
+                if (myPart) return 'coopWaiting'; // done, waiting on partner
+                return 'coopReady'; // approved, ready to work
               }
-              style={{
-                borderLeft: `3px solid ${isCoop ? '#5ec4d4' : sl.color}`,
-              }}
-            >
-              <div className='flex justify-between items-start'>
-                <div className='flex-1 min-w-0'>
-                  <div
+              return null;
+            };
+
+            const coopStatusKey = getCoopStatusKey();
+            const status =
+              coopStatusKey ||
+              (isDone
+                ? entry.status
+                : isMissed
+                  ? 'missed'
+                  : isRej
+                    ? baseStatus === 'missed'
+                      ? 'missed'
+                      : 'rejected'
+                    : baseStatus);
+
+            const sl = SL[status] || {
+              text: '',
+              color: '#64748b',
+              bg: 'transparent',
+            };
+
+            // Co-op cards waiting for partner/parent can't be completed
+            const coopPending =
+              coopReq &&
+              (coopReq.status === 'pending_partner' ||
+                coopReq.status === 'pending_parent');
+            // This kid already completed their part
+            const coopMyPartDone =
+              coopReq &&
+              coopReq.status === 'approved' &&
+              (isInitiator
+                ? coopReq.initiatorCompleted
+                : coopReq.partnerCompleted);
+
+            // Co-op request is in a terminal state and should not be completable
+            const coopTerminal =
+              coopReq &&
+              [
+                'completed',
+                'expired',
+                'cancelled',
+                'denied',
+                'declined',
+              ].includes(coopReq.status);
+
+            // For co-op tasks, show split coins (0 for failed co-op states)
+            const coopFailed = coopStatusKey === 'coopFailed';
+            const displayCoins =
+              isCoop && coopReq
+                ? coopFailed
+                  ? 0
+                  : Math.floor(
+                      (coopReq.coinOverride ?? tierCfgFn(t.tier).coins) / 2
+                    )
+                : isDone
+                  ? entry.points
+                  : isMissed
+                    ? entry.points
+                    : tp(t.tier);
+            const xpVal = isDone
+              ? entry.xp || 0
+              : isMissed || coopTerminal
+                ? 0
+                : tierCfgFn(t.tier).xp;
+
+            const cardBg = isCoop
+              ? 'bg-qcoop'
+              : idx % 2 === 0
+                ? 'bg-qmint'
+                : 'bg-qyellow';
+            const dimBg = isCoop
+              ? 'bg-qcoop-dim'
+              : idx % 2 === 0
+                ? 'bg-qmint-dim'
+                : 'bg-qyellow-dim';
+
+            const canComplete =
+              !isDone &&
+              !isMissed &&
+              status !== 'missed' &&
+              !coopPending &&
+              !coopMyPartDone &&
+              !coopTerminal &&
+              // Co-op tasks can be completed when approved (doComplete delegates to completeCoopTask)
+              (!isCoop || coopReq?.status === 'approved');
+
+            // Get partner info for CoopBadge
+            const coopPartnerName =
+              isCoop && coopReq
+                ? isInitiator
+                  ? coopReq.partnerName
+                  : coopReq.initiatorName
+                : '';
+            const coopPartnerAvatar =
+              isCoop && coopReq
+                ? (() => {
+                    const p = ctx.getChild(
+                      isInitiator ? coopReq.partnerId : coopReq.initiatorId
+                    );
+                    return p?.avatar;
+                  })()
+                : undefined;
+
+            const isSettled =
+              isDone || isMissed || coopMyPartDone || coopTerminal;
+
+            return (
+              <li
+                key={t.id}
+                className={
+                  (isSettled ? dimBg : cardBg) + ' rounded-btn p-4 task-card'
+                }
+                style={{
+                  borderLeft: `3px solid ${isCoop ? '#5ec4d4' : sl.color}`,
+                }}
+              >
+                <div className='flex justify-between items-start'>
+                  <div className='flex-1 min-w-0'>
+                    <div
+                      className={
+                        'text-sm font-semibold text-qslate flex items-center gap-1.5' +
+                        (isDone || coopTerminal ? ' line-through' : '')
+                      }
+                    >
+                      <span
+                        className='text-[10px] font-bold px-1.5 py-0.5 rounded-badge'
+                        style={{
+                          color: TIER_COLORS[t.tier] || '#6b7280',
+                          background: (TIER_COLORS[t.tier] || '#6b7280') + '18',
+                        }}
+                      >
+                        {t.tier}
+                      </span>
+                      {isCoop && (
+                        <FontAwesomeIcon
+                          icon={faHandshake}
+                          className='text-qcyan text-xs'
+                          aria-hidden='true'
+                        />
+                      )}
+                      {t.name}
+                    </div>
+                    <div className='text-[11px] text-qmuted'>
+                      {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
+                      {!t.daily && t.dueDay != null
+                        ? ` | ${DAYS_SHORT[t.dueDay]}`
+                        : ''}
+                    </div>
+                    {isCoop && (
+                      <div className='mt-1'>
+                        <CoopBadge
+                          partnerName={coopPartnerName}
+                          partnerAvatar={coopPartnerAvatar}
+                        />
+                      </div>
+                    )}
+                    {isRej && !isCoop && (
+                      <div className='text-[11px] text-qpink mt-0.5'>
+                        Parent requested redo
+                      </div>
+                    )}
+                    {coopPending && (
+                      <div className='text-[11px] text-qmuted mt-0.5 italic'>
+                        {coopReq!.status === 'pending_partner'
+                          ? `Waiting for ${isInitiator ? coopReq!.partnerName : coopReq!.initiatorName}...`
+                          : 'Awaiting parent approval'}
+                      </div>
+                    )}
+                    {coopMyPartDone && (
+                      <div className='text-[11px] text-qcyan mt-0.5 italic'>
+                        Done! Waiting for{' '}
+                        {isInitiator
+                          ? coopReq!.partnerName
+                          : coopReq!.initiatorName}
+                        ...
+                      </div>
+                    )}
+                  </div>
+                  <div className='flex flex-col items-end gap-1'>
+                    <Badge status={status} />
+                    <div className='text-sm font-bold font-display text-qslate'>
+                      {isSettled
+                        ? displayCoins > 0
+                          ? `+${displayCoins}`
+                          : displayCoins
+                        : displayCoins}{' '}
+                      coins
+                    </div>
+                    <div className='text-[10px] text-qmuted font-semibold'>
+                      {isDone || (isCoop && coopReq?.status === 'completed')
+                        ? `+${xpVal} XP`
+                        : isSettled
+                          ? '0 XP'
+                          : `${xpVal} XP`}
+                    </div>
+                  </div>
+                </div>
+                {isDone && entry.photo && (
+                  <button
+                    onClick={() => {
+                      setViewPhoto(entry.photo);
+                    }}
+                    className='text-[12px] text-qteal bg-transparent border-none cursor-pointer font-body mt-1 py-1.5 px-2 -ml-2 rounded-badge hover:underline hover:bg-qteal/5'
+                  >
+                    View photo proof
+                  </button>
+                )}
+                {canComplete && (
+                  <button
+                    onClick={() => {
+                      if (
+                        !isRej &&
+                        !window.confirm(
+                          'Take a photo of your completed mission as proof!'
+                        )
+                      )
+                        return;
+                      startCapture(t.id);
+                    }}
+                    aria-label={`Complete ${t.name}`}
                     className={
-                      'text-sm font-semibold text-qslate flex items-center gap-1.5' +
-                      (isDone || coopTerminal ? ' line-through' : '')
+                      'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
+                      (isCoop
+                        ? 'bg-qcyan'
+                        : isRej
+                          ? 'bg-qcoral'
+                          : status === 'active'
+                            ? 'bg-qteal'
+                            : status === 'upcoming'
+                              ? 'bg-qpurple'
+                              : 'bg-qorange')
                     }
                   >
-                    <span
-                      className='text-[10px] font-bold px-1.5 py-0.5 rounded-badge'
-                      style={{
-                        color: TIER_COLORS[t.tier] || '#6b7280',
-                        background: (TIER_COLORS[t.tier] || '#6b7280') + '18',
-                      }}
-                    >
-                      {t.tier}
-                    </span>
-                    {isCoop && (
-                      <FontAwesomeIcon
-                        icon={faHandshake}
-                        className='text-qcyan text-xs'
-                        aria-hidden='true'
-                      />
-                    )}
-                    {t.name}
-                  </div>
-                  <div className='text-[11px] text-qmuted'>
-                    {fmtTime(t.windowStart)} - {fmtTime(t.windowEnd)}
-                    {!t.daily && t.dueDay != null
-                      ? ` | ${DAYS_SHORT[t.dueDay]}`
-                      : ''}
-                  </div>
-                  {isCoop && (
-                    <div className='mt-1'>
-                      <CoopBadge
-                        partnerName={coopPartnerName}
-                        partnerAvatar={coopPartnerAvatar}
-                      />
-                    </div>
-                  )}
-                  {isRej && !isCoop && (
-                    <div className='text-[11px] text-qpink mt-0.5'>
-                      Parent requested redo
-                    </div>
-                  )}
-                  {coopPending && (
-                    <div className='text-[11px] text-qmuted mt-0.5 italic'>
-                      {coopReq!.status === 'pending_partner'
-                        ? `Waiting for ${isInitiator ? coopReq!.partnerName : coopReq!.initiatorName}...`
-                        : 'Awaiting parent approval'}
-                    </div>
-                  )}
-                  {coopMyPartDone && (
-                    <div className='text-[11px] text-qcyan mt-0.5 italic'>
-                      Done! Waiting for{' '}
-                      {isInitiator
-                        ? coopReq!.partnerName
-                        : coopReq!.initiatorName}
-                      ...
-                    </div>
-                  )}
-                </div>
-                <div className='flex flex-col items-end gap-1'>
-                  <Badge status={status} />
-                  <div className='text-sm font-bold font-display text-qslate'>
-                    {isSettled
-                      ? displayCoins > 0
-                        ? `+${displayCoins}`
-                        : displayCoins
-                      : displayCoins}{' '}
-                    coins
-                  </div>
-                  <div className='text-[10px] text-qmuted font-semibold'>
-                    {isDone || (isCoop && coopReq?.status === 'completed')
-                      ? `+${xpVal} XP`
-                      : isSettled
-                        ? '0 XP'
-                        : `${xpVal} XP`}
-                  </div>
-                </div>
-              </div>
-              {isDone && entry.photo && (
-                <button
-                  onClick={() => {
-                    setViewPhoto(entry.photo);
-                  }}
-                  className='text-[12px] text-qteal bg-transparent border-none cursor-pointer font-body mt-1 py-1.5 px-2 -ml-2 rounded-badge hover:underline hover:bg-qteal/5'
-                >
-                  View photo proof
-                </button>
-              )}
-              {canComplete && (
-                <button
-                  onClick={() => {
-                    if (
-                      !isRej &&
-                      !window.confirm(
-                        'Take a photo of your completed mission as proof!'
-                      )
-                    )
-                      return;
-                    startCapture(t.id);
-                  }}
-                  aria-label={`Complete ${t.name}`}
-                  className={
-                    'w-full text-white rounded-badge py-2.5 text-[13px] font-bold mt-3 border-none cursor-pointer font-body transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] ' +
-                    (isCoop
-                      ? 'bg-qcyan'
+                    <FontAwesomeIcon
+                      icon={faCamera}
+                      className='mr-1.5'
+                      aria-hidden='true'
+                    />
+                    {isCoop
+                      ? 'Complete Co-op + Photo'
                       : isRej
-                        ? 'bg-qcoral'
-                        : status === 'active'
-                          ? 'bg-qteal'
-                          : status === 'upcoming'
-                            ? 'bg-qpurple'
-                            : 'bg-qorange')
-                  }
-                >
-                  <FontAwesomeIcon
-                    icon={faCamera}
-                    className='mr-1.5'
-                    aria-hidden='true'
-                  />
-                  {isCoop
-                    ? 'Complete Co-op + Photo'
-                    : isRej
-                      ? 'Redo + Photo'
-                      : status === 'upcoming'
-                        ? 'Early (+25%) + Photo'
-                        : status === 'overdue'
-                          ? 'Late (50%) + Photo'
-                          : 'Complete + Photo'}
-                </button>
-              )}
-              {/* Co-op request button for solo tasks */}
-              {canComplete && !isCoop && canShowCoopButton(t) && (
-                <button
-                  onClick={e => {
-                    coopTriggerRef.current = e.currentTarget;
-                    setCoopTask(t);
-                  }}
-                  aria-haspopup='dialog'
-                  aria-label={`Start co-op for ${t.name}`}
-                  className='w-full bg-qcoop-dim text-qcyan rounded-badge py-2 text-[12px] font-semibold mt-2 border-none cursor-pointer font-body flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-[0.98] transition-all'
-                >
-                  <FontAwesomeIcon icon={faHandshake} />
-                  Co-op with sibling
-                </button>
-              )}
-              {isDone && !isCoop && (
-                <div className='text-xs mt-1.5' style={{ color: sl.color }}>
-                  {status === 'early'
-                    ? 'Early! Bonus coins.'
-                    : status === 'ontime'
-                      ? 'On time. Full coins.'
-                      : 'Late. Half coins.'}
-                </div>
-              )}
-              {isCoop && coopReq?.status === 'completed' && (
-                <div className='text-xs mt-1.5 text-qcyan'>
-                  Co-op complete! Coins split.
-                </div>
-              )}
-              {isMissed && !isCoop && (
-                <div className='text-xs mt-1.5 text-qred'>
-                  Missed. Coins deducted.
-                </div>
-              )}
-              {isCoop && coopReq?.status === 'expired' && (
-                <div className='text-xs mt-1.5 text-qred'>
-                  Co-op expired. Mission missed.
-                </div>
-              )}
-            </li>
-          );
-        })}
+                        ? 'Redo + Photo'
+                        : status === 'upcoming'
+                          ? 'Early (+25%) + Photo'
+                          : status === 'overdue'
+                            ? 'Late (50%) + Photo'
+                            : 'Complete + Photo'}
+                  </button>
+                )}
+                {/* Co-op request button for solo tasks */}
+                {canComplete && !isCoop && canShowCoopButton(t) && (
+                  <button
+                    onClick={e => {
+                      coopTriggerRef.current = e.currentTarget;
+                      setCoopTask(t);
+                    }}
+                    aria-haspopup='dialog'
+                    aria-label={`Start co-op for ${t.name}`}
+                    className='w-full bg-qcoop-dim text-qcyan rounded-badge py-2 text-[12px] font-semibold mt-2 border-none cursor-pointer font-body flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-[0.98] transition-all'
+                  >
+                    <FontAwesomeIcon icon={faHandshake} />
+                    Co-op with sibling
+                  </button>
+                )}
+                {isDone && !isCoop && (
+                  <div className='text-xs mt-1.5' style={{ color: sl.color }}>
+                    {status === 'early'
+                      ? 'Early! Bonus coins.'
+                      : status === 'ontime'
+                        ? 'On time. Full coins.'
+                        : 'Late. Half coins.'}
+                  </div>
+                )}
+                {isCoop && coopReq?.status === 'completed' && (
+                  <div className='text-xs mt-1.5 text-qcyan'>
+                    Co-op complete! Coins split.
+                  </div>
+                )}
+                {isMissed && !isCoop && (
+                  <div className='text-xs mt-1.5 text-qred'>
+                    Missed. Coins deducted.
+                  </div>
+                )}
+                {isCoop && coopReq?.status === 'expired' && (
+                  <div className='text-xs mt-1.5 text-qred'>
+                    Co-op expired. Mission missed.
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
         {tomorrowTasks.length > 0 && (
           <button

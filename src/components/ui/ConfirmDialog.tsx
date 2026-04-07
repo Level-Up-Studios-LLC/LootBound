@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { triggerHaptic } from '../../services/platform.ts';
 
 interface ConfirmDialogProps {
   title: string;
@@ -21,7 +22,10 @@ export default function ConfirmDialog(
   const [typed, setTyped] = useState('');
   const [dontAsk, setDontAsk] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
+  const dragStartY = useRef<number | null>(null);
+  const dragCurrentY = useRef(0);
 
   const confirmed =
     !props.requiredText ||
@@ -40,10 +44,71 @@ export default function ConfirmDialog(
     };
   }, []);
 
+  // Drag-to-dismiss handlers (on handle area only)
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+    dragCurrentY.current = 0;
+    if (panelRef.current) {
+      panelRef.current.style.transition = 'none';
+    }
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (dragStartY.current === null) return;
+    const delta = e.touches[0].clientY - dragStartY.current;
+    if (delta > 0) {
+      dragCurrentY.current = delta;
+      if (panelRef.current) {
+        panelRef.current.style.transform = `translateY(${delta}px)`;
+      }
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (dragStartY.current === null) return;
+    const panel = panelRef.current;
+    dragStartY.current = null;
+    if (!panel) return;
+
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    if (dragCurrentY.current > panel.offsetHeight * 0.4) {
+      if (reduced) {
+        panel.style.transition = 'none';
+        panel.style.transform = 'translateY(100%)';
+        props.onCancel();
+      } else {
+        panel.style.transition =
+          'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+        panel.style.transform = 'translateY(100%)';
+        setTimeout(() => props.onCancel(), 300);
+      }
+    } else {
+      panel.style.transition = reduced
+        ? 'none'
+        : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+      panel.style.transform = 'translateY(0)';
+    }
+    dragCurrentY.current = 0;
+  }, [props.onCancel]);
+
+  const handleConfirm = useCallback(() => {
+    if (!confirmed) return;
+    triggerHaptic('light');
+    if (dontAsk && props.dontAskAgainKey) {
+      try {
+        localStorage.setItem(props.dontAskAgainKey, '1');
+      } catch (_e) {}
+    }
+    props.onConfirm();
+  }, [confirmed, dontAsk, props.dontAskAgainKey, props.onConfirm]);
+
   return (
     <div
       ref={overlayRef}
-      className='fixed inset-0 bg-black/70 flex items-center justify-center z-[500] p-5 animate-fade-in'
+      className='fixed inset-0 bg-black/70 flex items-end justify-center z-[500] animate-fade-in'
       role='dialog'
       aria-modal='true'
       aria-labelledby='confirm-dialog-title'
@@ -69,11 +134,22 @@ export default function ConfirmDialog(
       }}
     >
       <div
+        ref={panelRef}
         className={
           (props.bgColor || 'bg-white') +
-          ' rounded-card p-6 w-full max-w-[380px] max-h-[85vh] overflow-y-auto shadow-lg animate-slide-up'
+          ' rounded-t-[20px] p-6 pb-[calc(24px+env(safe-area-inset-bottom))] w-full max-w-[480px] max-h-[85vh] overflow-y-auto shadow-lg animate-slide-up'
         }
       >
+        {/* Drag handle */}
+        <div
+          className='flex justify-center pt-2 pb-3 cursor-grab'
+          aria-hidden='true'
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className='w-10 h-1 rounded-full bg-black/20' />
+        </div>
         <div
           id='confirm-dialog-title'
           className='font-display text-xl font-bold mb-4 text-qslate'
@@ -102,14 +178,7 @@ export default function ConfirmDialog(
                   setTyped(e.target.value);
                 }}
                 onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && confirmed) {
-                    if (dontAsk && props.dontAskAgainKey) {
-                      try {
-                        localStorage.setItem(props.dontAskAgainKey, '1');
-                      } catch (_e) {}
-                    }
-                    props.onConfirm();
-                  }
+                  if (e.key === 'Enter') handleConfirm();
                 }}
                 className='quest-input'
                 autoFocus
@@ -138,15 +207,7 @@ export default function ConfirmDialog(
           </button>
           {props.confirmLabel && (
             <button
-              onClick={() => {
-                if (!confirmed) return;
-                if (dontAsk && props.dontAskAgainKey) {
-                  try {
-                    localStorage.setItem(props.dontAskAgainKey, '1');
-                  } catch (_e) {}
-                }
-                props.onConfirm();
-              }}
+              onClick={handleConfirm}
               disabled={!confirmed}
               className={
                 (props.confirmColor || 'bg-qcoral') +

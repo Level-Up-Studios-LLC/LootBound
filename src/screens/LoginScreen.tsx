@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '../fa.ts';
 import { FA_ICON_STYLE } from '../constants.ts';
 import { saveChild as fsSaveChild } from '../services/firestoreStorage.ts';
+import { triggerHaptic } from '../services/platform.ts';
 import PasswordInput from '../components/ui/PasswordInput.tsx';
 
 interface LoginScreenProps {
@@ -52,11 +53,12 @@ export default function LoginScreen(
     if (!ch) return;
     if (kpin === ch.pin) {
       ctx.setCurUser(pinTarget);
-      ctx.setScreen('dashboard');
+      ctx.navigate('dashboard', 'forward');
       setPinTarget(null);
       setKpin('');
       setPinErr('');
     } else {
+      triggerHaptic('error');
       setPinErr('Wrong PIN');
     }
   };
@@ -81,7 +83,7 @@ export default function LoginScreen(
       return;
     }
     ctx.setCurUser(pinTarget);
-    ctx.setScreen('dashboard');
+    ctx.navigate('dashboard', 'forward');
     setPinTarget(null);
     setCreatePin(false);
     setNewPin('');
