@@ -15,10 +15,11 @@ import {
   altBg,
 } from '../../constants.ts';
 import { fmtTime, getToday } from '../../utils.ts';
-import Modal from '../../components/ui/Modal.tsx';
+import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import TaskForm from '../../components/forms/TaskForm.tsx';
+import MissionPresetScreen from './MissionPresetScreen.tsx';
 import type { Task } from '../../types.ts';
 
 function getSkipKey() {
@@ -38,15 +39,67 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
     task: Task;
     childId: string;
   } | null>(null);
+  const [showPreset, setShowPreset] = useState(false);
 
   const ctx = useAppContext();
   const children = ctx.children;
   const cfg = ctx.cfg;
+  const activeForm = editTask || addTask;
 
   const removeTask = (childId: string, taskId: string) => {
     const nt: Record<string, Task[]> = { ...cfg!.tasks };
     nt[childId] = (nt[childId] || []).filter(x => x.id !== taskId);
     ctx.saveCfg({ ...cfg!, tasks: nt });
+  };
+
+  const isFormValid = (t: Task & { uid: string }) =>
+    !!t.name &&
+    (t.daily || t.dueDay != null) &&
+    (!t.windowStart || !t.windowEnd || t.windowEnd > t.windowStart);
+
+  const saveTask = () => {
+    if (!activeForm || !isFormValid(activeForm)) return;
+    const t = activeForm;
+    const uid = t.uid;
+    const nt: Record<string, Task[]> = { ...cfg!.tasks };
+    if (editTask) {
+      nt[uid] = nt[uid].map(x => {
+        return x.id === t.id
+          ? {
+              ...x,
+              id: t.id,
+              name: t.name,
+              tier: t.tier,
+              windowStart: t.windowStart,
+              windowEnd: t.windowEnd,
+              daily: t.daily,
+              dueDay: t.daily ? null : t.dueDay,
+            }
+          : x;
+      });
+    } else {
+      nt[uid] = (nt[uid] || []).concat([
+        {
+          id: uid.substring(0, 3) + Date.now(),
+          name: t.name,
+          tier: t.tier,
+          windowStart: t.windowStart,
+          windowEnd: t.windowEnd,
+          daily: t.daily,
+          dueDay: t.daily ? null : t.dueDay,
+          createdAt: getToday(),
+        },
+      ]);
+    }
+    ctx.saveCfg({ ...cfg!, tasks: nt });
+    setEditTask(null);
+    setAddTask(null);
+  };
+
+  const closeForm = () => {
+    setEditTask(null);
+    setAddTask(null);
+    setShowPreset(false);
   };
 
   if (children.length === 0) {
@@ -153,59 +206,44 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           </div>
         );
       })}
-      {(editTask || addTask) && (
-        <Modal
-          title={editTask ? 'Edit Mission' : 'Add Mission'}
-          onClose={() => {
-            setEditTask(null);
-            setAddTask(null);
-          }}
+
+      {activeForm && (
+        <FullScreenSlideUp
+          title={editTask ? 'Edit Mission' : 'New Mission'}
+          cancelLabel='Cancel'
+          actionLabel={editTask ? 'Save' : 'Add'}
+          actionDisabled={!isFormValid(activeForm)}
+          onCancel={closeForm}
+          onAction={saveTask}
         >
           <TaskForm
-            task={(editTask || addTask)!}
+            task={activeForm}
             tierConfig={cfg!.tierConfig || DEF_TIER_CONFIG}
-            onSave={t => {
-              const uid = t.uid;
-              const nt: Record<string, Task[]> = { ...cfg!.tasks };
-              if (editTask) {
-                nt[uid] = nt[uid].map(x => {
-                  return x.id === t.id
-                    ? {
-                        ...x,
-                        id: t.id,
-                        name: t.name,
-                        tier: t.tier,
-                        windowStart: t.windowStart,
-                        windowEnd: t.windowEnd,
-                        daily: t.daily,
-                        dueDay: t.daily ? null : t.dueDay,
-                      }
-                    : x;
-                });
-              } else {
-                nt[uid] = (nt[uid] || []).concat([
-                  {
-                    id: uid.substring(0, 3) + Date.now(),
-                    name: t.name,
-                    tier: t.tier,
-                    windowStart: t.windowStart,
-                    windowEnd: t.windowEnd,
-                    daily: t.daily,
-                    dueDay: t.daily ? null : t.dueDay,
-                    createdAt: getToday(),
-                  },
-                ]);
-              }
-              ctx.saveCfg({ ...cfg!, tasks: nt });
-              setEditTask(null);
-              setAddTask(null);
+            onChange={t => {
+              if (editTask) setEditTask(t);
+              else setAddTask(t);
             }}
-            onCancel={() => {
-              setEditTask(null);
-              setAddTask(null);
-            }}
+            onUsePreset={!editTask ? () => setShowPreset(true) : undefined}
           />
-        </Modal>
+        </FullScreenSlideUp>
+      )}
+
+      {showPreset && addTask && (
+        <MissionPresetScreen
+          onSelect={preset => {
+            setAddTask({
+              ...addTask,
+              name: preset.name,
+              tier: preset.tier,
+              windowStart: preset.windowStart,
+              windowEnd: preset.windowEnd,
+              daily: preset.daily,
+              dueDay: null,
+            });
+            setShowPreset(false);
+          }}
+          onBack={() => setShowPreset(false)}
+        />
       )}
 
       {deleteTask && (

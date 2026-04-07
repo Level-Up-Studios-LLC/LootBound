@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Reward } from '../../types.ts';
 
 const REWARD_EMOJIS: { emoji: string; label: string }[] = [
@@ -18,14 +18,13 @@ const REWARD_EMOJIS: { emoji: string; label: string }[] = [
 
 interface RewardFormProps {
   reward: Reward;
-  onSave: (reward: Reward) => void;
-  onCancel: () => void;
+  onChange: (reward: Reward) => void;
 }
 
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
-  const [f, setF] = useState<Reward>(props.reward);
+  const f = props.reward;
   const u = <K extends keyof Reward>(k: K, v: Reward[K]): void => {
-    setF(prev => Object.assign({}, prev, { [k]: v }));
+    props.onChange(Object.assign({}, f, { [k]: v }));
   };
   return (
     <div className='flex flex-col gap-4'>
@@ -126,22 +125,6 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
         />{' '}
         Require parent approval
       </label>
-      <div className='flex gap-3 justify-end'>
-        <button
-          onClick={props.onCancel}
-          className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            if (f.name) props.onSave(f);
-          }}
-          className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
-        >
-          Save
-        </button>
-      </div>
     </div>
   );
 }

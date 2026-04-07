@@ -8,6 +8,7 @@ import type {
 } from '../types.ts';
 import type { ChildData } from '../services/firestoreStorage.ts';
 import { freshUser, slugify } from '../utils.ts';
+import { MIN_COINS } from '../constants.ts';
 import {
   deleteChildData as fsDeleteChildData,
   replaceChildData,
@@ -89,7 +90,7 @@ export function useChildActions(deps: ChildActionsDeps) {
   const addBonus = async (uid: string, pts: number) => {
     const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
     const prevPoints = ud.points || 0;
-    const nextPoints = Math.max(0, prevPoints + pts);
+    const nextPoints = Math.max(MIN_COINS, prevPoints + pts);
     const appliedDelta = nextPoints - prevPoints;
     ud.points = nextPoints;
     try {

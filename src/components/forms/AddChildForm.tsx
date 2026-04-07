@@ -5,9 +5,6 @@ import type { AddChildFormData } from '../../types.ts';
 interface AddChildFormProps {
   form: AddChildFormData;
   onChange: (form: AddChildFormData) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  saveLabel?: string;
 }
 
 export default function AddChildForm(
@@ -82,22 +79,6 @@ export default function AddChildForm(
             );
           })}
         </div>
-      </div>
-      <div className='flex gap-3 justify-end mt-3'>
-        <button
-          onClick={props.onCancel}
-          className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            if (f.name && f.age) props.onSave();
-          }}
-          className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
-        >
-          {props.saveLabel || 'Add'}
-        </button>
       </div>
     </div>
   );

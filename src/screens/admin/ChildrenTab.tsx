@@ -11,7 +11,7 @@ import {
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { AVATARS, COLORS, altBg } from '../../constants.ts';
-import Modal from '../../components/ui/Modal.tsx';
+import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
@@ -208,27 +208,53 @@ export default function ChildrenTab(): React.ReactElement {
       )}
 
       {addChildForm && (
-        <Modal title='Add Child' onClose={() => setAddChildForm(null)}>
+        <FullScreenSlideUp
+          title='Add Child'
+          cancelLabel='Cancel'
+          actionLabel='Add'
+          actionDisabled={!addChildForm.name || !addChildForm.age}
+          onCancel={() => setAddChildForm(null)}
+          onAction={() => {
+            ctx.doAddChild(addChildForm!);
+            setAddChildForm(null);
+          }}
+        >
           <AddChildForm
             form={addChildForm}
             onChange={f => {
               setAddChildForm(f);
             }}
-            onSave={() => {
-              ctx.doAddChild(addChildForm!);
-              setAddChildForm(null);
-            }}
-            onCancel={() => {
-              setAddChildForm(null);
-            }}
           />
-        </Modal>
+        </FullScreenSlideUp>
       )}
 
       {editChild && editChildForm && (
-        <Modal
+        <FullScreenSlideUp
           title='Edit Child'
-          onClose={() => {
+          cancelLabel='Cancel'
+          actionLabel='Save'
+          actionDisabled={!editChildForm.name || !editChildForm.age}
+          onCancel={() => {
+            setEditChild(null);
+            setEditChildForm(null);
+          }}
+          onAction={() => {
+            if (!editChildForm || !editChild || !cfg) return;
+            const updated = cfg.children.map(c => {
+              if (c.id !== editChild.id) return c;
+              return {
+                ...c,
+                name: editChildForm.name,
+                age: (() => {
+                  const parsed = Number(editChildForm.age);
+                  return Number.isNaN(parsed) ? c.age : parsed;
+                })(),
+                avatar: editChildForm.avatar,
+                color: editChildForm.color,
+              };
+            });
+            ctx.saveCfg({ ...cfg, children: updated });
+            ctx.notify(`${editChildForm.name} updated!`);
             setEditChild(null);
             setEditChildForm(null);
           }}
@@ -238,33 +264,8 @@ export default function ChildrenTab(): React.ReactElement {
             onChange={f => {
               setEditChildForm(f);
             }}
-            onSave={() => {
-              if (!editChildForm || !editChild || !cfg) return;
-              const updated = cfg.children.map(c => {
-                if (c.id !== editChild.id) return c;
-                return {
-                  ...c,
-                  name: editChildForm.name,
-                  age: (() => {
-                    const parsed = Number(editChildForm.age);
-                    return Number.isNaN(parsed) ? c.age : parsed;
-                  })(),
-                  avatar: editChildForm.avatar,
-                  color: editChildForm.color,
-                };
-              });
-              ctx.saveCfg({ ...cfg, children: updated });
-              ctx.notify(`${editChildForm.name} updated!`);
-              setEditChild(null);
-              setEditChildForm(null);
-            }}
-            onCancel={() => {
-              setEditChild(null);
-              setEditChildForm(null);
-            }}
-            saveLabel='Save'
           />
-        </Modal>
+        </FullScreenSlideUp>
       )}
 
       {removeChild && (

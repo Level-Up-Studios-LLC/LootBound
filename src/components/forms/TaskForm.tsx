@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DAYS, TIER_ORDER } from '../../constants.ts';
 import { fmtTime } from '../../utils.ts';
 import type { Task, TierConfig } from '../../types.ts';
@@ -6,16 +6,16 @@ import type { Task, TierConfig } from '../../types.ts';
 interface TaskFormProps {
   task: Task & { uid: string };
   tierConfig: Record<string, TierConfig>;
-  onSave: (task: Task & { uid: string }) => void;
-  onCancel: () => void;
+  onChange: (task: Task & { uid: string }) => void;
+  onUsePreset?: () => void;
 }
 
 export default function TaskForm(props: TaskFormProps): React.ReactElement {
-  const [f, setF] = useState<Task & { uid: string }>(props.task);
+  const f = props.task;
   const tc = props.tierConfig;
   type FormState = Task & { uid: string };
   const u = <K extends keyof FormState>(k: K, v: FormState[K]): void => {
-    setF(prev => ({ ...prev, [k]: v }));
+    props.onChange({ ...f, [k]: v });
   };
   return (
     <div className='flex flex-col gap-4'>
@@ -35,6 +35,17 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           }}
           className='quest-input'
         />
+        {props.onUsePreset && (
+          <div className='flex justify-end mt-1'>
+            <button
+              type='button'
+              onClick={props.onUsePreset}
+              className='bg-transparent border-none cursor-pointer font-body text-sm font-semibold text-qteal px-0 py-0.5'
+            >
+              Use Preset
+            </button>
+          </div>
+        )}
       </div>
       <div>
         <label
@@ -170,27 +181,6 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
       )}
       <div className='text-xs text-qmuted'>
         {f.daily ? 'Repeats every day.' : 'Repeats weekly on selected day.'}
-      </div>
-      <div className='flex gap-3 justify-end'>
-        <button
-          onClick={props.onCancel}
-          className='bg-qslate-dim text-qslate rounded-badge px-5 py-2.5 font-semibold border-none cursor-pointer font-body'
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            if (
-              f.name &&
-              (f.daily || f.dueDay != null) &&
-              (!f.windowStart || !f.windowEnd || f.windowEnd > f.windowStart)
-            )
-              props.onSave(f);
-          }}
-          className='bg-qteal text-white rounded-badge px-5 py-2.5 font-bold border-none cursor-pointer font-body'
-        >
-          Save
-        </button>
       </div>
     </div>
   );

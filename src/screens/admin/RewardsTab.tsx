@@ -4,10 +4,11 @@ import { faPlus, faPenToSquare, faTrashCan, faGift } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { altBg } from '../../constants.ts';
-import Modal from '../../components/ui/Modal.tsx';
+import FullScreenSlideUp from '../../components/ui/FullScreenSlideUp.tsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import RewardForm from '../../components/forms/RewardForm.tsx';
+import LootPresetScreen from './LootPresetScreen.tsx';
 import type { Reward } from '../../types.ts';
 
 function getSkipKey() {
@@ -71,14 +72,48 @@ export default function RewardsTab(): React.ReactElement {
   const [addReward, setAddReward] = useState<Reward | null>(null);
   const [editReward, setEditReward] = useState<Reward | null>(null);
   const [deleteReward, setDeleteReward] = useState<Reward | null>(null);
+  const [showPreset, setShowPreset] = useState(false);
 
   const ctx = useAppContext();
   const cfg = ctx.cfg;
   if (!cfg) return <div />;
   const rewards = cfg.rewards || [];
+  const activeForm = editReward || addReward;
 
   const removeReward = (rewardId: string) => {
     ctx.saveCfg({ ...cfg, rewards: rewards.filter(x => x.id !== rewardId) });
+  };
+
+  const saveReward = () => {
+    if (!activeForm || !activeForm.name) return;
+    const r = activeForm;
+    if (editReward) {
+      ctx.saveCfg({
+        ...cfg!,
+        rewards: (cfg!.rewards || []).map(x => {
+          return x.id === r.id ? r : x;
+        }),
+      });
+    } else {
+      ctx.saveCfg({
+        ...cfg!,
+        rewards: (cfg!.rewards || []).concat([
+          {
+            ...r,
+            id: 'r' + Date.now(),
+            active: true,
+          },
+        ]),
+      });
+    }
+    setAddReward(null);
+    setEditReward(null);
+  };
+
+  const closeForm = () => {
+    setAddReward(null);
+    setEditReward(null);
+    setShowPreset(false);
   };
 
   return (
@@ -195,45 +230,52 @@ export default function RewardsTab(): React.ReactElement {
           </div>
         );
       })}
-      {(addReward || editReward) && (
-        <Modal
-          title={editReward ? 'Edit Loot' : 'Add Loot'}
-          onClose={() => {
-            setAddReward(null);
-            setEditReward(null);
-          }}
+
+      {activeForm && (
+        <FullScreenSlideUp
+          title={editReward ? 'Edit Loot' : 'New Loot'}
+          cancelLabel='Cancel'
+          actionLabel={editReward ? 'Save' : 'Add'}
+          actionDisabled={!activeForm.name}
+          onCancel={closeForm}
+          onAction={saveReward}
         >
           <RewardForm
-            reward={(editReward || addReward)!}
-            onSave={r => {
-              if (editReward) {
-                ctx.saveCfg({
-                  ...cfg!,
-                  rewards: (cfg!.rewards || []).map(x => {
-                    return x.id === r.id ? r : x;
-                  }),
-                });
-              } else {
-                ctx.saveCfg({
-                  ...cfg!,
-                  rewards: (cfg!.rewards || []).concat([
-                    {
-                      ...r,
-                      id: 'r' + Date.now(),
-                      active: true,
-                    },
-                  ]),
-                });
-              }
-              setAddReward(null);
-              setEditReward(null);
-            }}
-            onCancel={() => {
-              setAddReward(null);
-              setEditReward(null);
+            reward={activeForm}
+            onChange={r => {
+              if (editReward) setEditReward(r);
+              else setAddReward(r);
             }}
           />
-        </Modal>
+          {!editReward && (
+            <div className='flex justify-center mt-4'>
+              <button
+                type='button'
+                onClick={() => setShowPreset(true)}
+                className='bg-transparent border-none cursor-pointer font-body text-sm font-semibold text-qteal px-0 py-0.5'
+              >
+                Or choose from presets
+              </button>
+            </div>
+          )}
+        </FullScreenSlideUp>
+      )}
+
+      {showPreset && (
+        <LootPresetScreen
+          onSelect={preset => {
+            if (addReward) {
+              setAddReward({
+                ...addReward,
+                name: preset.name,
+                icon: preset.icon,
+                cost: preset.cost,
+              });
+            }
+            setShowPreset(false);
+          }}
+          onBack={() => setShowPreset(false)}
+        />
       )}
 
       {deleteReward && (
