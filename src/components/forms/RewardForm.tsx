@@ -19,6 +19,7 @@ const REWARD_EMOJIS: { emoji: string; label: string }[] = [
 interface RewardFormProps {
   reward: Reward;
   onChange: (reward: Reward) => void;
+  onUsePreset?: () => void;
 }
 
 export default function RewardForm(props: RewardFormProps): React.ReactElement {
@@ -40,6 +41,17 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
           }}
           className='quest-input'
         />
+        {props.onUsePreset && (
+          <div className='flex justify-end mt-1'>
+            <button
+              type='button'
+              onClick={props.onUsePreset}
+              className='bg-transparent border-none cursor-pointer font-body text-sm font-semibold text-qteal px-0 py-0.5'
+            >
+              Use Preset
+            </button>
+          </div>
+        )}
       </div>
       <div>
         <label className='text-qslate font-semibold mb-1 block'>Icon</label>

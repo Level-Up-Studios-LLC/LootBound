@@ -7,7 +7,6 @@ import {
   faFire,
   faPartyHorn,
   faCheck,
-  faCoins,
   faHandshake,
 } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
@@ -15,12 +14,11 @@ import { KID_NAV, FA_ICON_STYLE } from '../constants.ts';
 import Badge from '../components/Badge.tsx';
 import BNav from '../components/BNav.tsx';
 import CoopBadge from '../components/CoopBadge.tsx';
+import KidHeader from '../components/KidHeader.tsx';
 import {
   getTaskStatus,
   fmtTime,
   timeToMin,
-  getLevelTitle,
-  getXpProgress,
   getStreakMultiplier,
   getToday,
   getCoopForTask,
@@ -207,9 +205,6 @@ export default function DashboardScreen(): React.ReactElement | null {
 
   if (!ch || !ud) return null;
 
-  const lvl = ud.level || 1;
-  const lt = getLevelTitle(lvl);
-  const xpProg = getXpProgress(ud.xp || 0, lvl);
   const sMult = getStreakMultiplier(ud.streak || 0);
 
   const coopRequests = ctx.coopRequests;
@@ -244,38 +239,11 @@ export default function DashboardScreen(): React.ReactElement | null {
   return (
     <div className='pb-20' ref={containerRef}>
       {allDone && <Confetti />}
-      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
-        <div className='flex justify-between items-center dash-header'>
-          <div>
-            <div className='font-display text-[22px] font-bold'>
-              Hey {ch.name} {ch.avatar}
-            </div>
-            <div className='text-[12px] text-qmuted'>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </div>
-          </div>
-          <div
-            className='flex items-center gap-1.5 bg-qmint rounded-badge px-3 py-1.5'
-            role='status'
-            aria-label={`Coin balance: ${(ud.points || 0).toLocaleString()} coins`}
-          >
-            <FontAwesomeIcon
-              icon={faCoins}
-              style={FA_ICON_STYLE}
-              className='text-sm'
-            />
-            <span className='font-display text-lg font-bold text-qslate'>
-              {(ud.points || 0).toLocaleString()}
-            </span>
-          </div>
-        </div>
+      <KidHeader child={ch} userData={ud} />
+      <div className='px-4 pt-4'>
         {bedLock && (
           <div
-            className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'
+            className='bg-qcoral-dim rounded-badge px-4 py-2.5 mb-4 text-[13px] text-qcoral text-center'
             role='status'
             aria-live='polite'
           >
@@ -299,49 +267,19 @@ export default function DashboardScreen(): React.ReactElement | null {
             bedtime. Missions are locked for today.
           </div>
         )}
-      </div>
-      <div className='px-4 pt-4'>
-        <div className='bg-qmint rounded-btn p-4 mb-5 dash-xp'>
-          <div className='flex justify-between items-center mb-2'>
-            <div
-              className='font-display font-bold text-sm'
-              style={{ color: lt.color }}
-            >
-              Lv.{lvl} {lt.title}
-            </div>
-            <div className='text-[11px] text-qmuted font-bold'>
-              {lvl >= 20 ? 'MAX' : `${xpProg.current} / ${xpProg.needed} XP`}
-            </div>
-          </div>
-          <div className='h-2.5 bg-qmint-dim rounded-sm'>
-            <div
-              className='h-full rounded-sm transition-all duration-500'
-              role='progressbar'
-              aria-label='XP progress'
-              aria-valuemin={0}
-              {...(xpProg.needed > 0
-                ? {
-                    'aria-valuenow': xpProg.current,
-                    'aria-valuemax': xpProg.needed,
-                  }
-                : { 'aria-valuetext': 'Max level' })}
-              style={{
-                width: `${xpProg.pct}%`,
-                background: ch.color,
-              }}
+        <h1 className='font-display text-2xl font-bold text-qslate mb-4 dash-header'>
+          Dashboard
+        </h1>
+        {sMult > 1 && (
+          <div className='text-[12px] text-qmuted mb-3 font-semibold'>
+            <FontAwesomeIcon
+              icon={faFire}
+              style={FA_ICON_STYLE}
+              className='mr-1'
             />
+            {sMult}x XP streak bonus
           </div>
-          {sMult > 1 && (
-            <div className='text-[11px] text-qmuted mt-1.5 font-semibold'>
-              <FontAwesomeIcon
-                icon={faFire}
-                style={FA_ICON_STYLE}
-                className='mr-1'
-              />
-              {sMult}x XP streak bonus
-            </div>
-          )}
-        </div>
+        )}
         <div className='grid grid-cols-3 gap-3.5 mb-6'>
           <div className='bg-qmint rounded-btn p-4 dash-stat'>
             <div className='font-display text-[22px] font-bold text-qslate'>

@@ -11,16 +11,7 @@ export default function LootPresetScreen(
   p: LootPresetScreenProps
 ): React.ReactElement {
   return (
-    <SlideScreen title='New Reward' backLabel='Cancel' onBack={p.onBack}>
-      <button
-        onClick={p.onBack}
-        className='w-full bg-white border border-qteal rounded-badge px-4 py-3 mb-5 cursor-pointer font-body font-semibold text-qteal text-sm text-center hover:bg-qteal-dim transition-colors'
-      >
-        Add Custom Reward
-      </button>
-      <div className='text-[11px] font-bold text-qmuted uppercase tracking-wide mb-3'>
-        Rewards
-      </div>
+    <SlideScreen title='Choose Preset Loot' onBack={p.onBack}>
       <div className='grid grid-cols-2 gap-3'>
         {LOOT_PRESETS.map((preset, i) => (
           <button

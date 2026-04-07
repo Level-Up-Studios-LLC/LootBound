@@ -23,6 +23,7 @@ import BNav from '../components/BNav.tsx';
 import CoopBadge from '../components/CoopBadge.tsx';
 import CoopInviteCard from '../components/CoopInviteCard.tsx';
 import CoopRequestForm from '../components/forms/CoopRequestForm.tsx';
+import KidHeader from '../components/KidHeader.tsx';
 import Modal from '../components/ui/Modal.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
 import {
@@ -192,14 +193,15 @@ export default function TasksScreen(): React.ReactElement | null {
 
   return (
     <div className='pb-20' ref={containerRef}>
-      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+      <KidHeader child={ch} userData={ud} />
+      <div className='px-4 pt-3 flex flex-col gap-3'>
         <h1 className='font-display text-2xl font-bold text-qslate'>
           Today's Missions
         </h1>
         {bedLock && (
           <div
             role='alert'
-            className='bg-qcoral-dim rounded-badge px-4 py-2.5 mt-3 text-[13px] text-qcoral text-center'
+            className='bg-qcoral-dim rounded-badge px-4 py-2.5 text-[13px] text-qcoral text-center'
           >
             <FontAwesomeIcon
               icon={faBed}
@@ -209,8 +211,6 @@ export default function TasksScreen(): React.ReactElement | null {
             Bedtime cutoff passed. Incomplete missions marked as missed.
           </div>
         )}
-      </div>
-      <div className='px-4 pt-3 flex flex-col gap-3'>
         {/* Pending co-op invites (Kid 2 perspective) */}
         {pendingInvites.length > 0 && (
           <div className='mb-2'>

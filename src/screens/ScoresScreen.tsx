@@ -6,6 +6,7 @@ import { faFire, faTrophy, faMedal } from '../fa.ts';
 import { useAppContext } from '../context/AppContext.tsx';
 import { KID_NAV, FA_ICON_STYLE } from '../constants.ts';
 import BNav from '../components/BNav.tsx';
+import KidHeader from '../components/KidHeader.tsx';
 import {
   freshUser,
   getToday,
@@ -105,7 +106,9 @@ export default function ScoresScreen(): React.ReactElement | null {
     const sMult = getStreakMultiplier(ud.streak || 0);
 
     return (
-      <div className='p-4 pb-20' ref={containerRef}>
+      <div className='pb-20' ref={containerRef}>
+        <KidHeader child={ch} userData={ud} />
+        <div className='px-4 pt-3'>
         <h1 className='font-display text-2xl font-bold mb-4 text-qslate'>
           My Stats
         </h1>
@@ -219,6 +222,7 @@ export default function ScoresScreen(): React.ReactElement | null {
             ))}
           </div>
         </div>
+        </div>
         <BNav tabs={KID_NAV} />
       </div>
     );
@@ -252,15 +256,16 @@ export default function ScoresScreen(): React.ReactElement | null {
 
   return (
     <div className='pb-20' ref={containerRef}>
-      <div className='sticky top-0 z-[90] bg-white pl-4 pr-14 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+      <KidHeader child={ch} userData={ud} />
+      <div className='px-4 pt-3'>
         <h1 className='font-display text-2xl font-bold text-qslate'>
           Leaderboard
         </h1>
-        <div className='text-[12px] text-qmuted -mt-1'>
+        <div className='text-[12px] text-qmuted mb-3'>
           Ranked by perfect days this week
         </div>
       </div>
-      <ol className='px-4 pt-3 flex flex-col gap-4 list-none'>
+      <ol className='px-4 flex flex-col gap-4 list-none'>
         {sorted.map((c, idx) => {
           const udata = allU[c.id] || freshUser();
           const tasks = (cfg!.tasks[c.id] || []).filter(isTaskActiveToday);

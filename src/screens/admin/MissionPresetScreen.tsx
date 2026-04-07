@@ -15,7 +15,7 @@ export default function MissionPresetScreen(
   p: MissionPresetScreenProps
 ): React.ReactElement {
   return (
-    <SlideScreen title='Choose Preset Task' onBack={p.onBack}>
+    <SlideScreen title='Choose Preset Mission' onBack={p.onBack}>
       <div className='flex flex-col gap-2'>
         {MISSION_PRESETS.map((preset, i) => (
           <button

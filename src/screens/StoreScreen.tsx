@@ -3,11 +3,11 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import * as Sentry from '@sentry/react';
 import { useAppContext } from '../context/AppContext.tsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoins, faBagShopping } from '../fa.ts';
-import { FA_ICON_STYLE, KID_NAV } from '../constants.ts';
+import { faBagShopping } from '../fa.ts';
+import { KID_NAV } from '../constants.ts';
 import { triggerHaptic } from '../services/platform.ts';
 import BNav from '../components/BNav.tsx';
+import KidHeader from '../components/KidHeader.tsx';
 import EmptyState from '../components/ui/EmptyState.tsx';
 import { countRedeems } from '../utils.ts';
 import type { Reward } from '../types.ts';
@@ -82,28 +82,11 @@ export default function StoreScreen(): React.ReactElement | null {
 
   return (
     <div className='pb-20' ref={containerRef}>
-      <div className='sticky top-0 z-[90] bg-white pl-4 pr-4 pt-4 pb-3 shadow-[0_2px_6px_rgba(0,0,0,0.04)]'>
+      <KidHeader child={ch} userData={ud} />
+      <div className='px-4 pt-3'>
         <h1 className='font-display text-2xl font-bold text-qslate mb-3'>
           Loot Shop
         </h1>
-        <div className='flex justify-between items-center bg-qmint rounded-btn px-5 py-3 w-full store-balance'>
-          <span className='font-semibold text-qslate'>Balance:</span>
-          <span
-            className='font-display text-[22px] font-bold text-qslate flex items-center gap-1.5'
-            aria-live='polite'
-            aria-atomic='true'
-          >
-            <FontAwesomeIcon
-              icon={faCoins}
-              style={FA_ICON_STYLE}
-              className='text-base'
-              aria-hidden='true'
-            />
-            {(ud.points || 0).toLocaleString()} coins
-          </span>
-        </div>
-      </div>
-      <div className='px-4 pt-3'>
         {pendingR.length > 0 && (
           <div className='mb-4'>
             <div className='text-sm font-bold text-qslate mb-2'>
@@ -166,11 +149,6 @@ export default function StoreScreen(): React.ReactElement | null {
                   {r.cost} coins
                 </div>
                 {li && <div className='text-[11px] text-qmuted'>{li}</div>}
-                {!can && (
-                  <div className='text-[11px] text-qmuted italic'>
-                    {check.reason || 'Not enough coins'}
-                  </div>
-                )}
                 {na && (
                   <div className='text-xs text-qorange'>Needs parent OK</div>
                 )}
@@ -185,7 +163,7 @@ export default function StoreScreen(): React.ReactElement | null {
                   }}
                   aria-label={
                     can
-                      ? `${na ? 'Request' : 'Redeem'} ${r.name} for ${r.cost} coins`
+                      ? `${na ? 'Request' : 'Purchase'} ${r.name} for ${r.cost} coins`
                       : `${r.name} — ${check.reason || 'Need more coins'}`
                   }
                   className={
@@ -198,40 +176,13 @@ export default function StoreScreen(): React.ReactElement | null {
                   {can
                     ? na
                       ? 'Request'
-                      : 'Redeem'
-                    : check.reason || 'Need more coins'}
+                      : 'Purchase'
+                    : 'Purchase'}
                 </button>
               </div>
             );
           })}
         </div>
-        {ud.redemptions && ud.redemptions.length > 0 && (
-          <div>
-            <div className='font-display text-lg font-semibold mb-3 mt-5'>
-              Recent
-            </div>
-            {ud.redemptions
-              .slice(-5)
-              .reverse()
-              .map((r, i) => {
-                const recentBg =
-                  i % 2 === 0 ? 'bg-qmint-dim' : 'bg-qyellow-dim';
-                return (
-                  <div
-                    key={`${r.rewardId}-${r.date}-${i}`}
-                    className={
-                      'flex justify-between rounded-badge px-3 py-2 mb-2 text-[13px] ' +
-                      recentBg
-                    }
-                  >
-                    <span className='text-qslate'>{r.name}</span>
-                    <span className='text-qcoral'>-{r.cost}</span>
-                    <span className='text-qmuted text-xs'>{r.date}</span>
-                  </div>
-                );
-              })}
-          </div>
-        )}
         {confirmR && (
           <div
             ref={modalRef}

@@ -246,18 +246,8 @@ export default function RewardsTab(): React.ReactElement {
               if (editReward) setEditReward(r);
               else setAddReward(r);
             }}
+            onUsePreset={!editReward ? () => setShowPreset(true) : undefined}
           />
-          {!editReward && (
-            <div className='flex justify-center mt-4'>
-              <button
-                type='button'
-                onClick={() => setShowPreset(true)}
-                className='bg-transparent border-none cursor-pointer font-body text-sm font-semibold text-qteal px-0 py-0.5'
-              >
-                Or choose from presets
-              </button>
-            </div>
-          )}
         </FullScreenSlideUp>
       )}
 

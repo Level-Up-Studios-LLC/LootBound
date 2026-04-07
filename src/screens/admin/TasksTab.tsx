@@ -52,41 +52,49 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
     ctx.saveCfg({ ...cfg!, tasks: nt });
   };
 
-  const isFormValid = (t: Task & { uid: string }) =>
-    !!t.name &&
-    (t.daily || t.dueDay != null) &&
-    (!t.windowStart || !t.windowEnd || t.windowEnd > t.windowStart);
+  const isFormValid = (t: Task & { uid: string }) => {
+    if (!t.name) return false;
+    const freq = t.frequency || (t.daily ? 'daily' : 'specific_days');
+    if (freq === 'specific_days' && !(t.dueDays && t.dueDays.length > 0))
+      return false;
+    if (t.windowStart && t.windowEnd && t.windowEnd <= t.windowStart)
+      return false;
+    return true;
+  };
+
+  const buildTask = (t: Task & { uid: string }): Omit<Task, 'id'> => {
+    const freq = t.frequency || (t.daily ? 'daily' : 'specific_days');
+    return {
+      name: t.name,
+      tier: t.tier,
+      windowStart: t.windowStart,
+      windowEnd: t.windowEnd,
+      daily: freq === 'daily',
+      frequency: freq as Task['frequency'],
+      dueDay:
+        freq === 'specific_days' && t.dueDays?.length
+          ? t.dueDays[0]
+          : null,
+      dueDays: freq === 'specific_days' ? t.dueDays : undefined,
+      photoRequired: t.photoRequired,
+    };
+  };
 
   const saveTask = () => {
     if (!activeForm || !isFormValid(activeForm)) return;
     const t = activeForm;
     const uid = t.uid;
     const nt: Record<string, Task[]> = { ...cfg!.tasks };
+    const taskData = buildTask(t);
     if (editTask) {
       nt[uid] = nt[uid].map(x => {
-        return x.id === t.id
-          ? {
-              ...x,
-              id: t.id,
-              name: t.name,
-              tier: t.tier,
-              windowStart: t.windowStart,
-              windowEnd: t.windowEnd,
-              daily: t.daily,
-              dueDay: t.daily ? null : t.dueDay,
-            }
-          : x;
+        return x.id === t.id ? { ...x, ...taskData, id: t.id } : x;
       });
     } else {
       nt[uid] = (nt[uid] || []).concat([
         {
+          ...taskData,
           id: uid.substring(0, 3) + Date.now(),
-          name: t.name,
-          tier: t.tier,
-          windowStart: t.windowStart,
-          windowEnd: t.windowEnd,
-          daily: t.daily,
-          dueDay: t.daily ? null : t.dueDay,
           createdAt: getToday(),
         },
       ]);
@@ -141,6 +149,8 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                     windowEnd: '10:00',
                     daily: true,
                     dueDay: null,
+                    frequency: 'daily',
+                    photoRequired: true,
                   });
                 }}
                 className='bg-qmint text-qslate rounded-badge px-4 py-2 text-[13px] font-bold border-none cursor-pointer font-body flex items-center gap-1.5'
@@ -171,7 +181,13 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                       </span>
                       -Tier ({ctx.tp(t.tier)} coins, {ctx.tierCfg(t.tier).xp}{' '}
                       XP) | {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
-                      {t.daily ? 'Daily' : `Weekly: ${DAYS_SHORT[t.dueDay!]}`}
+                      {t.frequency === 'once'
+                        ? 'Once'
+                        : t.frequency === 'specific_days' || (!t.daily && t.dueDay != null)
+                          ? t.dueDays?.length
+                            ? t.dueDays.map(d => DAYS_SHORT[d]).join(', ')
+                            : DAYS_SHORT[t.dueDay!]
+                          : 'Daily'}
                     </div>
                   </div>
                   <div className='flex gap-1.5'>
