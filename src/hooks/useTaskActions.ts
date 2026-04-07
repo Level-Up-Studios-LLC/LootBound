@@ -66,7 +66,25 @@ export function useTaskActions(deps: TaskActionsDeps) {
       deps.notify(`Wait ${cfgCooldown - (now - ud.lastTaskTime)}s`, 'error');
       return;
     }
+    // Check if this task requires a photo
+    const task = deps.cfg
+      ? (deps.cfg.tasks[deps.curUser!] || []).find(t => t.id === taskId)
+      : null;
+    const needsPhoto = task ? task.photoRequired !== false : true;
+
     setCapturing(taskId);
+
+    if (!needsPhoto) {
+      // No photo required — complete immediately
+      doComplete(taskId, null)
+        .then(() => setCapturing(null))
+        .catch(err => {
+          console.error('doComplete failed:', err);
+          setCapturing(null);
+        });
+      return;
+    }
+
     if (isNative()) {
       nativeCapturePhoto()
         .then(photo => {

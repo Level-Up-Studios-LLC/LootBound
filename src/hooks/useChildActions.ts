@@ -7,7 +7,7 @@ import type {
   ResetOptions,
 } from '../types.ts';
 import type { ChildData } from '../services/firestoreStorage.ts';
-import { freshUser, slugify } from '../utils.ts';
+import { freshUser, getToday, slugify } from '../utils.ts';
 import { MIN_COINS } from '../constants.ts';
 import {
   deleteChildData as fsDeleteChildData,
@@ -87,12 +87,19 @@ export function useChildActions(deps: ChildActionsDeps) {
     }
   };
 
-  const addBonus = async (uid: string, pts: number) => {
+  const addBonus = async (uid: string, pts: number, reason?: string) => {
     const ud = structuredClone(deps.allU[uid] || freshUser()) as UserData;
     const prevPoints = ud.points || 0;
     const nextPoints = Math.max(MIN_COINS, prevPoints + pts);
     const appliedDelta = nextPoints - prevPoints;
     ud.points = nextPoints;
+    // Store adjustment in history
+    if (!ud.adjustments) ud.adjustments = [];
+    ud.adjustments.push({
+      amount: appliedDelta,
+      reason: reason || '',
+      date: getToday(),
+    });
     try {
       await deps.saveUsr(uid, ud);
     } catch (err) {

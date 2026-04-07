@@ -487,13 +487,6 @@ export default function TasksScreen(): React.ReactElement | null {
                 {canComplete && (
                   <button
                     onClick={() => {
-                      if (
-                        !isRej &&
-                        !window.confirm(
-                          'Take a photo of your completed mission as proof!'
-                        )
-                      )
-                        return;
                       startCapture(t.id);
                     }}
                     aria-label={`Complete ${t.name}`}
@@ -510,20 +503,32 @@ export default function TasksScreen(): React.ReactElement | null {
                               : 'bg-qorange')
                     }
                   >
-                    <FontAwesomeIcon
-                      icon={faCamera}
-                      className='mr-1.5'
-                      aria-hidden='true'
-                    />
+                    {t.photoRequired !== false && (
+                      <FontAwesomeIcon
+                        icon={faCamera}
+                        className='mr-1.5'
+                        aria-hidden='true'
+                      />
+                    )}
                     {isCoop
-                      ? 'Complete Co-op + Photo'
+                      ? t.photoRequired !== false
+                        ? 'Complete Co-op + Photo'
+                        : 'Complete Co-op'
                       : isRej
-                        ? 'Redo + Photo'
+                        ? t.photoRequired !== false
+                          ? 'Redo + Photo'
+                          : 'Redo'
                         : status === 'upcoming'
-                          ? 'Early (+25%) + Photo'
+                          ? t.photoRequired !== false
+                            ? 'Early (+25%) + Photo'
+                            : 'Early (+25%)'
                           : status === 'overdue'
-                            ? 'Late (50%) + Photo'
-                            : 'Complete + Photo'}
+                            ? t.photoRequired !== false
+                              ? 'Late (50%) + Photo'
+                              : 'Late (50%)'
+                            : t.photoRequired !== false
+                              ? 'Complete + Photo'
+                              : 'Complete'}
                   </button>
                 )}
                 {/* Co-op request button for solo tasks */}

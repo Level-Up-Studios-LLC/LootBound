@@ -16,7 +16,6 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.tsx';
 import AddChildForm from '../../components/forms/AddChildForm.tsx';
 import EmptyState from '../../components/ui/EmptyState.tsx';
 import PurchasesToggle from '../../components/ui/PurchasesToggle.tsx';
-import PasswordInput from '../../components/ui/PasswordInput.tsx';
 import type {
   UserData,
   Child,
@@ -91,14 +90,18 @@ export default function ChildrenTab(): React.ReactElement {
               <div className='flex gap-1.5'>
                 {kidPinEdit.uid === c.id ? (
                   <div className='flex gap-1'>
-                    <PasswordInput
+                    <input
+                      type='password'
                       maxLength={4}
+                      inputMode='numeric'
+                      pattern='[0-9]*'
                       placeholder='PIN'
                       value={kidPinEdit.val}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         setKidPinEdit({ uid: c.id, val: e.target.value });
                       }}
                       className='quest-input w-[60px]! text-center py-1! px-1.5! text-xs!'
+                      autoFocus
                     />
                     <button
                       onClick={() => {

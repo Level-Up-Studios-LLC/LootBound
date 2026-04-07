@@ -61,6 +61,13 @@ export function useApprovalActions(deps: ApprovalActionsDeps) {
     const p = ud.pendingRedemptions[idx];
     if (!p) return;
     ud.pendingRedemptions.splice(idx, 1);
+    // Record denial in adjustment history so it shows in profile
+    if (!ud.adjustments) ud.adjustments = [];
+    ud.adjustments.push({
+      amount: 0,
+      reason: `Loot "${p.name}" denied by parent`,
+      date: getToday(),
+    });
     await deps.saveUsr(uid, ud);
     deps.notify('Denied');
 

@@ -19,6 +19,7 @@ export function freshUser(): UserData {
     taskLog: {},
     redemptions: [],
     pendingRedemptions: [],
+    adjustments: [],
     lastTaskTime: 0,
   };
 }

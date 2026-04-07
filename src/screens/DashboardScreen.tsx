@@ -142,27 +142,35 @@ export default function DashboardScreen(): React.ReactElement | null {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const allDone = total > 0 && done === total;
 
-  // Play victory sound only on a real incomplete→complete transition
+  // Track whether celebration (confetti + sound) already played for this completion
+  const confettiPlayedRef = useRef(false);
+
+  // Play victory sound + confetti only on a real incomplete→complete transition
   useEffect(() => {
     // Reset tracking when child changes (before ud guard)
     if (ch && lastChildIdRef.current !== ch.id) {
       lastChildIdRef.current = ch.id;
       soundPlayedRef.current = allDone;
+      confettiPlayedRef.current = allDone;
       return;
     }
     if (!ch || !ud) return;
     if (!allDone) {
       soundPlayedRef.current = false;
+      confettiPlayedRef.current = false;
       return;
     }
     if (!soundPlayedRef.current) {
       soundPlayedRef.current = true;
+      confettiPlayedRef.current = true;
       const prefs = ctx.cfg ? ctx.cfg.notificationPrefs || {} : {};
       if ((prefs as Record<string, boolean>).soundEnabled !== false) {
         playSound('victory');
       }
     }
   }, [allDone, ch?.id, !!ud, ctx.cfg?.notificationPrefs?.soundEnabled]);
+
+  const showConfetti = allDone && confettiPlayedRef.current;
 
   // GSAP entrance animations (skipped when user prefers reduced motion)
   useGSAP(
@@ -232,7 +240,7 @@ export default function DashboardScreen(): React.ReactElement | null {
 
   return (
     <div className='pb-20' ref={containerRef}>
-      {allDone && <Confetti />}
+      {showConfetti && <Confetti />}
       <KidHeader child={ch} userData={ud} />
       <div className='px-4 pt-4'>
         {bedLock && (
@@ -434,9 +442,7 @@ export default function DashboardScreen(): React.ReactElement | null {
                     aria-label={
                       isRej ? `Redo ${t.name}` : `Mark ${t.name} as done`
                     }
-                    onClick={() => {
-                      startCapture(t.id);
-                    }}
+                    onClick={() => startCapture(t.id)}
                     className={
                       'text-xs py-2 px-4 rounded-badge cursor-pointer font-body font-bold text-white transition-all hover:scale-105 active:scale-95 border-none ' +
                       (isCoop ? 'bg-qcyan' : isRej ? 'bg-qcoral' : 'bg-qteal')

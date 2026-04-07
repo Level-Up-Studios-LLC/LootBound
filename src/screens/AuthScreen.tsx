@@ -298,6 +298,28 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
             Continue with Google
           </button>
 
+          <div className='text-[11px] text-qmuted text-center leading-relaxed'>
+            By signing in, you agree to the{' '}
+            <a
+              href='https://lootbound.com/terms-of-use/'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-qteal font-semibold'
+            >
+              Terms of Use
+            </a>{' '}
+            and the{' '}
+            <a
+              href='https://lootbound.com/privacy-policy/'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-qteal font-semibold'
+            >
+              Privacy Policy
+            </a>
+            .
+          </div>
+
           <button onClick={switchMode} disabled={busy} className='btn-ghost'>
             Don't have an account? Create one
           </button>
@@ -490,6 +512,28 @@ export default function AuthScreen(props: AuthScreenProps): React.ReactElement {
           </svg>
           Continue with Google
         </button>
+
+        <div className='text-[11px] text-qmuted text-center leading-relaxed'>
+          By signing up, you agree to the{' '}
+          <a
+            href='https://lootbound.com/terms-of-use/'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-qteal font-semibold'
+          >
+            Terms of Use
+          </a>{' '}
+          and the{' '}
+          <a
+            href='https://lootbound.com/privacy-policy/'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-qteal font-semibold'
+          >
+            Privacy Policy
+          </a>
+          .
+        </div>
 
         <button onClick={switchMode} disabled={busy} className='btn-ghost'>
           Already have an account? Sign in

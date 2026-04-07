@@ -89,9 +89,14 @@ export default function RewardForm(props: RewardFormProps): React.ReactElement {
           type='number'
           value={f.cost ?? ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const raw = e.target.value === '' ? 0 : Number(e.target.value);
-            u('cost', Number.isFinite(raw) ? Math.max(0, raw) : 0);
+            if (e.target.value === '') {
+              u('cost', 0);
+            } else {
+              const raw = Number(e.target.value);
+              u('cost', Number.isFinite(raw) ? Math.max(0, raw) : 0);
+            }
           }}
+          onFocus={e => e.target.select()}
           min={0}
           placeholder='0'
           className='quest-input'

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPenToSquare, faTrashCan, faGift } from '../../fa.ts';
+import { faPlus, faGift } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import { altBg } from '../../constants.ts';
@@ -170,64 +170,36 @@ export default function RewardsTab(): React.ReactElement {
               ? `${r.limitMax}/wk`
               : 'No limit';
         return (
-          <div
+          <button
             key={r.id}
+            type='button'
+            onClick={() => setEditReward({ ...r })}
             className={
               altBg(ri) +
-              ' flex justify-between items-center rounded-badge px-4 py-3 mb-3'
+              ' flex justify-between items-center rounded-badge px-4 py-3 mb-3 w-full text-left border-none cursor-pointer font-body hover:brightness-95 active:scale-[0.99] transition-all'
             }
           >
-            <div>
+            <div className='flex items-center gap-2'>
               <span className='text-lg'>{r.icon}</span>
-              <span className='font-semibold ml-2 text-qslate'>{r.name}</span>
-              <div className='text-[11px] text-qmuted'>
-                {r.cost} coins | {ll}
-                {r.requireApproval ? ' | Approval req.' : ''}
+              <div>
+                <div className='font-semibold text-qslate'>{r.name}</div>
+                <div className='text-[11px] text-qmuted'>
+                  {r.cost} coins | {ll}
+                  {r.requireApproval ? ' | Approval req.' : ''}
+                </div>
               </div>
             </div>
-            <div className='flex gap-1.5'>
-              <button
-                onClick={() => {
-                  ctx.saveCfg({
-                    ...cfg!,
-                    rewards: rewards.map(x => {
-                      return x.id === r.id ? { ...x, active: !x.active } : x;
-                    }),
-                  });
-                }}
-                className={
-                  'rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body ' +
-                  (r.active ? 'bg-qteal text-white' : 'bg-qcoral text-white')
-                }
-              >
-                {r.active ? 'On' : 'Off'}
-              </button>
-              <button
-                onClick={() => {
-                  setEditReward({ ...r });
-                }}
-                className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
-              >
-                <FontAwesomeIcon icon={faPenToSquare} />
-                <span className='sr-only'>Edit {r.name}</span>
-              </button>
-              <button
-                onClick={() => {
-                  try {
-                    if (localStorage.getItem(getSkipKey()) === '1') {
-                      removeReward(r.id);
-                      return;
-                    }
-                  } catch (_e) {}
-                  setDeleteReward(r);
-                }}
-                className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
-              >
-                <FontAwesomeIcon icon={faTrashCan} />
-                <span className='sr-only'>Delete {r.name}</span>
-              </button>
-            </div>
-          </div>
+            <span
+              className={
+                'rounded-badge px-2.5 py-1 text-[11px] font-bold shrink-0 ' +
+                (r.active
+                  ? 'bg-qteal-dim text-qteal'
+                  : 'bg-qcoral-dim text-qcoral')
+              }
+            >
+              {r.active ? 'Active' : 'Off'}
+            </span>
+          </button>
         );
       })}
 
@@ -248,6 +220,17 @@ export default function RewardsTab(): React.ReactElement {
             }}
             onUsePreset={!editReward ? () => setShowPreset(true) : undefined}
           />
+          {editReward && (
+            <div className='mt-8 text-center'>
+              <button
+                type='button'
+                onClick={() => setDeleteReward(editReward)}
+                className='bg-transparent border-none cursor-pointer font-body text-qred text-sm'
+              >
+                Delete Loot
+              </button>
+            </div>
+          )}
         </FullScreenSlideUp>
       )}
 
@@ -277,6 +260,7 @@ export default function RewardsTab(): React.ReactElement {
           onConfirm={() => {
             removeReward(deleteReward.id);
             setDeleteReward(null);
+            setEditReward(null);
           }}
           onCancel={() => setDeleteReward(null)}
         />

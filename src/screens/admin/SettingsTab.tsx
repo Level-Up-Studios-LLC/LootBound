@@ -120,21 +120,21 @@ export default function SettingsTab(): React.ReactElement {
       <div className='bg-qmint rounded-card p-4 mb-4'>
         <div className='font-bold mb-2 text-qslate flex items-center gap-2'>
           <FontAwesomeIcon icon={faCoins} style={FA_ICON_STYLE} />
-          Tier Coin & XP Values
+          Tier Coins
         </div>
-        <div className='flex flex-col gap-3'>
+        <div className='grid grid-cols-3 gap-3'>
           {TIER_ORDER.map(tier => {
             const tc = (cfg.tierConfig || DEF_TIER_CONFIG)[tier] || {
               coins: 0,
               xp: 0,
             };
             return (
-              <div key={tier} className='flex items-center gap-2'>
+              <div key={tier} className='flex flex-col items-center gap-1'>
                 <span
-                  className='text-[13px] font-bold min-w-[32px] text-center'
+                  className='text-[13px] font-bold'
                   style={{ color: TIER_COLORS[tier] || '#6b7280' }}
                 >
-                  {tier}
+                  {tier}-Tier
                 </span>
                 <input
                   type='number'
@@ -147,33 +147,17 @@ export default function SettingsTab(): React.ReactElement {
                       cfg.tierConfig || DEF_TIER_CONFIG
                     );
                     if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    const v =
-                      e.target.value === '' ? 0 : Number(e.target.value);
-                    n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
+                    if (e.target.value === '') {
+                      n[tier].coins = 0;
+                    } else {
+                      const v = Number(e.target.value);
+                      n[tier].coins = Number.isFinite(v) ? Math.max(0, v) : 0;
+                    }
                     update({ ...cfg, tierConfig: n });
                   }}
-                  className='quest-input w-[72px]! text-center'
+                  onFocus={e => e.target.select()}
+                  className='quest-input w-full text-center'
                 />
-                <span className='text-[11px] text-qmuted'>coins</span>
-                <input
-                  type='number'
-                  min={0}
-                  aria-label={`${tier} XP`}
-                  value={tc.xp ?? ''}
-                  placeholder='0'
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const n: Record<string, TierConfig> = structuredClone(
-                      cfg.tierConfig || DEF_TIER_CONFIG
-                    );
-                    if (!n[tier]) n[tier] = { coins: 0, xp: 0 };
-                    const v =
-                      e.target.value === '' ? 0 : Number(e.target.value);
-                    n[tier].xp = Number.isFinite(v) ? Math.max(0, v) : 0;
-                    update({ ...cfg, tierConfig: n });
-                  }}
-                  className='quest-input w-[72px]! text-center'
-                />
-                <span className='text-[11px] text-qmuted'>XP</span>
               </div>
             );
           })}
@@ -195,12 +179,17 @@ export default function SettingsTab(): React.ReactElement {
             value={cfg.approvalThreshold ?? ''}
             placeholder='0'
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const v = e.target.value === '' ? 0 : Number(e.target.value);
-              update({
-                ...cfg,
-                approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
-              });
+              if (e.target.value === '') {
+                update({ ...cfg, approvalThreshold: 0 });
+              } else {
+                const v = Number(e.target.value);
+                update({
+                  ...cfg,
+                  approvalThreshold: Number.isFinite(v) ? Math.max(0, v) : 0,
+                });
+              }
             }}
+            onFocus={e => e.target.select()}
             className='quest-input w-[100px]! text-center'
           />
           <span className='text-[13px] text-qmuted'>coins</span>
@@ -282,12 +271,17 @@ export default function SettingsTab(): React.ReactElement {
             value={cfg.cooldown ?? ''}
             placeholder='0'
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const v = e.target.value === '' ? 0 : Number(e.target.value);
-              update({
-                ...cfg,
-                cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,
-              });
+              if (e.target.value === '') {
+                update({ ...cfg, cooldown: 0 });
+              } else {
+                const v = Number(e.target.value);
+                update({
+                  ...cfg,
+                  cooldown: Number.isFinite(v) ? Math.max(0, v) : 0,
+                });
+              }
             }}
+            onFocus={e => e.target.select()}
             className='quest-input w-[100px]! text-center'
           />
           <span className='text-[13px] text-qmuted'>seconds</span>

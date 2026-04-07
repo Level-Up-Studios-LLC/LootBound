@@ -6,17 +6,17 @@ import { useAppContext } from '../context/AppContext.tsx';
 import { freshUser, getLevelTitle, getToday } from '../utils.ts';
 import FullScreenSlideUp from './ui/FullScreenSlideUp.tsx';
 import Modal from './ui/Modal.tsx';
-import type { Redemption } from '../types.ts';
+import type { Redemption, CoinAdjustment } from '../types.ts';
 
 interface ChildProfileSlideUpProps {
   childId: string;
   onClose: () => void;
 }
 
-type HistoryFilter = 'all' | 'tasks' | 'rewards';
+type HistoryFilter = 'all' | 'tasks' | 'rewards' | 'adjustments';
 
 interface HistoryItem {
-  type: 'task' | 'reward';
+  type: 'task' | 'reward' | 'adjustment';
   label: string;
   coins: number;
   date: string;
@@ -43,26 +43,50 @@ export default function ChildProfileSlideUp(
     ud.redemptions.forEach((r: Redemption) => {
       history.push({
         type: 'reward',
-        label: `Reward "${r.name}" redeemed`,
+        label: `Loot "${r.name}" purchased`,
         coins: -r.cost,
         date: r.date,
       });
     });
   }
 
-  // Tasks (from taskLog) — only include completed entries, not missed/penalty
+  // Adjustments
+  if (ud.adjustments) {
+    ud.adjustments.forEach((a: CoinAdjustment) => {
+      history.push({
+        type: 'adjustment',
+        label: a.reason
+          ? `Balance adjustment: ${a.reason}`
+          : 'Balance adjustment',
+        coins: a.amount,
+        date: a.date,
+      });
+    });
+  }
+
+  // Tasks (from taskLog) — include completed and missed entries
   if (ud.taskLog) {
     Object.entries(ud.taskLog).forEach(([date, logs]) => {
       Object.values(logs as Record<string, any>).forEach((entry: any) => {
-        if (
-          entry &&
-          !entry.rejected &&
-          entry.status !== 'missed' &&
-          typeof entry.points === 'number'
-        ) {
+        if (!entry || entry.rejected) return;
+        const name = entry.taskName || 'Mission';
+        if (entry.status === 'missed') {
           history.push({
             type: 'task',
-            label: `Task "${entry.taskName || 'Mission'}" completed`,
+            label: `Mission "${name}" missed`,
+            coins: typeof entry.points === 'number' ? entry.points : 0,
+            date,
+          });
+        } else if (typeof entry.points === 'number') {
+          const statusLabel =
+            entry.status === 'early'
+              ? 'completed early'
+              : entry.status === 'late'
+                ? 'completed late'
+                : 'completed';
+          history.push({
+            type: 'task',
+            label: `Mission "${name}" ${statusLabel}`,
             coins: entry.points,
             date,
           });
@@ -78,6 +102,7 @@ export default function ChildProfileSlideUp(
     if (filter === 'all') return true;
     if (filter === 'tasks') return h.type === 'task';
     if (filter === 'rewards') return h.type === 'reward';
+    if (filter === 'adjustments') return h.type === 'adjustment';
     return true;
   });
 
@@ -100,7 +125,7 @@ export default function ChildProfileSlideUp(
   const doAdjust = async () => {
     if (adjustAmount === 0) return;
     try {
-      await ctx.addBonus(p.childId, adjustAmount);
+      await ctx.addBonus(p.childId, adjustAmount, adjustReason.trim());
       setAdjustAmount(0);
       setAdjustReason('');
       setShowAdjust(false);
@@ -121,8 +146,8 @@ export default function ChildProfileSlideUp(
   return (
     <FullScreenSlideUp title='Coin Balance' onCancel={p.onClose}>
       {/* Profile header */}
-      <div className='flex flex-col items-center mb-5'>
-        <div className='w-16 h-16 rounded-full bg-qteal/20 flex items-center justify-center text-2xl mb-2'>
+      <div className='bg-qmint rounded-card p-5 flex flex-col items-center mb-5'>
+        <div className='w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl mb-2'>
           {child?.avatar || initials}
         </div>
         <div className='font-display text-lg font-bold text-qslate'>
@@ -147,72 +172,86 @@ export default function ChildProfileSlideUp(
       <div className='flex justify-center mb-5'>
         <button
           onClick={() => setShowAdjust(true)}
-          className='bg-qteal text-white rounded-badge px-6 py-2 text-sm font-bold border-none cursor-pointer font-body'
+          className='bg-qteal-btn text-white rounded-badge px-6 py-2.5 text-sm font-bold border-none cursor-pointer font-body hover:brightness-110 active:scale-[0.97] transition-all'
         >
-          Adjust
+          Adjust Coins
         </button>
       </div>
 
       {/* History */}
-      <div className='flex justify-between items-center mb-3'>
-        <span className='font-display text-base font-bold text-qslate'>
-          History
-        </span>
-      </div>
-      <select
-        value={filter}
-        onChange={e => setFilter(e.target.value as HistoryFilter)}
-        className='quest-input mb-3 text-sm'
-      >
-        <option value='all'>All Records</option>
-        <option value='tasks'>Tasks Only</option>
-        <option value='rewards'>Rewards Only</option>
-      </select>
+      <div className='bg-qyellow rounded-card p-4 mb-0'>
+        <div className='flex justify-between items-center mb-3'>
+          <span className='font-display text-base font-bold text-qslate'>
+            History
+          </span>
+        </div>
+        <select
+          value={filter}
+          onChange={e => setFilter(e.target.value as HistoryFilter)}
+          className='quest-input mb-3 text-sm'
+        >
+          <option value='all'>All Records</option>
+          <option value='tasks'>Tasks Only</option>
+          <option value='rewards'>Rewards Only</option>
+          <option value='adjustments'>Adjustments Only</option>
+        </select>
 
-      {Object.entries(grouped).map(([dateLabel, items]) => (
-        <div key={dateLabel} className='mb-4'>
-          <div className='text-[11px] font-bold text-qmuted uppercase tracking-wide mb-2'>
-            {dateLabel}
-          </div>
-          <div className='flex flex-col gap-2'>
-            {items.map((item, i) => (
-              <div
-                key={i}
-                className='flex items-center gap-3 bg-white rounded-badge px-3 py-2.5 border border-qborder'
-              >
+        {Object.entries(grouped).map(([dateLabel, items]) => (
+          <div key={dateLabel} className='mb-4'>
+            <div className='text-[11px] font-bold text-qmuted uppercase tracking-wide mb-2'>
+              {dateLabel}
+            </div>
+            <div className='flex flex-col gap-2'>
+              {items.map((item, i) => (
                 <div
-                  className={
-                    'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ' +
-                    (item.coins >= 0 ? 'bg-qteal' : 'bg-qcoral')
-                  }
+                  key={i}
+                  className='flex items-center gap-3 bg-white rounded-badge px-3 py-2.5 border border-qborder'
                 >
-                  {item.type === 'task' ? '\u2714' : '\u{1F381}'}
-                </div>
-                <div className='flex-1 min-w-0'>
-                  <div className='text-sm text-qslate font-medium truncate'>
-                    {item.label}
+                  <div
+                    className={
+                      'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ' +
+                      (item.coins >= 0 ? 'bg-qteal' : 'bg-qcoral')
+                    }
+                  >
+                    {item.type === 'task'
+                      ? '\u2714'
+                      : item.type === 'adjustment'
+                        ? '\u2696'
+                        : '\u{1F381}'}
+                  </div>
+                  <div className='flex-1 min-w-0'>
+                    <div className='text-[13px] text-qslate font-medium leading-snug'>
+                      {item.label}
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-1 shrink-0'>
+                    <FontAwesomeIcon
+                      icon={faCoins}
+                      style={FA_ICON_STYLE}
+                      className='text-[10px]'
+                    />
+                    <span
+                      className={
+                        'text-sm font-bold ' +
+                        (item.coins >= 0 ? 'text-qteal' : 'text-qcoral')
+                      }
+                    >
+                      {item.coins > 0 ? '+' : ''}
+                      {item.coins}
+                    </span>
                   </div>
                 </div>
-                <span
-                  className={
-                    'text-sm font-bold shrink-0 ' +
-                    (item.coins >= 0 ? 'text-qteal' : 'text-qcoral')
-                  }
-                >
-                  {item.coins > 0 ? '+' : ''}
-                  {item.coins}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
-      {filtered.length === 0 && (
-        <div className='text-center text-qmuted text-sm py-8'>
-          No records yet.
-        </div>
-      )}
+        {filtered.length === 0 && (
+          <div className='text-center text-qmuted text-sm py-8'>
+            No records yet.
+          </div>
+        )}
+      </div>
 
       {/* Adjust dialog */}
       {showAdjust && (

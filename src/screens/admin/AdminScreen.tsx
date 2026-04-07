@@ -202,6 +202,7 @@ export default function AdminScreen(): React.ReactElement {
             <button
               key={t[0]}
               onClick={() => {
+                if (atab === t[0]) return;
                 triggerHaptic('light');
                 setAtab(t[0]);
               }}

@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faPlus,
-  faPenToSquare,
-  faTrashCan,
-  faClipboardList,
-} from '../../fa.ts';
+import { faPlus, faClipboardList } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { getCurrentUid } from '../../services/auth.ts';
 import {
@@ -148,64 +143,38 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
                 Add
               </button>
             </div>
-            {tasks.map((t, ti) => {
-              return (
-                <div
-                  key={t.id}
-                  className={
-                    altBg(ti) +
-                    ' flex justify-between items-center rounded-badge px-4 py-3 mb-3'
-                  }
-                >
-                  <div>
-                    <div className='font-semibold text-qslate'>{t.name}</div>
-                    <div className='text-xs text-qmuted'>
-                      <span
-                        style={{
-                          color: TIER_COLORS[t.tier] || '#6b7280',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {t.tier}
-                      </span>
-                      -Tier ({ctx.tp(t.tier)} coins, {ctx.tierCfg(t.tier).xp}{' '}
-                      XP) | {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
-                      {t.frequency === 'once'
-                        ? 'Once'
-                        : t.frequency === 'specific_days'
-                          ? t.dueDays.map(d => DAYS_SHORT[d]).join(', ')
-                          : 'Daily'}
-                    </div>
-                  </div>
-                  <div className='flex gap-1.5'>
-                    <button
-                      onClick={() => {
-                        setEditTask({ ...t, uid: c.id });
+            {tasks.map((t, ti) => (
+              <button
+                key={t.id}
+                type='button'
+                onClick={() => setEditTask({ ...t, uid: c.id })}
+                className={
+                  altBg(ti) +
+                  ' flex justify-between items-center rounded-badge px-4 py-3 mb-3 w-full text-left border-none cursor-pointer font-body hover:brightness-95 active:scale-[0.99] transition-all'
+                }
+              >
+                <div>
+                  <div className='font-semibold text-qslate'>{t.name}</div>
+                  <div className='text-xs text-qmuted'>
+                    <span
+                      style={{
+                        color: TIER_COLORS[t.tier] || '#6b7280',
+                        fontWeight: 700,
                       }}
-                      className='bg-qblue-dim text-qblue rounded-[6px] px-3 py-1.5 text-xs font-semibold border-none cursor-pointer font-body flex items-center gap-1'
                     >
-                      <FontAwesomeIcon icon={faPenToSquare} />
-                      <span className='sr-only'>Edit {t.name}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        try {
-                          if (localStorage.getItem(getSkipKey()) === '1') {
-                            removeTask(c.id, t.id);
-                            return;
-                          }
-                        } catch (_e) {}
-                        setDeleteTask({ task: t, childId: c.id });
-                      }}
-                      className='bg-qred-dim text-qred rounded-[6px] px-3 py-1.5 text-xs font-bold border-none cursor-pointer font-body flex items-center gap-1'
-                    >
-                      <FontAwesomeIcon icon={faTrashCan} />
-                      <span className='sr-only'>Delete {t.name}</span>
-                    </button>
+                      {t.tier}
+                    </span>
+                    -Tier ({ctx.tp(t.tier)} coins, {ctx.tierCfg(t.tier).xp} XP)
+                    | {fmtTime(t.windowStart)}-{fmtTime(t.windowEnd)} |{' '}
+                    {t.frequency === 'once'
+                      ? 'Once'
+                      : t.frequency === 'specific_days'
+                        ? t.dueDays.map(d => DAYS_SHORT[d]).join(', ')
+                        : 'Daily'}
                   </div>
                 </div>
-              );
-            })}
+              </button>
+            ))}
           </div>
         );
       })}
@@ -228,6 +197,19 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
             }}
             onUsePreset={!editTask ? () => setShowPreset(true) : undefined}
           />
+          {editTask && (
+            <div className='mt-8 text-center'>
+              <button
+                type='button'
+                onClick={() => {
+                  setDeleteTask({ task: editTask, childId: editTask.uid });
+                }}
+                className='bg-transparent border-none cursor-pointer font-body text-qred text-sm'
+              >
+                Delete Mission
+              </button>
+            </div>
+          )}
         </FullScreenSlideUp>
       )}
 
@@ -258,6 +240,7 @@ export default function TasksTab(props: TasksTabProps): React.ReactElement {
           onConfirm={() => {
             removeTask(deleteTask.childId, deleteTask.task.id);
             setDeleteTask(null);
+            setEditTask(null);
           }}
           onCancel={() => setDeleteTask(null)}
         />

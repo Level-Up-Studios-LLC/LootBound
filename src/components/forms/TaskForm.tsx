@@ -99,8 +99,8 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
         </select>
       </div>
       <div>
-        <div className='flex gap-3'>
-          <div className='flex-1 min-w-0'>
+        <div className='grid grid-cols-2 gap-3'>
+          <div className='min-w-0'>
             <label
               htmlFor='tf-start'
               className='text-qslate text-sm font-semibold mb-1 block'
@@ -114,10 +114,10 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 u('windowStart', e.target.value);
               }}
-              className='quest-input w-full'
+              className='quest-input w-full max-w-full box-border'
             />
           </div>
-          <div className='flex-1 min-w-0'>
+          <div className='min-w-0'>
             <label
               htmlFor='tf-end'
               className='text-qslate text-sm font-semibold mb-1 block'
@@ -132,7 +132,7 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 u('windowEnd', e.target.value);
               }}
-              className='quest-input w-full'
+              className='quest-input w-full max-w-full box-border'
             />
           </div>
         </div>
@@ -147,13 +147,13 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           Frequency
         </label>
         <div className='flex gap-2' role='radiogroup' aria-label='Frequency'>
-          {(['daily', 'specific_days', 'once'] as Freq[]).map(opt => {
+          {(['daily', 'once', 'specific_days'] as Freq[]).map(opt => {
             const label =
               opt === 'daily'
                 ? 'Daily'
-                : opt === 'specific_days'
-                  ? 'Specific Days'
-                  : 'Once';
+                : opt === 'once'
+                  ? 'One-Time'
+                  : 'Specific Days';
             const active = freq === opt;
             return (
               <button
@@ -222,15 +222,13 @@ export default function TaskForm(props: TaskFormProps): React.ReactElement {
           aria-checked={photoOn}
           onClick={() => u('photoRequired', !photoOn)}
           className={
-            'relative w-12 h-7 rounded-full border-none cursor-pointer transition-colors duration-200 ' +
+            'relative inline-flex items-center w-12 h-7 rounded-full border-none cursor-pointer transition-colors duration-200 shrink-0 ' +
             (photoOn ? 'bg-qteal' : 'bg-qslate-dim')
           }
         >
           <span
-            className={
-              'absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform duration-200 ' +
-              (photoOn ? 'translate-x-[22px]' : 'translate-x-0.5')
-            }
+            className='absolute w-6 h-6 rounded-full bg-white shadow-sm transition-[left] duration-200'
+            style={{ left: photoOn ? 22 : 2, top: 2 }}
           />
         </button>
       </div>

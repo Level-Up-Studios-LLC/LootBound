@@ -117,7 +117,7 @@ interface AppContextValue {
   execRedeem: (uid: string, reward: Reward) => Promise<void>;
   approvePending: (uid: string, idx: number) => Promise<void>;
   denyPending: (uid: string, idx: number) => Promise<void>;
-  addBonus: (uid: string, pts: number) => Promise<void>;
+  addBonus: (uid: string, pts: number, reason?: string) => Promise<void>;
   resetAll: () => Promise<void>;
   resetData: (opts: import('../types.ts').ResetOptions) => Promise<void>;
   doAddChild: (form: AddChildFormData) => Promise<void>;

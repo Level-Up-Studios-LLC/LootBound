@@ -36,6 +36,7 @@ export default function BNav(p: BNavProps) {
           <button
             key={t.id}
             onClick={() => {
+              if (ctx.screen === t.id) return;
               triggerHaptic('light');
               ctx.navigate(t.id);
             }}

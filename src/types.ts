@@ -67,6 +67,12 @@ export interface StatusLabel {
   bg: string;
 }
 
+export interface CoinAdjustment {
+  amount: number;
+  reason: string;
+  date: string;
+}
+
 export interface UserData {
   points: number;
   xp: number;
@@ -78,6 +84,7 @@ export interface UserData {
   taskLog: Record<string, Record<string, any>>;
   redemptions: Redemption[];
   pendingRedemptions: PendingRedemption[];
+  adjustments: CoinAdjustment[];
   lastTaskTime: number;
 }
 

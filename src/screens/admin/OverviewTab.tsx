@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoins, faFamilyPants } from '../../fa.ts';
+import { faCoins, faChevronRight, faFamilyPants } from '../../fa.ts';
 import { useAppContext } from '../../context/AppContext.tsx';
 import { FA_ICON_STYLE, altBg } from '../../constants.ts';
 import {
@@ -83,7 +83,7 @@ export default function OverviewTab(
               </div>
               <button
                 onClick={() => setProfileChildId(c.id)}
-                className='bg-transparent border-none cursor-pointer p-0 font-display text-qslate flex items-center gap-1'
+                className='bg-qmint rounded-badge px-3 py-1.5 border-none cursor-pointer font-display text-qslate flex items-center gap-1.5 hover:brightness-95 active:scale-[0.97] transition-all'
                 aria-label={`View ${c.name}'s coin balance and history`}
               >
                 <FontAwesomeIcon
@@ -92,8 +92,12 @@ export default function OverviewTab(
                   className='text-xs'
                 />
                 <span className='font-bold'>
-                  {(udata.points || 0).toLocaleString()} coins
+                  {(udata.points || 0).toLocaleString()}
                 </span>
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  className='text-[10px] text-qmuted ml-0.5'
+                />
               </button>
             </div>
             <div className='flex gap-4 text-[13px] text-qmuted mb-2'>
